@@ -170,9 +170,9 @@ function EmployeeProfileModal({
                          record.status === 'O' ? 'On Duty' :
                          record.status === 'H' ? 'Holiday' : record.status}
                       </Badge>
-                      <span className="text-neutral-300">{formatDate(record.date)}</span>
+                      <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
                     </div>
-                    <span className="text-sm text-neutral-500">{formatTime(record.date)}</span>
+                    <span className="text-sm text-neutral-500">{formatTime(record.timestamp)}</span>
                   </div>
                 ))}
               </div>
@@ -204,7 +204,7 @@ function EmployeeProfileModal({
                 <tbody>
                   {attendanceHistory.map((record, i) => (
                     <tr key={i} className="border-t border-neutral-700/50">
-                      <td className="p-3 text-white">{formatDate(record.date)}</td>
+                      <td className="p-3 text-white">{formatDate(record.timestamp)}</td>
                       <td className="p-3">
                         <Badge variant={
                           record.status === 'P' ? 'success' :
@@ -218,7 +218,7 @@ function EmployeeProfileModal({
                            record.status === 'H' ? 'Holiday' : record.status}
                         </Badge>
                       </td>
-                      <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
+                      <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
                       <td className="p-3">
                         {record.locationVerified ? (
                           <Badge variant="success" size="sm">
@@ -283,8 +283,8 @@ function EditAttendanceModal({
     try {
       await updateEmployeeAttendance(
         employee.employeeId,
-        record.date.toDate().toISOString().split('T')[0],
-        status as 'present' | 'absent' | 'late' | 'leave',
+        record.timestamp.toDate().toISOString().split('T')[0],
+        status as 'P' | 'A' | 'L' | 'O' | 'H',
         reason
       )
       toast.success('Attendance updated')
@@ -327,7 +327,7 @@ function EditAttendanceModal({
         {/* Date */}
         <div>
           <label className="block text-sm font-medium text-neutral-400 mb-1">Date</label>
-          <p className="text-white">{formatDate(record.date)}</p>
+          <p className="text-white">{formatDate(record.timestamp)}</p>
         </div>
 
         {/* Current Status */}
@@ -491,8 +491,8 @@ function AttendanceTable({
                     </div>
                   </div>
                 </td>
-                <td className="p-3 text-neutral-300">{formatDate(record.date)}</td>
-                <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
+                <td className="p-3 text-neutral-300">{formatDate(record.timestamp)}</td>
+                <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
                 <td className="p-3">
                   <Badge variant={
                     record.status === 'P' ? 'success' :
@@ -729,11 +729,11 @@ export function AdminPanel() {
       
       // Date filters
       if (filterDateFrom) {
-        const recordDate = record.date?.toDate?.()
+        const recordDate = record.timestamp?.toDate?.()
         if (recordDate && recordDate < new Date(filterDateFrom)) return false
       }
       if (filterDateTo) {
-        const recordDate = record.date?.toDate?.()
+        const recordDate = record.timestamp?.toDate?.()
         if (recordDate && recordDate > new Date(filterDateTo)) return false
       }
       
