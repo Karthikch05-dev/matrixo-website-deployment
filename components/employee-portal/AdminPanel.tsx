@@ -282,9 +282,8 @@ function EditAttendanceModal({
     setSaving(true)
     try {
       await updateEmployeeAttendance(
-        employee.employeeId,
-        record.timestamp.toDate().toISOString().split('T')[0],
-        status as 'P' | 'A' | 'L' | 'O' | 'H',
+        record.id!,
+        { status: status as 'P' | 'A' | 'L' | 'O' | 'H' },
         reason
       )
       toast.success('Attendance updated')
