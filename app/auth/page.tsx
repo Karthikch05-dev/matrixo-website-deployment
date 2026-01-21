@@ -35,7 +35,7 @@ export default function AuthPage() {
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, []) // Only run once on mount when phone is selected
+  }, [authMethod, setupRecaptcha]) // Run when authMethod or setupRecaptcha changes
   
   // Also setup when switching to phone
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function AuthPage() {
         }, 100)
       }
     }
-  }, [authMethod])
+  }, [authMethod, setupRecaptcha])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

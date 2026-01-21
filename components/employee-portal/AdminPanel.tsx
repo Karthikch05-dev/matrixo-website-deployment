@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaUsers, 
@@ -100,7 +100,7 @@ function EmployeeProfileModal({
         <div className="flex-1">
           <h3 className="text-xl font-bold text-white">{employee.name}</h3>
           <div className="flex flex-wrap items-center gap-2 mt-1">
-            <Badge variant="secondary">{employee.employeeId}</Badge>
+            <Badge>{employee.employeeId}</Badge>
             {employee.department && <Badge>{employee.department}</Badge>}
             <Badge variant={employee.role === 'admin' ? 'primary' : 'default'}>
               {employee.role}
@@ -161,7 +161,7 @@ function EmployeeProfileModal({
                     <div className="flex items-center gap-3">
                       <Badge variant={
                         record.status === 'present' ? 'success' :
-                        record.status === 'absent' ? 'danger' :
+                        record.status === 'absent' ? 'error' :
                         record.status === 'late' ? 'warning' : 'default'
                       }>
                         {record.status}
@@ -204,7 +204,7 @@ function EmployeeProfileModal({
                       <td className="p-3">
                         <Badge variant={
                           record.status === 'present' ? 'success' :
-                          record.status === 'absent' ? 'danger' :
+                          record.status === 'absent' ? 'error' :
                           record.status === 'late' ? 'warning' : 'default'
                         }>
                           {record.status}
@@ -328,7 +328,7 @@ function EditAttendanceModal({
             <label className="block text-sm font-medium text-neutral-400 mb-1">Current Status</label>
             <Badge variant={
               record.status === 'present' ? 'success' :
-              record.status === 'absent' ? 'danger' :
+              record.status === 'absent' ? 'error' :
               record.status === 'late' ? 'warning' : 'default'
             }>
               {record.status}
@@ -483,7 +483,7 @@ function AttendanceTable({
                 <td className="p-3">
                   <Badge variant={
                     record.status === 'present' ? 'success' :
-                    record.status === 'absent' ? 'danger' :
+                    record.status === 'absent' ? 'error' :
                     record.status === 'late' ? 'warning' : 'default'
                   }>
                     {record.status}
@@ -634,12 +634,7 @@ export function AdminPanel() {
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithStats | null>(null)
   const [editingRecord, setEditingRecord] = useState<{ record: AttendanceRecord, employee: EmployeeProfile } | null>(null)
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const [emps, attendance] = await Promise.all([
@@ -681,7 +676,12 @@ export function AdminPanel() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [getAllEmployees, getAllAttendance, getEmployeeAttendanceHistory])
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   // Get unique departments
   const departments = useMemo(() => {

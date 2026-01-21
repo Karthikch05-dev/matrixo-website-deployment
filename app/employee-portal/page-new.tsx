@@ -36,11 +36,11 @@ import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
 // Import modular components
-import { Calendar } from '@/components/employee-portal/Calendar'
-import { Attendance } from '@/components/employee-portal/Attendance'
-import { Tasks } from '@/components/employee-portal/Tasks'
-import { Discussions } from '@/components/employee-portal/Discussions'
-import { AdminPanel } from '@/components/employee-portal/AdminPanel'
+import Calendar from '@/components/employee-portal/Calendar'
+import Attendance from '@/components/employee-portal/Attendance'
+import Tasks from '@/components/employee-portal/Tasks'
+import Discussions from '@/components/employee-portal/Discussions'
+import AdminPanel from '@/components/employee-portal/AdminPanel'
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
