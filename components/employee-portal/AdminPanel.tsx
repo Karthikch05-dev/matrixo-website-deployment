@@ -350,7 +350,7 @@ function EditAttendanceModal({
             <label className="block text-sm font-medium text-neutral-400 mb-1">New Status</label>
             <Select
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(value) => setStatus(value)}
               options={[
                 { value: 'P', label: '✅ Present' },
                 { value: 'A', label: '❌ Absent' },
@@ -835,7 +835,7 @@ export function AdminPanel() {
           {/* Department */}
           <Select
             value={filterDepartment}
-            onChange={(e) => setFilterDepartment(e.target.value)}
+            onChange={(value) => setFilterDepartment(value)}
             options={[
               { value: '', label: 'All Departments' },
               ...departments.map(d => ({ value: d, label: d }))
@@ -846,13 +846,14 @@ export function AdminPanel() {
           {activeTab === 'attendance' && (
             <Select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(value) => setFilterStatus(value)}
               options={[
                 { value: '', label: 'All Statuses' },
-                { value: 'present', label: '✅ Present' },
-                { value: 'absent', label: '❌ Absent' },
-                { value: 'late', label: '⏰ Late' },
-                { value: 'leave', label: '🏖️ Leave' }
+                { value: 'P', label: '✅ Present' },
+                { value: 'A', label: '❌ Absent' },
+                { value: 'L', label: '🏖️ Leave' },
+                { value: 'O', label: '💼 On Duty' },
+                { value: 'H', label: '🎉 Holiday' }
               ]}
             />
           )}
