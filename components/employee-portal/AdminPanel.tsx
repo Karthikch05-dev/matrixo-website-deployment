@@ -580,24 +580,24 @@ function EmployeeList({
           <Card
             hover
             className="cursor-pointer"
-            onClick={() => onViewProfile(emp)}
           >
-            <div className="flex items-center gap-4">
-              <Avatar src={emp.profileImage} name={emp.name} size="lg" />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white truncate">{emp.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge size="sm">{emp.employeeId}</Badge>
-                  {emp.department && (
-                    <Badge variant="info" size="sm">{emp.department}</Badge>
-                  )}
+            <div onClick={() => onViewProfile(emp)}>
+              <div className="flex items-center gap-4">
+                <Avatar src={emp.profileImage} name={emp.name} size="lg" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate">{emp.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge size="sm">{emp.employeeId}</Badge>
+                    {emp.department && (
+                      <Badge variant="info" size="sm">{emp.department}</Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className={`text-2xl font-bold ${
-                  emp.attendancePercentage >= 90 ? 'text-green-400' :
-                  emp.attendancePercentage >= 75 ? 'text-amber-400' : 'text-red-400'
-                }`}>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${
+                    emp.attendancePercentage >= 90 ? 'text-green-400' :
+                    emp.attendancePercentage >= 75 ? 'text-amber-400' : 'text-red-400'
+                  }`}>
                   {emp.attendancePercentage.toFixed(0)}%
                 </div>
                 <p className="text-xs text-neutral-500">Attendance</p>
@@ -613,6 +613,7 @@ function EmployeeList({
                   <FaEye className="mr-1 inline" /> View
                 </button>
               </div>
+            </div>
             </div>
           </Card>
         </motion.div>
@@ -665,9 +666,9 @@ export function AdminPanel() {
       const empsWithStats: EmployeeWithStats[] = await Promise.all(
         emps.map(async (emp) => {
           const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
-          const presentDays = history.filter(r => r.status === 'present').length
-          const absentDays = history.filter(r => r.status === 'absent').length
-          const lateDays = history.filter(r => r.status === 'late').length
+          const presentDays = history.filter(r => r.status === 'P').length
+          const absentDays = history.filter(r => r.status === 'A').length
+          const lateDays = history.filter(r => r.status === 'L').length
           const totalDays = history.length
           const attendancePercentage = totalDays > 0 
             ? ((presentDays + lateDays) / totalDays) * 100 
