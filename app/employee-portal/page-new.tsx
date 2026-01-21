@@ -438,7 +438,27 @@ function TopHeader({
 // ============================================
 
 function DashboardOverview() {
-  const { employee, attendanceRecords, holidays, tasks } = useEmployeeAuth()
+  const { employee, getAttendanceRecords, holidays, tasks } = useEmployeeAuth()
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      setLoading(true)
+      try {
+        // Get attendance for last 30 days
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - 30)
+        const records = await getAttendanceRecords(startDate, new Date())
+        setAttendanceRecords(records)
+      } catch (error) {
+        console.error('Error fetching attendance:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAttendance()
+  }, [getAttendanceRecords])
   
   const presentDays = attendanceRecords.filter(r => r.status === 'present').length
   const absentDays = attendanceRecords.filter(r => r.status === 'absent').length
@@ -447,10 +467,18 @@ function DashboardOverview() {
     ? Math.round(((presentDays + attendanceRecords.filter(r => r.status === 'late').length) / totalDays) * 100) 
     : 0
 
-  const myTasks = tasks.filter(t => t.assignedTo === employee?.employeeId && t.status !== 'completed')
+  const myTasks = tasks.filter(t => t.assignedTo.includes(employee?.employeeId || '') && t.status !== 'completed')
   const upcomingHolidays = holidays
     .filter(h => new Date(h.date) >= new Date())
     .slice(0, 3)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <FaSpinner className="animate-spin text-4xl text-primary-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
