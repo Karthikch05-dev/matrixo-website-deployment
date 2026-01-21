@@ -939,21 +939,21 @@ export function AdminPanel() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-400">
-                {filteredAttendance.filter(r => r.status === 'present').length}
+                {filteredAttendance.filter(r => r.status === 'P').length}
               </div>
               <p className="text-sm text-neutral-400">Present</p>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-400">
-                {filteredAttendance.filter(r => r.status === 'absent').length}
+                {filteredAttendance.filter(r => r.status === 'A').length}
               </div>
               <p className="text-sm text-neutral-400">Absent</p>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-amber-400">
-                {filteredAttendance.filter(r => r.status === 'late').length}
+                {filteredAttendance.filter(r => r.status === 'L').length}
               </div>
-              <p className="text-sm text-neutral-400">Late</p>
+              <p className="text-sm text-neutral-400">Leave</p>
             </div>
           </div>
         </Card>
