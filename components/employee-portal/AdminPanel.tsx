@@ -1,0 +1,952 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  FaUsers, 
+  FaSearch, 
+  FaFilter,
+  FaEdit,
+  FaHistory,
+  FaUserCircle,
+  FaCalendarAlt,
+  FaBuilding,
+  FaIdBadge,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+  FaSave,
+  FaTimes,
+  FaChevronDown,
+  FaChartBar,
+  FaExclamationTriangle,
+  FaMapMarkerAlt,
+  FaSortAlphaDown,
+  FaSortAmountDown,
+  FaEye
+} from 'react-icons/fa'
+import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs } from './ui'
+import { toast } from 'sonner'
+import { Timestamp } from 'firebase/firestore'
+
+// ============================================
+// TYPES
+// ============================================
+
+interface EmployeeWithStats extends EmployeeProfile {
+  attendancePercentage: number
+  presentDays: number
+  absentDays: number
+  lateDays: number
+  totalDays: number
+  recentAttendance: AttendanceRecord[]
+}
+
+// ============================================
+// EMPLOYEE PROFILE MODAL
+// ============================================
+
+function EmployeeProfileModal({
+  employee,
+  onClose
+}: {
+  employee: EmployeeWithStats | null
+  onClose: () => void
+}) {
+  const { getEmployeeAttendanceHistory } = useEmployeeAuth()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (employee && activeTab === 'history') {
+      setLoading(true)
+      getEmployeeAttendanceHistory(employee.employeeId, 90)
+        .then(setAttendanceHistory)
+        .finally(() => setLoading(false))
+    }
+  }, [employee, activeTab, getEmployeeAttendanceHistory])
+
+  if (!employee) return null
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp?.toDate) return '-'
+    return timestamp.toDate().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const formatTime = (timestamp: Timestamp) => {
+    if (!timestamp?.toDate) return '-'
+    return timestamp.toDate().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Employee Profile"
+      size="xl"
+    >
+      {/* Employee Header */}
+      <div className="flex items-center gap-4 p-4 bg-neutral-800/50 rounded-xl mb-6">
+        <Avatar src={employee.profileImage} name={employee.name} size="xl" />
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-white">{employee.name}</h3>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <Badge variant="secondary">{employee.employeeId}</Badge>
+            {employee.department && <Badge>{employee.department}</Badge>}
+            <Badge variant={employee.role === 'admin' ? 'primary' : 'default'}>
+              {employee.role}
+            </Badge>
+          </div>
+          {employee.email && (
+            <p className="text-sm text-neutral-400 mt-2">{employee.email}</p>
+          )}
+        </div>
+        <div className="text-right">
+          <div className="text-3xl font-bold text-primary-400">
+            {employee.attendancePercentage.toFixed(1)}%
+          </div>
+          <p className="text-sm text-neutral-400">Attendance Rate</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        tabs={[
+          { id: 'overview', label: 'Overview' },
+          { id: 'history', label: 'Attendance History' }
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* Tab Content */}
+      <div className="mt-4">
+        {activeTab === 'overview' ? (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
+                <div className="text-2xl font-bold text-green-400">{employee.presentDays}</div>
+                <p className="text-sm text-neutral-400">Present</p>
+              </div>
+              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
+                <div className="text-2xl font-bold text-red-400">{employee.absentDays}</div>
+                <p className="text-sm text-neutral-400">Absent</p>
+              </div>
+              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
+                <div className="text-2xl font-bold text-amber-400">{employee.lateDays}</div>
+                <p className="text-sm text-neutral-400">Late</p>
+              </div>
+              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
+                <div className="text-2xl font-bold text-neutral-400">{employee.totalDays}</div>
+                <p className="text-sm text-neutral-400">Total Days</p>
+              </div>
+            </div>
+
+            {/* Recent Attendance */}
+            <div>
+              <h4 className="font-semibold text-white mb-3">Recent Attendance</h4>
+              <div className="space-y-2">
+                {employee.recentAttendance.slice(0, 5).map((record, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={
+                        record.status === 'present' ? 'success' :
+                        record.status === 'absent' ? 'danger' :
+                        record.status === 'late' ? 'warning' : 'default'
+                      }>
+                        {record.status}
+                      </Badge>
+                      <span className="text-neutral-300">{formatDate(record.date)}</span>
+                    </div>
+                    <span className="text-sm text-neutral-500">{formatTime(record.date)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="lg" />
+              </div>
+            ) : attendanceHistory.length === 0 ? (
+              <EmptyState
+                icon={<FaHistory className="text-2xl" />}
+                title="No attendance history"
+                description="No records found for this employee"
+              />
+            ) : (
+              <table className="w-full">
+                <thead className="bg-neutral-800/50 sticky top-0">
+                  <tr>
+                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Date</th>
+                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Status</th>
+                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Time</th>
+                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Location</th>
+                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Modified</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceHistory.map((record, i) => (
+                    <tr key={i} className="border-t border-neutral-700/50">
+                      <td className="p-3 text-white">{formatDate(record.date)}</td>
+                      <td className="p-3">
+                        <Badge variant={
+                          record.status === 'present' ? 'success' :
+                          record.status === 'absent' ? 'danger' :
+                          record.status === 'late' ? 'warning' : 'default'
+                        }>
+                          {record.status}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
+                      <td className="p-3">
+                        {record.locationVerified ? (
+                          <Badge variant="success" size="sm">
+                            <FaMapMarkerAlt className="mr-1" /> Verified
+                          </Badge>
+                        ) : record.latitude ? (
+                          <Badge variant="warning" size="sm">Not in range</Badge>
+                        ) : (
+                          <span className="text-neutral-500">-</span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        {record.modifiedBy ? (
+                          <span className="text-xs text-amber-400">
+                            By {record.modifiedByName || record.modifiedBy}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-500">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+}
+
+// ============================================
+// EDIT ATTENDANCE MODAL
+// ============================================
+
+function EditAttendanceModal({
+  record,
+  employee,
+  onClose,
+  onSave
+}: {
+  record: AttendanceRecord | null
+  employee: EmployeeProfile | null
+  onClose: () => void
+  onSave: () => void
+}) {
+  const { updateEmployeeAttendance, employee: currentAdmin } = useEmployeeAuth()
+  const [status, setStatus] = useState(record?.status || 'present')
+  const [reason, setReason] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  if (!record || !employee) return null
+
+  const handleSave = async () => {
+    if (!reason.trim()) {
+      toast.error('Please provide a reason for the change')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await updateEmployeeAttendance(
+        employee.employeeId,
+        record.date.toDate().toISOString().split('T')[0],
+        status as 'present' | 'absent' | 'late' | 'leave',
+        reason
+      )
+      toast.success('Attendance updated')
+      onSave()
+      onClose()
+    } catch (error) {
+      toast.error('Failed to update attendance')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp?.toDate) return '-'
+    return timestamp.toDate().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  return (
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Edit Attendance"
+      size="md"
+    >
+      <div className="space-y-4">
+        {/* Employee Info */}
+        <div className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
+          <Avatar src={employee.profileImage} name={employee.name} size="md" showBorder={false} />
+          <div>
+            <p className="font-medium text-white">{employee.name}</p>
+            <p className="text-sm text-neutral-400">{employee.employeeId}</p>
+          </div>
+        </div>
+
+        {/* Date */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-400 mb-1">Date</label>
+          <p className="text-white">{formatDate(record.date)}</p>
+        </div>
+
+        {/* Current Status */}
+        <div className="flex items-center gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-400 mb-1">Current Status</label>
+            <Badge variant={
+              record.status === 'present' ? 'success' :
+              record.status === 'absent' ? 'danger' :
+              record.status === 'late' ? 'warning' : 'default'
+            }>
+              {record.status}
+            </Badge>
+          </div>
+          <div className="text-2xl text-neutral-500">→</div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-neutral-400 mb-1">New Status</label>
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { value: 'present', label: '✅ Present' },
+                { value: 'absent', label: '❌ Absent' },
+                { value: 'late', label: '⏰ Late' },
+                { value: 'leave', label: '🏖️ Leave' }
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Reason */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-400 mb-1">
+            Reason for Change <span className="text-red-400">*</span>
+          </label>
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g., Medical leave approved, System error correction"
+          />
+          <p className="text-xs text-neutral-500 mt-1">
+            This will be recorded in the audit trail
+          </p>
+        </div>
+
+        {/* Audit Notice */}
+        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <div className="flex items-start gap-2">
+            <FaExclamationTriangle className="text-amber-400 mt-1" />
+            <div>
+              <p className="text-sm text-amber-300">
+                This change will be logged as modified by:
+              </p>
+              <p className="text-sm font-medium text-white mt-1">
+                {currentAdmin?.name} ({currentAdmin?.employeeId})
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            loading={saving}
+            icon={<FaSave />}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ============================================
+// ATTENDANCE TABLE
+// ============================================
+
+function AttendanceTable({
+  attendanceRecords,
+  employees,
+  onEditRecord,
+  onViewProfile
+}: {
+  attendanceRecords: AttendanceRecord[]
+  employees: EmployeeProfile[]
+  onEditRecord: (record: AttendanceRecord, employee: EmployeeProfile) => void
+  onViewProfile: (employee: EmployeeWithStats) => void
+}) {
+  const getEmployee = (empId: string) => employees.find(e => e.employeeId === empId)
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp?.toDate) return '-'
+    return timestamp.toDate().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const formatTime = (timestamp: Timestamp) => {
+    if (!timestamp?.toDate) return '-'
+    return timestamp.toDate().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  if (attendanceRecords.length === 0) {
+    return (
+      <EmptyState
+        icon={<FaHistory className="text-2xl" />}
+        title="No records found"
+        description="Try adjusting your filters"
+      />
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-neutral-800/50">
+          <tr>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Employee</th>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Date</th>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Time</th>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Status</th>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Location</th>
+            <th className="text-left p-3 text-sm font-medium text-neutral-400">Modified By</th>
+            <th className="text-right p-3 text-sm font-medium text-neutral-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendanceRecords.map((record, i) => {
+            const emp = getEmployee(record.employeeId)
+            if (!emp) return null
+            
+            return (
+              <motion.tr
+                key={i}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="border-t border-neutral-700/50 hover:bg-neutral-800/30"
+              >
+                <td className="p-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                    <div>
+                      <p className="font-medium text-white">{emp.name}</p>
+                      <p className="text-xs text-neutral-500">{emp.employeeId}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3 text-neutral-300">{formatDate(record.date)}</td>
+                <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
+                <td className="p-3">
+                  <Badge variant={
+                    record.status === 'present' ? 'success' :
+                    record.status === 'absent' ? 'danger' :
+                    record.status === 'late' ? 'warning' : 'default'
+                  }>
+                    {record.status}
+                  </Badge>
+                </td>
+                <td className="p-3">
+                  {record.locationVerified ? (
+                    <Badge variant="success" size="sm">
+                      <FaMapMarkerAlt className="mr-1" /> Verified
+                    </Badge>
+                  ) : record.latitude ? (
+                    <Badge variant="warning" size="sm">Out of range</Badge>
+                  ) : (
+                    <span className="text-neutral-500">-</span>
+                  )}
+                </td>
+                <td className="p-3">
+                  {record.modifiedBy ? (
+                    <div>
+                      <p className="text-sm text-amber-400">{record.modifiedByName || record.modifiedBy}</p>
+                      {record.modifyReason && (
+                        <p className="text-xs text-neutral-500 truncate max-w-32">{record.modifyReason}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-neutral-500">-</span>
+                  )}
+                </td>
+                <td className="p-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onEditRecord(record, emp)}
+                      className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </button>
+                  </div>
+                </td>
+              </motion.tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ============================================
+// EMPLOYEE LIST
+// ============================================
+
+function EmployeeList({
+  employees,
+  onViewProfile
+}: {
+  employees: EmployeeWithStats[]
+  onViewProfile: (employee: EmployeeWithStats) => void
+}) {
+  if (employees.length === 0) {
+    return (
+      <EmptyState
+        icon={<FaUsers className="text-2xl" />}
+        title="No employees found"
+        description="Try adjusting your filters"
+      />
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {employees.map((emp) => (
+        <motion.div
+          key={emp.employeeId}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card
+            hover
+            className="cursor-pointer"
+            onClick={() => onViewProfile(emp)}
+          >
+            <div className="flex items-center gap-4">
+              <Avatar src={emp.profileImage} name={emp.name} size="lg" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-white truncate">{emp.name}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge size="sm">{emp.employeeId}</Badge>
+                  {emp.department && (
+                    <Badge variant="secondary" size="sm">{emp.department}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${
+                  emp.attendancePercentage >= 90 ? 'text-green-400' :
+                  emp.attendancePercentage >= 75 ? 'text-amber-400' : 'text-red-400'
+                }`}>
+                  {emp.attendancePercentage.toFixed(0)}%
+                </div>
+                <p className="text-xs text-neutral-500">Attendance</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-neutral-700/50">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-green-400">P: {emp.presentDays}</span>
+                <span className="text-red-400">A: {emp.absentDays}</span>
+                <span className="text-amber-400">L: {emp.lateDays}</span>
+                <button className="text-primary-400 hover:text-primary-300">
+                  <FaEye className="mr-1 inline" /> View
+                </button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+// ============================================
+// MAIN ADMIN PANEL COMPONENT
+// ============================================
+
+export function AdminPanel() {
+  const { 
+    employee, 
+    getAllEmployees, 
+    getAllAttendance,
+    getEmployeeAttendanceHistory
+  } = useEmployeeAuth()
+  
+  const [activeTab, setActiveTab] = useState('attendance')
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([])
+  const [employeesWithStats, setEmployeesWithStats] = useState<EmployeeWithStats[]>([])
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterDepartment, setFilterDepartment] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
+  
+  // Modals
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithStats | null>(null)
+  const [editingRecord, setEditingRecord] = useState<{ record: AttendanceRecord, employee: EmployeeProfile } | null>(null)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [emps, attendance] = await Promise.all([
+        getAllEmployees(),
+        getAllAttendance()
+      ])
+      
+      setEmployees(emps)
+      setAttendanceRecords(attendance)
+      
+      // Calculate stats for each employee
+      const empsWithStats: EmployeeWithStats[] = await Promise.all(
+        emps.map(async (emp) => {
+          const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
+          const presentDays = history.filter(r => r.status === 'present').length
+          const absentDays = history.filter(r => r.status === 'absent').length
+          const lateDays = history.filter(r => r.status === 'late').length
+          const totalDays = history.length
+          const attendancePercentage = totalDays > 0 
+            ? ((presentDays + lateDays) / totalDays) * 100 
+            : 0
+
+          return {
+            ...emp,
+            attendancePercentage,
+            presentDays,
+            absentDays,
+            lateDays,
+            totalDays,
+            recentAttendance: history.slice(0, 10)
+          }
+        })
+      )
+      
+      setEmployeesWithStats(empsWithStats)
+    } catch (error) {
+      console.error('Failed to fetch data:', error)
+      toast.error('Failed to load data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Get unique departments
+  const departments = useMemo(() => {
+    return [...new Set(employees.map(e => e.department).filter(Boolean))]
+  }, [employees])
+
+  // Filter attendance records
+  const filteredAttendance = useMemo(() => {
+    return attendanceRecords.filter(record => {
+      // Search filter
+      if (searchQuery) {
+        const emp = employees.find(e => e.employeeId === record.employeeId)
+        const query = searchQuery.toLowerCase()
+        const matchesSearch = 
+          emp?.name.toLowerCase().includes(query) ||
+          record.employeeId.toLowerCase().includes(query)
+        if (!matchesSearch) return false
+      }
+      
+      // Department filter
+      if (filterDepartment) {
+        const emp = employees.find(e => e.employeeId === record.employeeId)
+        if (emp?.department !== filterDepartment) return false
+      }
+      
+      // Status filter
+      if (filterStatus && record.status !== filterStatus) return false
+      
+      // Date filters
+      if (filterDateFrom) {
+        const recordDate = record.date?.toDate?.()
+        if (recordDate && recordDate < new Date(filterDateFrom)) return false
+      }
+      if (filterDateTo) {
+        const recordDate = record.date?.toDate?.()
+        if (recordDate && recordDate > new Date(filterDateTo)) return false
+      }
+      
+      return true
+    })
+  }, [attendanceRecords, employees, searchQuery, filterDepartment, filterStatus, filterDateFrom, filterDateTo])
+
+  // Filter employees
+  const filteredEmployees = useMemo(() => {
+    return employeesWithStats.filter(emp => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matches = 
+          emp.name.toLowerCase().includes(query) ||
+          emp.employeeId.toLowerCase().includes(query)
+        if (!matches) return false
+      }
+      
+      if (filterDepartment && emp.department !== filterDepartment) return false
+      
+      return true
+    })
+  }, [employeesWithStats, searchQuery, filterDepartment])
+
+  const clearFilters = () => {
+    setSearchQuery('')
+    setFilterDepartment('')
+    setFilterStatus('')
+    setFilterDateFrom('')
+    setFilterDateTo('')
+  }
+
+  const hasFilters = searchQuery || filterDepartment || filterStatus || filterDateFrom || filterDateTo
+
+  if (employee?.role !== 'admin') {
+    return (
+      <EmptyState
+        icon={<FaExclamationTriangle className="text-2xl text-red-400" />}
+        title="Access Denied"
+        description="You don't have permission to access the admin panel"
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FaUsers className="text-primary-500" />
+            Admin Panel
+          </h2>
+          <p className="text-neutral-400 mt-1">
+            Manage employees and attendance records
+          </p>
+        </div>
+        
+        <Button
+          variant="secondary"
+          onClick={fetchData}
+          loading={loading}
+        >
+          Refresh Data
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        tabs={[
+          { id: 'attendance', label: 'Attendance Records' },
+          { id: 'employees', label: 'Employees' }
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* Filters */}
+      <Card padding="md">
+        <div className="flex items-center gap-2 mb-4">
+          <FaFilter className="text-neutral-400" />
+          <span className="font-medium text-white">Filters</span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Search */}
+          <div className="lg:col-span-2">
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or ID..."
+                className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+          
+          {/* Department */}
+          <Select
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+            options={[
+              { value: '', label: 'All Departments' },
+              ...departments.map(d => ({ value: d, label: d }))
+            ]}
+          />
+          
+          {/* Status (only for attendance tab) */}
+          {activeTab === 'attendance' && (
+            <Select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'present', label: '✅ Present' },
+                { value: 'absent', label: '❌ Absent' },
+                { value: 'late', label: '⏰ Late' },
+                { value: 'leave', label: '🏖️ Leave' }
+              ]}
+            />
+          )}
+
+          {/* Clear Filters */}
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              onClick={clearFilters}
+              icon={<FaTimes />}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+        
+        {/* Date Range (only for attendance tab) */}
+        {activeTab === 'attendance' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">From Date</label>
+              <input
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => setFilterDateFrom(e.target.value)}
+                className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">To Date</label>
+              <input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => setFilterDateTo(e.target.value)}
+                className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : activeTab === 'attendance' ? (
+        <Card padding="none">
+          <AttendanceTable
+            attendanceRecords={filteredAttendance}
+            employees={employees}
+            onEditRecord={(record, emp) => setEditingRecord({ record, employee: emp })}
+            onViewProfile={setSelectedEmployee}
+          />
+        </Card>
+      ) : (
+        <EmployeeList
+          employees={filteredEmployees}
+          onViewProfile={setSelectedEmployee}
+        />
+      )}
+
+      {/* Stats Summary */}
+      {activeTab === 'attendance' && !loading && (
+        <Card padding="md">
+          <div className="flex items-center gap-2 mb-4">
+            <FaChartBar className="text-neutral-400" />
+            <span className="font-medium text-white">Summary</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white">{filteredAttendance.length}</div>
+              <p className="text-sm text-neutral-400">Total Records</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {filteredAttendance.filter(r => r.status === 'present').length}
+              </div>
+              <p className="text-sm text-neutral-400">Present</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-400">
+                {filteredAttendance.filter(r => r.status === 'absent').length}
+              </div>
+              <p className="text-sm text-neutral-400">Absent</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-amber-400">
+                {filteredAttendance.filter(r => r.status === 'late').length}
+              </div>
+              <p className="text-sm text-neutral-400">Late</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Modals */}
+      <EmployeeProfileModal
+        employee={selectedEmployee}
+        onClose={() => setSelectedEmployee(null)}
+      />
+      
+      <EditAttendanceModal
+        record={editingRecord?.record || null}
+        employee={editingRecord?.employee || null}
+        onClose={() => setEditingRecord(null)}
+        onSave={fetchData}
+      />
+    </div>
+  )
+}
+
+export default AdminPanel
