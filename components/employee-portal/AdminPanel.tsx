@@ -710,7 +710,7 @@ export function AdminPanel() {
 
   // Get unique departments
   const departments = useMemo(() => {
-    return [...new Set(employees.map(e => e.department).filter(Boolean))]
+    return Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
   }, [employees])
 
   // Filter attendance records
