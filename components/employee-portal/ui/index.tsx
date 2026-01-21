@@ -202,6 +202,7 @@ interface TextareaProps {
   placeholder?: string
   value?: string
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   error?: string
   disabled?: boolean
   required?: boolean
@@ -215,6 +216,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   placeholder,
   value,
   onChange,
+  onKeyDown,
   error,
   disabled = false,
   required = false,
@@ -234,6 +236,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         ref={ref}
         value={value}
         onChange={onChange}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         disabled={disabled}
         required={required}

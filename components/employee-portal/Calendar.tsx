@@ -124,7 +124,7 @@ function AddHolidayModal({
             { value: 'optional', label: 'Optional Holiday' }
           ]}
           value={form.type}
-          onChange={(value) => setForm({ ...form, type: value })}
+          onChange={(value) => setForm({ ...form, type: value as 'public' | 'company' | 'optional' })}
         />
         <div className="flex justify-end gap-3 pt-4">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -250,7 +250,7 @@ function AddEventModal({
             { value: 'announcement', label: '📢 Announcement' }
           ]}
           value={form.type}
-          onChange={(value) => setForm({ ...form, type: value })}
+          onChange={(value) => setForm({ ...form, type: value as 'event' | 'deadline' | 'meeting' | 'announcement' })}
         />
         <div className="flex justify-end gap-3 pt-4">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -346,26 +346,28 @@ function DayDetailModal({
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-neutral-400">Events</h4>
             {day.events.map(event => (
-              <Card key={event.id} className="border-l-4" style={{ borderLeftColor: event.color || '#6366f1' }}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h5 className="font-medium text-white">{event.title}</h5>
-                    <Badge size="sm" variant="info" className="mt-1">{event.type}</Badge>
-                    {event.description && (
-                      <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
-                    )}
-                    <p className="text-neutral-500 text-xs mt-2">
-                      By {event.createdByName}
-                    </p>
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => handleDeleteEvent(event.id!)}
-                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                    >
+              <Card key={event.id} className="border-l-4">
+                <div style={{ borderLeftColor: event.color || '#6366f1' }}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h5 className="font-medium text-white">{event.title}</h5>
+                      <Badge size="sm" variant="info" className="mt-1">{event.type}</Badge>
+                      {event.description && (
+                        <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
+                      )}
+                      <p className="text-neutral-500 text-xs mt-2">
+                        By {event.createdByName}
+                      </p>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteEvent(event.id!)}
+                        className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                      >
                       <FaTrash />
                     </button>
                   )}
+                  </div>
                 </div>
               </Card>
             ))}

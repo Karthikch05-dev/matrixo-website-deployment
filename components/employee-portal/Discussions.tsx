@@ -311,7 +311,7 @@ function DiscussionPost({
     })
   }
 
-  const departments = [...new Set(employees.map(e => e.department).filter(Boolean))]
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
 
   return (
     <motion.div
@@ -506,7 +506,7 @@ export function Discussions() {
     getAllEmployees().then(setEmployees)
   }, [getAllEmployees])
 
-  const departments = [...new Set(employees.map(e => e.department).filter(Boolean))]
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
 
   const handleCreatePost = async (mentions: string[], mentionedDepartments: string[]) => {
     if (!newPostContent.trim()) return

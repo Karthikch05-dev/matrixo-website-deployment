@@ -128,7 +128,7 @@ function TaskModal({
   }
 
   // Get unique departments
-  const departments = [...new Set(employees.map(e => e.department).filter(Boolean))]
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editingTask ? 'Edit Task' : 'Create New Task'} size="lg">
@@ -159,7 +159,7 @@ function TaskModal({
               { value: 'urgent', label: '🔴 Urgent' }
             ]}
             value={form.priority}
-            onChange={(value) => setForm({ ...form, priority: value })}
+            onChange={(value) => setForm({ ...form, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
           />
 
           <Select
@@ -171,7 +171,7 @@ function TaskModal({
               { value: 'completed', label: 'Completed' }
             ]}
             value={form.status}
-            onChange={(value) => setForm({ ...form, status: value })}
+            onChange={(value) => setForm({ ...form, status: value as 'todo' | 'in-progress' | 'review' | 'completed' })}
           />
         </div>
 
