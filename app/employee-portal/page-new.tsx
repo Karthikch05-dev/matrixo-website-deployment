@@ -542,23 +542,28 @@ function DashboardOverview() {
             <p className="text-neutral-500 text-center py-4">No pending tasks</p>
           ) : (
             <div className="space-y-3">
-              {myTasks.slice(0, 4).map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl">
-                  <div>
-                    <p className="text-white font-medium">{task.title}</p>
-                    <p className="text-xs text-neutral-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+              {myTasks.slice(0, 4).map((task) => {
+                const dueDateStr = task.dueDate 
+                  ? new Date(task.dueDate).toLocaleDateString() 
+                  : 'No due date'
+                return (
+                  <div key={task.id} className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl">
+                    <div>
+                      <p className="text-white font-medium">{task.title}</p>
+                      <p className="text-xs text-neutral-500">Due: {dueDateStr}</p>
+                    </div>
+                    <span className={`
+                      px-2 py-1 text-xs rounded-full font-medium
+                      ${task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
+                        task.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
+                        task.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-neutral-500/20 text-neutral-400'}
+                    `}>
+                      {task.priority}
+                    </span>
                   </div>
-                  <span className={`
-                    px-2 py-1 text-xs rounded-full font-medium
-                    ${task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
-                      task.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
-                      task.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-neutral-500/20 text-neutral-400'}
-                  `}>
-                    {task.priority}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
