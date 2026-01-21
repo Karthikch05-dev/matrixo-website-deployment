@@ -175,6 +175,25 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       toast.error('Please select your attendance status')
       return
     }
+
+    // Check if location is enabled - MANDATORY for Present and On Duty
+    if ((selectedStatus === 'P' || selectedStatus === 'O') && locationStatus !== 'granted') {
+      toast.error('Location services are mandatory for attendance marking. Please enable location access.')
+      // Try to request permission
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            setLocationStatus('granted')
+            toast.success('Location enabled! Please try marking attendance again.')
+          },
+          () => {
+            setLocationStatus('denied')
+            toast.error('Location permission denied. Please enable it in your browser settings.')
+          }
+        )
+      }
+      return
+    }
     
     // Validate leave dates
     if (selectedStatus === 'L') {
@@ -261,9 +280,28 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     { status: 'O' as const, ...statusConfig.O }
   ]
 
+  // Request location permission
+  const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setLocationStatus('granted')
+          toast.success('Location enabled successfully!')
+        },
+        (error) => {
+          setLocationStatus('denied')
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error('Location permission denied. Please enable it in browser settings.')
+          }
+        },
+        { enableHighAccuracy: true }
+      )
+    }
+  }
+
   if (loading) {
     return (
-      <Card padding="lg">
+      <Card padding="lg" glow>
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
         </div>
@@ -274,7 +312,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   // If today is a holiday, show holiday notice
   if (isTodayHoliday) {
     return (
-      <Card padding="lg">
+      <Card padding="lg" glow>
         <div className="text-center py-8">
           <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
             <FaPlane className="text-4xl text-purple-400" />
@@ -295,7 +333,31 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   }
 
   return (
-    <Card padding="lg">
+    <Card padding="lg" glow>
+      {/* Location Required Banner */}
+      {locationStatus !== 'granted' && !todayAttendance && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <FaLocationArrow className="text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-400">Location Required</h3>
+              <p className="text-sm text-neutral-400 mt-1">
+                Location services are mandatory for marking attendance. Please enable location access to continue.
+              </p>
+              <button
+                onClick={requestLocationPermission}
+                className="mt-3 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-lg transition-all flex items-center gap-2"
+              >
+                <FaLocationArrow />
+                Enable Location
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
@@ -307,21 +369,27 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
         </div>
         <div className="flex items-center gap-3">
           {/* Location Status Indicator */}
-          <div className={`
-            flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm
-            ${locationStatus === 'granted' ? 'bg-emerald-500/20 text-emerald-400' : 
-              locationStatus === 'denied' ? 'bg-red-500/20 text-red-400' : 
-              'bg-neutral-800 text-neutral-400'}
-          `}>
+          <button
+            onClick={locationStatus !== 'granted' ? requestLocationPermission : undefined}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
+              ${locationStatus === 'granted' 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                : locationStatus === 'denied' 
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 cursor-pointer' 
+                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 cursor-pointer'
+              }
+            `}
+          >
             <FaLocationArrow />
             <span>
-              {locationStatus === 'granted' ? 'Location On' : 
-               locationStatus === 'denied' ? 'Location Off' : 
-               'Location Pending'}
+              {locationStatus === 'granted' ? '✓ Location On' : 
+               locationStatus === 'denied' ? 'Enable Location' : 
+               'Enable Location'}
             </span>
-          </div>
+          </button>
           
-          <div className="flex items-center gap-2 text-neutral-300 bg-neutral-800 px-4 py-2 rounded-lg">
+          <div className="flex items-center gap-2 text-white bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-xl">
             <FaClock className="text-primary-400" />
             <span className="text-lg font-mono tabular-nums">{formattedTime}</span>
           </div>

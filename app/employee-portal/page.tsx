@@ -238,57 +238,68 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50">
+      {/* Gradient accent line */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
+      
+      <div className="w-full px-6">
+        <div className="flex items-center justify-between h-16 gap-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logos/logo-dark.png" alt="matriXO" className="h-8" />
-            <span className="text-white font-bold hidden sm:block">Employee Portal</span>
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <img src="/logos/logo-dark.png" alt="matriXO" className="h-9 group-hover:scale-105 transition-transform" />
+            <div className="hidden sm:flex flex-col">
+              <span className="text-white font-bold text-sm leading-tight">Employee</span>
+              <span className="text-primary-400 text-xs font-medium leading-tight">Portal</span>
+            </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navigationItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-sm
-                  ${activeTab === item.id 
-                    ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30' 
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-                  }
-                `}
-              >
-                <item.icon className="text-sm" />
-                {item.label}
-              </button>
-            ))}
-            
-            {isAdmin && (
-              <button
-                onClick={() => setActiveTab('admin')}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-sm
-                  ${activeTab === 'admin' 
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                    : 'text-amber-400/70 hover:text-amber-400 hover:bg-neutral-800'
-                  }
-                `}
-              >
-                <FaUserShield className="text-sm" />
-                Admin Panel
-              </button>
-            )}
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden xl:flex items-center justify-center flex-1">
+            <div className="flex items-center gap-2">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`
+                    flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
+                    ${activeTab === item.id 
+                      ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30' 
+                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  <item.icon className="text-sm shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+              
+              {isAdmin && (
+                <>
+                  <div className="w-px h-6 bg-white/10 mx-2" />
+                  <button
+                    onClick={() => setActiveTab('admin')}
+                    className={`
+                      flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
+                      ${activeTab === 'admin' 
+                        ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30' 
+                        : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
+                      }
+                    `}
+                  >
+                    <FaUserShield className="text-sm shrink-0" />
+                    <span>Admin</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             {/* Time Display */}
-            <div className="hidden md:flex items-center gap-2 text-neutral-400 text-sm">
-              <FaClock />
-              <span className="font-mono tabular-nums">
+            <div className="hidden lg:flex items-center gap-2.5 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+              <FaClock className="text-primary-400 text-sm" />
+              <span className="font-mono tabular-nums text-white text-sm">
                 {currentTime.toLocaleTimeString('en-US', { 
                   hour: '2-digit', 
                   minute: '2-digit',
@@ -301,16 +312,16 @@ function TopNavbar({
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
               >
                 <img
                   src={getProfileImageUrl(employee?.profileImage, employee?.name)}
                   alt={employee?.name}
-                  className="w-8 h-8 rounded-full object-cover border-2 border-primary-500"
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
                   onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
                 />
-                <span className="text-white font-medium hidden md:block">{employee?.name?.split(' ')[0]}</span>
-                <FaChevronDown className="text-neutral-400 text-xs hidden md:block" />
+                <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
+                <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* User Dropdown */}
@@ -319,32 +330,33 @@ function TopNavbar({
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 top-full mt-2 w-64 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
-                      <div className="p-4 border-b border-neutral-800">
+                      <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent">
                         <div className="flex items-center gap-3">
                           <img
                             src={getProfileImageUrl(employee?.profileImage, employee?.name)}
                             alt={employee?.name}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-primary-500"
+                            className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary-500/50"
                           />
-                          <div>
-                            <p className="text-white font-semibold">{employee?.name}</p>
-                            <p className="text-xs text-neutral-500">{employee?.department}</p>
-                            <p className="text-xs text-neutral-500">{employee?.employeeId}</p>
+                          <div className="min-w-0">
+                            <p className="text-white font-semibold truncate">{employee?.name}</p>
+                            <p className="text-xs text-primary-400">{employee?.department}</p>
+                            <p className="text-xs text-neutral-500 font-mono">{employee?.employeeId}</p>
                           </div>
                         </div>
                       </div>
                       <div className="p-2">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                         >
                           <FaSignOutAlt />
-                          Sign Out
+                          <span>Sign Out</span>
                         </button>
                       </div>
                     </motion.div>
@@ -356,9 +368,9 @@ function TopNavbar({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-neutral-400 hover:text-white"
+              className="xl:hidden p-2.5 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
             >
-              {mobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+              {mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
             </button>
           </div>
         </div>
@@ -370,7 +382,7 @@ function TopNavbar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-t border-neutral-800 py-4"
+              className="xl:hidden border-t border-white/5 py-4"
             >
               <div className="grid grid-cols-2 gap-2">
                 {navigationItems.map((item) => (
@@ -378,10 +390,10 @@ function TopNavbar({
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
                     className={`
-                      flex items-center gap-2 px-4 py-3 rounded-lg transition-all font-medium text-sm
+                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
                       ${activeTab === item.id 
-                        ? 'bg-primary-500/20 text-primary-400' 
-                        : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                        ? 'bg-primary-500/20 text-primary-400 border border-primary-500/20' 
+                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent'
                       }
                     `}
                   >
@@ -394,10 +406,10 @@ function TopNavbar({
                   <button
                     onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false) }}
                     className={`
-                      flex items-center gap-2 px-4 py-3 rounded-lg transition-all font-medium text-sm col-span-2
+                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm col-span-2
                       ${activeTab === 'admin' 
-                        ? 'bg-amber-500/20 text-amber-400' 
-                        : 'text-amber-400/70 hover:text-amber-400 hover:bg-neutral-800'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' 
+                        : 'text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent'
                       }
                     `}
                   >
@@ -608,7 +620,11 @@ function HistoryTab() {
         const startDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1)
         const endDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0)
         const data = await getAttendanceRecords(startDate, endDate)
-        setRecords(data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()))
+        setRecords(data.sort((a, b) => {
+          const aTime = b.timestamp?.toDate?.() || new Date(b.timestamp as any)
+          const bTime = a.timestamp?.toDate?.() || new Date(a.timestamp as any)
+          return aTime.getTime() - bTime.getTime()
+        }))
       } catch (error) {
         console.error('Error fetching records:', error)
       } finally {

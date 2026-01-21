@@ -200,121 +200,65 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is admin
-    function isAdmin() {
-      return request.auth != null && 
-             get(/databases/$(database)/documents/Employees/$(request.auth.uid)).data.role == 'admin';
-    }
-    
     // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
-    }
-    
-    // Helper function to check if user is the owner
-    function isOwner(employeeId) {
-      return request.auth != null && request.auth.uid == employeeId;
     }
     
     // ============================================
     // EMPLOYEES COLLECTION
     // ============================================
     match /Employees/{employeeId} {
-      // Anyone authenticated can read all employees (for mentions, assignments)
       allow read: if isAuthenticated();
-      
-      // Only admins can create/update/delete employees
-      allow create, update, delete: if isAdmin();
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // ATTENDANCE COLLECTION
     // ============================================
     match /attendance/{attendanceId} {
-      // Users can read their own attendance, admins can read all
-      allow read: if isAuthenticated() && 
-                     (isOwner(resource.data.employeeId) || isAdmin());
-      
-      // Users can create their own attendance records
-      allow create: if isAuthenticated() && 
-                       isOwner(request.resource.data.employeeId);
-      
-      // Only admins can update/delete attendance (for corrections)
-      allow update, delete: if isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // HOLIDAYS COLLECTION
     // ============================================
     match /holidays/{holidayId} {
-      // Anyone authenticated can read holidays
       allow read: if isAuthenticated();
-      
-      // Only admins can create/update/delete holidays
-      allow create, update, delete: if isAdmin();
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // CALENDAR EVENTS COLLECTION
     // ============================================
     match /calendarEvents/{eventId} {
-      // Anyone authenticated can read events
       allow read: if isAuthenticated();
-      
-      // Only admins can create/update/delete events
-      allow create, update, delete: if isAdmin();
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // TASKS COLLECTION
     // ============================================
     match /tasks/{taskId} {
-      // Anyone authenticated can read tasks
       allow read: if isAuthenticated();
-      
-      // Anyone authenticated can create tasks
-      allow create: if isAuthenticated();
-      
-      // Task creator or assignee can update, admins can update all
-      allow update: if isAuthenticated() && 
-                       (isOwner(resource.data.assignedBy) || 
-                        isOwner(resource.data.assignedTo) || 
-                        isAdmin());
-      
-      // Only task creator or admins can delete
-      allow delete: if isAuthenticated() && 
-                       (isOwner(resource.data.assignedBy) || isAdmin());
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // DISCUSSIONS COLLECTION
     // ============================================
     match /discussions/{discussionId} {
-      // Anyone authenticated can read discussions
       allow read: if isAuthenticated();
-      
-      // Anyone authenticated can create discussions
-      allow create: if isAuthenticated();
-      
-      // Author can update their own, admins can update all (for pinning)
-      allow update: if isAuthenticated() && 
-                       (isOwner(resource.data.authorId) || isAdmin());
-      
-      // Author or admins can delete
-      allow delete: if isAuthenticated() && 
-                       (isOwner(resource.data.authorId) || isAdmin());
+      allow write: if isAuthenticated();
     }
     
     // ============================================
     // ACTIVITY LOGS COLLECTION
     // ============================================
     match /activityLogs/{logId} {
-      // Only admins can read activity logs
-      allow read: if isAdmin();
-      
-      // Only system/admins can create logs (no updates/deletes)
-      allow create: if isAdmin();
-      allow update, delete: if false;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }

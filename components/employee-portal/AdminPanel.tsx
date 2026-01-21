@@ -39,6 +39,7 @@ interface EmployeeWithStats extends EmployeeProfile {
   presentDays: number
   absentDays: number
   lateDays: number
+  onDutyDays: number
   totalDays: number
   recentAttendance: AttendanceRecord[]
 }
@@ -58,15 +59,42 @@ function EmployeeProfileModal({
   const [activeTab, setActiveTab] = useState('overview')
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState({
+    presentDays: 0,
+    absentDays: 0,
+    lateDays: 0,
+    onDutyDays: 0,
+    totalDays: 0,
+    attendancePercentage: 0
+  })
 
+  // Load attendance history when modal opens
   useEffect(() => {
-    if (employee && activeTab === 'history') {
+    if (employee) {
       setLoading(true)
       getEmployeeAttendanceHistory(employee.employeeId, 90)
-        .then(setAttendanceHistory)
+        .then((history) => {
+          setAttendanceHistory(history)
+          // Calculate stats from history
+          const present = history.filter(r => r.status === 'P').length
+          const absent = history.filter(r => r.status === 'A').length
+          const leave = history.filter(r => r.status === 'L').length
+          const onDuty = history.filter(r => r.status === 'O').length
+          const total = history.length
+          const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
+          
+          setStats({
+            presentDays: present,
+            absentDays: absent,
+            lateDays: leave,
+            onDutyDays: onDuty,
+            totalDays: total,
+            attendancePercentage: percentage
+          })
+        })
         .finally(() => setLoading(false))
     }
-  }, [employee, activeTab, getEmployeeAttendanceHistory])
+  }, [employee, getEmployeeAttendanceHistory])
 
   if (!employee) return null
 
@@ -95,26 +123,37 @@ function EmployeeProfileModal({
       size="xl"
     >
       {/* Employee Header */}
-      <div className="flex items-center gap-4 p-4 bg-neutral-800/50 rounded-xl mb-6">
-        <Avatar src={employee.profileImage} name={employee.name} size="xl" />
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-white">{employee.name}</h3>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <Badge>{employee.employeeId}</Badge>
-            {employee.department && <Badge>{employee.department}</Badge>}
-            <Badge variant={employee.role === 'admin' ? 'primary' : 'default'}>
-              {employee.role}
+      <div className="flex items-center gap-5 p-5 bg-gradient-to-r from-neutral-800/80 to-neutral-900/80 backdrop-blur-xl rounded-2xl mb-6 border border-white/10">
+        <div className="relative">
+          {/* Gradient ring around avatar */}
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full opacity-40"></div>
+          <Avatar src={employee.profileImage} name={employee.name} size="xl" />
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-neutral-900" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-2xl font-bold text-white truncate">{employee.name}</h3>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <Badge variant="primary">{employee.employeeId}</Badge>
+            {employee.department && <Badge variant="info">{employee.department}</Badge>}
+            <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
+              {employee.role === 'admin' ? '👑 Admin' : employee.role}
             </Badge>
           </div>
           {employee.email && (
-            <p className="text-sm text-neutral-400 mt-2">{employee.email}</p>
+            <p className="text-sm text-neutral-400 mt-2 truncate">{employee.email}</p>
           )}
         </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-primary-400">
-            {employee.attendancePercentage.toFixed(1)}%
-          </div>
-          <p className="text-sm text-neutral-400">Attendance Rate</p>
+        <div className="text-right bg-white/5 p-4 rounded-xl border border-white/10">
+          {loading ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-cyan-400 bg-clip-text text-transparent">
+                {stats.attendancePercentage.toFixed(1)}%
+              </div>
+              <p className="text-xs text-neutral-400 mt-1">Attendance Rate</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -122,7 +161,7 @@ function EmployeeProfileModal({
       <Tabs
         tabs={[
           { id: 'overview', label: 'Overview' },
-          { id: 'history', label: 'Attendance History' }
+          { id: 'history', label: `Attendance History (${attendanceHistory.length})` }
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -130,52 +169,64 @@ function EmployeeProfileModal({
 
       {/* Tab Content */}
       <div className="mt-4">
-        {activeTab === 'overview' ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Spinner size="lg" />
+          </div>
+        ) : activeTab === 'overview' ? (
           <div className="space-y-6">
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
-                <div className="text-2xl font-bold text-green-400">{employee.presentDays}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              <div className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-green-400">{stats.presentDays}</div>
                 <p className="text-sm text-neutral-400">Present</p>
               </div>
-              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
-                <div className="text-2xl font-bold text-red-400">{employee.absentDays}</div>
+              <div className="p-4 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-red-400">{stats.absentDays}</div>
                 <p className="text-sm text-neutral-400">Absent</p>
               </div>
-              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
-                <div className="text-2xl font-bold text-amber-400">{employee.lateDays}</div>
-                <p className="text-sm text-neutral-400">Late</p>
+              <div className="p-4 bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-amber-400">{stats.lateDays}</div>
+                <p className="text-sm text-neutral-400">Leave</p>
               </div>
-              <div className="p-4 bg-neutral-800/50 rounded-xl text-center">
-                <div className="text-2xl font-bold text-neutral-400">{employee.totalDays}</div>
-                <p className="text-sm text-neutral-400">Total Days</p>
+              <div className="p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-blue-400">{stats.onDutyDays}</div>
+                <p className="text-sm text-neutral-400">On Duty</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-neutral-500/20 to-neutral-600/10 border border-neutral-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-neutral-300">{stats.totalDays}</div>
+                <p className="text-sm text-neutral-400">Total</p>
               </div>
             </div>
 
-            {/* Recent Attendance */}
+            {/* Recent Attendance (Last 10) */}
             <div>
-              <h4 className="font-semibold text-white mb-3">Recent Attendance</h4>
-              <div className="space-y-2">
-                {employee.recentAttendance.slice(0, 5).map((record, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={
-                        record.status === 'P' ? 'success' :
-                        record.status === 'A' ? 'error' :
-                        record.status === 'L' ? 'warning' : 'default'
-                      }>
-                        {record.status === 'P' ? 'Present' :
-                         record.status === 'A' ? 'Absent' :
-                         record.status === 'L' ? 'Leave' :
-                         record.status === 'O' ? 'On Duty' :
-                         record.status === 'H' ? 'Holiday' : record.status}
-                      </Badge>
-                      <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
+              <h4 className="font-semibold text-white mb-3">Recent Attendance (Last 10)</h4>
+              {attendanceHistory.length === 0 ? (
+                <p className="text-neutral-500 text-center py-4">No attendance records found</p>
+              ) : (
+                <div className="space-y-2">
+                  {attendanceHistory.slice(0, 10).map((record, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={
+                          record.status === 'P' ? 'success' :
+                          record.status === 'A' ? 'error' :
+                          record.status === 'L' ? 'warning' : 'default'
+                        }>
+                          {record.status === 'P' ? 'Present' :
+                           record.status === 'A' ? 'Absent' :
+                           record.status === 'L' ? 'Leave' :
+                           record.status === 'O' ? 'On Duty' :
+                           record.status === 'H' ? 'Holiday' : record.status}
+                        </Badge>
+                        <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
+                      </div>
+                      <span className="text-sm text-neutral-500">{formatTime(record.timestamp)}</span>
                     </div>
-                    <span className="text-sm text-neutral-500">{formatTime(record.timestamp)}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -246,6 +297,13 @@ function EmployeeProfileModal({
             )}
           </div>
         )}
+      </div>
+      
+      {/* Close Button at bottom */}
+      <div className="flex justify-end mt-6 pt-4 border-t border-white/10">
+        <Button variant="secondary" onClick={onClose} icon={<FaTimes />}>
+          Close (ESC)
+        </Button>
       </div>
     </Modal>
   )
@@ -418,15 +476,18 @@ function EditAttendanceModal({
 function AttendanceTable({
   attendanceRecords,
   employees,
+  employeesWithStats,
   onEditRecord,
   onViewProfile
 }: {
   attendanceRecords: AttendanceRecord[]
   employees: EmployeeProfile[]
+  employeesWithStats: EmployeeWithStats[]
   onEditRecord: (record: AttendanceRecord, employee: EmployeeProfile) => void
   onViewProfile: (employee: EmployeeWithStats) => void
 }) {
   const getEmployee = (empId: string) => employees.find(e => e.employeeId === empId)
+  const getEmployeeWithStats = (empId: string) => employeesWithStats.find(e => e.employeeId === empId)
 
   const formatDate = (timestamp: Timestamp) => {
     if (!timestamp?.toDate) return '-'
@@ -470,25 +531,34 @@ function AttendanceTable({
           </tr>
         </thead>
         <tbody>
-          {attendanceRecords.map((record, i) => {
+          {attendanceRecords.map((record) => {
             const emp = getEmployee(record.employeeId)
             if (!emp) return null
             
             return (
               <motion.tr
-                key={i}
+                key={record.id || `${record.employeeId}_${record.date}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="border-t border-neutral-700/50 hover:bg-neutral-800/30"
+                className="border-t border-white/5 hover:bg-white/5 transition-colors"
               >
                 <td className="p-3">
-                  <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      // Get employee with pre-computed stats
+                      const empWithStats = getEmployeeWithStats(emp.employeeId)
+                      if (empWithStats) {
+                        onViewProfile(empWithStats)
+                      }
+                    }}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left"
+                  >
                     <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
                     <div>
-                      <p className="font-medium text-white">{emp.name}</p>
+                      <p className="font-medium text-white hover:text-primary-400 transition-colors">{emp.name}</p>
                       <p className="text-xs text-neutral-500">{emp.employeeId}</p>
                     </div>
-                  </div>
+                  </button>
                 </td>
                 <td className="p-3 text-neutral-300">{formatDate(record.timestamp)}</td>
                 <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
@@ -529,11 +599,23 @@ function AttendanceTable({
                   )}
                 </td>
                 <td className="p-3">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => {
+                        const empWithStats = getEmployeeWithStats(emp.employeeId)
+                        if (empWithStats) {
+                          onViewProfile(empWithStats)
+                        }
+                      }}
+                      className="p-2 text-neutral-400 hover:text-primary-400 hover:bg-primary-500/10 rounded-lg transition-all"
+                      title="View Profile"
+                    >
+                      <FaEye />
+                    </button>
                     <button
                       onClick={() => onEditRecord(record, emp)}
-                      className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded-lg transition-colors"
-                      title="Edit"
+                      className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                      title="Edit Attendance"
                     >
                       <FaEdit />
                     </button>
@@ -584,6 +666,10 @@ function EmployeeList({
             <div onClick={() => onViewProfile(emp)}>
               <div className="flex items-center gap-4">
                 <Avatar src={emp.profileImage} name={emp.name} size="lg" />
+                  {/* Small matriXO badge */}
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-neutral-900 rounded-full flex items-center justify-center border border-primary-500/50">
+                    <span className="text-[8px] font-bold text-primary-400">M</span>
+                  </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-white truncate">{emp.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -609,6 +695,7 @@ function EmployeeList({
                 <span className="text-green-400">P: {emp.presentDays}</span>
                 <span className="text-red-400">A: {emp.absentDays}</span>
                 <span className="text-amber-400">L: {emp.lateDays}</span>
+                <span className="text-blue-400">O: {emp.onDutyDays}</span>
                 <button className="text-primary-400 hover:text-primary-300">
                   <FaEye className="mr-1 inline" /> View
                 </button>
@@ -634,7 +721,7 @@ export function AdminPanel() {
     getEmployeeAttendanceHistory
   } = useEmployeeAuth()
   
-  const [activeTab, setActiveTab] = useState('attendance')
+  const [activeTab, setActiveTab] = useState('employees')
   const [employees, setEmployees] = useState<EmployeeProfile[]>([])
   const [employeesWithStats, setEmployeesWithStats] = useState<EmployeeWithStats[]>([])
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
@@ -667,19 +754,49 @@ export function AdminPanel() {
         )
       ])
       
-      setEmployees(emps)
-      setAttendanceRecords(attendance)
+      // Deduplicate employees by employeeId
+      const uniqueEmps = emps.filter((emp, index, self) => 
+        index === self.findIndex(e => e.employeeId === emp.employeeId)
+      )
+      
+      // Deduplicate attendance records - use employeeId + date as unique key
+      // Keep only the most recent record for each employee per day
+      const attendanceMap = new Map<string, AttendanceRecord>()
+      attendance.forEach((record) => {
+        // Create unique key from employeeId + date
+        const dateStr = record.date || (record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0]) || ''
+        const key = `${record.employeeId}_${dateStr}`
+        
+        // If no existing record for this key, or this record is newer, use it
+        const existing = attendanceMap.get(key)
+        if (!existing) {
+          attendanceMap.set(key, record)
+        } else {
+          // Keep the one with more recent timestamp
+          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
+          const currentTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+          if (currentTime > existingTime) {
+            attendanceMap.set(key, record)
+          }
+        }
+      })
+      const uniqueAttendance = Array.from(attendanceMap.values())
+      
+      setEmployees(uniqueEmps)
+      setAttendanceRecords(uniqueAttendance)
       
       // Calculate stats for each employee
       const empsWithStats: EmployeeWithStats[] = await Promise.all(
-        emps.map(async (emp) => {
+        uniqueEmps.map(async (emp) => {
           const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
           const presentDays = history.filter(r => r.status === 'P').length
           const absentDays = history.filter(r => r.status === 'A').length
           const lateDays = history.filter(r => r.status === 'L').length
+          const onDutyDays = history.filter(r => r.status === 'O').length
           const totalDays = history.length
+          // Match profile modal formula: (present + onDuty) / total
           const attendancePercentage = totalDays > 0 
-            ? ((presentDays + lateDays) / totalDays) * 100 
+            ? ((presentDays + onDutyDays) / totalDays) * 100 
             : 0
 
           return {
@@ -688,6 +805,7 @@ export function AdminPanel() {
             presentDays,
             absentDays,
             lateDays,
+            onDutyDays,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
@@ -812,8 +930,8 @@ export function AdminPanel() {
       {/* Tabs */}
       <Tabs
         tabs={[
-          { id: 'attendance', label: 'Attendance Records' },
-          { id: 'employees', label: 'Employees' }
+          { id: 'employees', label: 'All Employees' },
+          { id: 'attendance', label: 'Recent Activity' }
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -914,6 +1032,7 @@ export function AdminPanel() {
           <AttendanceTable
             attendanceRecords={filteredAttendance}
             employees={employees}
+            employeesWithStats={employeesWithStats}
             onEditRecord={(record, emp) => setEditingRecord({ record, employee: emp })}
             onViewProfile={setSelectedEmployee}
           />

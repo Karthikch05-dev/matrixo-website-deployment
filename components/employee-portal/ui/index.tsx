@@ -451,6 +451,17 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
     xl: 'max-w-4xl',
   }
 
+  // Handle ESC key press
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [isOpen, onClose])
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -465,14 +476,15 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
+        <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
+          {/* Backdrop with strong blur - covers entire viewport */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="fixed top-0 left-0 right-0 bottom-0 bg-black/90 backdrop-blur-2xl"
+            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
           />
           
           {/* Modal content */}
@@ -481,7 +493,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${sizes[size]} bg-neutral-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-black/50 ${className}`}
+            className={`relative w-full ${sizes[size]} bg-neutral-900/95 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/10 ${className}`}
           >
             {/* Gradient accent */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent pointer-events-none" />
