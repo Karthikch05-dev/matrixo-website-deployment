@@ -630,7 +630,7 @@ export function AdminPanel() {
   const { 
     employee, 
     getAllEmployees, 
-    getAllAttendance,
+    getAllEmployeesAttendance,
     getEmployeeAttendanceHistory
   } = useEmployeeAuth()
   
@@ -654,9 +654,17 @@ export function AdminPanel() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
+      // Get last 90 days of attendance
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - 90)
+      
       const [emps, attendance] = await Promise.all([
         getAllEmployees(),
-        getAllAttendance()
+        getAllEmployeesAttendance(
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0]
+        )
       ])
       
       setEmployees(emps)
@@ -693,7 +701,7 @@ export function AdminPanel() {
     } finally {
       setLoading(false)
     }
-  }, [getAllEmployees, getAllAttendance, getEmployeeAttendanceHistory])
+  }, [getAllEmployees, getAllEmployeesAttendance, getEmployeeAttendanceHistory])
 
   // Fetch data on mount
   useEffect(() => {
