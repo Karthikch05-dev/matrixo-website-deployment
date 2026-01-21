@@ -160,11 +160,15 @@ function EmployeeProfileModal({
                   <div key={i} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-lg">
                     <div className="flex items-center gap-3">
                       <Badge variant={
-                        record.status === 'present' ? 'success' :
-                        record.status === 'absent' ? 'error' :
-                        record.status === 'late' ? 'warning' : 'default'
+                        record.status === 'P' ? 'success' :
+                        record.status === 'A' ? 'error' :
+                        record.status === 'L' ? 'warning' : 'default'
                       }>
-                        {record.status}
+                        {record.status === 'P' ? 'Present' :
+                         record.status === 'A' ? 'Absent' :
+                         record.status === 'L' ? 'Leave' :
+                         record.status === 'O' ? 'On Duty' :
+                         record.status === 'H' ? 'Holiday' : record.status}
                       </Badge>
                       <span className="text-neutral-300">{formatDate(record.date)}</span>
                     </div>
@@ -203,11 +207,15 @@ function EmployeeProfileModal({
                       <td className="p-3 text-white">{formatDate(record.date)}</td>
                       <td className="p-3">
                         <Badge variant={
-                          record.status === 'present' ? 'success' :
-                          record.status === 'absent' ? 'error' :
-                          record.status === 'late' ? 'warning' : 'default'
+                          record.status === 'P' ? 'success' :
+                          record.status === 'A' ? 'error' :
+                          record.status === 'L' ? 'warning' : 'default'
                         }>
-                          {record.status}
+                          {record.status === 'P' ? 'Present' :
+                           record.status === 'A' ? 'Absent' :
+                           record.status === 'L' ? 'Leave' :
+                           record.status === 'O' ? 'On Duty' :
+                           record.status === 'H' ? 'Holiday' : record.status}
                         </Badge>
                       </td>
                       <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
@@ -327,11 +335,15 @@ function EditAttendanceModal({
           <div>
             <label className="block text-sm font-medium text-neutral-400 mb-1">Current Status</label>
             <Badge variant={
-              record.status === 'present' ? 'success' :
-              record.status === 'absent' ? 'error' :
-              record.status === 'late' ? 'warning' : 'default'
+              record.status === 'P' ? 'success' :
+              record.status === 'A' ? 'error' :
+              record.status === 'L' ? 'warning' : 'default'
             }>
-              {record.status}
+              {record.status === 'P' ? 'Present' :
+               record.status === 'A' ? 'Absent' :
+               record.status === 'L' ? 'Leave' :
+               record.status === 'O' ? 'On Duty' :
+               record.status === 'H' ? 'Holiday' : record.status}
             </Badge>
           </div>
           <div className="text-2xl text-neutral-500">→</div>
@@ -341,10 +353,11 @@ function EditAttendanceModal({
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               options={[
-                { value: 'present', label: '✅ Present' },
-                { value: 'absent', label: '❌ Absent' },
-                { value: 'late', label: '⏰ Late' },
-                { value: 'leave', label: '🏖️ Leave' }
+                { value: 'P', label: '✅ Present' },
+                { value: 'A', label: '❌ Absent' },
+                { value: 'L', label: '🏖️ Leave' },
+                { value: 'O', label: '💼 On Duty' },
+                { value: 'H', label: '🎉 Holiday' }
               ]}
             />
           </div>
@@ -482,11 +495,15 @@ function AttendanceTable({
                 <td className="p-3 text-neutral-400">{formatTime(record.date)}</td>
                 <td className="p-3">
                   <Badge variant={
-                    record.status === 'present' ? 'success' :
-                    record.status === 'absent' ? 'error' :
-                    record.status === 'late' ? 'warning' : 'default'
+                    record.status === 'P' ? 'success' :
+                    record.status === 'A' ? 'error' :
+                    record.status === 'L' ? 'warning' : 'default'
                   }>
-                    {record.status}
+                    {record.status === 'P' ? 'Present' :
+                     record.status === 'A' ? 'Absent' :
+                     record.status === 'L' ? 'Leave' :
+                     record.status === 'O' ? 'On Duty' :
+                     record.status === 'H' ? 'Holiday' : record.status}
                   </Badge>
                 </td>
                 <td className="p-3">
@@ -504,8 +521,8 @@ function AttendanceTable({
                   {record.modifiedBy ? (
                     <div>
                       <p className="text-sm text-amber-400">{record.modifiedByName || record.modifiedBy}</p>
-                      {record.modifyReason && (
-                        <p className="text-xs text-neutral-500 truncate max-w-32">{record.modifyReason}</p>
+                      {record.modificationReason && (
+                        <p className="text-xs text-neutral-500 truncate max-w-32">{record.modificationReason}</p>
                       )}
                     </div>
                   ) : (
@@ -573,7 +590,7 @@ function EmployeeList({
                 <div className="flex items-center gap-2 mt-1">
                   <Badge size="sm">{emp.employeeId}</Badge>
                   {emp.department && (
-                    <Badge variant="secondary" size="sm">{emp.department}</Badge>
+                    <Badge variant="info" size="sm">{emp.department}</Badge>
                   )}
                 </div>
               </div>
