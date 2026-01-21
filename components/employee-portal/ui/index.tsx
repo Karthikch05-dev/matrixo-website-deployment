@@ -43,7 +43,7 @@ export const colors = {
 }
 
 // ============================================
-// BUTTON COMPONENT
+// BUTTON COMPONENT (Glassmorphism)
 // ============================================
 interface ButtonProps {
   children: ReactNode
@@ -72,14 +72,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   type = 'button',
   className = '',
 }, ref) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-900'
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-900 backdrop-blur-sm'
   
   const variants = {
-    primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500 shadow-sm',
-    secondary: 'bg-neutral-700 hover:bg-neutral-600 text-white focus:ring-neutral-500 border border-neutral-600',
-    ghost: 'bg-transparent hover:bg-neutral-800 text-neutral-300 hover:text-white focus:ring-neutral-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-sm',
-    success: 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 shadow-sm',
+    primary: 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white focus:ring-primary-500 shadow-lg shadow-primary-500/25 border border-primary-400/20',
+    secondary: 'bg-white/5 hover:bg-white/10 text-white focus:ring-neutral-500 border border-white/10 backdrop-blur-xl',
+    ghost: 'bg-transparent hover:bg-white/5 text-neutral-300 hover:text-white focus:ring-neutral-500',
+    danger: 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white focus:ring-red-500 shadow-lg shadow-red-500/25 border border-red-400/20',
+    success: 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white focus:ring-emerald-500 shadow-lg shadow-emerald-500/25 border border-emerald-400/20',
   }
   
   const sizes = {
@@ -174,11 +174,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           max={max}
           name={name}
           className={`
-            w-full px-4 py-2.5 bg-neutral-800 border rounded-lg text-white placeholder-neutral-500
-            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-            transition-all duration-200
+            w-full px-4 py-3 bg-white/5 backdrop-blur-xl border rounded-xl text-white placeholder-neutral-500
+            focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
+            transition-all duration-300
             ${icon ? 'pl-10' : ''}
-            ${error ? 'border-red-500' : 'border-neutral-700'}
+            ${error ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         />
@@ -243,10 +243,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         rows={rows}
         name={name}
         className={`
-          w-full px-4 py-2.5 bg-neutral-800 border rounded-lg text-white placeholder-neutral-500
-          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-          transition-all duration-200 resize-none
-          ${error ? 'border-red-500' : 'border-neutral-700'}
+          w-full px-4 py-3 bg-white/5 backdrop-blur-xl border rounded-xl text-white placeholder-neutral-500
+          focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
+          transition-all duration-300 resize-none
+          ${error ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
       />
@@ -314,45 +314,48 @@ export const Select = ({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`
-            w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-left
-            flex items-center justify-between transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-neutral-600'}
+            w-full px-4 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl text-left
+            flex items-center justify-between transition-all duration-300
+            focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/20 hover:bg-white/10'}
           `}
         >
           <span className={selectedOption ? 'text-white' : 'text-neutral-500'}>
             {selectedOption?.label || placeholder}
           </span>
-          <FaChevronDown className={`text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <FaChevronDown className={`text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
         
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute z-50 w-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl overflow-hidden"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute z-50 w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
             >
-              {options.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    onChange?.(option.value)
-                    setIsOpen(false)
-                  }}
-                  className={`
-                    w-full px-4 py-2.5 text-left transition-colors
-                    ${value === option.value 
-                      ? 'bg-primary-600 text-white' 
-                      : 'text-neutral-300 hover:bg-neutral-700'
-                    }
-                  `}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <div className="max-h-60 overflow-y-auto">
+                {options.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      onChange?.(option.value)
+                      setIsOpen(false)
+                    }}
+                    className={`
+                      w-full px-4 py-3 text-left transition-all duration-200
+                      ${value === option.value 
+                        ? 'bg-primary-500/20 text-primary-400 border-l-2 border-primary-500' 
+                        : 'text-neutral-300 hover:bg-white/10 hover:text-white border-l-2 border-transparent'
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -394,16 +397,17 @@ export const Badge = ({ children, variant = 'default', size = 'md', className = 
 }
 
 // ============================================
-// CARD COMPONENT
+// CARD COMPONENT (Glassmorphism)
 // ============================================
 interface CardProps {
   children: ReactNode
   className?: string
   padding?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
+  glow?: boolean
 }
 
-export const Card = ({ children, className = '', padding = 'md', hover = false }: CardProps) => {
+export const Card = ({ children, className = '', padding = 'md', hover = false, glow = false }: CardProps) => {
   const paddings = {
     none: '',
     sm: 'p-4',
@@ -413,11 +417,12 @@ export const Card = ({ children, className = '', padding = 'md', hover = false }
   
   return (
     <motion.div
-      whileHover={hover ? { y: -2 } : undefined}
+      whileHover={hover ? { y: -4, scale: 1.01 } : undefined}
       className={`
-        bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-xl
+        bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl
         ${paddings[padding]}
-        ${hover ? 'transition-shadow hover:shadow-lg hover:shadow-neutral-900/50' : ''}
+        ${hover ? 'transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 hover:border-white/20' : ''}
+        ${glow ? 'shadow-lg shadow-primary-500/10' : ''}
         ${className}
       `}
     >
@@ -427,7 +432,7 @@ export const Card = ({ children, className = '', padding = 'md', hover = false }
 }
 
 // ============================================
-// MODAL COMPONENT
+// MODAL COMPONENT (Glassmorphism)
 // ============================================
 interface ModalProps {
   isOpen: boolean
@@ -467,23 +472,27 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
           
           {/* Modal content */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full ${sizes[size]} bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl ${className}`}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`relative w-full ${sizes[size]} bg-neutral-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-black/50 ${className}`}
           >
+            {/* Gradient accent */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent pointer-events-none" />
+            
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
-                <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <div className="relative flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <h3 className="text-xl font-bold text-white">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                  className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
                 >
                   <FaTimes />
                 </button>
@@ -491,7 +500,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             )}
             
             {/* Body */}
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
+            <div className="relative p-6 max-h-[70vh] overflow-y-auto">
               {children}
             </div>
           </motion.div>
