@@ -7,7 +7,7 @@ import { getAnalytics, Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ",
-  authDomain: "matrixo.in",
+  authDomain: "matrixo-in-auth.firebaseapp.com",
   projectId: "matrixo-in-auth",
   storageBucket: "matrixo-in-auth.firebasestorage.app",
   messagingSenderId: "431287252568",
