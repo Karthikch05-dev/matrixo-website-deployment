@@ -166,8 +166,8 @@ export interface ActivityLog {
 
 // Office location for geolocation verification (configurable)
 export const OFFICE_LOCATION = {
-  latitude: 17.433209511638708, // Update with actual office coordinates
-  longitude: 78.68535411995639,
+  latitude: 17.43320, // Update with actual office coordinates
+  longitude: 78.68535,
   radiusMeters: 500, // 500 meters radius
 },
 
