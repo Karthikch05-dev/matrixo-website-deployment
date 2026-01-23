@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaTasks, 
@@ -578,7 +578,7 @@ function TaskCard({
 // ============================================
 
 export function Tasks() {
-  const { employee, tasks, getAllEmployees } = useEmployeeAuth()
+  const { employee, tasks = [], getAllEmployees } = useEmployeeAuth()
   const [employees, setEmployees] = useState<EmployeeProfile[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -592,45 +592,54 @@ export function Tasks() {
   const [showMyTasks, setShowMyTasks] = useState(false)
 
   // Fetch employees on mount
-  useState(() => {
-    getAllEmployees().then(setEmployees)
-  })
+  useEffect(() => {
+    getAllEmployees().then(setEmployees).catch(console.error)
+  }, [getAllEmployees])
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {
+    if (!tasks || !Array.isArray(tasks)) return []
+    
     let result = [...tasks]
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       result = result.filter(task => 
-        task.title.toLowerCase().includes(query) ||
-        task.description?.toLowerCase().includes(query) ||
-        task.assignedToNames?.some(name => name.toLowerCase().includes(query))
+        task?.title?.toLowerCase()?.includes(query) ||
+        task?.description?.toLowerCase()?.includes(query) ||
+        task?.assignedToNames?.some(name => name?.toLowerCase()?.includes(query))
       )
     }
 
     // Priority filter
     if (filterPriority) {
-      result = result.filter(task => task.priority === filterPriority)
+      result = result.filter(task => task?.priority === filterPriority)
     }
 
     // Status filter
     if (filterStatus) {
-      result = result.filter(task => task.status === filterStatus)
+      result = result.filter(task => task?.status === filterStatus)
     }
 
     // Assignee filter
     if (filterAssignee) {
-      result = result.filter(task => task.assignedTo?.includes(filterAssignee))
+      result = result.filter(task => {
+        const assignedTo = task?.assignedTo
+        if (Array.isArray(assignedTo)) return assignedTo.includes(filterAssignee)
+        return assignedTo === filterAssignee
+      })
     }
 
     // My tasks filter
     if (showMyTasks && employee) {
-      result = result.filter(task => 
-        task.assignedTo?.includes(employee.employeeId) ||
-        task.createdBy === employee.employeeId
-      )
+      result = result.filter(task => {
+        const assignedTo = task?.assignedTo
+        if (Array.isArray(assignedTo)) {
+          return assignedTo.includes(employee.employeeId) || task.createdBy === employee.employeeId
+        }
+        return assignedTo === employee.employeeId || task.createdBy === employee.employeeId
+      })
     }
 
     return result

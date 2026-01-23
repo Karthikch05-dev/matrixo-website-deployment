@@ -431,7 +431,7 @@ function TopNavbar({
 // ============================================
 
 function DashboardOverview() {
-  const { employee, getAttendanceRecords, holidays, tasks } = useEmployeeAuth()
+  const { employee, getAttendanceRecords, holidays = [], tasks = [] } = useEmployeeAuth()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -442,9 +442,10 @@ function DashboardOverview() {
         const startDate = new Date()
         startDate.setDate(startDate.getDate() - 30)
         const records = await getAttendanceRecords(startDate, new Date())
-        setAttendanceRecords(records)
+        setAttendanceRecords(records || [])
       } catch (error) {
         console.error('Error fetching attendance:', error)
+        setAttendanceRecords([])
       } finally {
         setLoading(false)
       }
@@ -459,9 +460,21 @@ function DashboardOverview() {
     ? Math.round(((presentDays + attendanceRecords.filter(r => r.status === 'L').length) / totalDays) * 100) 
     : 0
 
-  const myTasks = tasks.filter(t => t.assignedTo.includes(employee?.employeeId || '') && t.status !== 'completed')
-  const upcomingHolidays = holidays
-    .filter(h => new Date(h.date) >= new Date())
+  // Safely filter tasks - handle both array and string for assignedTo
+  const myTasks = (tasks || []).filter(t => {
+    if (!t || !employee?.employeeId) return false
+    const assignedTo = t.assignedTo
+    if (Array.isArray(assignedTo)) {
+      return assignedTo.includes(employee.employeeId) && t.status !== 'completed'
+    }
+    if (typeof assignedTo === 'string') {
+      return assignedTo === employee.employeeId && t.status !== 'completed'
+    }
+    return false
+  })
+  
+  const upcomingHolidays = (holidays || [])
+    .filter(h => h?.date && new Date(h.date) >= new Date())
     .slice(0, 3)
 
   if (loading) {
