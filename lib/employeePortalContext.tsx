@@ -352,11 +352,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ============================================
-  // REALTIME SUBSCRIPTIONS
+  // REALTIME SUBSCRIPTIONS (Only when authenticated)
   // ============================================
   
-  // Subscribe to holidays
+  // Subscribe to holidays - ONLY when user is authenticated
   useEffect(() => {
+    // Don't subscribe until user is authenticated
+    if (!user) {
+      setHolidays([])
+      return
+    }
+    
     const unsubscribe = onSnapshot(
       collection(db, 'holidays'),
       (snapshot) => {
@@ -369,10 +375,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching holidays:', error)
     )
     return () => unsubscribe()
-  }, [])
+  }, [user]) // Re-subscribe when user changes
 
-  // Subscribe to calendar events
+  // Subscribe to calendar events - ONLY when user is authenticated
   useEffect(() => {
+    if (!user) {
+      setCalendarEvents([])
+      return
+    }
+    
     const unsubscribe = onSnapshot(
       collection(db, 'calendarEvents'),
       (snapshot) => {
@@ -385,10 +396,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching calendar events:', error)
     )
     return () => unsubscribe()
-  }, [])
+  }, [user]) // Re-subscribe when user changes
 
-  // Subscribe to tasks
+  // Subscribe to tasks - ONLY when user is authenticated
   useEffect(() => {
+    if (!user) {
+      setTasks([])
+      return
+    }
+    
     const unsubscribe = onSnapshot(
       collection(db, 'tasks'),
       (snapshot) => {
@@ -408,10 +424,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching tasks:', error)
     )
     return () => unsubscribe()
-  }, [])
+  }, [user]) // Re-subscribe when user changes
 
-  // Subscribe to discussions
+  // Subscribe to discussions - ONLY when user is authenticated
   useEffect(() => {
+    if (!user) {
+      setDiscussions([])
+      return
+    }
+    
     const unsubscribe = onSnapshot(
       collection(db, 'discussions'),
       (snapshot) => {
@@ -429,7 +450,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching discussions:', error)
     )
     return () => unsubscribe()
-  }, [])
+  }, [user]) // Re-subscribe when user changes
 
   // ============================================
   // AUTH FUNCTIONS
