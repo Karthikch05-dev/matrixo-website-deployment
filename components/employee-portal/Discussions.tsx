@@ -299,6 +299,8 @@ function DiscussionPost({
 
   // Highlight mentions in content
   const renderContent = (content: string) => {
+    if (!content || typeof content !== 'string') return content || ''
+    
     const parts = content.split(/(@\w+|#\w+)/g)
     return parts.map((part, i) => {
       if (part.startsWith('@')) {
@@ -332,14 +334,14 @@ function DiscussionPost({
         <div className="flex items-start gap-3">
           <Avatar 
             src={discussion.authorImage} 
-            name={discussion.authorName} 
+            name={discussion.authorName || 'Anonymous'} 
             size="md" 
             showBorder={false} 
           />
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-white">{discussion.authorName}</span>
+              <span className="font-medium text-white">{discussion.authorName || 'Anonymous'}</span>
               {discussion.authorDepartment && (
                 <Badge size="sm">{discussion.authorDepartment}</Badge>
               )}
@@ -453,20 +455,22 @@ function DiscussionPost({
 
       {/* Replies */}
       <AnimatePresence>
-        {showReplies && discussion.replies?.length > 0 && (
+        {showReplies && discussion.replies && Array.isArray(discussion.replies) && discussion.replies.length > 0 && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-neutral-700/50 bg-neutral-900/30"
           >
-            {discussion.replies.map((reply) => (
+            {discussion.replies.map((reply) => {
+              if (!reply) return null
+              return (
               <div key={reply.id} className="p-4 border-b border-neutral-700/30 last:border-b-0">
                 <div className="flex items-start gap-3">
-                  <Avatar src={reply.authorImage} name={reply.authorName} size="sm" showBorder={false} />
+                  <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white text-sm">{reply.authorName}</span>
+                      <span className="font-medium text-white text-sm">{reply.authorName || 'Anonymous'}</span>
                       <span className="text-xs text-neutral-500">{formatTimestamp(reply.createdAt)}</span>
                     </div>
                     <p className="text-neutral-300 text-sm mt-1">{renderContent(reply.content)}</p>
@@ -481,7 +485,8 @@ function DiscussionPost({
                   )}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </motion.div>
         )}
       </AnimatePresence>
@@ -494,7 +499,7 @@ function DiscussionPost({
 // ============================================
 
 export function Discussions() {
-  const { employee, discussions, addDiscussion, getAllEmployees } = useEmployeeAuth()
+  const { employee, discussions = [], addDiscussion, getAllEmployees } = useEmployeeAuth()
   const [employees, setEmployees] = useState<EmployeeProfile[]>([])
   const [newPostContent, setNewPostContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -525,13 +530,15 @@ export function Discussions() {
 
   // Filter discussions
   const filteredDiscussions = useMemo(() => {
+    if (!discussions || !Array.isArray(discussions)) return []
+    
     let result = [...discussions]
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       result = result.filter(d => 
-        d.content.toLowerCase().includes(query) ||
-        d.authorName.toLowerCase().includes(query)
+        (d.content || '').toLowerCase().includes(query) ||
+        (d.authorName || '').toLowerCase().includes(query)
       )
     }
 

@@ -489,8 +489,12 @@ function TaskCard({
   onClick: () => void
   isHighlighted: boolean
 }) {
-  const config = priorityConfig[task.priority]
-  const PriorityIcon = config.icon
+  // Defensive checks for task data
+  if (!task) return null
+  
+  const priority = task.priority || 'medium'
+  const config = priorityConfig[priority] || priorityConfig.medium
+  const PriorityIcon = config?.icon || FaFlag
 
   return (
     <motion.div
@@ -506,7 +510,7 @@ function TaskCard({
       `}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="font-medium text-white line-clamp-2">{task.title}</h3>
+        <h3 className="font-medium text-white line-clamp-2">{task.title || 'Untitled Task'}</h3>
         <Badge 
           variant={
             task.priority === 'urgent' ? 'error' :
@@ -526,8 +530,8 @@ function TaskCard({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge size="sm" className={statusConfig[task.status].color}>
-            {statusConfig[task.status].label}
+          <Badge size="sm" className={(statusConfig[task.status || 'todo'] || statusConfig.todo).color}>
+            {(statusConfig[task.status || 'todo'] || statusConfig.todo).label}
           </Badge>
           {task.department === 'Management' && (
             <Badge size="sm" variant="warning">Mgmt</Badge>
