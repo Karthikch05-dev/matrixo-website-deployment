@@ -341,10 +341,10 @@ function TaskDetailModal({
                   task.priority === 'high' ? 'warning' :
                   task.priority === 'medium' ? 'info' : 'default'
                 }>
-                  {priorityConfig[task.priority].label}
+                  {(priorityConfig[task.priority] || priorityConfig.medium).label}
                 </Badge>
                 <Badge>
-                  {statusConfig[task.status].label}
+                  {(statusConfig[task.status] || statusConfig.todo).label}
                 </Badge>
                 {task.department === 'Management' && (
                   <Badge variant="primary">Management</Badge>

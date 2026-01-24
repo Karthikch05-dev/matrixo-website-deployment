@@ -418,7 +418,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           id: doc.id,
           ...doc.data()
         })) as Holiday[]
-        setHolidays(holidaysData.sort((a, b) => a.date.localeCompare(b.date)))
+        setHolidays(holidaysData.sort((a, b) => (a.date || '').localeCompare(b.date || '')))
       },
       (error) => console.error('Error fetching holidays:', error)
     )
@@ -439,7 +439,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           id: doc.id,
           ...doc.data()
         })) as CalendarEvent[]
-        setCalendarEvents(eventsData.sort((a, b) => a.date.localeCompare(b.date)))
+        // Sort with null checks to prevent undefined.localeCompare errors
+        setCalendarEvents(eventsData.sort((a, b) => {
+          const dateA = a.date || ''
+          const dateB = b.date || ''
+          return dateA.localeCompare(dateB)
+        }))
       },
       (error) => console.error('Error fetching calendar events:', error)
     )
@@ -707,7 +712,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       ...doc.data()
     })) as AttendanceRecord[]
 
-    records.sort((a, b) => b.date.localeCompare(a.date))
+    records.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
     if (startDate && endDate) {
       const start = startDate.toISOString().split('T')[0]
@@ -767,8 +772,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })) as AttendanceRecord[]
     
     return records
-      .filter(r => r.date >= startDate && r.date <= endDate)
-      .sort((a, b) => b.date.localeCompare(a.date))
+      .filter(r => r.date && r.date >= startDate && r.date <= endDate)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   }
 
   const getEmployeeAttendanceHistory = async (employeeId: string, limit = 100): Promise<AttendanceRecord[]> => {
@@ -781,7 +786,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       ...doc.data()
     })) as AttendanceRecord[]
     
-    return records.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit)
+    return records.sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, limit)
   }
 
   // ============================================

@@ -440,13 +440,30 @@ export function Calendar() {
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day)
       const dateString = date.toISOString().split('T')[0]
+      const dayOfWeek = date.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      
+      // Auto-mark Saturdays and Sundays as weekend holidays if not already marked
+      let holidayForDay = holidays.find(h => h.date === dateString)
+      if (isWeekend && !holidayForDay) {
+        holidayForDay = {
+          date: dateString,
+          name: dayOfWeek === 0 ? 'Sunday' : 'Saturday',
+          type: 'company',
+          description: 'Weekend',
+          createdBy: 'system',
+          createdByName: 'System',
+          createdAt: { toDate: () => date } as any
+        }
+      }
+      
       days.push({
         date,
         dateString,
         isCurrentMonth: true,
         isToday: dateString === todayString,
-        isWeekend: date.getDay() === 0 || date.getDay() === 6,
-        holiday: holidays.find(h => h.date === dateString),
+        isWeekend,
+        holiday: holidayForDay,
         events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
       })
     }

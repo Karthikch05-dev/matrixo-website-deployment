@@ -690,17 +690,23 @@ function HistoryTab() {
                     </div>
                     <div>
                       <p className="text-white font-medium">
-                        {new Date(record.timestamp).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {(() => {
+                          const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
+                          return timestamp.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'short',
+                            day: 'numeric'
+                          })
+                        })()}
                       </p>
                       <p className="text-xs text-neutral-500">
-                        {new Date(record.timestamp).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {(() => {
+                          const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
+                          return timestamp.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        })()}
                         {record.notes && ` • ${record.notes}`}
                       </p>
                     </div>
