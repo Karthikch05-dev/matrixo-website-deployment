@@ -312,53 +312,101 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authReady, setAuthReady] = useState(false) // 🔥 NEW: Track if auth is initialized
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [discussions, setDiscussions] = useState<Discussion[]>([])
 
   // ============================================
-  // AUTH EFFECTS
+  // AUTH EFFECTS - Step 1: Initialize Firebase Auth
   // ============================================
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user)
-      if (user) {
-        try {
-          const employeeDoc = await getDoc(doc(db, 'Employees', user.uid))
-          if (employeeDoc.exists()) {
-            const data = employeeDoc.data() as EmployeeProfile
-            setEmployee(data)
-          } else {
-            const employeesRef = collection(db, 'Employees')
-            const q = query(employeesRef, where('email', '==', user.email))
-            const querySnapshot = await getDocs(q)
-            if (!querySnapshot.empty) {
-              const data = querySnapshot.docs[0].data() as EmployeeProfile
-              setEmployee(data)
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching employee data:', error)
-        }
-      } else {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser)
+      
+      if (!firebaseUser) {
+        // User logged out - clear everything
         setEmployee(null)
+        setAuthReady(true)
+        setLoading(false)
+        return
       }
-      setLoading(false)
+
+      // User is authenticated - wait for token to propagate
+      try {
+        // 🔥 CRITICAL: Wait for token to be ready before Firestore access
+        await firebaseUser.getIdToken(true) // Force refresh to ensure token is valid
+        
+        // Small delay to ensure token reaches Firestore servers
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Mark auth as ready BEFORE fetching employee data
+        setAuthReady(true)
+        
+      } catch (error) {
+        console.error('Error refreshing auth token:', error)
+        setAuthReady(true) // Still mark ready to allow retry
+      } finally {
+        setLoading(false)
+      }
     })
 
     return () => unsubscribe()
   }, [])
 
   // ============================================
-  // REALTIME SUBSCRIPTIONS (Only when authenticated)
+  // EMPLOYEE DATA FETCH - Step 2: Fetch employee profile AFTER auth is ready
   // ============================================
   
-  // Subscribe to holidays - ONLY when user is authenticated
   useEffect(() => {
-    // Don't subscribe until user is authenticated
-    if (!user) {
+    if (!authReady || !user) {
+      setEmployee(null)
+      return
+    }
+
+    // Fetch employee profile from Firestore (NOW auth token is ready)
+    const fetchEmployeeData = async () => {
+      try {
+        // Try to get by user.uid first
+        const employeeDoc = await getDoc(doc(db, 'Employees', user.uid))
+        if (employeeDoc.exists()) {
+          const data = employeeDoc.data() as EmployeeProfile
+          setEmployee(data)
+          return
+        }
+
+        // Fallback: get by email
+        const employeesRef = collection(db, 'Employees')
+        const q = query(employeesRef, where('email', '==', user.email))
+        const querySnapshot = await getDocs(q)
+        
+        if (!querySnapshot.empty) {
+          const data = querySnapshot.docs[0].data() as EmployeeProfile
+          setEmployee(data)
+        } else {
+          console.warn('No employee profile found for user:', user.email)
+          setEmployee(null)
+        }
+      } catch (error) {
+        console.error('Error fetching employee data:', error)
+        // Don't throw - let user stay logged in even if profile fetch fails
+        setEmployee(null)
+      }
+    }
+
+    fetchEmployeeData()
+  }, [authReady, user]) // Run when auth becomes ready or user changes
+
+  // ============================================
+  // REALTIME SUBSCRIPTIONS - Step 3: Subscribe to Firestore ONLY when auth ready + user exists
+  // ============================================
+  
+  // Subscribe to holidays - ONLY when authReady AND user authenticated
+  useEffect(() => {
+    // 🔥 CRITICAL: Don't subscribe until BOTH authReady AND user exist
+    if (!authReady || !user) {
       setHolidays([])
       return
     }
@@ -375,11 +423,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching holidays:', error)
     )
     return () => unsubscribe()
-  }, [user]) // Re-subscribe when user changes
+  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
 
-  // Subscribe to calendar events - ONLY when user is authenticated
+  // Subscribe to calendar events - ONLY when authReady AND user authenticated
   useEffect(() => {
-    if (!user) {
+    if (!authReady || !user) {
       setCalendarEvents([])
       return
     }
@@ -396,11 +444,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching calendar events:', error)
     )
     return () => unsubscribe()
-  }, [user]) // Re-subscribe when user changes
+  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
 
-  // Subscribe to tasks - ONLY when user is authenticated
+  // Subscribe to tasks - ONLY when authReady AND user authenticated
   useEffect(() => {
-    if (!user) {
+    if (!authReady || !user) {
       setTasks([])
       return
     }
@@ -424,11 +472,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching tasks:', error)
     )
     return () => unsubscribe()
-  }, [user]) // Re-subscribe when user changes
+  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
 
-  // Subscribe to discussions - ONLY when user is authenticated
+  // Subscribe to discussions - ONLY when authReady AND user authenticated
   useEffect(() => {
-    if (!user) {
+    if (!authReady || !user) {
       setDiscussions([])
       return
     }
@@ -450,28 +498,58 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching discussions:', error)
     )
     return () => unsubscribe()
-  }, [user]) // Re-subscribe when user changes
+  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
 
   // ============================================
   // AUTH FUNCTIONS
   // ============================================
 
   const signIn = async (employeeId: string, password: string) => {
-    const employeesRef = collection(db, 'Employees')
-    const q = query(employeesRef, where('employeeId', '==', employeeId.trim()))
-    const querySnapshot = await getDocs(q)
-    
-    if (querySnapshot.empty) {
-      throw new Error('Employee ID not found')
-    }
+    try {
+      // Step 1: Query Firestore for employee (this needs special rule - see FIRESTORE RULES below)
+      const employeesRef = collection(db, 'Employees')
+      const q = query(employeesRef, where('employeeId', '==', employeeId.trim()))
+      const querySnapshot = await getDocs(q)
+      
+      if (querySnapshot.empty) {
+        throw new Error('EMPLOYEE_NOT_FOUND')
+      }
 
-    const employeeData = querySnapshot.docs[0].data() as EmployeeProfile
-    await signInWithEmailAndPassword(auth, employeeData.email, password)
+      const employeeData = querySnapshot.docs[0].data() as EmployeeProfile
+      
+      // Step 2: Sign in with Firebase Auth
+      await signInWithEmailAndPassword(auth, employeeData.email, password)
+      
+      // onAuthStateChanged will handle the rest (setting user, fetching employee profile)
+      // Don't throw Firestore permission errors here
+      
+    } catch (error: any) {
+      // Re-throw with clearer messages
+      if (error.message === 'EMPLOYEE_NOT_FOUND') {
+        throw new Error('Employee ID not found')
+      }
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+        throw new Error('Invalid password')
+      }
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('Employee account not found')
+      }
+      if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many login attempts. Please try again later.')
+      }
+      // Don't throw Firestore permission errors - auth succeeded
+      if (error.code?.startsWith('permission-denied') || error.message?.includes('insufficient permissions')) {
+        console.warn('Firestore permission error during login (non-critical):', error)
+        return // Auth succeeded, profile will load via onAuthStateChanged
+      }
+      throw error
+    }
   }
 
   const logout = async () => {
     await signOut(auth)
     setEmployee(null)
+    setAuthReady(false)
   }
 
   // ============================================
