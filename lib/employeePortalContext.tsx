@@ -151,6 +151,7 @@ export interface DiscussionReply {
   authorName: string
   authorImage?: string
   createdAt: Timestamp
+  updatedAt?: Timestamp
   mentions: string[]
 }
 
@@ -297,6 +298,7 @@ interface EmployeeAuthContextType {
   updateDiscussion: (id: string, content: string) => Promise<void>
   deleteDiscussion: (id: string) => Promise<void>
   addDiscussionReply: (discussionId: string, content: string, mentions?: string[]) => Promise<void>
+  updateDiscussionReply: (discussionId: string, replyId: string, content: string) => Promise<void>
   deleteDiscussionReply: (discussionId: string, replyId: string) => Promise<void>
   togglePinDiscussion: (id: string) => Promise<void>
   
@@ -1225,6 +1227,38 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const updateDiscussionReply = async (discussionId: string, replyId: string, content: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const discussionRef = doc(db, 'discussions', discussionId)
+    const discussionDoc = await getDoc(discussionRef)
+    
+    if (!discussionDoc.exists()) throw new Error('Discussion not found')
+    
+    const discussion = discussionDoc.data() as Discussion
+    const replyIndex = discussion.replies?.findIndex(r => r.id === replyId) ?? -1
+    
+    if (replyIndex === -1) throw new Error('Reply not found')
+    
+    const reply = discussion.replies![replyIndex]
+    
+    // Only reply author can edit
+    if (reply.authorId !== employee.employeeId) {
+      throw new Error('Unauthorized - only the author can edit this reply')
+    }
+    
+    const updatedReplies = [...(discussion.replies || [])]
+    updatedReplies[replyIndex] = {
+      ...reply,
+      content,
+      updatedAt: Timestamp.now()
+    }
+    
+    await updateDoc(discussionRef, {
+      replies: updatedReplies
+    })
+  }
+
   const togglePinDiscussion = async (id: string) => {
     if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
     
@@ -1368,6 +1402,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       deleteDiscussion,
       addDiscussionReply,
       deleteDiscussionReply,
+      updateDiscussionReply,
       togglePinDiscussion,
       logActivity,
       getActivityLogs,

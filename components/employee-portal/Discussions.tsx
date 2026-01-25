@@ -211,6 +211,173 @@ function MentionInput({
 }
 
 // ============================================
+// REPLY ITEM COMPONENT (with edit support)
+// ============================================
+
+function ReplyItem({
+  reply,
+  discussionId,
+  isAdmin,
+  currentEmployeeId,
+  onDelete,
+  formatTimestamp,
+  renderContent
+}: {
+  reply: DiscussionReply
+  discussionId: string
+  isAdmin: boolean
+  currentEmployeeId?: string
+  onDelete: (replyId: string) => void
+  formatTimestamp: (timestamp: Timestamp) => string
+  renderContent: (content: string) => React.ReactNode
+}) {
+  const { updateDiscussionReply } = useEmployeeAuth()
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(reply.content || '')
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+
+  const canEdit = reply.authorId === currentEmployeeId
+  const canDelete = reply.authorId === currentEmployeeId || isAdmin
+
+  const handleEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error('Reply cannot be empty')
+      return
+    }
+    setEditSubmitting(true)
+    try {
+      await updateDiscussionReply(discussionId, reply.id, editContent)
+      setIsEditing(false)
+      toast.success('Reply updated')
+    } catch (error) {
+      toast.error('Failed to update reply')
+    } finally {
+      setEditSubmitting(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditContent(reply.content || '')
+    setIsEditing(false)
+  }
+
+  return (
+    <div className="p-4 border-b border-neutral-700/30 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <ProfileInfo
+          data={{
+            employeeId: reply.authorId,
+            name: reply.authorName || 'Anonymous',
+            profileImage: reply.authorImage,
+            role: 'employee',
+            status: 'Active'
+          }}
+          isAdmin={isAdmin}
+        >
+          <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
+        </ProfileInfo>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <ProfileInfo
+              data={{
+                employeeId: reply.authorId,
+                name: reply.authorName || 'Anonymous',
+                profileImage: reply.authorImage,
+                role: 'employee',
+                status: 'Active'
+              }}
+              isAdmin={isAdmin}
+            >
+              <span className="font-medium text-white text-sm hover:text-primary-400 cursor-pointer">{reply.authorName || 'Anonymous'}</span>
+            </ProfileInfo>
+            <span className="text-xs text-neutral-500">
+              {formatTimestamp(reply.createdAt)}
+              {reply.updatedAt && ' (edited)'}
+            </span>
+          </div>
+          
+          {isEditing ? (
+            <div className="mt-2 space-y-2">
+              <Textarea
+                value={editContent}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditContent(e.target.value)}
+                placeholder="Edit your reply..."
+                rows={2}
+                className="w-full text-sm"
+              />
+              <div className="flex items-center gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  disabled={editSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleEdit}
+                  loading={editSubmitting}
+                  disabled={!editContent.trim()}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-neutral-300 text-sm mt-1">{renderContent(reply.content)}</p>
+          )}
+        </div>
+        
+        {/* Reply Actions Menu */}
+        {(canEdit || canDelete) && !isEditing && (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1 text-neutral-500 hover:text-white transition-colors"
+            >
+              <FaEllipsisV className="text-xs" />
+            </button>
+            
+            <AnimatePresence>
+              {showMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="absolute right-0 mt-1 w-32 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-10 overflow-hidden"
+                >
+                  {canEdit && (
+                    <button
+                      onClick={() => { setIsEditing(true); setShowMenu(false) }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors"
+                    >
+                      <FaEdit />
+                      Edit
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => { onDelete(reply.id); setShowMenu(false) }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-neutral-700 transition-colors"
+                    >
+                      <FaTrash />
+                      Delete
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================
 // DISCUSSION POST COMPONENT
 // ============================================
 
@@ -223,16 +390,22 @@ function DiscussionPost({
   onReply: (discussionId: string) => void
   employees: EmployeeProfile[]
 }) {
-  const { employee, deleteDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply } = useEmployeeAuth()
+  const { employee, deleteDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply, updateDiscussion } = useEmployeeAuth()
   const [showReplies, setShowReplies] = useState(false)
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyContent, setReplyContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(discussion.content || '')
+  const [editSubmitting, setEditSubmitting] = useState(false)
 
   const isAdmin = employee?.role === 'admin'
   const isAuthor = discussion.authorId === employee?.employeeId
   const canDelete = isAdmin || isAuthor
+  const canEdit = isAuthor // Only author can edit their own message
   const isMentioned = discussion.mentions?.includes(employee?.employeeId || '') ||
     discussion.mentionedDepartments?.includes(employee?.department || '')
 
@@ -269,6 +442,28 @@ function DiscussionPost({
     } catch (error) {
       toast.error('Failed to update post')
     }
+  }
+
+  const handleEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error('Message cannot be empty')
+      return
+    }
+    setEditSubmitting(true)
+    try {
+      await updateDiscussion(discussion.id!, editContent)
+      setIsEditing(false)
+      toast.success('Message updated')
+    } catch (error) {
+      toast.error('Failed to update message')
+    } finally {
+      setEditSubmitting(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditContent(discussion.content || '')
+    setIsEditing(false)
   }
 
   const handleReply = async (mentions: string[]) => {
@@ -386,6 +581,15 @@ function DiscussionPost({
                       {discussion.isPinned ? 'Unpin' : 'Pin Post'}
                     </button>
                   )}
+                  {canEdit && (
+                    <button
+                      onClick={() => { setIsEditing(true); setShowMenu(false) }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors"
+                    >
+                      <FaEdit />
+                      Edit
+                    </button>
+                  )}
                   {canDelete && (
                     <button
                       onClick={() => { handleDelete(); setShowMenu(false) }}
@@ -402,9 +606,40 @@ function DiscussionPost({
         </div>
 
         {/* Content */}
-        <div className="mt-3 text-neutral-300 whitespace-pre-wrap">
-          {renderContent(discussion.content)}
-        </div>
+        {isEditing ? (
+          <div className="mt-3 space-y-3">
+            <Textarea
+              value={editContent}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditContent(e.target.value)}
+              placeholder="Edit your message..."
+              rows={4}
+              className="w-full"
+            />
+            <div className="flex items-center gap-2 justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelEdit}
+                disabled={editSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleEdit}
+                loading={editSubmitting}
+                disabled={!editContent.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 text-neutral-300 whitespace-pre-wrap">
+            {renderContent(discussion.content)}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-neutral-700/50">
@@ -465,48 +700,16 @@ function DiscussionPost({
             {discussion.replies.map((reply) => {
               if (!reply) return null
               return (
-              <div key={reply.id} className="p-4 border-b border-neutral-700/30 last:border-b-0">
-                <div className="flex items-start gap-3">
-                  <ProfileInfo
-                    data={{
-                      employeeId: reply.authorId,
-                      name: reply.authorName || 'Anonymous',
-                      profileImage: reply.authorImage,
-                      role: 'employee',
-                      status: 'Active'
-                    }}
-                    isAdmin={isAdmin}
-                  >
-                    <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
-                  </ProfileInfo>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <ProfileInfo
-                        data={{
-                          employeeId: reply.authorId,
-                          name: reply.authorName || 'Anonymous',
-                          profileImage: reply.authorImage,
-                          role: 'employee',
-                          status: 'Active'
-                        }}
-                        isAdmin={isAdmin}
-                      >
-                        <span className="font-medium text-white text-sm hover:text-primary-400 cursor-pointer">{reply.authorName || 'Anonymous'}</span>
-                      </ProfileInfo>
-                      <span className="text-xs text-neutral-500">{formatTimestamp(reply.createdAt)}</span>
-                    </div>
-                    <p className="text-neutral-300 text-sm mt-1">{renderContent(reply.content)}</p>
-                  </div>
-                  {(reply.authorId === employee?.employeeId || isAdmin) && (
-                    <button
-                      onClick={() => handleDeleteReply(reply.id)}
-                      className="p-1 text-neutral-500 hover:text-red-400 transition-colors"
-                    >
-                      <FaTrash className="text-xs" />
-                    </button>
-                  )}
-                </div>
-              </div>
+                <ReplyItem
+                  key={reply.id}
+                  reply={reply}
+                  discussionId={discussion.id!}
+                  isAdmin={isAdmin}
+                  currentEmployeeId={employee?.employeeId}
+                  onDelete={handleDeleteReply}
+                  formatTimestamp={formatTimestamp}
+                  renderContent={renderContent}
+                />
               )
             })}
           </motion.div>
