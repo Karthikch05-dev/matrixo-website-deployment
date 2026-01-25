@@ -241,12 +241,12 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 w-full" style={{ zIndex: 9000, isolation: 'isolate' }}>
+    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 fixed top-0 left-0 right-0 overflow-x-hidden" style={{ zIndex: 9000, isolation: 'isolate' }}>
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
       
-      <div className="w-full max-w-full px-4 md:px-6">
-        <div className="flex items-center justify-between h-16 gap-2 md:gap-8 max-w-full">
+      <div className="max-w-[100vw] px-4 md:px-6 mx-auto">
+        <div className="flex items-center justify-between h-16 gap-2 md:gap-4 overflow-hidden">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
             <img src="/logos/logo-dark.png" alt="matriXO" className="h-8 md:h-9 group-hover:scale-105 transition-transform" />
@@ -257,14 +257,14 @@ function TopNavbar({
           </Link>
 
           {/* Desktop Navigation - Centered */}
-          <div className="hidden xl:flex items-center justify-center flex-1">
-            <div className="flex items-center gap-2">
+          <div className="hidden xl:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-1">
               {navigationItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`
-                    flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
+                    flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
                     ${activeTab === item.id 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30' 
                       : 'text-neutral-400 hover:text-white hover:bg-white/5'
@@ -278,11 +278,11 @@ function TopNavbar({
               
               {isAdmin && (
                 <>
-                  <div className="w-px h-6 bg-white/10 mx-2" />
+                  <div className="w-px h-6 bg-white/10 mx-1" />
                   <button
                     onClick={() => setActiveTab('admin')}
                     className={`
-                      flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
+                      flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
                       ${activeTab === 'admin' 
                         ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30' 
                         : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
@@ -298,12 +298,12 @@ function TopNavbar({
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Notification Bell */}
             <NotificationBell />
             
             {/* Time Display */}
-            <div className="hidden lg:flex items-center gap-2.5 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
               <FaClock className="text-primary-400 text-sm" />
               <span className="font-mono tabular-nums text-white text-sm">
                 {currentTime.toLocaleTimeString('en-US', { 
@@ -804,12 +804,12 @@ function Dashboard() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-neutral-950" style={{ overflowX: 'hidden' }}>
+    <div className="min-h-screen bg-neutral-950 overflow-x-hidden max-w-[100vw]">
       {/* Top Navigation */}
       <TopNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+      {/* Main Content - pt-20 compensates for fixed navbar height */}
+      <main className="max-w-7xl mx-auto px-4 py-6 pt-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
