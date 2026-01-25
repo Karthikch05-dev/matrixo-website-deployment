@@ -593,6 +593,8 @@ export function Tasks() {
   const [filterPriority, setFilterPriority] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterAssignee, setFilterAssignee] = useState<string>('')
+  const [filterRole, setFilterRole] = useState<string>('')
+  const [filterInternSpecialization, setFilterInternSpecialization] = useState<string>('')
   const [showMyTasks, setShowMyTasks] = useState(false)
 
   // Fetch employees on mount
@@ -635,6 +637,28 @@ export function Tasks() {
       })
     }
 
+    // Role filter
+    if (filterRole) {
+      result = result.filter(task => {
+        const assignedTo = task?.assignedTo || []
+        return assignedTo.some(empId => {
+          const emp = employees.find(e => e.employeeId === empId)
+          return emp?.role === filterRole
+        })
+      })
+    }
+
+    // Intern Specialization filter (filters by department for interns)
+    if (filterInternSpecialization) {
+      result = result.filter(task => {
+        const assignedTo = task?.assignedTo || []
+        return assignedTo.some(empId => {
+          const emp = employees.find(e => e.employeeId === empId)
+          return emp?.role === 'Intern' && emp?.department === filterInternSpecialization
+        })
+      })
+    }
+
     // My tasks filter
     if (showMyTasks && employee) {
       result = result.filter(task => {
@@ -647,17 +671,19 @@ export function Tasks() {
     }
 
     return result
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, showMyTasks, employee])
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, showMyTasks, employee, employees])
 
   const clearFilters = () => {
     setSearchQuery('')
     setFilterPriority('')
     setFilterStatus('')
     setFilterAssignee('')
+    setFilterRole('')
+    setFilterInternSpecialization('')
     setShowMyTasks(false)
   }
 
-  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || showMyTasks
+  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterInternSpecialization || showMyTasks
 
   return (
     <div className="space-y-6">
@@ -718,6 +744,22 @@ export function Tasks() {
               onChange={setFilterStatus}
             />
 
+            <Select
+              options={[
+                { value: '', label: 'All Roles' },
+                { value: 'Intern', label: 'Intern' },
+                { value: 'employee', label: 'Employee' },
+                { value: 'admin', label: 'Admin' }
+              ]}
+              value={filterRole}
+              onChange={(value) => {
+                setFilterRole(value)
+                if (value !== 'Intern') {
+                  setFilterInternSpecialization('')
+                }
+              }}
+            />
+
             <Button
               variant={showMyTasks ? 'primary' : 'secondary'}
               size="sm"
@@ -734,6 +776,33 @@ export function Tasks() {
             )}
           </div>
         </div>
+
+        {/* Conditional Intern Specialization Dropdown */}
+        <AnimatePresence>
+          {filterRole === 'Intern' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="overflow-hidden"
+            >
+              <Select
+                label="Intern Specialization"
+                options={[
+                  { value: '', label: 'All Specializations' },
+                  { value: 'Web Development', label: 'Web Development' },
+                  { value: 'Content and Curriculum Development', label: 'Content and Curriculum Development' },
+                  { value: 'Product Research & Innovation', label: 'Product Research & Innovation' },
+                  { value: 'Operations & Project Management', label: 'Operations & Project Management' },
+                  { value: 'Marketing & Brand Strategy', label: 'Marketing & Brand Strategy' }
+                ]}
+                value={filterInternSpecialization}
+                onChange={setFilterInternSpecialization}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
 
       {/* Tasks Grid */}
