@@ -175,21 +175,21 @@ function AddEventModal({
       if (editingEvent?.id) {
         await updateCalendarEvent(editingEvent.id, {
           title: form.title,
-          description: form.description,
+          description: form.description || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color
+          color: form.color || undefined
         })
         toast.success('Event updated successfully')
       } else {
         await addCalendarEvent({
           title: form.title,
-          description: form.description,
+          description: form.description || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color
+          color: form.color || undefined
         })
         toast.success('Event added successfully')
       }
