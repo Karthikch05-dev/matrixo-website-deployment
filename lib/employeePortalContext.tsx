@@ -25,7 +25,7 @@ import {
 } from 'firebase/firestore'
 import { auth } from './firebaseConfig'
 import { getFirestore } from 'firebase/firestore'
-import { createNotification } from './notificationContext'
+import { createNotification, notifyAllUsers } from './notificationContext'
 
 // Initialize Firestore
 const db = getFirestore()
@@ -876,7 +876,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const addHoliday = async (holiday: Omit<Holiday, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
     if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
     
-    await addDoc(collection(db, 'holidays'), {
+    const holidayDoc = await addDoc(collection(db, 'holidays'), {
       ...holiday,
       createdBy: employee.employeeId,
       createdByName: employee.name,
@@ -887,6 +887,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       type: 'holiday',
       action: 'create',
       description: `Added holiday: ${holiday.name} on ${holiday.date}`,
+    })
+
+    // 🔔 GLOBAL BROADCAST: Notify ALL users about office closure/holiday
+    const allEmployees = await getAllEmployees()
+    await notifyAllUsers(allEmployees, {
+      type: 'calendar',
+      title: '🏖️ Holiday/Office Closed',
+      message: `${holiday.name} on ${new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      targetId: holidayDoc.id,
+      targetUrl: '#calendar',
+      senderId: employee.employeeId,
+      senderName: employee.name,
+      icon: '/logos/logo-dark.png'
     })
   }
 
@@ -963,31 +976,64 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       description: `Created task: ${task.title}`,
     })
 
-    // 🔔 Create notifications for assigned users
-    if (task.assignedTo && task.assignedTo.length > 0) {
-      for (const assigneeId of task.assignedTo) {
-        await createNotification({
-          type: 'task',
-          title: 'New Task Assigned',
-          message: `You have been assigned: ${task.title}`,
-          targetId: taskDoc.id,
-          targetUrl: '#tasks',
-          recipientId: assigneeId,
-          senderId: employee.employeeId,
-          senderName: employee.name,
-          icon: '/logos/logo-dark.png'
-        })
-      }
-    }
+    // 🔔 GLOBAL BROADCAST: Notify ALL users about new task
+    const allEmployees = await getAllEmployees()
+    await notifyAllUsers(allEmployees, {
+      type: 'task',
+      title: 'New Task Created',
+      message: `${employee.name} created: ${task.title}`,
+      targetId: taskDoc.id,
+      targetUrl: '#tasks',
+      senderId: employee.employeeId,
+      senderName: employee.name,
+      icon: '/logos/logo-dark.png'
+    })
   }
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     if (!employee) throw new Error('Not authenticated')
     
-    await updateDoc(doc(db, 'tasks', id), {
+    const taskRef = doc(db, 'tasks', id)
+    const taskDoc = await getDoc(taskRef)
+    
+    if (!taskDoc.exists()) throw new Error('Task not found')
+    const oldTask = taskDoc.data() as Task
+    
+    await updateDoc(taskRef, {
       ...updates,
       updatedAt: Timestamp.now()
     })
+    
+    // 🔔 GLOBAL BROADCAST: Notify ALL users about task updates
+    const allEmployees = await getAllEmployees()
+    
+    // Notify on status change
+    if (updates.status && updates.status !== oldTask.status) {
+      await notifyAllUsers(allEmployees, {
+        type: 'task',
+        title: 'Task Status Updated',
+        message: `${employee.name} changed status of "${oldTask.title}" to ${updates.status}`,
+        targetId: id,
+        targetUrl: '#tasks',
+        senderId: employee.employeeId,
+        senderName: employee.name,
+        icon: '/logos/logo-dark.png'
+      })
+    }
+    
+    // Notify on deadline change
+    if (updates.dueDate && updates.dueDate !== oldTask.dueDate) {
+      await notifyAllUsers(allEmployees, {
+        type: 'task',
+        title: 'Task Deadline Updated',
+        message: `${employee.name} updated deadline for "${oldTask.title}" to ${new Date(updates.dueDate).toLocaleDateString()}`,
+        targetId: id,
+        targetUrl: '#tasks',
+        senderId: employee.employeeId,
+        senderName: employee.name,
+        icon: '/logos/logo-dark.png'
+      })
+    }
   }
 
   const deleteTask = async (id: string) => {
@@ -1072,43 +1118,18 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       isPinned: false
     })
 
-    // 🔔 Create notifications for mentioned users
-    if (mentions && mentions.length > 0) {
-      for (const mentionedUserId of mentions) {
-        await createNotification({
-          type: 'discussion',
-          title: 'You were mentioned in a discussion',
-          message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-          targetId: discussionDoc.id,
-          targetUrl: '#discussions',
-          recipientId: mentionedUserId,
-          senderId: employee.employeeId,
-          senderName: employee.name,
-          icon: '/logos/logo-dark.png'
-        })
-      }
-    }
-
-    // 🔔 Notify department members if department is mentioned
-    if (mentionedDepartments && mentionedDepartments.length > 0) {
-      const allEmployees = await getAllEmployees()
-      for (const dept of mentionedDepartments) {
-        const deptEmployees = allEmployees.filter(e => e.department === dept)
-        for (const deptEmployee of deptEmployees) {
-          await createNotification({
-            type: 'discussion',
-            title: 'New discussion in your department',
-            message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-            targetId: discussionDoc.id,
-            targetUrl: '#discussions',
-            recipientId: deptEmployee.employeeId,
-            senderId: employee.employeeId,
-            senderName: employee.name,
-            icon: '/logos/logo-dark.png'
-          })
-        }
-      }
-    }
+    // 🔔 GLOBAL BROADCAST: Notify ALL users about new discussion
+    const allEmployees = await getAllEmployees()
+    await notifyAllUsers(allEmployees, {
+      type: 'discussion',
+      title: 'New Discussion Posted',
+      message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
+      targetId: discussionDoc.id,
+      targetUrl: '#discussions',
+      senderId: employee.employeeId,
+      senderName: employee.name,
+      icon: '/logos/logo-dark.png'
+    })
   }
 
   const updateDiscussion = async (id: string, content: string) => {
@@ -1169,37 +1190,18 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [...(discussion.replies || []), newReply]
     })
 
-    // 🔔 Notify discussion author about new reply
-    if (discussion.authorId !== employee.employeeId) {
-      await createNotification({
-        type: 'discussion',
-        title: 'New reply on your discussion',
-        message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-        targetId: discussionId,
-        targetUrl: '#discussions',
-        recipientId: discussion.authorId,
-        senderId: employee.employeeId,
-        senderName: employee.name,
-        icon: '/logos/logo-dark.png'
-      })
-    }
-
-    // 🔔 Notify mentioned users in reply
-    if (mentions && mentions.length > 0) {
-      for (const mentionedUserId of mentions) {
-        await createNotification({
-          type: 'discussion',
-          title: 'You were mentioned in a reply',
-          message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-          targetId: discussionId,
-          targetUrl: '#discussions',
-          recipientId: mentionedUserId,
-          senderId: employee.employeeId,
-          senderName: employee.name,
-          icon: '/logos/logo-dark.png'
-        })
-      }
-    }
+    // 🔔 GLOBAL BROADCAST: Notify ALL users about new reply
+    const allEmployees = await getAllEmployees()
+    await notifyAllUsers(allEmployees, {
+      type: 'discussion',
+      title: 'New Reply Posted',
+      message: `${employee.name} replied: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
+      targetId: discussionId,
+      targetUrl: '#discussions',
+      senderId: employee.employeeId,
+      senderName: employee.name,
+      icon: '/logos/logo-dark.png'
+    })
   }
 
   const deleteDiscussionReply = async (discussionId: string, replyId: string) => {

@@ -766,6 +766,22 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('attendance')
   const isAdmin = employee?.role === 'admin'
 
+  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION ON FIRST LOAD
+  useEffect(() => {
+    const requestPermissionOnLoad = async () => {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+          try {
+            await Notification.requestPermission()
+          } catch (error) {
+            console.error('Failed to request notification permission:', error)
+          }
+        }
+      }
+    }
+    requestPermissionOnLoad()
+  }, [])
+
   return (
     <div className="min-h-screen bg-neutral-950 overflow-x-hidden">
       {/* Top Navigation */}

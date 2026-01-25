@@ -236,3 +236,43 @@ export async function createNotification(notification: Omit<Notification, 'id' |
     console.error('Error creating notification:', error)
   }
 }
+
+// ============================================
+// HELPER: BROADCAST TO ALL USERS (GLOBAL)
+// ============================================
+
+/**
+ * Broadcasts a notification to ALL active users
+ * Used for global announcements: tasks, discussions, holidays, etc.
+ * @param allEmployees Array of all employee profiles
+ * @param notification Base notification data (without recipientId)
+ */
+export async function notifyAllUsers(
+  allEmployees: any[],
+  notificationData: Omit<Notification, 'id' | 'createdAt' | 'read' | 'recipientId'>
+) {
+  try {
+    const batch = writeBatch(db)
+    const notificationsRef = collection(db, 'notifications')
+    
+    // Create notification for each employee
+    for (const emp of allEmployees) {
+      // Skip sender (no self-notification)
+      if (emp.employeeId === notificationData.senderId) {
+        continue
+      }
+      
+      const docRef = doc(notificationsRef)
+      batch.set(docRef, {
+        ...notificationData,
+        recipientId: emp.employeeId,
+        read: false,
+        createdAt: Timestamp.now()
+      })
+    }
+    
+    await batch.commit()
+  } catch (error) {
+    console.error('Error broadcasting notifications to all users:', error)
+  }
+}
