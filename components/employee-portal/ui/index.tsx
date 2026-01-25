@@ -304,11 +304,11 @@ export const Select = ({
   const selectedOption = options.find(opt => opt.value === value)
 
   return (
-    <div className={`space-y-1.5 ${className}`} ref={ref}>
+    <div className={`space-y-1.5 ${className}`} ref={ref} style={{ isolation: 'isolate' }}>
       {label && (
         <label className="block text-sm font-medium text-neutral-300">{label}</label>
       )}
-      <div className="relative z-[9999]">
+      <div className="relative" style={{ zIndex: isOpen ? 9999 : 1 }}>
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -333,7 +333,8 @@ export const Select = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute z-[9999] w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              className="absolute w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              style={{ zIndex: 99999 }}
             >
               <div className="max-h-60 overflow-y-auto">
                 {options.map((option) => (

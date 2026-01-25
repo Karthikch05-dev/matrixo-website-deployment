@@ -205,7 +205,8 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 0px;
+  height: 0px;
 }
 
 ::-webkit-scrollbar-track {
@@ -218,6 +219,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply from-purple-600 to-blue-700;
+}
+
+/* Hide scrollbars globally for employee portal */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Global scrollbar hide */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none;
 }
 
 /* Smooth scroll behavior */

@@ -112,7 +112,8 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-96 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+            className="absolute right-0 mt-2 w-96 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            style={{ zIndex: 99999 }}
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50">
