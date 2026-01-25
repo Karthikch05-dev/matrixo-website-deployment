@@ -771,6 +771,7 @@ export const ProfileInfo = ({
   const [showPreview, setShowPreview] = useState(false)
   const [showExpanded, setShowExpanded] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [arrowOffset, setArrowOffset] = useState(0) // Offset from center for arrow
   const triggerRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const expandedRef = useRef<HTMLDivElement>(null)
@@ -782,10 +783,25 @@ export const ProfileInfo = ({
     hoverTimeoutRef.current = setTimeout(() => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect()
-        setPosition({
-          x: rect.left + rect.width / 2,
-          y: rect.bottom + 8
-        })
+        const viewportWidth = window.innerWidth
+        const cardWidth = 280 // max-w-[280px]
+        
+        const originalX = rect.left + rect.width / 2
+        let x = originalX
+        const y = rect.bottom + 8
+        
+        // Adjust if too close to right edge
+        if (x + cardWidth / 2 > viewportWidth - 20) {
+          x = viewportWidth - cardWidth / 2 - 20
+        }
+        // Adjust if too close to left edge
+        if (x - cardWidth / 2 < 20) {
+          x = cardWidth / 2 + 20
+        }
+        
+        // Calculate arrow offset (how much we moved the card)
+        setArrowOffset(originalX - x)
+        setPosition({ x, y })
         setShowPreview(true)
       }
     }, 300)
@@ -817,7 +833,8 @@ export const ProfileInfo = ({
       const viewportHeight = window.innerHeight
       
       // Calculate optimal position
-      let x = rect.left + rect.width / 2
+      const originalX = rect.left + rect.width / 2
+      let x = originalX
       let y = rect.bottom + 12
       
       // Adjust if too close to edges
@@ -828,6 +845,8 @@ export const ProfileInfo = ({
       if (x + cardWidth / 2 > viewportWidth - 20) x = viewportWidth - cardWidth / 2 - 20
       if (y + cardHeight > viewportHeight - 20) y = rect.top - cardHeight - 12
       
+      // Calculate arrow offset
+      setArrowOffset(originalX - x)
       setPosition({ x, y })
     }
     setShowExpanded(true)
@@ -909,9 +928,10 @@ export const ProfileInfo = ({
           }}
           className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 min-w-[240px] max-w-[280px]"
         >
-          {/* Arrow */}
+          {/* Arrow - positioned based on offset */}
           <div 
-            className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15 rotate-45"
+            className="absolute -top-2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15 rotate-45"
+            style={{ left: `calc(50% + ${arrowOffset}px)`, transform: 'translateX(-50%)' }}
           />
           
           <div className="flex items-center gap-3 relative">
