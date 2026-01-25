@@ -27,6 +27,7 @@ import {
   FaChevronDown
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { NotificationProvider } from '@/lib/notificationContext'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -36,6 +37,7 @@ import Attendance from '@/components/employee-portal/Attendance'
 import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
+import NotificationBell from '@/components/employee-portal/NotificationBell'
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
@@ -296,6 +298,9 @@ function TopNavbar({
 
           {/* Right side */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* Notification Bell */}
+            <NotificationBell />
+            
             {/* Time Display */}
             <div className="hidden lg:flex items-center gap-2.5 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
               <FaClock className="text-primary-400 text-sm" />
@@ -825,8 +830,10 @@ function EmployeePortalContent() {
 export default function EmployeePortalPage() {
   return (
     <EmployeeAuthProvider>
-      <EmployeePortalContent />
-      <Toaster position="top-right" richColors />
+      <NotificationProvider>
+        <EmployeePortalContent />
+        <Toaster position="top-right" richColors />
+      </NotificationProvider>
     </EmployeeAuthProvider>
   )
 }

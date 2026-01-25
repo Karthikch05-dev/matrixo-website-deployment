@@ -684,6 +684,7 @@ export function Tasks() {
         const assignedTo = task?.assignedTo || []
         return assignedTo.some(empId => {
           const emp = employees.find(e => e.employeeId === empId)
+          // Check if employee is intern AND their department matches the selected specialization
           return emp?.role === 'Intern' && emp?.department === filterInternSpecialization
         })
       })
