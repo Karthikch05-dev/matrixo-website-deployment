@@ -308,7 +308,7 @@ export const Select = ({
       {label && (
         <label className="block text-sm font-medium text-neutral-300">{label}</label>
       )}
-      <div className="relative">
+      <div className="relative z-[9999]">
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
