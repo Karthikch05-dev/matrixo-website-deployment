@@ -218,7 +218,7 @@ function TaskModal({
               animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
               exit={{ opacity: 0, height: 0, marginTop: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="overflow-hidden"
+              style={{ overflow: 'visible' }}
             >
               <Select
                 label="Intern Specialization"
@@ -827,7 +827,7 @@ export function Tasks() {
               animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
               exit={{ opacity: 0, height: 0, marginTop: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="overflow-hidden"
+              style={{ overflow: 'visible' }}
             >
               <Select
                 label="Intern Specialization"
