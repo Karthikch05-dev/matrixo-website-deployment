@@ -138,11 +138,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     setEmployee(null)
   }
 
+  // Helper to get local date string without UTC conversion
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const markAttendance = async (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => {
     if (!user || !employee) throw new Error('Not authenticated')
 
     const today = new Date()
-    const dateString = today.toISOString().split('T')[0]
+    const dateString = getLocalDateString(today)
     const now = new Date()
     
     const attendanceId = `${employee.employeeId}_${dateString}`
@@ -167,7 +175,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const updateAttendanceNotes = async (notes: string) => {
     if (!user || !employee) throw new Error('Not authenticated')
     
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
     
     await updateDoc(doc(db, 'attendance', attendanceId), {
@@ -185,7 +193,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     // Mark leave for each day in the range
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dateString = d.toISOString().split('T')[0]
+      const dateString = getLocalDateString(d)
       const attendanceId = `${employee.employeeId}_${dateString}`
       
       const attendanceData: AttendanceRecord = {
@@ -206,7 +214,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const getTodayAttendance = async (): Promise<AttendanceRecord | null> => {
     if (!employee) return null
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
     
     const attendanceDoc = await getDoc(doc(db, 'attendance', attendanceId))
@@ -238,8 +246,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
     // Filter by date range if provided
     if (startDate && endDate) {
-      const start = startDate.toISOString().split('T')[0]
-      const end = endDate.toISOString().split('T')[0]
+      const start = getLocalDateString(startDate)
+      const end = getLocalDateString(endDate)
       records = records.filter(r => r.date >= start && r.date <= end)
     }
 

@@ -224,9 +224,12 @@ export function getCurrentLocation(): Promise<GeolocationPosition> {
   })
 }
 
-// Format date to YYYY-MM-DD
+// Format date to YYYY-MM-DD using local time
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0]
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 // Get today's date string
@@ -560,6 +563,33 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ============================================
+  // DATE & WORKING DAY HELPERS
+  // ============================================
+
+  // Helper to get local date string without UTC conversion
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Check if a date is a working day (not weekend, not holiday)
+  const isWorkingDay = (dateString: string): boolean => {
+    // Check if it's a holiday from database
+    const hasHoliday = holidays.some(h => h.date === dateString)
+    if (hasHoliday) return false
+
+    // Check if it's a weekend (Saturday or Sunday)
+    const dateParts = dateString.split('-')
+    const checkDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
+    const dayOfWeek = checkDate.getDay()
+    if (dayOfWeek === 0 || dayOfWeek === 6) return false
+
+    return true
+  }
+
+  // ============================================
   // ATTENDANCE FUNCTIONS
   // ============================================
 
@@ -567,7 +597,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (!user || !employee) throw new Error('Not authenticated')
 
     const today = new Date()
-    const dateString = today.toISOString().split('T')[0]
+    const dateString = getLocalDateString(today)
     const now = new Date()
     
     const attendanceId = `${employee.employeeId}_${dateString}`
@@ -641,7 +671,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const updateAttendanceNotes = async (notes: string) => {
     if (!user || !employee) throw new Error('Not authenticated')
     
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
     
     await updateDoc(doc(db, 'attendance', attendanceId), {
@@ -659,7 +689,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const batch = writeBatch(db)
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dateString = d.toISOString().split('T')[0]
+      const dateString = getLocalDateString(d)
       const attendanceId = `${employee.employeeId}_${dateString}`
       
       const attendanceData: AttendanceRecord = {
@@ -688,7 +718,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const getTodayAttendance = useCallback(async (): Promise<AttendanceRecord | null> => {
     if (!employee) return null
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
     
     const attendanceDoc = await getDoc(doc(db, 'attendance', attendanceId))
@@ -717,8 +747,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     records.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
     if (startDate && endDate) {
-      const start = startDate.toISOString().split('T')[0]
-      const end = endDate.toISOString().split('T')[0]
+      const start = getLocalDateString(startDate)
+      const end = getLocalDateString(endDate)
       records = records.filter(r => r.date >= start && r.date <= end)
     }
 
@@ -1246,14 +1276,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    const dateString = yesterday.toISOString().split('T')[0]
+    const dateString = getLocalDateString(yesterday)
     
-    // Skip if yesterday was a holiday
-    if (isHoliday(dateString)) return
-    
-    // Skip weekends
-    const dayOfWeek = yesterday.getDay()
-    if (dayOfWeek === 0 || dayOfWeek === 6) return
+    // Skip if yesterday was not a working day (weekend or holiday)
+    if (!isWorkingDay(dateString)) {
+      console.log(`Skipping auto-absent for ${dateString} - not a working day`)
+      return
+    }
     
     const allEmployees = await getAllEmployees()
     const batch = writeBatch(db)
