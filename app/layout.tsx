@@ -114,7 +114,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased overflow-x-hidden max-w-full">
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-KFF7KV3Z11"
@@ -131,7 +131,7 @@ export default async function RootLayout({
 
         <AuthProvider>
           {!isEmployeePortal && <Navbar />}
-          <main className={isEmployeePortal ? "min-h-screen" : "min-h-screen pt-0"}>
+          <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
             {children}
           </main>
           {!isEmployeePortal && <Footer />}

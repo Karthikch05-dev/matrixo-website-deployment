@@ -359,7 +359,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             <FaCalendarCheck className="text-primary-500" />
@@ -367,12 +367,12 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
           </h2>
           <p className="text-neutral-400 mt-1">{formattedDate}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Location Status Indicator */}
           <button
             onClick={locationStatus !== 'granted' ? requestLocationPermission : undefined}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
+              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap
               ${locationStatus === 'granted' 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
                 : locationStatus === 'denied' 
@@ -389,7 +389,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             </span>
           </button>
           
-          <div className="flex items-center gap-2 text-white bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-xl">
+          <div className="flex items-center gap-2 text-white bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap">
             <FaClock className="text-primary-400" />
             <span className="text-lg font-mono tabular-nums">{formattedTime}</span>
           </div>

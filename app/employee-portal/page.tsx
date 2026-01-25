@@ -240,15 +240,15 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50">
+    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50 w-full overflow-x-hidden">
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
       
-      <div className="w-full px-6">
-        <div className="flex items-center justify-between h-16 gap-8">
+      <div className="w-full max-w-full px-4 md:px-6">
+        <div className="flex items-center justify-between h-16 gap-2 md:gap-8 max-w-full">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <img src="/logos/logo-dark.png" alt="matriXO" className="h-9 group-hover:scale-105 transition-transform" />
+          <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
+            <img src="/logos/logo-dark.png" alt="matriXO" className="h-8 md:h-9 group-hover:scale-105 transition-transform" />
             <div className="hidden sm:flex flex-col">
               <span className="text-white font-bold text-sm leading-tight">Employee</span>
               <span className="text-primary-400 text-xs font-medium leading-tight">Portal</span>
@@ -297,7 +297,7 @@ function TopNavbar({
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
             {/* Notification Bell */}
             <NotificationBell />
             
@@ -767,12 +767,12 @@ function Dashboard() {
   const isAdmin = employee?.role === 'admin'
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-neutral-950 overflow-x-hidden">
       {/* Top Navigation */}
       <TopNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 w-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -780,6 +780,7 @@ function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
+            className="w-full"
           >
             {activeTab === 'attendance' && <Attendance />}
             {activeTab === 'dashboard' && <DashboardOverview />}
