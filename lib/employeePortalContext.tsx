@@ -116,6 +116,7 @@ export interface Task {
   dueDate?: string
   tags?: string[]
   department?: string
+  specialization?: string // Intern specialization
   comments: TaskComment[]
 }
 

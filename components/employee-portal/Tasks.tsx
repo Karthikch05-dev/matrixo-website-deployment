@@ -46,6 +46,18 @@ const statusConfig = {
 }
 
 // ============================================
+// INTERN SPECIALIZATIONS
+// ============================================
+
+const INTERN_SPECIALIZATIONS = [
+  'Web Development',
+  'Content and Curriculum Development',
+  'Product Research & Innovation',
+  'Operations & Project Management',
+  'Marketing & Brand Strategy'
+]
+
+// ============================================
 // CREATE/EDIT TASK MODAL
 // ============================================
 
@@ -107,7 +119,8 @@ function TaskModal({
           assignedTo: form.assignedTo,
           assignedToNames,
           dueDate: form.dueDate || undefined,
-          department: form.department
+          department: form.department,
+          specialization: form.department === 'Intern' ? form.specialization : undefined
         })
         toast.success('Task created successfully')
       }
@@ -211,11 +224,7 @@ function TaskModal({
                 label="Intern Specialization"
                 options={[
                   { value: '', label: 'Select Specialization' },
-                  { value: 'Web Development', label: 'Web Development' },
-                  { value: 'Content and Curriculum Development', label: 'Content and Curriculum Development' },
-                  { value: 'Product Research & Innovation', label: 'Product Research & Innovation' },
-                  { value: 'Operations & Project Management', label: 'Operations & Project Management' },
-                  { value: 'Marketing & Brand Strategy', label: 'Marketing & Brand Strategy' }
+                  ...INTERN_SPECIALIZATIONS.map(spec => ({ value: spec, label: spec }))
                 ]}
                 value={form.specialization}
                 onChange={(value) => setForm({ ...form, specialization: value })}
@@ -678,15 +687,11 @@ export function Tasks() {
       })
     }
 
-    // Intern Specialization filter (filters by department for interns)
+    // Intern Specialization filter (filters by task specialization field)
     if (filterInternSpecialization) {
       result = result.filter(task => {
-        const assignedTo = task?.assignedTo || []
-        return assignedTo.some(empId => {
-          const emp = employees.find(e => e.employeeId === empId)
-          // Check if employee is intern AND their department matches the selected specialization
-          return emp?.role === 'Intern' && emp?.department === filterInternSpecialization
-        })
+        // Check if task has specialization field and it matches the filter
+        return task?.specialization === filterInternSpecialization
       })
     }
 
@@ -828,11 +833,7 @@ export function Tasks() {
                 label="Intern Specialization"
                 options={[
                   { value: '', label: 'All Specializations' },
-                  { value: 'Web Development', label: 'Web Development' },
-                  { value: 'Content and Curriculum Development', label: 'Content and Curriculum Development' },
-                  { value: 'Product Research & Innovation', label: 'Product Research & Innovation' },
-                  { value: 'Operations & Project Management', label: 'Operations & Project Management' },
-                  { value: 'Marketing & Brand Strategy', label: 'Marketing & Brand Strategy' }
+                  ...INTERN_SPECIALIZATIONS.map(spec => ({ value: spec, label: spec }))
                 ]}
                 value={filterInternSpecialization}
                 onChange={setFilterInternSpecialization}
