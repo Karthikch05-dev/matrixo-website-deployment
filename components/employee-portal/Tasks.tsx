@@ -69,7 +69,8 @@ function TaskModal({
     status: editingTask?.status || 'todo',
     assignedTo: editingTask?.assignedTo || [],
     dueDate: editingTask?.dueDate || '',
-    department: editingTask?.department || employee?.department || ''
+    department: editingTask?.department || employee?.department || '',
+    specialization: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,9 +191,38 @@ function TaskModal({
               ...departments.map(d => ({ value: d, label: d }))
             ]}
             value={form.department}
-            onChange={(value) => setForm({ ...form, department: value })}
+            onChange={(value) => {
+              setForm({ ...form, department: value, specialization: value === 'Intern' ? form.specialization : '' })
+            }}
           />
         </div>
+
+        {/* Conditional Intern Specialization Dropdown */}
+        <AnimatePresence>
+          {form.department === 'Intern' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="overflow-hidden"
+            >
+              <Select
+                label="Intern Specialization"
+                options={[
+                  { value: '', label: 'Select Specialization' },
+                  { value: 'Web Development', label: 'Web Development' },
+                  { value: 'Content and Curriculum Development', label: 'Content and Curriculum Development' },
+                  { value: 'Product Research & Innovation', label: 'Product Research & Innovation' },
+                  { value: 'Operations & Project Management', label: 'Operations & Project Management' },
+                  { value: 'Marketing & Brand Strategy', label: 'Marketing & Brand Strategy' }
+                ]}
+                value={form.specialization}
+                onChange={(value) => setForm({ ...form, specialization: value })}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Assignees */}
         <div>
@@ -745,6 +775,7 @@ export function Tasks() {
             />
 
             <Select
+              placeholder="Filter by Role"
               options={[
                 { value: '', label: 'All Roles' },
                 { value: 'Intern', label: 'Intern' },
