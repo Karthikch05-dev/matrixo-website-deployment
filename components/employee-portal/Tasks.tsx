@@ -42,7 +42,7 @@ const statusConfig = {
   'todo': { label: 'To Do', color: 'bg-neutral-600' },
   'in-progress': { label: 'In Progress', color: 'bg-blue-500' },
   'review': { label: 'In Review', color: 'bg-amber-500' },
-  'completed': { label: 'Completed', color: 'bg-emerald-500' }
+  'completed': { label: 'Completed', color: 'bg-emerald-600 text-white' }
 }
 
 // ============================================
@@ -684,6 +684,7 @@ export function Tasks() {
         const assignedTo = task?.assignedTo || []
         return assignedTo.some(empId => {
           const emp = employees.find(e => e.employeeId === empId)
+          // Check if employee is intern AND their department matches the selected specialization
           return emp?.role === 'Intern' && emp?.department === filterInternSpecialization
         })
       })
@@ -698,6 +699,11 @@ export function Tasks() {
         }
         return assignedTo === employee.employeeId || task.createdBy === employee.employeeId
       })
+    }
+
+    // Hide completed tasks by default (unless explicitly selected in status filter)
+    if (filterStatus !== 'completed') {
+      result = result.filter(task => task?.status !== 'completed')
     }
 
     return result

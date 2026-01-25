@@ -175,21 +175,21 @@ function AddEventModal({
       if (editingEvent?.id) {
         await updateCalendarEvent(editingEvent.id, {
           title: form.title,
-          description: form.description,
+          description: form.description || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color
+          color: form.color || undefined
         })
         toast.success('Event updated successfully')
       } else {
         await addCalendarEvent({
           title: form.title,
-          description: form.description,
+          description: form.description || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color
+          color: form.color || undefined
         })
         toast.success('Event added successfully')
       }
@@ -330,13 +330,19 @@ function DayDetailModal({
                   )}
                 </div>
               </div>
-              {isAdmin && (
+              {isAdmin && day.holiday.id && (
                 <button
                   onClick={handleDeleteHoliday}
                   className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                  title="Delete holiday"
                 >
                   <FaTrash />
                 </button>
+              )}
+              {isAdmin && !day.holiday.id && day.holiday.isAutoHoliday && (
+                <div className="text-xs text-neutral-500 italic">
+                  Auto-generated
+                </div>
               )}
             </div>
           </Card>
@@ -408,6 +414,14 @@ export function Calendar() {
 
   const isAdmin = employee?.role === 'admin'
 
+  // Helper to get local date string without UTC conversion
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   // Generate calendar days
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear()
@@ -418,13 +432,13 @@ export function Calendar() {
     
     const days: CalendarDay[] = []
     const today = new Date()
-    const todayString = today.toISOString().split('T')[0]
+    const todayString = getLocalDateString(today)
     
     // Add days from previous month
     const startPadding = firstDay.getDay()
     for (let i = startPadding - 1; i >= 0; i--) {
       const date = new Date(year, month, -i)
-      const dateString = date.toISOString().split('T')[0]
+      const dateString = getLocalDateString(date)
       days.push({
         date,
         dateString,
@@ -439,11 +453,11 @@ export function Calendar() {
     // Add days of current month
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day)
-      const dateString = date.toISOString().split('T')[0]
+      const dateString = getLocalDateString(date)
       const dayOfWeek = date.getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       
-      // Auto-mark Saturdays and Sundays as weekend holidays if not already marked
+      // Auto-generate weekend holidays if not already marked
       let holidayForDay = holidays.find(h => h.date === dateString)
       if (isWeekend && !holidayForDay) {
         holidayForDay = {
@@ -453,7 +467,8 @@ export function Calendar() {
           description: 'Weekend',
           createdBy: 'system',
           createdByName: 'System',
-          createdAt: { toDate: () => date } as any
+          createdAt: { toDate: () => date } as any,
+          isAutoHoliday: true // Mark as auto-generated
         }
       }
       
@@ -472,7 +487,7 @@ export function Calendar() {
     const remainingDays = 42 - days.length // 6 rows of 7 days
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month + 1, i)
-      const dateString = date.toISOString().split('T')[0]
+      const dateString = getLocalDateString(date)
       days.push({
         date,
         dateString,
@@ -489,7 +504,7 @@ export function Calendar() {
 
   // Upcoming events for list view
   const upcomingEvents = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateString(new Date())
     const allItems: Array<{ type: 'holiday' | 'event'; date: string; item: Holiday | CalendarEvent }> = []
     
     holidays.filter(h => h.date >= today).forEach(h => {
