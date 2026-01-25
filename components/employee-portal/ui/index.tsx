@@ -905,7 +905,7 @@ export const ProfileInfo = ({
             left: position.x,
             top: position.y,
             transform: 'translateX(-50%)',
-            zIndex: 100000,
+            zIndex: 10000,
           }}
           className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 min-w-[240px] max-w-[280px]"
         >
@@ -957,7 +957,7 @@ export const ProfileInfo = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-            style={{ zIndex: 99999 }}
+            style={{ zIndex: 9999 }}
             onClick={() => setShowExpanded(false)}
           />
           
@@ -973,7 +973,7 @@ export const ProfileInfo = ({
               left: position.x,
               top: position.y,
               transform: 'translateX(-50%)',
-              zIndex: 100000,
+              zIndex: 10000,
             }}
             className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/50 w-[360px] max-h-[80vh] overflow-auto"
           >

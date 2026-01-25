@@ -108,14 +108,14 @@ export default function NotificationBell() {
       <AnimatePresence>
         {isOpen && (
           <>
-            <div className="fixed inset-0" style={{ zIndex: 99998 }} onClick={() => setIsOpen(false)} />
+            <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setIsOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
               className="fixed right-4 top-16 w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
-              style={{ zIndex: 99999 }}
+              style={{ zIndex: 9999 }}
             >
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50">

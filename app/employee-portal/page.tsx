@@ -241,7 +241,7 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 w-full" style={{ zIndex: 50 }}>
+    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 sticky top-0 w-full" style={{ zIndex: 9000, isolation: 'isolate' }}>
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
       
@@ -353,14 +353,14 @@ function TopNavbar({
               <AnimatePresence>
                 {userMenuOpen && (
                   <>
-                    <div className="fixed inset-0" style={{ zIndex: 99998 }} onClick={() => setUserMenuOpen(false)} />
+                    <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setUserMenuOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
                       className="fixed right-4 top-16 w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
-                      style={{ zIndex: 99999 }}
+                      style={{ zIndex: 9999 }}
                     >
                       <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent">
                         <div className="flex items-center gap-3">

@@ -954,7 +954,7 @@ export function AdminPanel() {
       />
 
       {/* Filters */}
-      <div className="relative" style={{ zIndex: 100, isolation: 'isolate' }}>
+      <div className="relative" style={{ zIndex: 10 }}>
         <Card padding="md">
         <div className="flex items-center gap-2 mb-4">
           <FaFilter className="text-neutral-400" />
