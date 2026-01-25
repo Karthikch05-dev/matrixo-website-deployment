@@ -23,7 +23,7 @@ import {
   FaSearch
 } from 'react-icons/fa'
 import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner } from './ui'
+import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -468,10 +468,32 @@ function TaskDetailModal({
             )}
             {task.comments?.map((comment) => (
               <div key={comment.id} className="flex gap-3 p-3 bg-neutral-800/50 rounded-lg">
-                <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
+                <ProfileInfo
+                  data={{
+                    employeeId: comment.authorId,
+                    name: comment.authorName,
+                    profileImage: comment.authorImage,
+                    role: 'employee',
+                    status: 'Active'
+                  }}
+                  isAdmin={isAdmin}
+                >
+                  <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
+                </ProfileInfo>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-white">{comment.authorName}</p>
+                    <ProfileInfo
+                      data={{
+                        employeeId: comment.authorId,
+                        name: comment.authorName,
+                        profileImage: comment.authorImage,
+                        role: 'employee',
+                        status: 'Active'
+                      }}
+                      isAdmin={isAdmin}
+                    >
+                      <p className="text-sm font-medium text-white hover:text-primary-400 cursor-pointer">{comment.authorName}</p>
+                    </ProfileInfo>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-neutral-500">
                         {formatTimestamp(comment.createdAt)}

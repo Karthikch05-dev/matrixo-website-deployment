@@ -718,3 +718,448 @@ export const Spinner = ({ size = 'md', className = '' }: SpinnerProps) => {
     </div>
   )
 }
+
+// ============================================
+// PROFILE INFO SYSTEM - REUSABLE OVERLAY COMPONENT
+// ============================================
+
+import { createPortal } from 'react-dom'
+import { FaEnvelope, FaCalendarAlt as FaCalendar2, FaChartLine, FaCircle, FaIdCard, FaBriefcase, FaEye, FaEdit, FaClock } from 'react-icons/fa'
+
+// Profile Data Contract
+export interface ProfileInfoData {
+  // Primary Info
+  employeeId: string
+  name: string
+  profileImage?: string
+  role: string
+  department?: string
+  specialization?: string // For interns
+  designation?: string
+  
+  // Secondary Info
+  email?: string
+  joiningDate?: string
+  attendancePercentage?: number
+  status?: 'Active' | 'On Leave' | 'Inactive'
+  
+  // Admin-only Info
+  lastAttendanceDate?: string
+  presentCount?: number
+  absentCount?: number
+  leaveCount?: number
+}
+
+interface ProfileInfoProps {
+  data: ProfileInfoData
+  isAdmin?: boolean
+  children: ReactNode
+  onViewProfile?: () => void
+  onEditProfile?: () => void
+  disabled?: boolean
+}
+
+// Main ProfileInfo Component
+export const ProfileInfo = ({
+  data,
+  isAdmin = false,
+  children,
+  onViewProfile,
+  onEditProfile,
+  disabled = false
+}: ProfileInfoProps) => {
+  const [showPreview, setShowPreview] = useState(false)
+  const [showExpanded, setShowExpanded] = useState(false)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const expandedRef = useRef<HTMLDivElement>(null)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Handle hover
+  const handleMouseEnter = () => {
+    if (disabled || showExpanded) return
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect()
+        setPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.bottom + 8
+        })
+        setShowPreview(true)
+      }
+    }, 300)
+  }
+
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    // Check if moving to preview card
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (previewRef.current?.contains(relatedTarget)) return
+    setShowPreview(false)
+  }
+
+  const handlePreviewMouseLeave = (e: React.MouseEvent) => {
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (triggerRef.current?.contains(relatedTarget)) return
+    setShowPreview(false)
+  }
+
+  // Handle click for expanded view
+  const handleClick = () => {
+    if (disabled) return
+    setShowPreview(false)
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      
+      // Calculate optimal position
+      let x = rect.left + rect.width / 2
+      let y = rect.bottom + 12
+      
+      // Adjust if too close to edges
+      const cardWidth = 360
+      const cardHeight = 400
+      
+      if (x - cardWidth / 2 < 20) x = cardWidth / 2 + 20
+      if (x + cardWidth / 2 > viewportWidth - 20) x = viewportWidth - cardWidth / 2 - 20
+      if (y + cardHeight > viewportHeight - 20) y = rect.top - cardHeight - 12
+      
+      setPosition({ x, y })
+    }
+    setShowExpanded(true)
+  }
+
+  // Close expanded on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        expandedRef.current && 
+        !expandedRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        setShowExpanded(false)
+      }
+    }
+    
+    if (showExpanded) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showExpanded])
+
+  // ESC to close
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowExpanded(false)
+        setShowPreview(false)
+      }
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [])
+
+  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name?.split(' ').map(n => n[0]).join('') || 'U')}&background=4f46e5&color=fff&size=200`
+  
+  const getRoleBadgeVariant = (role: string) => {
+    if (role === 'admin') return 'warning'
+    if (role === 'Intern') return 'info'
+    return 'primary'
+  }
+
+  const getStatusColor = (status?: string) => {
+    if (status === 'Active') return 'text-emerald-400'
+    if (status === 'On Leave') return 'text-amber-400'
+    return 'text-neutral-400'
+  }
+
+  return (
+    <>
+      {/* Trigger Element */}
+      <div
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+        className={disabled ? '' : 'cursor-pointer'}
+      >
+        {children}
+      </div>
+
+      {/* Preview Card (Hover) - Rendered via Portal */}
+      {showPreview && typeof window !== 'undefined' && createPortal(
+        <motion.div
+          ref={previewRef}
+          initial={{ opacity: 0, y: -8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.95 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          onMouseLeave={handlePreviewMouseLeave}
+          style={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            transform: 'translateX(-50%)',
+            zIndex: 100000,
+          }}
+          className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 min-w-[240px] max-w-[280px]"
+        >
+          {/* Arrow */}
+          <div 
+            className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15 rotate-45"
+          />
+          
+          <div className="flex items-center gap-3 relative">
+            <div className="relative">
+              <img
+                src={data.profileImage || fallbackUrl}
+                alt={data.name}
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500/50"
+                onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
+              />
+              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-white truncate">{data.name}</p>
+              <p className="text-xs text-neutral-400 truncate">{data.designation || data.department}</p>
+              <p className="text-xs text-primary-400 font-mono">{data.employeeId}</p>
+            </div>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+            <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
+              {data.role === 'admin' ? '👑 Admin' : data.role}
+            </Badge>
+            {data.attendancePercentage !== undefined && (
+              <span className="text-neutral-400 flex items-center gap-1">
+                <FaChartLine className="text-primary-400" />
+                {data.attendancePercentage.toFixed(0)}% attendance
+              </span>
+            )}
+          </div>
+          
+          <p className="text-xs text-neutral-500 text-center mt-2">Click for more details</p>
+        </motion.div>,
+        document.body
+      )}
+
+      {/* Expanded Card (Click) - Rendered via Portal */}
+      {showExpanded && typeof window !== 'undefined' && createPortal(
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            style={{ zIndex: 99999 }}
+            onClick={() => setShowExpanded(false)}
+          />
+          
+          {/* Expanded Card */}
+          <motion.div
+            ref={expandedRef}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              position: 'fixed',
+              left: position.x,
+              top: position.y,
+              transform: 'translateX(-50%)',
+              zIndex: 100000,
+            }}
+            className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/50 w-[360px] max-h-[80vh] overflow-auto"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowExpanded(false)}
+              className="absolute top-3 right-3 p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-all z-10"
+            >
+              <FaTimes className="text-sm" />
+            </button>
+
+            {/* Header with Gradient */}
+            <div className="p-5 bg-gradient-to-br from-primary-600/20 via-primary-500/10 to-transparent border-b border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full opacity-40 blur-sm" />
+                  <img
+                    src={data.profileImage || fallbackUrl}
+                    alt={data.name}
+                    className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
+                    onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
+                  />
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-white truncate">{data.name}</h3>
+                  <p className="text-sm text-neutral-400 truncate">{data.designation || 'Employee'}</p>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <Badge variant="primary" size="sm">{data.employeeId}</Badge>
+                    <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
+                      {data.role === 'admin' ? '👑 Admin' : data.role}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Primary Info */}
+            <div className="p-4 space-y-3 border-b border-white/5">
+              {data.department && (
+                <div className="flex items-center gap-3 text-sm">
+                  <FaBriefcase className="text-primary-400 flex-shrink-0" />
+                  <span className="text-neutral-400">Department:</span>
+                  <span className="text-white">{data.department}</span>
+                </div>
+              )}
+              {data.specialization && (
+                <div className="flex items-center gap-3 text-sm">
+                  <FaIdCard className="text-cyan-400 flex-shrink-0" />
+                  <span className="text-neutral-400">Specialization:</span>
+                  <span className="text-white">{data.specialization}</span>
+                </div>
+              )}
+              {data.email && (
+                <div className="flex items-center gap-3 text-sm">
+                  <FaEnvelope className="text-primary-400 flex-shrink-0" />
+                  <span className="text-neutral-400">Email:</span>
+                  <span className="text-white truncate">{data.email}</span>
+                </div>
+              )}
+              {data.joiningDate && (
+                <div className="flex items-center gap-3 text-sm">
+                  <FaCalendar2 className="text-emerald-400 flex-shrink-0" />
+                  <span className="text-neutral-400">Joined:</span>
+                  <span className="text-white">{data.joiningDate}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Secondary Info */}
+            <div className="p-4 space-y-3 border-b border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-sm">
+                  <FaCircle className={`text-xs flex-shrink-0 ${getStatusColor(data.status)}`} />
+                  <span className="text-neutral-400">Status:</span>
+                  <span className={`font-medium ${getStatusColor(data.status)}`}>{data.status || 'Unknown'}</span>
+                </div>
+                {data.attendancePercentage !== undefined && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
+                    <FaChartLine className="text-primary-400 text-sm" />
+                    <span className="text-lg font-bold bg-gradient-to-r from-primary-400 to-cyan-400 bg-clip-text text-transparent">
+                      {data.attendancePercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Admin-only Info */}
+            {isAdmin && (data.presentCount !== undefined || data.lastAttendanceDate) && (
+              <div className="p-4 bg-amber-500/5 border-b border-amber-500/10">
+                <p className="text-xs text-amber-400 font-medium mb-3 flex items-center gap-1">
+                  <FaClock /> Admin View
+                </p>
+                {data.lastAttendanceDate && (
+                  <div className="flex items-center gap-3 text-sm mb-2">
+                    <span className="text-neutral-400">Last marked:</span>
+                    <span className="text-white">{data.lastAttendanceDate}</span>
+                  </div>
+                )}
+                {data.presentCount !== undefined && (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    <div className="text-center p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                      <div className="text-lg font-bold text-emerald-400">{data.presentCount}</div>
+                      <div className="text-xs text-neutral-400">Present</div>
+                    </div>
+                    <div className="text-center p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="text-lg font-bold text-red-400">{data.absentCount || 0}</div>
+                      <div className="text-xs text-neutral-400">Absent</div>
+                    </div>
+                    <div className="text-center p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                      <div className="text-lg font-bold text-amber-400">{data.leaveCount || 0}</div>
+                      <div className="text-xs text-neutral-400">Leave</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            {(onViewProfile || onEditProfile) && (
+              <div className="p-4 flex gap-2">
+                {onViewProfile && (
+                  <button
+                    onClick={() => {
+                      setShowExpanded(false)
+                      onViewProfile()
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl transition-colors font-medium text-sm"
+                  >
+                    <FaEye /> View Full Profile
+                  </button>
+                )}
+                {isAdmin && onEditProfile && (
+                  <button
+                    onClick={() => {
+                      setShowExpanded(false)
+                      onEditProfile()
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors border border-white/10"
+                  >
+                    <FaEdit />
+                  </button>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </>,
+        document.body
+      )}
+    </>
+  )
+}
+
+// Helper function to convert EmployeeProfile to ProfileInfoData
+export const employeeToProfileData = (
+  employee: {
+    employeeId: string
+    name: string
+    email?: string
+    department?: string
+    designation?: string
+    joiningDate?: string
+    profileImage?: string
+    role?: string
+  },
+  stats?: {
+    attendancePercentage?: number
+    presentCount?: number
+    absentCount?: number
+    leaveCount?: number
+    lastAttendanceDate?: string
+  }
+): ProfileInfoData => ({
+  employeeId: employee.employeeId,
+  name: employee.name,
+  profileImage: employee.profileImage,
+  role: employee.role || 'employee',
+  department: employee.department,
+  designation: employee.designation,
+  email: employee.email,
+  joiningDate: employee.joiningDate,
+  attendancePercentage: stats?.attendancePercentage,
+  status: 'Active', // Can be computed from recent attendance
+  presentCount: stats?.presentCount,
+  absentCount: stats?.absentCount,
+  leaveCount: stats?.leaveCount,
+  lastAttendanceDate: stats?.lastAttendanceDate
+})

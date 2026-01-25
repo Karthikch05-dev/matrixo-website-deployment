@@ -38,6 +38,7 @@ import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
+import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
@@ -313,23 +314,42 @@ function TopNavbar({
               </span>
             </div>
 
-            {/* User Menu */}
+            {/* User Menu with ProfileInfo */}
             <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
+              <ProfileInfo
+                data={employee ? employeeToProfileData({
+                  employeeId: employee.employeeId,
+                  name: employee.name,
+                  email: employee.email,
+                  department: employee.department,
+                  designation: employee.designation,
+                  joiningDate: employee.joiningDate,
+                  profileImage: employee.profileImage,
+                  role: employee.role
+                }) : {
+                  employeeId: '',
+                  name: 'User',
+                  role: 'employee'
+                }}
+                isAdmin={isAdmin}
+                disabled={!employee}
               >
-                <img
-                  src={getProfileImageUrl(employee?.profileImage, employee?.name)}
-                  alt={employee?.name}
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
-                  onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
-                />
-                <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
-                <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
+                >
+                  <img
+                    src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+                    alt={employee?.name}
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
+                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
+                  />
+                  <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
+                  <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </ProfileInfo>
 
-              {/* User Dropdown */}
+              {/* User Dropdown - Quick Actions */}
               <AnimatePresence>
                 {userMenuOpen && (
                   <>

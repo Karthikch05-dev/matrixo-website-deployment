@@ -26,7 +26,7 @@ import {
   FaEye
 } from 'react-icons/fa'
 import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs } from './ui'
+import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -543,22 +543,28 @@ function AttendanceTable({
                 className="border-t border-white/5 hover:bg-white/5 transition-colors"
               >
                 <td className="p-3">
-                  <button
-                    onClick={() => {
-                      // Get employee with pre-computed stats
+                  <ProfileInfo
+                    data={employeeToProfileData(emp, {
+                      attendancePercentage: getEmployeeWithStats(emp.employeeId)?.attendancePercentage,
+                      presentCount: getEmployeeWithStats(emp.employeeId)?.presentDays,
+                      absentCount: getEmployeeWithStats(emp.employeeId)?.absentDays,
+                      leaveCount: getEmployeeWithStats(emp.employeeId)?.lateDays,
+                      lastAttendanceDate: formatDate(record.timestamp)
+                    })}
+                    isAdmin={true}
+                    onViewProfile={() => {
                       const empWithStats = getEmployeeWithStats(emp.employeeId)
-                      if (empWithStats) {
-                        onViewProfile(empWithStats)
-                      }
+                      if (empWithStats) onViewProfile(empWithStats)
                     }}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left"
                   >
-                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                    <div>
-                      <p className="font-medium text-white hover:text-primary-400 transition-colors">{emp.name}</p>
-                      <p className="text-xs text-neutral-500">{emp.employeeId}</p>
+                    <div className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                      <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                      <div>
+                        <p className="font-medium text-white hover:text-primary-400 transition-colors">{emp.name}</p>
+                        <p className="text-xs text-neutral-500">{emp.employeeId}</p>
+                      </div>
                     </div>
-                  </button>
+                  </ProfileInfo>
                 </td>
                 <td className="p-3 text-neutral-300">{formatDate(record.timestamp)}</td>
                 <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
@@ -659,17 +665,24 @@ function EmployeeList({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card
-            hover
-            className="cursor-pointer"
-          >
-            <div onClick={() => onViewProfile(emp)}>
+          <Card hover className="relative">
+            <ProfileInfo
+              data={employeeToProfileData(emp, {
+                attendancePercentage: emp.attendancePercentage,
+                presentCount: emp.presentDays,
+                absentCount: emp.absentDays,
+                leaveCount: emp.lateDays,
+              })}
+              isAdmin={true}
+              onViewProfile={() => onViewProfile(emp)}
+            >
               <div className="flex items-center gap-4">
-                <Avatar src={emp.profileImage} name={emp.name} size="lg" />
-                  {/* Small matriXO badge */}
+                <div className="relative">
+                  <Avatar src={emp.profileImage} name={emp.name} size="lg" />
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-neutral-900 rounded-full flex items-center justify-center border border-primary-500/50">
                     <span className="text-[8px] font-bold text-primary-400">M</span>
                   </div>
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-white truncate">{emp.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -684,11 +697,12 @@ function EmployeeList({
                     emp.attendancePercentage >= 90 ? 'text-green-400' :
                     emp.attendancePercentage >= 75 ? 'text-amber-400' : 'text-red-400'
                   }`}>
-                  {emp.attendancePercentage.toFixed(0)}%
+                    {emp.attendancePercentage.toFixed(0)}%
+                  </div>
+                  <p className="text-xs text-neutral-500">Attendance</p>
                 </div>
-                <p className="text-xs text-neutral-500">Attendance</p>
               </div>
-            </div>
+            </ProfileInfo>
             
             <div className="mt-4 pt-4 border-t border-neutral-700/50">
               <div className="flex items-center justify-between text-sm">
@@ -696,11 +710,13 @@ function EmployeeList({
                 <span className="text-red-400">A: {emp.absentDays}</span>
                 <span className="text-amber-400">L: {emp.lateDays}</span>
                 <span className="text-blue-400">O: {emp.onDutyDays}</span>
-                <button className="text-primary-400 hover:text-primary-300">
+                <button 
+                  onClick={() => onViewProfile(emp)}
+                  className="text-primary-400 hover:text-primary-300"
+                >
                   <FaEye className="mr-1 inline" /> View
                 </button>
               </div>
-            </div>
             </div>
           </Card>
         </motion.div>

@@ -15,7 +15,7 @@ import {
   FaTimes
 } from 'react-icons/fa'
 import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Textarea, Badge, Avatar, EmptyState, Spinner, Modal } from './ui'
+import { Card, Button, Textarea, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -467,10 +467,32 @@ function DiscussionPost({
               return (
               <div key={reply.id} className="p-4 border-b border-neutral-700/30 last:border-b-0">
                 <div className="flex items-start gap-3">
-                  <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
+                  <ProfileInfo
+                    data={{
+                      employeeId: reply.authorId,
+                      name: reply.authorName || 'Anonymous',
+                      profileImage: reply.authorImage,
+                      role: 'employee',
+                      status: 'Active'
+                    }}
+                    isAdmin={isAdmin}
+                  >
+                    <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
+                  </ProfileInfo>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white text-sm">{reply.authorName || 'Anonymous'}</span>
+                      <ProfileInfo
+                        data={{
+                          employeeId: reply.authorId,
+                          name: reply.authorName || 'Anonymous',
+                          profileImage: reply.authorImage,
+                          role: 'employee',
+                          status: 'Active'
+                        }}
+                        isAdmin={isAdmin}
+                      >
+                        <span className="font-medium text-white text-sm hover:text-primary-400 cursor-pointer">{reply.authorName || 'Anonymous'}</span>
+                      </ProfileInfo>
                       <span className="text-xs text-neutral-500">{formatTimestamp(reply.createdAt)}</span>
                     </div>
                     <p className="text-neutral-300 text-sm mt-1">{renderContent(reply.content)}</p>
