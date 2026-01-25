@@ -333,7 +333,7 @@ export const Select = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute z-50 w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              className="absolute z-[9999] w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
             >
               <div className="max-h-60 overflow-y-auto">
                 {options.map((option) => (
