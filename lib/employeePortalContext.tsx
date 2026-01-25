@@ -85,6 +85,7 @@ export interface Holiday {
   createdBy: string
   createdByName: string
   createdAt: Timestamp
+  isAutoHoliday?: boolean // Flag for auto-generated weekend holidays
 }
 
 export interface CalendarEvent {
