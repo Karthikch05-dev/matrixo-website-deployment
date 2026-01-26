@@ -16,7 +16,8 @@ import {
   FaFlag,
   FaUsers,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaBriefcase
 } from 'react-icons/fa'
 import { useEmployeeAuth, Holiday, CalendarEvent } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Alert } from './ui'
@@ -270,13 +271,15 @@ function AddEventModal({
 function DayDetailModal({
   isOpen,
   onClose,
-  day
+  day,
+  workingDayOverride
 }: {
   isOpen: boolean
   onClose: () => void
   day: CalendarDay | null
+  workingDayOverride?: Holiday | null
 }) {
-  const { employee, deleteHoliday, deleteCalendarEvent } = useEmployeeAuth()
+  const { employee, deleteHoliday, deleteCalendarEvent, addHoliday } = useEmployeeAuth()
   const isAdmin = employee?.role === 'admin'
 
   if (!day) return null
@@ -291,6 +294,41 @@ function DayDetailModal({
       onClose()
     } catch (error) {
       toast.error('Failed to delete holiday')
+    }
+  }
+
+  // Mark auto-generated weekend as a working day by creating a "working day override"
+  const handleMarkAsWorkingDay = async () => {
+    if (!day.dateString) return
+    if (!confirm('Mark this weekend as a working day? Employees will need to mark attendance.')) return
+    
+    try {
+      // Create a special holiday entry that marks this as a working day
+      // We use 'optional' type with special prefix __WORKING_DAY__ to identify it
+      await addHoliday({
+        date: day.dateString,
+        name: '__WORKING_DAY__',
+        type: 'optional',
+        description: 'This weekend has been marked as a working day'
+      })
+      toast.success('Marked as working day')
+      onClose()
+    } catch (error) {
+      toast.error('Failed to update')
+    }
+  }
+
+  // Revert working day override back to a weekend
+  const handleRevertToWeekend = async () => {
+    if (!workingDayOverride?.id) return
+    if (!confirm('Revert this day back to a weekend? Attendance will not be required.')) return
+    
+    try {
+      await deleteHoliday(workingDayOverride.id)
+      toast.success('Reverted to weekend')
+      onClose()
+    } catch (error) {
+      toast.error('Failed to revert')
     }
   }
 
@@ -340,9 +378,14 @@ function DayDetailModal({
                 </button>
               )}
               {isAdmin && !day.holiday.id && day.holiday.isAutoHoliday && (
-                <div className="text-xs text-neutral-500 italic">
-                  Auto-generated
-                </div>
+                <button
+                  onClick={handleMarkAsWorkingDay}
+                  className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-1"
+                  title="Mark as working day"
+                >
+                  <FaBriefcase className="text-xs" />
+                  Mark as Working Day
+                </button>
               )}
             </div>
           </Card>
@@ -380,11 +423,40 @@ function DayDetailModal({
           </div>
         )}
 
-        {!day.holiday && day.events.length === 0 && (
+        {!day.holiday && day.events.length === 0 && !workingDayOverride && (
           <div className="text-center py-8 text-neutral-400">
             <FaCalendarAlt className="text-3xl mx-auto mb-2 opacity-50" />
             <p>No events on this day</p>
           </div>
+        )}
+
+        {/* Working Day Override - Weekend marked as working day */}
+        {workingDayOverride && (
+          <Card className="border-l-4 border-l-blue-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <FaBriefcase className="text-blue-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">Working Day</h4>
+                  <Badge variant="info" size="sm" className="mt-1">
+                    Weekend Override
+                  </Badge>
+                  <p className="text-neutral-400 text-sm mt-2">This weekend has been marked as a working day</p>
+                </div>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={handleRevertToWeekend}
+                  className="px-3 py-1.5 text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors"
+                  title="Revert to weekend"
+                >
+                  Revert to Weekend
+                </button>
+              )}
+            </div>
+          </Card>
         )}
 
         {day.holiday && (
@@ -457,9 +529,12 @@ export function Calendar() {
       const dayOfWeek = date.getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       
-      // Auto-generate weekend holidays if not already marked
-      let holidayForDay = holidays.find(h => h.date === dateString)
-      if (isWeekend && !holidayForDay) {
+      // Check if there's a working day override for this weekend
+      const workingDayOverride = holidays.find(h => h.date === dateString && h.name === '__WORKING_DAY__')
+      
+      // Auto-generate weekend holidays if not already marked and no working day override
+      let holidayForDay = holidays.find(h => h.date === dateString && h.name !== '__WORKING_DAY__')
+      if (isWeekend && !holidayForDay && !workingDayOverride) {
         holidayForDay = {
           date: dateString,
           name: dayOfWeek === 0 ? 'Sunday' : 'Saturday',
@@ -477,7 +552,7 @@ export function Calendar() {
         dateString,
         isCurrentMonth: true,
         isToday: dateString === todayString,
-        isWeekend,
+        isWeekend: isWeekend && !workingDayOverride, // Not a weekend if override exists
         holiday: holidayForDay,
         events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
       })
@@ -488,13 +563,14 @@ export function Calendar() {
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month + 1, i)
       const dateString = getLocalDateString(date)
+      const workingDayOverride = holidays.find(h => h.date === dateString && h.name === '__WORKING_DAY__')
       days.push({
         date,
         dateString,
         isCurrentMonth: false,
         isToday: dateString === todayString,
-        isWeekend: date.getDay() === 0 || date.getDay() === 6,
-        holiday: holidays.find(h => h.date === dateString),
+        isWeekend: (date.getDay() === 0 || date.getDay() === 6) && !workingDayOverride,
+        holiday: holidays.find(h => h.date === dateString && h.name !== '__WORKING_DAY__'),
         events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
       })
     }
@@ -507,7 +583,8 @@ export function Calendar() {
     const today = getLocalDateString(new Date())
     const allItems: Array<{ type: 'holiday' | 'event'; date: string; item: Holiday | CalendarEvent }> = []
     
-    holidays.filter(h => h.date >= today).forEach(h => {
+    // Filter out working day overrides from upcoming holidays
+    holidays.filter(h => h.date >= today && h.name !== '__WORKING_DAY__').forEach(h => {
       allItems.push({ type: 'holiday', date: h.date, item: h })
     })
     
@@ -787,6 +864,7 @@ export function Calendar() {
         isOpen={!!selectedDay}
         onClose={() => setSelectedDay(null)}
         day={selectedDay}
+        workingDayOverride={selectedDay ? holidays.find(h => h.date === selectedDay.dateString && h.name === '__WORKING_DAY__') : null}
       />
     </div>
   )

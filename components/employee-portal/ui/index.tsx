@@ -291,6 +291,7 @@ export const Select = ({
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [openAbove, setOpenAbove] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -299,28 +300,34 @@ export const Select = ({
     if (isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
       const viewportHeight = window.innerHeight
-      const dropdownHeight = 240 // max-h-60 = 15rem = 240px
+      const dropdownHeight = Math.min(240, options.length * 48) // Estimate based on options count
       
       // Check if dropdown would go below viewport
       const spaceBelow = viewportHeight - rect.bottom - 8
       const spaceAbove = rect.top - 8
       
       let top: number
+      let shouldOpenAbove = false
+      
       if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
         // Position below
         top = rect.bottom + 8
+        shouldOpenAbove = false
       } else {
-        // Position above
-        top = rect.top - Math.min(dropdownHeight, spaceAbove) - 8
+        // Position above - calculate from bottom of trigger minus dropdown height
+        const actualDropdownHeight = Math.min(dropdownHeight, spaceAbove)
+        top = rect.top - actualDropdownHeight - 8
+        shouldOpenAbove = true
       }
       
+      setOpenAbove(shouldOpenAbove)
       setDropdownPosition({
         top,
         left: rect.left,
         width: rect.width
       })
     }
-  }, [isOpen])
+  }, [isOpen, options.length])
 
   // Close on outside click
   useEffect(() => {
@@ -379,9 +386,9 @@ export const Select = ({
           <AnimatePresence>
             <motion.div
               ref={dropdownRef}
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              initial={{ opacity: 0, y: openAbove ? 10 : -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              exit={{ opacity: 0, y: openAbove ? 10 : -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-neutral-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
               style={{
@@ -834,6 +841,7 @@ export const ProfileInfo = ({
   const previewRef = useRef<HTMLDivElement>(null)
   const expandedRef = useRef<HTMLDivElement>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [arrowPosition, setArrowPosition] = useState<'top' | 'bottom'>('top') // Arrow at top or bottom
 
   // Handle hover
   const handleMouseEnter = () => {
@@ -850,15 +858,20 @@ export const ProfileInfo = ({
         const originalX = rect.left + rect.width / 2
         let x = originalX - cardWidth / 2 // Left edge of card
         let y = rect.bottom + 8
+        let openedAbove = false
         
         // Clamp horizontal position
         if (x < padding) x = padding
         if (x + cardWidth > viewportWidth - padding) x = viewportWidth - cardWidth - padding
         
-        // Check vertical overflow
+        // Check vertical overflow - if not enough space below, open above
         if (y + cardHeight > viewportHeight - padding) {
           y = rect.top - cardHeight - 8
+          openedAbove = true
         }
+        
+        // Arrow position: if opened above trigger, arrow at bottom; if below, arrow at top
+        setArrowPosition(openedAbove ? 'bottom' : 'top')
         
         // Calculate arrow offset from card's center to trigger's center
         const cardCenter = x + cardWidth / 2
@@ -1013,10 +1026,17 @@ export const ProfileInfo = ({
           }}
           className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 w-[280px] max-w-[calc(100vw-32px)]"
         >
-          {/* Arrow - positioned based on offset */}
+          {/* Arrow - positioned dynamically based on whether hover opens above or below */}
           <div 
-            className="absolute -top-2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15"
-            style={{ left: `calc(50% + ${arrowOffset}px)`, transform: 'translateX(-50%) rotate(45deg)' }}
+            className={`absolute w-4 h-4 bg-neutral-900 border-white/15 ${
+              arrowPosition === 'top' 
+                ? '-top-2 border-l border-t' 
+                : '-bottom-2 border-r border-b'
+            }`}
+            style={{ 
+              left: `calc(50% + ${arrowOffset}px)`, 
+              transform: 'translateX(-50%) rotate(45deg)' 
+            }}
           />
           
           <div className="flex items-center gap-3 relative">

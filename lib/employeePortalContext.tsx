@@ -632,8 +632,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   // Check if a date is a working day (not weekend, not holiday)
   const isWorkingDay = (dateString: string): boolean => {
-    // Check if it's a holiday from database
-    const hasHoliday = holidays.some(h => h.date === dateString)
+    // Check for working day override (weekend marked as working day)
+    const hasWorkingDayOverride = holidays.some(h => h.date === dateString && h.name === '__WORKING_DAY__')
+    
+    // If there's a working day override, it's a working day regardless of weekend
+    if (hasWorkingDayOverride) return true
+    
+    // Check if it's a holiday from database (excluding working day overrides)
+    const hasHoliday = holidays.some(h => h.date === dateString && h.name !== '__WORKING_DAY__')
     if (hasHoliday) return false
 
     // Check if it's a weekend (Saturday or Sunday)

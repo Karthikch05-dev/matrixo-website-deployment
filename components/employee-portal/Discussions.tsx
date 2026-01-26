@@ -508,6 +508,8 @@ function DiscussionPost({
         )
         
         if (mentionedEmployee) {
+          // Display name WITHOUT @ symbol, but keep hover functionality
+          const displayName = mentionedEmployee.name.split(' ')[0] // Show first name
           return (
             <ProfileInfo
               key={i}
@@ -523,12 +525,12 @@ function DiscussionPost({
               }}
               isAdmin={false}
             >
-              <span className="text-primary-400 font-medium cursor-pointer hover:underline">{part}</span>
+              <span className="text-primary-400 font-medium cursor-pointer hover:underline">{displayName}</span>
             </ProfileInfo>
           )
         }
-        // If employee not found, just style it
-        return <span key={i} className="text-primary-400 font-medium">{part}</span>
+        // If employee not found, show without @ symbol
+        return <span key={i} className="text-primary-400 font-medium">{part.slice(1)}</span>
       }
       if (part.startsWith('#')) {
         return <span key={i} className="text-amber-400 font-medium">{part}</span>
