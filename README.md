@@ -1,10 +1,84 @@
 # matriXO Website
 
+> ⚠️ **PROPRIETARY SOFTWARE - ALL RIGHTS RESERVED** ⚠️
+
 A modern, responsive event ticketing and ed-tech platform for **matriXO** - An Ed-Tech Startup supported by KPRISE (KPR Foundation for Innovation and Social Empowerment).
 
 🌐 **Live**: [matrixo.in](https://matrixo.in)  
 🧪 **Beta**: [beta.matrixo.in](https://beta.matrixo.in)  
 👥 **Employee Portal**: [team-auth.matrixo.in](https://team-auth.matrixo.in)
+
+---
+
+## ⚖️ LEGAL NOTICE & COPYRIGHT WARNING
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║   🚨 THIS IS PROPRIETARY SOFTWARE - UNAUTHORIZED USE IS STRICTLY PROHIBITED  ║
+║                                                                              ║
+║   Copyright © 2024-2026 matriXO (KPRISE - KPR Foundation). ALL RIGHTS RESERVED.  ║
+║                                                                              ║
+║   This repository and ALL its contents including but not limited to:         ║
+║   • Source code, algorithms, and logic                                       ║
+║   • UI/UX designs, layouts, and styling                                      ║
+║   • Business logic and proprietary implementations                           ║
+║   • Database schemas and data structures                                     ║
+║   • API designs and integrations                                             ║
+║   • Employee portal systems and workflows                                    ║
+║   • All assets, images, logos, and branding                                  ║
+║                                                                              ║
+║   Are the EXCLUSIVE INTELLECTUAL PROPERTY of matriXO and KPRISE Foundation.  ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### 🚫 PROHIBITED ACTIONS
+
+The following actions are **STRICTLY PROHIBITED** without explicit written authorization:
+
+| ❌ Action | ⚖️ Consequence |
+|-----------|----------------|
+| Copying source code | Legal action under Copyright Act |
+| Cloning this repository | DMCA takedown + Legal proceedings |
+| Using code in personal/commercial projects | Civil lawsuit for damages |
+| Redistributing any part of the codebase | Criminal prosecution |
+| Creating derivative works | Intellectual property infringement |
+| Selling or licensing this code | Fraud + Copyright violation |
+| Using designs/UI in other projects | Design theft prosecution |
+| Scraping or extracting data | Computer fraud charges |
+
+### 🔒 MONITORING & ENFORCEMENT
+
+- **All repository activities are logged and monitored**
+- **IP addresses and user information are tracked**
+- **Automated plagiarism detection is active**
+- **Legal team is on standby for DMCA takedowns**
+
+### ⚠️ LEGAL CONSEQUENCES
+
+Any unauthorized use, reproduction, or distribution of this software will result in:
+
+1. **Immediate DMCA Takedown** - Your repository/project will be removed
+2. **Legal Action** - Civil lawsuit seeking damages up to ₹50,00,000 (INR) / $60,000 (USD)
+3. **Criminal Prosecution** - Under IT Act 2000 (India) and DMCA (USA)
+4. **Public Disclosure** - Offenders may be publicly named
+5. **Professional Consequences** - Report to employers/institutions
+
+### 📜 APPLICABLE LAWS
+
+This software is protected under:
+- **Indian Copyright Act, 1957** (Sections 51, 63)
+- **Information Technology Act, 2000** (India)
+- **Digital Millennium Copyright Act (DMCA)** (USA)
+- **Berne Convention for the Protection of Literary and Artistic Works**
+- **TRIPS Agreement** (WTO)
+
+---
+
+> 💡 **If you're interested in our technology or want to collaborate, contact us legally at hello@matrixo.in**
+
+---
 
 ## Features
 
@@ -304,7 +378,51 @@ npm start
 
 ## License
 
-© 2025-2026 matriXO. All rights reserved.
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                        PROPRIETARY LICENSE                                  ║
+║                                                                            ║
+║  Copyright © 2024-2026 matriXO / KPRISE Foundation. ALL RIGHTS RESERVED.   ║
+║                                                                            ║
+║  This software is proprietary and confidential. Unauthorized copying,     ║
+║  modification, distribution, or use of this software, via any medium,     ║
+║  is strictly prohibited without the prior written consent of matriXO.     ║
+║                                                                            ║
+║  This is NOT open source software. This is NOT free software.             ║
+║  No license is granted to use, copy, modify, or distribute this code.     ║
+║                                                                            ║
+║  Violations will be prosecuted to the fullest extent of the law.          ║
+║                                                                            ║
+║  Legal Contact: legal@matrixo.in                                           ║
+║  General Contact: hello@matrixo.in                                         ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Ownership Declaration
+
+- **Owner**: matriXO (A venture of KPRISE - KPR Foundation for Innovation and Social Empowerment)
+- **Registered Entity**: KPRISE Foundation
+- **Jurisdiction**: India
+- **Original Authors**: Shiva Ganesh T & matriXO Development Team
+- **Registration**: All original works are timestamped and documented
+
+### Why This Repository is Public
+
+This repository is publicly visible due to platform migration constraints. **Public visibility does NOT grant any usage rights.** The code remains fully proprietary and protected under international copyright law.
+
+> ⚠️ **DO NOT assume public = free to use. IT IS NOT.**
+
+---
+
+**Last Updated**: January 26, 2026
+
+---
+
+<p align="center">
+  <strong>🔐 Protected by matriXO Legal Team 🔐</strong><br>
+  <em>We actively monitor and pursue copyright violations</em>
+</p>
 
 ---
 
@@ -349,4 +467,8 @@ The Employee Portal is a comprehensive internal management system built with Rea
 
 ---
 
-**Last Updated**: January 26, 2026
+<p align="center">
+  <strong>© 2024-2026 matriXO / KPRISE Foundation. ALL RIGHTS RESERVED.</strong><br>
+  <em>Unauthorized use is prohibited and will be prosecuted.</em><br><br>
+  <strong>Last Updated: January 26, 2026</strong>
+</p>
