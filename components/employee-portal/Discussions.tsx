@@ -511,6 +511,7 @@ function DiscussionPost({
           return (
             <ProfileInfo
               key={i}
+              inline={true}
               data={{
                 employeeId: mentionedEmployee.employeeId,
                 name: mentionedEmployee.name,

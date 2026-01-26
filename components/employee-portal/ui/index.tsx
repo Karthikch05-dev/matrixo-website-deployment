@@ -813,6 +813,7 @@ interface ProfileInfoProps {
   onViewProfile?: () => void
   onEditProfile?: () => void
   disabled?: boolean
+  inline?: boolean // For inline @mentions in text
 }
 
 // Main ProfileInfo Component
@@ -822,7 +823,8 @@ export const ProfileInfo = ({
   children,
   onViewProfile,
   onEditProfile,
-  disabled = false
+  disabled = false,
+  inline = false
 }: ProfileInfoProps) => {
   const [showPreview, setShowPreview] = useState(false)
   const [showExpanded, setShowExpanded] = useState(false)
@@ -883,9 +885,9 @@ export const ProfileInfo = ({
     setShowPreview(false)
   }
 
-  // Handle click for expanded view
+  // Handle click for expanded view (disabled for inline mentions)
   const handleClick = () => {
-    if (disabled) return
+    if (disabled || inline) return // Inline mentions are hover-only
     setShowPreview(false)
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
@@ -971,15 +973,28 @@ export const ProfileInfo = ({
   return (
     <>
       {/* Trigger Element */}
-      <div
-        ref={triggerRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-        className={disabled ? '' : 'cursor-pointer'}
-      >
-        {children}
-      </div>
+      {inline ? (
+        <span
+          ref={triggerRef as React.RefObject<HTMLSpanElement>}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
+          className={disabled ? '' : 'cursor-pointer'}
+          style={{ display: 'inline' }}
+        >
+          {children}
+        </span>
+      ) : (
+        <div
+          ref={triggerRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
+          className={disabled ? '' : 'cursor-pointer'}
+        >
+          {children}
+        </div>
+      )}
 
       {/* Preview Card (Hover) - Rendered via Portal */}
       {showPreview && typeof window !== 'undefined' && createPortal(
@@ -1000,8 +1015,8 @@ export const ProfileInfo = ({
         >
           {/* Arrow - positioned based on offset */}
           <div 
-            className="absolute -top-2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15 rotate-45"
-            style={{ left: `calc(50% + ${arrowOffset}px)`, transform: 'translateX(-50%)' }}
+            className="absolute -top-2 w-4 h-4 bg-neutral-900 border-l border-t border-white/15"
+            style={{ left: `calc(50% + ${arrowOffset}px)`, transform: 'translateX(-50%) rotate(45deg)' }}
           />
           
           <div className="flex items-center gap-3 relative">
@@ -1025,7 +1040,7 @@ export const ProfileInfo = ({
             <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
               {data.role === 'admin' ? '👑 Admin' : data.role}
             </Badge>
-            {data.attendancePercentage !== undefined && (
+            {!inline && data.attendancePercentage !== undefined && (
               <span className="text-neutral-400 flex items-center gap-1">
                 <FaChartLine className="text-primary-400" />
                 {data.attendancePercentage.toFixed(0)}% attendance
@@ -1033,7 +1048,7 @@ export const ProfileInfo = ({
             )}
           </div>
           
-          <p className="text-xs text-neutral-500 text-center mt-2">Click for more details</p>
+          {!inline && <p className="text-xs text-neutral-500 text-center mt-2">Click for more details</p>}
         </motion.div>,
         document.body
       )}
