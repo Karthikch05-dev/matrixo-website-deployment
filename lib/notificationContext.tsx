@@ -89,7 +89,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const q = query(
       notificationsRef,
       where('recipientId', '==', employee.employeeId),
-      orderBy('createdAt', 'desc'),
+      // Note: orderBy removed to avoid requiring composite index
+      // Sorting is done client-side
       limit(50)
     )
 
@@ -100,6 +101,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           id: doc.id,
           ...doc.data()
         })) as Notification[]
+        
+        // Sort by createdAt descending (newest first)
+        notificationsData.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0
+          const bTime = b.createdAt?.toMillis?.() || 0
+          return bTime - aTime
+        })
         
         setNotifications(notificationsData)
 

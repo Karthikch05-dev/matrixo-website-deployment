@@ -471,9 +471,11 @@ function DashboardOverview() {
   
   const presentDays = attendanceRecords.filter(r => r.status === 'P').length
   const absentDays = attendanceRecords.filter(r => r.status === 'A').length
+  const onDutyDays = attendanceRecords.filter(r => r.status === 'O').length
   const totalDays = attendanceRecords.length
+  // FIXED: Match Admin formula - (present + onDuty) / total
   const attendancePercentage = totalDays > 0 
-    ? Math.round(((presentDays + attendanceRecords.filter(r => r.status === 'L').length) / totalDays) * 100) 
+    ? Math.round(((presentDays + onDutyDays) / totalDays) * 100) 
     : 0
 
   // Safely filter tasks - handle both array and string for assignedTo

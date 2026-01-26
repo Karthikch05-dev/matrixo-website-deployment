@@ -540,17 +540,28 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSnapshot(
       query(
         collection(db, 'personalTodos'),
-        where('employeeId', '==', employee.employeeId),
-        orderBy('createdAt', 'desc')
+        where('employeeId', '==', employee.employeeId)
+        // Note: orderBy removed to avoid requiring composite index
+        // Sorting is done client-side in the component
       ),
       (snapshot) => {
         const todosData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as PersonalTodo[]
+        // Sort by createdAt descending (newest first)
+        todosData.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0
+          const bTime = b.createdAt?.toMillis?.() || 0
+          return bTime - aTime
+        })
         setPersonalTodos(todosData)
+        console.log('Personal todos loaded:', todosData.length)
       },
-      (error) => console.error('Error fetching personal todos:', error)
+      (error) => {
+        console.error('Error fetching personal todos:', error)
+        // Error will be visible in console - user sees empty list
+      }
     )
     return () => unsubscribe()
   }, [authReady, user, employee])

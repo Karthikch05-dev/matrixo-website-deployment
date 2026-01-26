@@ -708,7 +708,8 @@ export function AdminPanel() {
     employee, 
     getAllEmployees, 
     getAllEmployeesAttendance,
-    getEmployeeAttendanceHistory
+    getEmployeeAttendanceHistory,
+    runAutoAbsentJob
   } = useEmployeeAuth()
   
   const [activeTab, setActiveTab] = useState('employees')
@@ -727,6 +728,20 @@ export function AdminPanel() {
   // Modals
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithStats | null>(null)
   const [editingRecord, setEditingRecord] = useState<{ record: AttendanceRecord, employee: EmployeeProfile } | null>(null)
+
+  // Auto-absent job: Run once when AdminPanel loads (marks yesterday's missing as absent)
+  useEffect(() => {
+    const runAutoAbsent = async () => {
+      try {
+        await runAutoAbsentJob()
+        console.log('Auto-absent job completed')
+      } catch (error) {
+        // Silent fail - this runs in background
+        console.log('Auto-absent skipped or failed:', error)
+      }
+    }
+    runAutoAbsent()
+  }, [runAutoAbsentJob])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
