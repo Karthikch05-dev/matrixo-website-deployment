@@ -241,7 +241,7 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 fixed top-0 left-0 right-0 overflow-x-hidden" style={{ zIndex: 9000, isolation: 'isolate' }}>
+    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 fixed top-0 left-0 right-0 overflow-x-hidden" style={{ zIndex: 9000 }}>
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
       

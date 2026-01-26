@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode, forwardRef, useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaSpinner, FaChevronDown, FaTimes, FaCheck, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa'
 
@@ -289,32 +290,79 @@ export const Select = ({
   className = '',
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const dropdownHeight = 240 // max-h-60 = 15rem = 240px
+      
+      // Check if dropdown would go below viewport
+      const spaceBelow = viewportHeight - rect.bottom - 8
+      const spaceAbove = rect.top - 8
+      
+      let top: number
+      if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+        // Position below
+        top = rect.bottom + 8
+      } else {
+        // Position above
+        top = rect.top - Math.min(dropdownHeight, spaceAbove) - 8
+      }
+      
+      setDropdownPosition({
+        top,
+        left: rect.left,
+        width: rect.width
+      })
+    }
+  }, [isOpen])
+
+  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  // Close on scroll (parent containers)
+  useEffect(() => {
+    if (isOpen) {
+      const handleScroll = () => setIsOpen(false)
+      window.addEventListener('scroll', handleScroll, true)
+      return () => window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [isOpen])
 
   const selectedOption = options.find(opt => opt.value === value)
 
   return (
-    <div className={`space-y-1.5 ${className}`} ref={ref} style={{ isolation: 'isolate' }}>
+    <div className={`space-y-1.5 ${className}`}>
       {label && (
         <label className="block text-sm font-medium text-neutral-300">{label}</label>
       )}
-      <div className="relative" style={{ zIndex: isOpen ? 9999 : 1 }}>
+      <div className="relative">
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`
-            w-full px-4 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl text-left
+            w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left
             flex items-center justify-between transition-all duration-300
             focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/20 hover:bg-white/10'}
@@ -326,15 +374,23 @@ export const Select = ({
           <FaChevronDown className={`text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
         
-        <AnimatePresence>
-          {isOpen && (
+        {/* Dropdown rendered via Portal to escape parent stacking contexts */}
+        {isOpen && typeof window !== 'undefined' && createPortal(
+          <AnimatePresence>
             <motion.div
+              ref={dropdownRef}
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute w-full mt-2 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
-              style={{ zIndex: 99999 }}
+              className="bg-neutral-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              style={{
+                position: 'fixed',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width,
+                zIndex: 99999
+              }}
             >
               <div className="max-h-60 overflow-y-auto">
                 {options.map((option) => (
@@ -358,8 +414,9 @@ export const Select = ({
                 ))}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>,
+          document.body
+        )}
       </div>
     </div>
   )
@@ -723,7 +780,6 @@ export const Spinner = ({ size = 'md', className = '' }: SpinnerProps) => {
 // PROFILE INFO SYSTEM - REUSABLE OVERLAY COMPONENT
 // ============================================
 
-import { createPortal } from 'react-dom'
 import { FaEnvelope, FaCalendarAlt as FaCalendar2, FaChartLine, FaCircle, FaIdCard, FaBriefcase, FaEye, FaEdit, FaClock } from 'react-icons/fa'
 
 // Profile Data Contract
@@ -784,23 +840,27 @@ export const ProfileInfo = ({
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect()
         const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
         const cardWidth = 280 // max-w-[280px]
+        const cardHeight = 150 // approximate height
+        const padding = 16
         
         const originalX = rect.left + rect.width / 2
-        let x = originalX
-        const y = rect.bottom + 8
+        let x = originalX - cardWidth / 2 // Left edge of card
+        let y = rect.bottom + 8
         
-        // Adjust if too close to right edge
-        if (x + cardWidth / 2 > viewportWidth - 20) {
-          x = viewportWidth - cardWidth / 2 - 20
-        }
-        // Adjust if too close to left edge
-        if (x - cardWidth / 2 < 20) {
-          x = cardWidth / 2 + 20
+        // Clamp horizontal position
+        if (x < padding) x = padding
+        if (x + cardWidth > viewportWidth - padding) x = viewportWidth - cardWidth - padding
+        
+        // Check vertical overflow
+        if (y + cardHeight > viewportHeight - padding) {
+          y = rect.top - cardHeight - 8
         }
         
-        // Calculate arrow offset (how much we moved the card)
-        setArrowOffset(originalX - x)
+        // Calculate arrow offset from card's center to trigger's center
+        const cardCenter = x + cardWidth / 2
+        setArrowOffset(originalX - cardCenter)
         setPosition({ x, y })
         setShowPreview(true)
       }
@@ -832,21 +892,32 @@ export const ProfileInfo = ({
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
       
-      // Calculate optimal position
-      const originalX = rect.left + rect.width / 2
-      let x = originalX
-      let y = rect.bottom + 12
-      
-      // Adjust if too close to edges
       const cardWidth = 360
       const cardHeight = 400
+      const padding = 16
       
-      if (x - cardWidth / 2 < 20) x = cardWidth / 2 + 20
-      if (x + cardWidth / 2 > viewportWidth - 20) x = viewportWidth - cardWidth / 2 - 20
-      if (y + cardHeight > viewportHeight - 20) y = rect.top - cardHeight - 12
+      // Calculate horizontal position - clamp to viewport
+      const originalX = rect.left + rect.width / 2
+      let x = originalX - cardWidth / 2 // Left edge of card
       
-      // Calculate arrow offset
-      setArrowOffset(originalX - x)
+      // Clamp horizontal position
+      if (x < padding) x = padding
+      if (x + cardWidth > viewportWidth - padding) x = viewportWidth - cardWidth - padding
+      
+      // Calculate vertical position
+      let y = rect.bottom + 12
+      if (y + cardHeight > viewportHeight - padding) {
+        // Try positioning above
+        y = rect.top - cardHeight - 12
+        if (y < padding) {
+          // If still doesn't fit, position at top with scroll
+          y = padding
+        }
+      }
+      
+      // Calculate arrow offset from card's center to trigger's center
+      const cardCenter = x + cardWidth / 2
+      setArrowOffset(originalX - cardCenter)
       setPosition({ x, y })
     }
     setShowExpanded(true)
@@ -923,10 +994,9 @@ export const ProfileInfo = ({
             position: 'fixed',
             left: position.x,
             top: position.y,
-            transform: 'translateX(-50%)',
             zIndex: 10000,
           }}
-          className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 min-w-[240px] max-w-[280px]"
+          className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 w-[280px] max-w-[calc(100vw-32px)]"
         >
           {/* Arrow - positioned based on offset */}
           <div 
@@ -992,10 +1062,9 @@ export const ProfileInfo = ({
               position: 'fixed',
               left: position.x,
               top: position.y,
-              transform: 'translateX(-50%)',
               zIndex: 10000,
             }}
-            className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/50 w-[360px] max-h-[80vh] overflow-auto"
+            className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/50 w-[360px] max-w-[calc(100vw-32px)] max-h-[80vh] overflow-auto"
           >
             {/* Close Button */}
             <button
