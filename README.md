@@ -15,7 +15,8 @@ A modern, responsive event ticketing and ed-tech platform for **matriXO** - An E
 - 🎭 **Smooth Animations**: Framer Motion powered animations throughout
 - 🎫 **Ticketing System**: Dynamic pricing, early bird offers, Razorpay integration ready
 - 🔐 **Authentication**: Firebase Auth with Google, GitHub, and email sign-in
-- 👥 **Employee Portal**: Internal attendance tracking system for team members
+- 👥 **Employee Portal**: Comprehensive internal management system with attendance, tasks, discussions, and calendar
+- 🔔 **Real-time Notifications**: Push notifications and in-app notification system
 - 📊 **Analytics Ready**: SEO optimized with Open Graph tags
 - 🔒 **Type-Safe**: Built with TypeScript for reliability
 - 📧 **Contact Form**: Integrated email notifications via Resend
@@ -111,6 +112,15 @@ matriXO Website/
 ├── components/                   # React components
 │   ├── about/                   # About page components
 │   ├── contact/                 # Contact page components
+│   ├── employee-portal/         # Employee portal components
+│   │   ├── AdminPanel.tsx      # Admin management panel
+│   │   ├── Attendance.tsx      # Attendance tracking
+│   │   ├── Calendar.tsx        # Holiday & event calendar
+│   │   ├── Discussions.tsx     # Team discussions
+│   │   ├── NotificationBell.tsx # Notification popover
+│   │   ├── Tasks.tsx           # Task management
+│   │   └── ui/                 # Shared UI components
+│   │       └── index.tsx       # Card, Button, Modal, Select, ProfileInfo, etc.
 │   ├── events/                  # Event components
 │   │   ├── EventDetail.tsx     # Event detail page
 │   │   ├── EventRegistrationForm.tsx
@@ -131,7 +141,8 @@ matriXO Website/
 │   └── events.json              # Event data
 ├── lib/                          # Utility libraries
 │   ├── AuthContext.tsx          # User authentication context
-│   ├── employeeAuthContext.tsx  # Employee auth context
+│   ├── employeePortalContext.tsx # Employee portal auth & data context
+│   ├── notificationContext.tsx  # Real-time notification system
 │   ├── firebaseConfig.ts        # Firebase configuration
 │   └── config.ts                # App configuration
 ├── public/                       # Static assets
@@ -185,10 +196,37 @@ matriXO Website/
 - Password reset
 
 ### Employee Portal (`/employee-portal`)
-- Employee authentication
-- Attendance tracking
-- Leave management
-- Admin dashboard
+- **Authentication**: Secure employee login with Firebase Auth
+- **Dashboard**: Personal overview with attendance stats, quick actions, and personal todo list
+- **Attendance Tracking**: 
+  - Check-in/check-out with timestamps
+  - Status options: Present, On Duty, Leave, Half Day
+  - Attendance percentage calculation
+  - Auto-absent job for missed attendance
+- **Calendar**:
+  - Holiday management (public, company, optional)
+  - Working day overrides for weekends
+  - Calendar events with color coding
+  - List and month views
+- **Tasks**:
+  - Task assignment and tracking
+  - Priority levels (low, medium, high, urgent)
+  - Status management (pending, in-progress, completed)
+  - Due date tracking
+- **Discussions**:
+  - Team discussion board
+  - @mention users with hover profile cards
+  - #mention departments
+  - Reply threads and pinning
+- **Admin Panel** (admin only):
+  - Employee management
+  - Attendance overview for all employees
+  - Holiday and event management
+  - Leave request approvals
+- **Notifications**:
+  - Real-time push notifications
+  - In-app notification bell with popover
+  - Mark as read/unread functionality
 
 ### Policy Pages
 - `/privacy` - Privacy Policy
@@ -266,8 +304,49 @@ npm start
 
 ## License
 
-© 2025 matriXO. All rights reserved.
+© 2025-2026 matriXO. All rights reserved.
 
 ---
 
-**Last Updated**: December 18, 2025
+## Employee Portal Architecture
+
+The Employee Portal is a comprehensive internal management system built with React Context and Firebase Firestore.
+
+### Core Components
+
+| Component | Purpose |
+|-----------|---------|
+| `Attendance.tsx` | Check-in/out, status tracking, history |
+| `Calendar.tsx` | Holidays, events, working day overrides |
+| `Tasks.tsx` | Task management with priorities |
+| `Discussions.tsx` | Team discussions with @mentions |
+| `AdminPanel.tsx` | Employee & attendance management |
+| `NotificationBell.tsx` | Real-time notification popover |
+| `ui/index.tsx` | Shared UI components (Card, Button, Modal, Select, ProfileInfo, etc.) |
+
+### Firestore Collections
+
+| Collection | Purpose |
+|------------|---------|
+| `employees` | Employee profiles and credentials |
+| `attendance` | Daily attendance records |
+| `holidays` | Company and public holidays |
+| `calendarEvents` | Calendar events |
+| `tasks` | Assigned tasks |
+| `discussions` | Discussion posts |
+| `discussionReplies` | Reply threads |
+| `notifications` | User notifications |
+| `leaveRequests` | Leave applications |
+| `personalTodos` | Personal todo items |
+
+### Key Features
+
+- **Portal-based Popovers**: All dropdowns and popovers use React Portals to escape parent stacking contexts
+- **Real-time Updates**: Firebase `onSnapshot` listeners for live data sync
+- **Working Day Overrides**: Weekends can be marked as working days for special requirements
+- **@Mention System**: Tag employees in discussions with hover profile cards
+- **Auto-Absent Job**: Automatically marks employees as absent if no attendance by end of day
+
+---
+
+**Last Updated**: January 26, 2026
