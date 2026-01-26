@@ -273,7 +273,7 @@ function ReplyItem({
             role: 'employee',
             status: 'Active'
           }}
-          isAdmin={isAdmin}
+          isAdmin={false}
         >
           <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
         </ProfileInfo>
@@ -287,7 +287,7 @@ function ReplyItem({
                 role: 'employee',
                 status: 'Active'
               }}
-              isAdmin={isAdmin}
+              isAdmin={false}
             >
               <span className="font-medium text-white text-sm hover:text-primary-400 cursor-pointer">{reply.authorName || 'Anonymous'}</span>
             </ProfileInfo>
@@ -527,16 +527,40 @@ function DiscussionPost({
       {/* Header */}
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <Avatar 
-            src={discussion.authorImage} 
-            name={discussion.authorName || 'Anonymous'} 
-            size="md" 
-            showBorder={false} 
-          />
+          <ProfileInfo
+            data={{
+              employeeId: discussion.authorId,
+              name: discussion.authorName || 'Anonymous',
+              profileImage: discussion.authorImage,
+              department: discussion.authorDepartment,
+              role: 'employee',
+              status: 'Active'
+            }}
+            isAdmin={false}
+          >
+            <Avatar 
+              src={discussion.authorImage} 
+              name={discussion.authorName || 'Anonymous'} 
+              size="md" 
+              showBorder={false} 
+            />
+          </ProfileInfo>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-white">{discussion.authorName || 'Anonymous'}</span>
+              <ProfileInfo
+                data={{
+                  employeeId: discussion.authorId,
+                  name: discussion.authorName || 'Anonymous',
+                  profileImage: discussion.authorImage,
+                  department: discussion.authorDepartment,
+                  role: 'employee',
+                  status: 'Active'
+                }}
+                isAdmin={false}
+              >
+                <span className="font-medium text-white hover:text-primary-400 cursor-pointer">{discussion.authorName || 'Anonymous'}</span>
+              </ProfileInfo>
               {discussion.authorDepartment && (
                 <Badge size="sm">{discussion.authorDepartment}</Badge>
               )}

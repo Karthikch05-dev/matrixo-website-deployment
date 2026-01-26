@@ -24,7 +24,10 @@ import {
   FaUserShield,
   FaTasks,
   FaComments,
-  FaChevronDown
+  FaChevronDown,
+  FaPlus,
+  FaTrash,
+  FaListAlt
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { NotificationProvider } from '@/lib/notificationContext'
@@ -302,41 +305,25 @@ function TopNavbar({
             {/* Notification Bell */}
             <NotificationBell />
             
-            {/* Time Display */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
-              <FaClock className="text-primary-400 text-sm" />
-              <span className="font-mono tabular-nums text-white text-sm">
-                {currentTime.toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  second: '2-digit'
-                })}
-              </span>
-            </div>
+            {/* Time Display - Only visible on Attendance tab */}
+            {activeTab === 'attendance' && (
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
+                <FaClock className="text-primary-400 text-sm" />
+                <span className="font-mono tabular-nums text-white text-sm">
+                  {currentTime.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}
+                </span>
+              </div>
+            )}
 
-            {/* User Menu with ProfileInfo */}
+            {/* User Menu - Hover disabled outside Discussions */}
             <div className="relative">
-              <ProfileInfo
-                data={employee ? employeeToProfileData({
-                  employeeId: employee.employeeId,
-                  name: employee.name,
-                  email: employee.email,
-                  department: employee.department,
-                  designation: employee.designation,
-                  joiningDate: employee.joiningDate,
-                  profileImage: employee.profileImage,
-                  role: employee.role
-                }) : {
-                  employeeId: '',
-                  name: 'User',
-                  role: 'employee'
-                }}
-                isAdmin={isAdmin}
-                disabled={!employee}
-              >
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
                 >
                   <img
                     src={getProfileImageUrl(employee?.profileImage, employee?.name)}
@@ -347,7 +334,6 @@ function TopNavbar({
                   <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
                   <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
-              </ProfileInfo>
 
               {/* User Dropdown - Quick Actions */}
               <AnimatePresence>
@@ -457,9 +443,11 @@ function TopNavbar({
 // ============================================
 
 function DashboardOverview() {
-  const { employee, getAttendanceRecords, holidays = [], tasks = [] } = useEmployeeAuth()
+  const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [newTodoTitle, setNewTodoTitle] = useState('')
+  const [addingTodo, setAddingTodo] = useState(false)
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -498,10 +486,45 @@ function DashboardOverview() {
     }
     return false
   })
-  
-  const upcomingHolidays = (holidays || [])
-    .filter(h => h?.date && new Date(h.date) >= new Date())
-    .slice(0, 3)
+
+  // Helpers for todo list
+  const handleAddTodo = async () => {
+    if (!newTodoTitle.trim()) return
+    setAddingTodo(true)
+    try {
+      await addPersonalTodo(newTodoTitle.trim())
+      setNewTodoTitle('')
+      toast.success('Todo added')
+    } catch (error) {
+      toast.error('Failed to add todo')
+    } finally {
+      setAddingTodo(false)
+    }
+  }
+
+  const handleToggleTodo = async (id: string, currentStatus: 'pending' | 'completed') => {
+    try {
+      await updatePersonalTodo(id, { status: currentStatus === 'pending' ? 'completed' : 'pending' })
+    } catch (error) {
+      toast.error('Failed to update todo')
+    }
+  }
+
+  const handleDeleteTodo = async (id: string) => {
+    try {
+      await deletePersonalTodo(id)
+      toast.success('Todo deleted')
+    } catch (error) {
+      toast.error('Failed to delete todo')
+    }
+  }
+
+  // Filter: pending first, then completed
+  const sortedTodos = [...personalTodos].sort((a, b) => {
+    if (a.status === 'pending' && b.status === 'completed') return -1
+    if (a.status === 'completed' && b.status === 'pending') return 1
+    return 0
+  })
 
   if (loading) {
     return (
@@ -597,28 +620,65 @@ function DashboardOverview() {
 
         <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <FaCalendarAlt className="text-amber-400" />
-            Upcoming Holidays
+            <FaListAlt className="text-primary-400" />
+            My Todo List
           </h3>
-          {upcomingHolidays.length === 0 ? (
-            <p className="text-neutral-500 text-center py-4">No upcoming holidays</p>
+          
+          {/* Add Todo Input */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newTodoTitle}
+              onChange={(e) => setNewTodoTitle(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
+              placeholder="Add a new todo..."
+              className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            />
+            <button
+              onClick={handleAddTodo}
+              disabled={addingTodo || !newTodoTitle.trim()}
+              className="px-3 py-2 bg-primary-500 hover:bg-primary-400 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+            >
+              {addingTodo ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+            </button>
+          </div>
+
+          {sortedTodos.length === 0 ? (
+            <p className="text-neutral-500 text-center py-4">No todos yet. Add one above!</p>
           ) : (
-            <div className="space-y-3">
-              {upcomingHolidays.map((holiday) => (
-                <div key={holiday.id} className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                  <div>
-                    <p className="text-white font-medium">{holiday.name}</p>
-                    <p className="text-xs text-neutral-500">
-                      {new Date(holiday.date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </p>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {sortedTodos.slice(0, 6).map((todo) => (
+                <div 
+                  key={todo.id} 
+                  className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                    todo.status === 'completed' 
+                      ? 'bg-neutral-900/30 border-neutral-800' 
+                      : 'bg-neutral-900/50 border-neutral-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <button
+                      onClick={() => todo.id && handleToggleTodo(todo.id, todo.status)}
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        todo.status === 'completed' 
+                          ? 'bg-green-500 border-green-500 text-white' 
+                          : 'border-neutral-500 hover:border-primary-500'
+                      }`}
+                    >
+                      {todo.status === 'completed' && <FaCheckCircle className="text-xs" />}
+                    </button>
+                    <span className={`text-sm truncate ${
+                      todo.status === 'completed' ? 'text-neutral-500 line-through' : 'text-white'
+                    }`}>
+                      {todo.title}
+                    </span>
                   </div>
-                  <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 font-medium">
-                    {holiday.type}
-                  </span>
+                  <button
+                    onClick={() => todo.id && handleDeleteTodo(todo.id)}
+                    className="text-neutral-500 hover:text-red-400 transition-colors ml-2"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
                 </div>
               ))}
             </div>

@@ -543,28 +543,13 @@ function AttendanceTable({
                 className="border-t border-white/5 hover:bg-white/5 transition-colors"
               >
                 <td className="p-3">
-                  <ProfileInfo
-                    data={employeeToProfileData(emp, {
-                      attendancePercentage: getEmployeeWithStats(emp.employeeId)?.attendancePercentage,
-                      presentCount: getEmployeeWithStats(emp.employeeId)?.presentDays,
-                      absentCount: getEmployeeWithStats(emp.employeeId)?.absentDays,
-                      leaveCount: getEmployeeWithStats(emp.employeeId)?.lateDays,
-                      lastAttendanceDate: formatDate(record.timestamp)
-                    })}
-                    isAdmin={true}
-                    onViewProfile={() => {
-                      const empWithStats = getEmployeeWithStats(emp.employeeId)
-                      if (empWithStats) onViewProfile(empWithStats)
-                    }}
-                  >
-                    <div className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                      <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                      <div>
-                        <p className="font-medium text-white hover:text-primary-400 transition-colors">{emp.name}</p>
-                        <p className="text-xs text-neutral-500">{emp.employeeId}</p>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                    <div>
+                      <p className="font-medium text-white">{emp.name}</p>
+                      <p className="text-xs text-neutral-500">{emp.employeeId}</p>
                     </div>
-                  </ProfileInfo>
+                  </div>
                 </td>
                 <td className="p-3 text-neutral-300">{formatDate(record.timestamp)}</td>
                 <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
@@ -666,16 +651,6 @@ function EmployeeList({
           animate={{ opacity: 1, y: 0 }}
         >
           <Card hover className="relative">
-            <ProfileInfo
-              data={employeeToProfileData(emp, {
-                attendancePercentage: emp.attendancePercentage,
-                presentCount: emp.presentDays,
-                absentCount: emp.absentDays,
-                leaveCount: emp.lateDays,
-              })}
-              isAdmin={true}
-              onViewProfile={() => onViewProfile(emp)}
-            >
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar src={emp.profileImage} name={emp.name} size="lg" />
@@ -702,7 +677,6 @@ function EmployeeList({
                   <p className="text-xs text-neutral-500">Attendance</p>
                 </div>
               </div>
-            </ProfileInfo>
             
             <div className="mt-4 pt-4 border-t border-neutral-700/50">
               <div className="flex items-center justify-between text-sm">

@@ -155,6 +155,16 @@ export interface DiscussionReply {
   mentions: string[]
 }
 
+// Personal Todo (private per user)
+export interface PersonalTodo {
+  id?: string
+  title: string
+  status: 'pending' | 'completed'
+  dueDate?: string
+  createdAt: Timestamp
+  completedAt?: Timestamp
+}
+
 export interface ActivityLog {
   id?: string
   type: 'attendance' | 'profile' | 'task' | 'discussion' | 'holiday' | 'system'
@@ -306,6 +316,12 @@ interface EmployeeAuthContextType {
   logActivity: (log: Omit<ActivityLog, 'id' | 'timestamp' | 'performedBy' | 'performedByName'>) => Promise<void>
   getActivityLogs: (employeeId?: string, limit?: number) => Promise<ActivityLog[]>
   
+  // Personal Todos
+  personalTodos: PersonalTodo[]
+  addPersonalTodo: (title: string, dueDate?: string) => Promise<void>
+  updatePersonalTodo: (id: string, updates: Partial<PersonalTodo>) => Promise<void>
+  deletePersonalTodo: (id: string) => Promise<void>
+  
   // Auto-absent
   runAutoAbsentJob: () => Promise<void>
 }
@@ -325,6 +341,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [discussions, setDiscussions] = useState<Discussion[]>([])
+  const [personalTodos, setPersonalTodos] = useState<PersonalTodo[]>([])
 
   // ============================================
   // AUTH EFFECTS - Step 1: Initialize Firebase Auth
@@ -512,6 +529,31 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     )
     return () => unsubscribe()
   }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
+
+  // Subscribe to personal todos - private per user
+  useEffect(() => {
+    if (!authReady || !user || !employee) {
+      setPersonalTodos([])
+      return
+    }
+    
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, 'personalTodos'),
+        where('employeeId', '==', employee.employeeId),
+        orderBy('createdAt', 'desc')
+      ),
+      (snapshot) => {
+        const todosData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as PersonalTodo[]
+        setPersonalTodos(todosData)
+      },
+      (error) => console.error('Error fetching personal todos:', error)
+    )
+    return () => unsubscribe()
+  }, [authReady, user, employee])
 
   // ============================================
   // AUTH FUNCTIONS
@@ -1272,6 +1314,63 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ============================================
+  // PERSONAL TODO FUNCTIONS
+  // ============================================
+
+  const addPersonalTodo = async (title: string, dueDate?: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    await addDoc(collection(db, 'personalTodos'), {
+      title,
+      status: 'pending',
+      dueDate: dueDate || null,
+      employeeId: employee.employeeId,
+      createdAt: Timestamp.now()
+    })
+  }
+
+  const updatePersonalTodo = async (id: string, updates: Partial<PersonalTodo>) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const todoRef = doc(db, 'personalTodos', id)
+    const todoDoc = await getDoc(todoRef)
+    
+    if (!todoDoc.exists()) throw new Error('Todo not found')
+    
+    const todo = todoDoc.data()
+    
+    // Only owner can update their todos
+    if (todo.employeeId !== employee.employeeId) {
+      throw new Error('Unauthorized')
+    }
+    
+    const updateData: any = { ...updates }
+    if (updates.status === 'completed') {
+      updateData.completedAt = Timestamp.now()
+    }
+    
+    await updateDoc(todoRef, updateData)
+  }
+
+  const deletePersonalTodo = async (id: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const todoRef = doc(db, 'personalTodos', id)
+    const todoDoc = await getDoc(todoRef)
+    
+    if (!todoDoc.exists()) throw new Error('Todo not found')
+    
+    const todo = todoDoc.data()
+    
+    // Only owner can delete their todos
+    if (todo.employeeId !== employee.employeeId) {
+      throw new Error('Unauthorized')
+    }
+    
+    await deleteDoc(todoRef)
+  }
+
+  // ============================================
   // ACTIVITY LOG FUNCTIONS
   // ============================================
 
@@ -1406,6 +1505,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       togglePinDiscussion,
       logActivity,
       getActivityLogs,
+      personalTodos,
+      addPersonalTodo,
+      updatePersonalTodo,
+      deletePersonalTodo,
       runAutoAbsentJob
     }}>
       {children}

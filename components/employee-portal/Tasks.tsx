@@ -468,32 +468,10 @@ function TaskDetailModal({
             )}
             {task.comments?.map((comment) => (
               <div key={comment.id} className="flex gap-3 p-3 bg-neutral-800/50 rounded-lg">
-                <ProfileInfo
-                  data={{
-                    employeeId: comment.authorId,
-                    name: comment.authorName,
-                    profileImage: comment.authorImage,
-                    role: 'employee',
-                    status: 'Active'
-                  }}
-                  isAdmin={isAdmin}
-                >
-                  <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
-                </ProfileInfo>
+                <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <ProfileInfo
-                      data={{
-                        employeeId: comment.authorId,
-                        name: comment.authorName,
-                        profileImage: comment.authorImage,
-                        role: 'employee',
-                        status: 'Active'
-                      }}
-                      isAdmin={isAdmin}
-                    >
-                      <p className="text-sm font-medium text-white hover:text-primary-400 cursor-pointer">{comment.authorName}</p>
-                    </ProfileInfo>
+                    <p className="text-sm font-medium text-white">{comment.authorName}</p>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-neutral-500">
                         {formatTimestamp(comment.createdAt)}
