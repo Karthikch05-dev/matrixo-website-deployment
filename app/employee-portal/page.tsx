@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -227,8 +227,23 @@ function TopNavbar({
   const { employee, logout } = useEmployeeAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0 })
   const [currentTime, setCurrentTime] = useState(new Date())
+  const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const isAdmin = employee?.role === 'admin'
+
+  // Calculate user menu position when opening
+  useEffect(() => {
+    if (userMenuOpen && userMenuButtonRef.current) {
+      const rect = userMenuButtonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      
+      setUserMenuPosition({
+        top: rect.bottom + 8,
+        right: viewportWidth - rect.right
+      })
+    }
+  }, [userMenuOpen])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -323,6 +338,7 @@ function TopNavbar({
             {/* User Menu - Hover disabled outside Discussions */}
             <div className="relative">
               <button
+                ref={userMenuButtonRef}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
                 >
@@ -346,10 +362,15 @@ function TopNavbar({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="fixed right-4 top-16 w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
-                      style={{ zIndex: 99991 }}
+                      className="w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
+                      style={{ 
+                        position: 'fixed',
+                        top: userMenuPosition.top,
+                        right: userMenuPosition.right,
+                        zIndex: 99991 
+                      }}
                     >
-                      <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent">
+                      <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent rounded-t-2xl">
                         <div className="flex items-center gap-3">
                           <img
                             src={getProfileImageUrl(employee?.profileImage, employee?.name)}

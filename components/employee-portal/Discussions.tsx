@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaComments, 
@@ -45,7 +46,31 @@ function MentionInput({
   const [showMentions, setShowMentions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionType, setMentionType] = useState<'user' | 'department'>('user')
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0, width: 0, openBelow: true })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Calculate mention dropdown position when showing
+  useEffect(() => {
+    if (showMentions && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const dropdownHeight = 200 // Estimated max height
+      
+      const spaceBelow = viewportHeight - rect.bottom - 8
+      const spaceAbove = rect.top - 8
+      
+      // Default: open below, flip if not enough space
+      const openBelow = spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove
+      
+      setMentionPosition({
+        top: openBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4,
+        left: rect.left,
+        width: rect.width,
+        openBelow
+      })
+    }
+  }, [showMentions])
 
   const filteredMentions = useMemo(() => {
     const query = mentionQuery.toLowerCase()
@@ -136,7 +161,7 @@ function MentionInput({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Textarea
         ref={textareaRef}
         value={value}
@@ -146,49 +171,68 @@ function MentionInput({
         rows={3}
       />
       
-      {/* Mentions Dropdown */}
+      {/* Mentions Dropdown - Rendered via Portal to escape parent stacking contexts */}
       <AnimatePresence>
-        {showMentions && filteredMentions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute bottom-full left-0 right-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl overflow-hidden z-10"
-          >
-            <div className="p-2 border-b border-neutral-700">
-              <p className="text-xs text-neutral-400">
-                {mentionType === 'user' ? 'Mention a person' : 'Mention a department'}
-              </p>
-            </div>
-            {mentionType === 'user' ? (
-              filteredMentions.map((emp) => (
-                <button
-                  key={(emp as EmployeeProfile).employeeId}
-                  onClick={() => insertMention((emp as EmployeeProfile).name.replace(/\s/g, ''))}
-                  className="w-full flex items-center gap-3 p-2 hover:bg-neutral-700 transition-colors"
-                >
-                  <Avatar src={(emp as EmployeeProfile).profileImage} name={(emp as EmployeeProfile).name} size="sm" showBorder={false} />
-                  <div className="text-left">
-                    <p className="text-sm text-white">{(emp as EmployeeProfile).name}</p>
-                    <p className="text-xs text-neutral-500">{(emp as EmployeeProfile).department}</p>
-                  </div>
-                </button>
-              ))
-            ) : (
-              (filteredMentions as string[]).map((dept) => (
-                <button
-                  key={dept}
-                  onClick={() => insertMention(dept.replace(/\s/g, ''))}
-                  className="w-full flex items-center gap-3 p-2 hover:bg-neutral-700 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
-                    <FaAt className="text-primary-400" />
-                  </div>
-                  <p className="text-sm text-white">{dept}</p>
-                </button>
-              ))
-            )}
-          </motion.div>
+        {showMentions && filteredMentions.length > 0 && typeof window !== 'undefined' && createPortal(
+          <>
+            {/* Backdrop to close on outside click */}
+            <div 
+              className="fixed inset-0" 
+              style={{ zIndex: 99998 }} 
+              onClick={() => setShowMentions(false)} 
+            />
+            <motion.div
+              initial={{ opacity: 0, y: mentionPosition.openBelow ? -10 : 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: mentionPosition.openBelow ? -10 : 10 }}
+              className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden"
+              style={{
+                position: 'fixed',
+                top: mentionPosition.top,
+                left: mentionPosition.left,
+                width: mentionPosition.width,
+                maxWidth: 400,
+                zIndex: 99999
+              }}
+            >
+              <div className="p-2 border-b border-neutral-700">
+                <p className="text-xs text-neutral-400">
+                  {mentionType === 'user' ? 'Mention a person' : 'Mention a department'}
+                </p>
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                {mentionType === 'user' ? (
+                  filteredMentions.map((emp) => (
+                    <button
+                      key={(emp as EmployeeProfile).employeeId}
+                      onClick={() => insertMention((emp as EmployeeProfile).name.replace(/\s/g, ''))}
+                      className="w-full flex items-center gap-3 p-2 hover:bg-neutral-700 transition-colors"
+                    >
+                      <Avatar src={(emp as EmployeeProfile).profileImage} name={(emp as EmployeeProfile).name} size="sm" showBorder={false} />
+                      <div className="text-left">
+                        <p className="text-sm text-white">{(emp as EmployeeProfile).name}</p>
+                        <p className="text-xs text-neutral-500">{(emp as EmployeeProfile).department}</p>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  (filteredMentions as string[]).map((dept) => (
+                    <button
+                      key={dept}
+                      onClick={() => insertMention(dept.replace(/\s/g, ''))}
+                      className="w-full flex items-center gap-3 p-2 hover:bg-neutral-700 transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
+                        <FaAt className="text-primary-400" />
+                      </div>
+                      <p className="text-sm text-white">{dept}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </>,
+          document.body
         )}
       </AnimatePresence>
 

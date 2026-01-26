@@ -31,7 +31,22 @@ export default function NotificationBell() {
   } = useNotifications()
   
   const [isOpen, setIsOpen] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        right: viewportWidth - rect.right
+      })
+    }
+  }, [isOpen])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -87,6 +102,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
+        ref={buttonRef}
         onClick={handleBellClick}
         className="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
         aria-label="Notifications"
@@ -115,8 +131,13 @@ export default function NotificationBell() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="fixed right-4 top-16 w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
-              style={{ zIndex: 99991 }}
+              className="w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
+              style={{ 
+                position: 'fixed',
+                top: dropdownPosition.top,
+                right: dropdownPosition.right,
+                zIndex: 99991 
+              }}
             >
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50">
