@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaUser, 
@@ -335,18 +336,18 @@ function TopNavbar({
                   <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-              {/* User Dropdown - Quick Actions */}
+              {/* User Dropdown - Quick Actions - Rendered via Portal */}
               <AnimatePresence>
-                {userMenuOpen && (
+                {userMenuOpen && typeof window !== 'undefined' && createPortal(
                   <>
-                    <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setUserMenuOpen(false)} />
+                    <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setUserMenuOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
                       className="fixed right-4 top-16 w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
-                      style={{ zIndex: 9999 }}
+                      style={{ zIndex: 99991 }}
                     >
                       <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent">
                         <div className="flex items-center gap-3">
@@ -372,7 +373,8 @@ function TopNavbar({
                         </button>
                       </div>
                     </motion.div>
-                  </>
+                  </>,
+                  document.body
                 )}
               </AnimatePresence>
             </div>
@@ -495,8 +497,9 @@ function DashboardOverview() {
       await addPersonalTodo(newTodoTitle.trim())
       setNewTodoTitle('')
       toast.success('Todo added')
-    } catch (error) {
-      toast.error('Failed to add todo')
+    } catch (error: any) {
+      console.error('Todo add error:', error)
+      toast.error(error?.message || 'Failed to add todo')
     } finally {
       setAddingTodo(false)
     }

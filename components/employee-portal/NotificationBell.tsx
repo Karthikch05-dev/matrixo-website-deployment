@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaBell, 
@@ -104,18 +105,18 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
+      {/* Dropdown Panel - Rendered via Portal to escape navbar stacking context */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && typeof window !== 'undefined' && createPortal(
           <>
-            <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setIsOpen(false)} />
+            <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setIsOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
               className="fixed right-4 top-16 w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
-              style={{ zIndex: 9999 }}
+              style={{ zIndex: 99991 }}
             >
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50">
@@ -240,7 +241,8 @@ export default function NotificationBell() {
               </div>
             )}
           </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
     </div>

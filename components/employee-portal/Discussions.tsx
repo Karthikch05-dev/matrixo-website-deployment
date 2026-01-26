@@ -492,13 +492,41 @@ function DiscussionPost({
     }
   }
 
-  // Highlight mentions in content
+  // Highlight mentions in content with hover support for @mentions
   const renderContent = (content: string) => {
     if (!content || typeof content !== 'string') return content || ''
     
     const parts = content.split(/(@\w+|#\w+)/g)
     return parts.map((part, i) => {
       if (part.startsWith('@')) {
+        const mentionName = part.slice(1).toLowerCase()
+        // Find employee matching the mention
+        const mentionedEmployee = employees.find(e => 
+          e.name.toLowerCase().replace(/\s/g, '').includes(mentionName) ||
+          e.employeeId.toLowerCase() === mentionName ||
+          e.name.split(' ')[0].toLowerCase() === mentionName
+        )
+        
+        if (mentionedEmployee) {
+          return (
+            <ProfileInfo
+              key={i}
+              data={{
+                employeeId: mentionedEmployee.employeeId,
+                name: mentionedEmployee.name,
+                profileImage: mentionedEmployee.profileImage,
+                department: mentionedEmployee.department,
+                designation: mentionedEmployee.designation,
+                role: mentionedEmployee.role || 'employee',
+                status: 'Active'
+              }}
+              isAdmin={false}
+            >
+              <span className="text-primary-400 font-medium cursor-pointer hover:underline">{part}</span>
+            </ProfileInfo>
+          )
+        }
+        // If employee not found, just style it
         return <span key={i} className="text-primary-400 font-medium">{part}</span>
       }
       if (part.startsWith('#')) {

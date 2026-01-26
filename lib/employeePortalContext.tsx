@@ -1320,13 +1320,21 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const addPersonalTodo = async (title: string, dueDate?: string) => {
     if (!employee) throw new Error('Not authenticated')
     
-    await addDoc(collection(db, 'personalTodos'), {
-      title,
-      status: 'pending',
-      dueDate: dueDate || null,
-      employeeId: employee.employeeId,
-      createdAt: Timestamp.now()
-    })
+    try {
+      await addDoc(collection(db, 'personalTodos'), {
+        title,
+        status: 'pending',
+        dueDate: dueDate || null,
+        employeeId: employee.employeeId,
+        createdAt: Timestamp.now()
+      })
+    } catch (error: any) {
+      console.error('Firestore addPersonalTodo error:', error?.code, error?.message)
+      if (error?.code === 'permission-denied') {
+        throw new Error('Permission denied. Check Firestore rules for personalTodos collection.')
+      }
+      throw error
+    }
   }
 
   const updatePersonalTodo = async (id: string, updates: Partial<PersonalTodo>) => {
