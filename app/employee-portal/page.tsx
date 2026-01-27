@@ -31,7 +31,6 @@ import {
   FaListAlt
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
-import { NotificationProvider } from '@/lib/notificationContext'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -1013,10 +1012,8 @@ function EmployeePortalContent() {
 export default function EmployeePortalPage() {
   return (
     <EmployeeAuthProvider>
-      <NotificationProvider>
-        <EmployeePortalContent />
-        <Toaster position="top-right" richColors />
-      </NotificationProvider>
+      <EmployeePortalContent />
+      <Toaster position="top-right" richColors />
     </EmployeeAuthProvider>
   )
 }

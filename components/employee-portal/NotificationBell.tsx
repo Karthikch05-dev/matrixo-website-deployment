@@ -8,36 +8,111 @@ import {
   FaTasks, 
   FaComments, 
   FaCalendarAlt, 
-  FaCheck,
   FaCheckDouble
 } from 'react-icons/fa'
-import { useNotifications, Notification } from '@/lib/notificationContext'
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  onSnapshot,
+  updateDoc,
+  doc,
+  writeBatch,
+  Timestamp
+} from 'firebase/firestore'
+import { db } from '@/lib/firebaseConfig'
 import { formatDistanceToNow } from 'date-fns'
+
+// Notification type
+interface Notification {
+  id: string
+  type: 'task' | 'discussion' | 'calendar'
+  action?: string
+  title: string
+  message: string
+  createdByName?: string
+  read: boolean
+  createdAt: Timestamp
+}
 
 interface NotificationBellProps {
   onNavigate?: (tab: string) => void
 }
 
 export default function NotificationBell({ onNavigate }: NotificationBellProps) {
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    requestPermission,
-    permissionState
-  } = useNotifications()
-  
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
+  const [loading, setLoading] = useState(true)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Fetch notifications directly from Firestore
+  useEffect(() => {
+    console.log('🔔 NotificationBell: Setting up Firestore listener...')
+    
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(
+      notificationsRef,
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    )
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        console.log('📬 NotificationBell: Received', snapshot.docs.length, 'notifications')
+        const data = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        })) as Notification[]
+        
+        setNotifications(data)
+        setLoading(false)
+        console.log('📬 NotificationBell: Notifications set:', data)
+      },
+      (error) => {
+        console.error('❌ NotificationBell: Error fetching notifications:', error)
+        setLoading(false)
+      }
+    )
+
+    return () => {
+      console.log('🔔 NotificationBell: Cleaning up listener')
+      unsubscribe()
+    }
+  }, [])
 
   // Ensure we're on client side for portal
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  // Mark single notification as read
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await updateDoc(doc(db, 'notifications', notificationId), { read: true })
+    } catch (error) {
+      console.error('Error marking as read:', error)
+    }
+  }
+
+  // Mark all as read
+  const markAllAsRead = async () => {
+    try {
+      const batch = writeBatch(db)
+      notifications.filter(n => !n.read).forEach(n => {
+        batch.update(doc(db, 'notifications', n.id), { read: true })
+      })
+      await batch.commit()
+    } catch (error) {
+      console.error('Error marking all as read:', error)
+    }
+  }
 
   // Calculate position relative to button
   const updatePosition = useCallback(() => {
@@ -57,9 +132,6 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     
     if (!isOpen) {
       updatePosition()
-      if (permissionState === 'default') {
-        requestPermission()
-      }
     }
     setIsOpen(prev => !prev)
   }
@@ -69,9 +141,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     if (!isOpen) return
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false)
-      }
+      if (e.key === 'Escape') setIsOpen(false)
     }
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -85,7 +155,6 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     }
 
     document.addEventListener('keydown', handleEscape)
-    // Use setTimeout to avoid closing on the same click that opened
     const timer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside)
     }, 0)
@@ -98,22 +167,15 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   }, [isOpen])
 
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.read && notification.id) {
+    if (!notification.read) {
       await markAsRead(notification.id)
     }
     
-    // Navigate to the appropriate tab based on notification type
     if (onNavigate) {
       switch (notification.type) {
-        case 'task':
-          onNavigate('tasks')
-          break
-        case 'discussion':
-          onNavigate('discussions')
-          break
-        case 'calendar':
-          onNavigate('calendar')
-          break
+        case 'task': onNavigate('tasks'); break
+        case 'discussion': onNavigate('discussions'); break
+        case 'calendar': onNavigate('calendar'); break
       }
     }
     
@@ -156,6 +218,14 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     )
   }
 
+  const formatTime = (timestamp: Timestamp) => {
+    try {
+      return formatDistanceToNow(timestamp.toDate(), { addSuffix: true })
+    } catch {
+      return 'Just now'
+    }
+  }
+
   return (
     <>
       {/* Bell Button */}
@@ -176,7 +246,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         )}
       </button>
 
-      {/* Dropdown via Portal - renders to document.body */}
+      {/* Dropdown via Portal */}
       {mounted && isOpen && createPortal(
         <div 
           ref={dropdownRef}
@@ -200,21 +270,17 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
                   <FaBell className="text-primary-400" />
                   Notifications
                   {unreadCount > 0 && (
-                    <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
                       {unreadCount} new
                     </span>
                   )}
                 </h3>
-                
                 {unreadCount > 0 && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      markAllAsRead()
-                    }}
-                    className="text-xs text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+                    onClick={markAllAsRead}
+                    className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors"
                   >
-                    <FaCheckDouble className="text-xs" />
+                    <FaCheckDouble size={12} />
                     Mark all read
                   </button>
                 )}
@@ -222,98 +288,59 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
             </div>
 
             {/* Notification List */}
-            <div className="max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="px-4 py-12 text-center">
-                  <FaBell className="text-5xl text-neutral-700 mx-auto mb-3" />
-                  <p className="text-neutral-400 text-sm">No notifications yet</p>
+            <div className="max-h-80 overflow-y-auto">
+              {loading ? (
+                <div className="px-4 py-8 text-center text-neutral-500">
+                  <div className="animate-spin w-6 h-6 border-2 border-neutral-600 border-t-primary-400 rounded-full mx-auto mb-2"></div>
+                  Loading...
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="px-4 py-8 text-center text-neutral-500">
+                  <FaBell className="text-3xl mx-auto mb-2 opacity-50" />
+                  <p>No notifications yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-white/5">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer relative ${!notification.read ? 'bg-primary-500/5' : ''}`}
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      {!notification.read && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500" />
-                      )}
-
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0 mt-1">
-                          {getIcon(notification.type)}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-neutral-300'}`}>
-                                {notification.title}
-                              </h4>
-                              {getActionBadge(notification.action)}
-                            </div>
-                            
-                            {!notification.read && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  if (notification.id) markAsRead(notification.id)
-                                }}
-                                className="text-primary-400 hover:text-primary-300 transition-colors"
-                                aria-label="Mark as read"
-                              >
-                                <FaCheck className="text-xs" />
-                              </button>
-                            )}
-                          </div>
-                          
-                          <p className="text-xs text-neutral-400 mt-1 line-clamp-2">
-                            {notification.message}
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`px-4 py-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
+                      !notification.read ? 'bg-primary-500/5' : ''
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className="mt-1">
+                        {getIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className={`text-sm font-medium truncate ${!notification.read ? 'text-white' : 'text-neutral-300'}`}>
+                            {notification.title}
                           </p>
-                          
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-neutral-500">
-                              {notification.createdAt && formatDistanceToNow(notification.createdAt.toDate(), { addSuffix: true })}
+                          {getActionBadge(notification.action)}
+                          {!notification.read && (
+                            <span className="w-2 h-2 bg-primary-400 rounded-full flex-shrink-0"></span>
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-400 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-neutral-500">
+                            {formatTime(notification.createdAt)}
+                          </span>
+                          {notification.createdByName && (
+                            <span className="text-[10px] text-neutral-500">
+                              by {notification.createdByName}
                             </span>
-                            
-                            {notification.createdByName && (
-                              <span className="text-xs text-neutral-500">
-                                by {notification.createdByName}
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))
               )}
             </div>
-
-            {/* Footer - Permission Request */}
-            {permissionState === 'default' && (
-              <div className="px-4 py-3 border-t border-white/10 bg-neutral-800/50 rounded-b-2xl">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    requestPermission()
-                  }}
-                  className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaBell />
-                  Enable Browser Notifications
-                </button>
-              </div>
-            )}
-
-            {permissionState === 'denied' && (
-              <div className="px-4 py-3 border-t border-white/10 bg-amber-500/10 rounded-b-2xl">
-                <p className="text-xs text-amber-400 text-center">
-                  Browser notifications are blocked. Enable them in your browser settings.
-                </p>
-              </div>
-            )}
           </motion.div>
         </div>,
         document.body
