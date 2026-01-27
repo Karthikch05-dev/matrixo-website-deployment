@@ -290,44 +290,52 @@ export const Select = ({
   className = '',
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null)
   const [openAbove, setOpenAbove] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Calculate dropdown position when opening
-  useEffect(() => {
-    if (isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-      const dropdownHeight = Math.min(240, options.length * 48) // Estimate based on options count
-      
-      // Check if dropdown would go below viewport
-      const spaceBelow = viewportHeight - rect.bottom - 8
-      const spaceAbove = rect.top - 8
-      
-      let top: number
-      let shouldOpenAbove = false
-      
-      if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
-        // Position below
-        top = rect.bottom + 8
-        shouldOpenAbove = false
-      } else {
-        // Position above - calculate from bottom of trigger minus dropdown height
-        const actualDropdownHeight = Math.min(dropdownHeight, spaceAbove)
-        top = rect.top - actualDropdownHeight - 8
-        shouldOpenAbove = true
-      }
-      
-      setOpenAbove(shouldOpenAbove)
-      setDropdownPosition({
-        top,
-        left: rect.left,
-        width: rect.width
-      })
+  // Calculate dropdown position synchronously
+  const calculatePosition = () => {
+    if (!triggerRef.current) return null
+    
+    const rect = triggerRef.current.getBoundingClientRect()
+    const viewportHeight = window.innerHeight
+    const dropdownHeight = Math.min(240, options.length * 48)
+    
+    const spaceBelow = viewportHeight - rect.bottom - 8
+    const spaceAbove = rect.top - 8
+    
+    let top: number
+    let shouldOpenAbove = false
+    
+    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+      top = rect.bottom + 8
+      shouldOpenAbove = false
+    } else {
+      const actualDropdownHeight = Math.min(dropdownHeight, spaceAbove)
+      top = rect.top - actualDropdownHeight - 8
+      shouldOpenAbove = true
     }
-  }, [isOpen, options.length])
+    
+    return { top, left: rect.left, width: rect.width, shouldOpenAbove }
+  }
+
+  // Toggle dropdown with synchronous position calculation
+  const handleToggle = () => {
+    if (disabled) return
+    
+    if (!isOpen) {
+      const pos = calculatePosition()
+      if (pos) {
+        setDropdownPosition({ top: pos.top, left: pos.left, width: pos.width })
+        setOpenAbove(pos.shouldOpenAbove)
+        setIsOpen(true)
+      }
+    } else {
+      setIsOpen(false)
+    }
+  }
 
   // Close on outside click
   useEffect(() => {
@@ -366,7 +374,7 @@ export const Select = ({
         <button
           ref={triggerRef}
           type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
+          onClick={handleToggle}
           disabled={disabled}
           className={`
             w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left
@@ -382,7 +390,7 @@ export const Select = ({
         </button>
         
         {/* Dropdown rendered via Portal to escape parent stacking contexts */}
-        {isOpen && typeof window !== 'undefined' && createPortal(
+        {isOpen && dropdownPosition && typeof window !== 'undefined' && createPortal(
           <AnimatePresence>
             <motion.div
               ref={dropdownRef}

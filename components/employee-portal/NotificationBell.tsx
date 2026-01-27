@@ -31,21 +31,8 @@ export default function NotificationBell() {
   } = useNotifications()
   
   const [isOpen, setIsOpen] = useState(false)
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-
-  // Calculate dropdown position when opening
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      
-      setDropdownPosition({
-        top: rect.bottom + 8,
-        right: viewportWidth - rect.right
-      })
-    }
-  }, [isOpen])
 
   // ESC key handler to close dropdown
   useEffect(() => {
@@ -58,8 +45,18 @@ export default function NotificationBell() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen])
 
-  // Request permission on first interaction
+  // Request permission on first interaction and calculate position synchronously
   const handleBellClick = async () => {
+    if (!isOpen && buttonRef.current) {
+      // Calculate position BEFORE opening to avoid flicker
+      const rect = buttonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        right: viewportWidth - rect.right
+      })
+    }
+    
     setIsOpen(!isOpen)
     
     if (permissionState === 'default') {
@@ -119,7 +116,7 @@ export default function NotificationBell() {
 
       {/* Dropdown Panel - Rendered via Portal to escape navbar stacking context */}
       <AnimatePresence>
-        {isOpen && typeof window !== 'undefined' && createPortal(
+        {isOpen && dropdownPosition && typeof window !== 'undefined' && createPortal(
           <>
             <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setIsOpen(false)} />
             <motion.div

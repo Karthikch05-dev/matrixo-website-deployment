@@ -227,23 +227,10 @@ function TopNavbar({
   const { employee, logout } = useEmployeeAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0 })
+  const [userMenuPosition, setUserMenuPosition] = useState<{ top: number; right: number } | null>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const isAdmin = employee?.role === 'admin'
-
-  // Calculate user menu position when opening
-  useEffect(() => {
-    if (userMenuOpen && userMenuButtonRef.current) {
-      const rect = userMenuButtonRef.current.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      
-      setUserMenuPosition({
-        top: rect.bottom + 8,
-        right: viewportWidth - rect.right
-      })
-    }
-  }, [userMenuOpen])
 
   // ESC key handler to close user menu
   useEffect(() => {
@@ -255,6 +242,19 @@ function TopNavbar({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [userMenuOpen])
+
+  // Handle user menu toggle - calculate position synchronously
+  const handleUserMenuClick = () => {
+    if (!userMenuOpen && userMenuButtonRef.current) {
+      const rect = userMenuButtonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      setUserMenuPosition({
+        top: rect.bottom + 8,
+        right: viewportWidth - rect.right
+      })
+    }
+    setUserMenuOpen(!userMenuOpen)
+  }
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -350,7 +350,7 @@ function TopNavbar({
             <div className="relative">
               <button
                 ref={userMenuButtonRef}
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                onClick={handleUserMenuClick}
                 className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
                 >
                   <img
@@ -365,7 +365,7 @@ function TopNavbar({
 
               {/* User Dropdown - Quick Actions - Rendered via Portal */}
               <AnimatePresence>
-                {userMenuOpen && typeof window !== 'undefined' && createPortal(
+                {userMenuOpen && userMenuPosition && typeof window !== 'undefined' && createPortal(
                   <>
                     <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setUserMenuOpen(false)} />
                     <motion.div

@@ -46,33 +46,40 @@ function MentionInput({
   const [showMentions, setShowMentions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionType, setMentionType] = useState<'user' | 'department'>('user')
-  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0, width: 300, openBelow: true })
+  const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number; width: number; openBelow: boolean } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Calculate mention dropdown position when showing - runs synchronously on state change
-  useEffect(() => {
-    if (showMentions && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-      const dropdownHeight = 200 // Estimated max height
-      
-      const spaceBelow = viewportHeight - rect.bottom - 8
-      const spaceAbove = rect.top - 8
-      
-      // Default: open below, flip if not enough space
-      const openBelow = spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove
-      
-      const newPosition = {
-        top: openBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4,
-        left: rect.left,
-        width: Math.max(rect.width, 250), // Minimum width of 250px
-        openBelow
-      }
-      
-      setMentionPosition(newPosition)
+  // Helper to calculate mention dropdown position synchronously
+  const calculateMentionPosition = () => {
+    if (!containerRef.current) return null
+    
+    const rect = containerRef.current.getBoundingClientRect()
+    const viewportHeight = window.innerHeight
+    const dropdownHeight = 200 // Estimated max height
+    
+    const spaceBelow = viewportHeight - rect.bottom - 8
+    const spaceAbove = rect.top - 8
+    
+    // Default: open below, flip if not enough space
+    const openBelow = spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove
+    
+    return {
+      top: openBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4,
+      left: rect.left,
+      width: Math.max(rect.width, 250), // Minimum width of 250px
+      openBelow
     }
-  }, [showMentions])
+  }
+  
+  // Show mentions with position calculated synchronously
+  const showMentionsDropdown = () => {
+    const pos = calculateMentionPosition()
+    if (pos) {
+      setMentionPosition(pos)
+      setShowMentions(true)
+    }
+  }
 
   const filteredMentions = useMemo(() => {
     const query = mentionQuery.toLowerCase()
@@ -118,7 +125,7 @@ function MentionInput({
       if (!afterAt.includes(' ')) {
         setMentionQuery(afterAt)
         setMentionType('user')
-        setShowMentions(true)
+        showMentionsDropdown()
       } else {
         setShowMentions(false)
       }
@@ -127,7 +134,7 @@ function MentionInput({
       if (!afterHash.includes(' ')) {
         setMentionQuery(afterHash)
         setMentionType('department')
-        setShowMentions(true)
+        showMentionsDropdown()
       } else {
         setShowMentions(false)
       }
@@ -175,7 +182,7 @@ function MentionInput({
       
       {/* Mentions Dropdown - Rendered via Portal to escape parent stacking contexts */}
       <AnimatePresence>
-        {showMentions && typeof window !== 'undefined' && createPortal(
+        {showMentions && mentionPosition && typeof window !== 'undefined' && createPortal(
           <>
             {/* Backdrop to close on outside click */}
             <div 
