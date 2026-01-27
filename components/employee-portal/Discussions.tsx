@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaComments, 
@@ -20,7 +21,7 @@ import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
 // ============================================
-// MENTION INPUT COMPONENT (REWRITTEN)
+// MENTION INPUT COMPONENT (PORTAL-BASED)
 // ============================================
 
 function MentionInput({
@@ -42,14 +43,21 @@ function MentionInput({
   loading?: boolean
   buttonText?: string
 }) {
+  const [mounted, setMounted] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownType, setDropdownType] = useState<'user' | 'department'>('user')
   const [searchQuery, setSearchQuery] = useState('')
   const [triggerIndex, setTriggerIndex] = useState(-1)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Filter suggestions based on search query (limit to 5)
+  // SSR safety
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Filter suggestions (limit to 5)
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
     if (dropdownType === 'user') {
@@ -64,13 +72,22 @@ function MentionInput({
     }
   }, [searchQuery, dropdownType, employees, departments])
 
-  // Handle text input change - detect @ and # patterns at cursor position
+  // Calculate dropdown position based on textarea
+  const updateDropdownPosition = () => {
+    if (!textareaRef.current) return
+    const rect = textareaRef.current.getBoundingClientRect()
+    setDropdownPos({
+      top: rect.bottom + 4,
+      left: rect.left
+    })
+  }
+
+  // Handle text input change
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
     const cursorPos = e.target.selectionStart || 0
     onChange(newValue)
     
-    // Look backwards from cursor to find the trigger character (@ or #)
     let foundTrigger = -1
     let triggerChar = ''
     
@@ -89,6 +106,7 @@ function MentionInput({
       setSearchQuery(query)
       setDropdownType(triggerChar === '@' ? 'user' : 'department')
       setTriggerIndex(foundTrigger)
+      updateDropdownPosition()
       setShowDropdown(true)
       return
     }
@@ -107,7 +125,7 @@ function MentionInput({
     }
   }
 
-  // Insert selected mention into text (remove spaces for proper regex matching)
+  // Insert selected mention
   const selectMention = (mention: string) => {
     if (triggerIndex < 0) return
     
@@ -116,12 +134,10 @@ function MentionInput({
     const cursorPos = textareaRef.current?.selectionStart || value.length
     const afterCursor = value.slice(cursorPos)
     
-    // Remove spaces from mention so it can be matched by regex @\w+
     const mentionNoSpaces = mention.replace(/\s+/g, '')
     const newValue = beforeTrigger + symbol + mentionNoSpaces + ' ' + afterCursor
     onChange(newValue)
     
-    // Set cursor after the inserted mention (use mentionNoSpaces length)
     const newCursorPos = beforeTrigger.length + symbol.length + mentionNoSpaces.length + 1
     setTimeout(() => {
       textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos)
@@ -136,7 +152,6 @@ function MentionInput({
   const handleSubmit = () => {
     if (!value.trim()) return
     
-    // Extract @mentions and #mentions (no spaces in names since we store them without spaces)
     const userMentionPattern = /@(\w+)/g
     const deptMentionPattern = /#(\w+)/g
     
@@ -166,7 +181,10 @@ function MentionInput({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const isTextarea = textareaRef.current?.contains(target)
+      const isDropdown = dropdownRef.current?.contains(target)
+      if (!isTextarea && !isDropdown) {
         setShowDropdown(false)
       }
     }
@@ -177,66 +195,72 @@ function MentionInput({
     }
   }, [showDropdown])
 
-  return (
-    <div ref={wrapperRef}>
-      {/* Input area wrapper - relative for dropdown positioning */}
-      <div className="relative">
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          rows={3}
-          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
-        />
-        
-        {/* Mention Suggestions Dropdown - absolutely positioned below textarea */}
-        {showDropdown && suggestions.length > 0 && (
-          <div
-            className="absolute left-0 w-80 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden"
-            style={{ zIndex: 99999 }}
-          >
-            <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
-              <p className="text-xs text-neutral-400 font-medium">
-                {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
-              </p>
-            </div>
-            <div className="max-h-48 overflow-y-auto">
-              {dropdownType === 'user' ? (
-                (suggestions as EmployeeProfile[]).map((emp) => (
-                  <button
-                    key={emp.employeeId}
-                    type="button"
-                    onClick={() => selectMention(emp.name)}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
-                  >
-                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-white font-medium truncate">{emp.name}</p>
-                      <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                (suggestions as string[]).map((dept) => (
-                  <button
-                    key={dept}
-                    type="button"
-                    onClick={() => selectMention(dept)}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-primary-500/20 flex items-center justify-center">
-                      <FaAt className="text-primary-400 text-xs" />
-                    </div>
-                    <p className="text-sm text-white truncate">{dept}</p>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
+  // Dropdown portal content
+  const dropdownContent = showDropdown && suggestions.length > 0 && mounted ? (
+    <div
+      ref={dropdownRef}
+      className="fixed bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden"
+      style={{
+        top: dropdownPos.top,
+        left: dropdownPos.left,
+        width: 280,
+        zIndex: 999999
+      }}
+    >
+      <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
+        <p className="text-xs text-neutral-400 font-medium">
+          {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
+        </p>
+      </div>
+      <div className="max-h-40 overflow-y-auto">
+        {dropdownType === 'user' ? (
+          (suggestions as EmployeeProfile[]).map((emp) => (
+            <button
+              key={emp.employeeId}
+              type="button"
+              onClick={() => selectMention(emp.name)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
+            >
+              <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-white font-medium truncate">{emp.name}</p>
+                <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
+              </div>
+            </button>
+          ))
+        ) : (
+          (suggestions as string[]).map((dept) => (
+            <button
+              key={dept}
+              type="button"
+              onClick={() => selectMention(dept)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
+            >
+              <div className="w-6 h-6 rounded-full bg-primary-500/20 flex items-center justify-center">
+                <FaAt className="text-primary-400 text-xs" />
+              </div>
+              <p className="text-sm text-white truncate">{dept}</p>
+            </button>
+          ))
         )}
       </div>
+    </div>
+  ) : null
+
+  return (
+    <div>
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        rows={3}
+        className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
+      />
+      
+      {/* Portal dropdown to document.body */}
+      {mounted && dropdownContent && createPortal(dropdownContent, document.body)}
 
       <div className="flex items-center justify-between mt-2">
         <p className="text-xs text-neutral-500">
