@@ -49,18 +49,18 @@ function MentionInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  // Filter suggestions based on search query
+  // Filter suggestions based on search query (limit to 5)
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
     if (dropdownType === 'user') {
       return employees.filter(e => 
         e.name.toLowerCase().includes(query) ||
         e.employeeId.toLowerCase().includes(query)
-      ).slice(0, 8)
+      ).slice(0, 5)
     } else {
       return departments.filter(d => 
         d.toLowerCase().includes(query)
-      ).slice(0, 8)
+      ).slice(0, 5)
     }
   }, [searchQuery, dropdownType, employees, departments])
 
@@ -107,7 +107,7 @@ function MentionInput({
     }
   }
 
-  // Insert selected mention into text
+  // Insert selected mention into text (remove spaces for proper regex matching)
   const selectMention = (mention: string) => {
     if (triggerIndex < 0) return
     
@@ -116,10 +116,13 @@ function MentionInput({
     const cursorPos = textareaRef.current?.selectionStart || value.length
     const afterCursor = value.slice(cursorPos)
     
-    const newValue = beforeTrigger + symbol + mention + ' ' + afterCursor
+    // Remove spaces from mention so it can be matched by regex @\w+
+    const mentionNoSpaces = mention.replace(/\s+/g, '')
+    const newValue = beforeTrigger + symbol + mentionNoSpaces + ' ' + afterCursor
     onChange(newValue)
     
-    const newCursorPos = beforeTrigger.length + symbol.length + mention.length + 1
+    // Set cursor after the inserted mention (use mentionNoSpaces length)
+    const newCursorPos = beforeTrigger.length + symbol.length + mentionNoSpaces.length + 1
     setTimeout(() => {
       textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos)
       textareaRef.current?.focus()
@@ -133,8 +136,9 @@ function MentionInput({
   const handleSubmit = () => {
     if (!value.trim()) return
     
-    const userMentionPattern = /@([A-Za-z][A-Za-z0-9 ]*?)(?=\s*[@#\n]|$)/g
-    const deptMentionPattern = /#([A-Za-z][A-Za-z0-9 ]*?)(?=\s*[@#\n]|$)/g
+    // Extract @mentions and #mentions (no spaces in names since we store them without spaces)
+    const userMentionPattern = /@(\w+)/g
+    const deptMentionPattern = /#(\w+)/g
     
     const userMentions: string[] = []
     const deptMentions: string[] = []
@@ -190,27 +194,27 @@ function MentionInput({
         {/* Mention Suggestions Dropdown - absolutely positioned below textarea */}
         {showDropdown && suggestions.length > 0 && (
           <div
-            className="absolute left-0 right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden"
-            style={{ zIndex: 9999 }}
+            className="absolute left-0 w-80 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden"
+            style={{ zIndex: 99999 }}
           >
-            <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-700">
+            <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
               <p className="text-xs text-neutral-400 font-medium">
                 {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
               </p>
             </div>
-            <div className="max-h-64 overflow-y-auto">
+            <div className="max-h-48 overflow-y-auto">
               {dropdownType === 'user' ? (
                 (suggestions as EmployeeProfile[]).map((emp) => (
                   <button
                     key={emp.employeeId}
                     type="button"
                     onClick={() => selectMention(emp.name)}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
                   >
                     <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                    <div>
-                      <p className="text-sm text-white font-medium">{emp.name}</p>
-                      <p className="text-xs text-neutral-500">{emp.department} • {emp.role}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-white font-medium truncate">{emp.name}</p>
+                      <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
                     </div>
                   </button>
                 ))
@@ -220,12 +224,12 @@ function MentionInput({
                     key={dept}
                     type="button"
                     onClick={() => selectMention(dept)}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-700 transition-colors text-left"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
-                      <FaAt className="text-primary-400" />
+                    <div className="w-6 h-6 rounded-full bg-primary-500/20 flex items-center justify-center">
+                      <FaAt className="text-primary-400 text-xs" />
                     </div>
-                    <p className="text-sm text-white">{dept}</p>
+                    <p className="text-sm text-white truncate">{dept}</p>
                   </button>
                 ))
               )}
