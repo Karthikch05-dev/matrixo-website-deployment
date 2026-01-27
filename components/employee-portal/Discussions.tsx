@@ -46,11 +46,11 @@ function MentionInput({
   const [showMentions, setShowMentions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionType, setMentionType] = useState<'user' | 'department'>('user')
-  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0, width: 0, openBelow: true })
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0, width: 300, openBelow: true })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Calculate mention dropdown position when showing
+  // Calculate mention dropdown position when showing - runs synchronously on state change
   useEffect(() => {
     if (showMentions && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
@@ -63,12 +63,14 @@ function MentionInput({
       // Default: open below, flip if not enough space
       const openBelow = spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove
       
-      setMentionPosition({
+      const newPosition = {
         top: openBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4,
         left: rect.left,
-        width: rect.width,
+        width: Math.max(rect.width, 250), // Minimum width of 250px
         openBelow
-      })
+      }
+      
+      setMentionPosition(newPosition)
     }
   }, [showMentions])
 
@@ -173,7 +175,7 @@ function MentionInput({
       
       {/* Mentions Dropdown - Rendered via Portal to escape parent stacking contexts */}
       <AnimatePresence>
-        {showMentions && filteredMentions.length > 0 && typeof window !== 'undefined' && createPortal(
+        {showMentions && typeof window !== 'undefined' && createPortal(
           <>
             {/* Backdrop to close on outside click */}
             <div 
@@ -201,7 +203,11 @@ function MentionInput({
                 </p>
               </div>
               <div className="max-h-48 overflow-y-auto">
-                {mentionType === 'user' ? (
+                {filteredMentions.length === 0 ? (
+                  <div className="p-4 text-center text-neutral-500 text-sm">
+                    {employees.length === 0 ? 'Loading...' : 'No matches found'}
+                  </div>
+                ) : mentionType === 'user' ? (
                   filteredMentions.map((emp) => (
                     <button
                       key={(emp as EmployeeProfile).employeeId}
@@ -832,8 +838,16 @@ export function Discussions() {
 
   // Fetch employees on mount
   useEffect(() => {
-    getAllEmployees().then(setEmployees)
-  }, [getAllEmployees])
+    getAllEmployees()
+      .then(data => {
+        console.log('Fetched employees for mentions:', data?.length || 0)
+        setEmployees(data || [])
+      })
+      .catch(err => {
+        console.error('Failed to fetch employees:', err)
+        setEmployees([])
+      })
+  }, []) // Remove getAllEmployees from deps to avoid infinite loop
 
   const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
 
