@@ -24,6 +24,7 @@ import {
 } from 'react-icons/fa'
 import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
+import RichTextEditor, { RichTextRenderer } from './RichTextEditor'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -111,9 +112,10 @@ function TaskModal({
       )
 
       // Build base task payload - NEVER include undefined values for Firestore
+      // Note: description is stored as HTML to preserve rich text formatting
       const basePayload = {
         title: form.title.trim(),
-        description: form.description.trim(),
+        description: form.description, // Stored as HTML - DO NOT TRIM
         priority: form.priority as Task['priority'],
         status: form.status as Task['status'],
         assignedTo: form.assignedTo,
@@ -189,13 +191,18 @@ function TaskModal({
           required
         />
 
-        <Textarea
-          label="Description"
-          placeholder="Describe the task in detail..."
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          rows={3}
-        />
+        <div>
+          <label className="block text-sm font-medium text-neutral-300 mb-2">
+            Description
+          </label>
+          <RichTextEditor
+            content={form.description}
+            onChange={(html) => setForm({ ...form, description: html })}
+            placeholder="Describe the task in detail... Use the toolbar for formatting."
+            editable={true}
+            minHeight="120px"
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Select
@@ -444,7 +451,9 @@ function TaskDetailModal({
           </div>
           
           {task.description && (
-            <p className="text-neutral-400 mt-3">{task.description}</p>
+            <div className="mt-3">
+              <RichTextRenderer content={task.description} />
+            </div>
           )}
         </div>
 
@@ -602,7 +611,9 @@ function TaskCard({
       </div>
 
       {task.description && (
-        <p className="text-neutral-400 text-sm line-clamp-2 mb-3">{task.description}</p>
+        <div className="text-neutral-400 text-sm line-clamp-2 mb-3 prose prose-invert prose-sm max-w-none prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0">
+          <RichTextRenderer content={task.description} className="line-clamp-2" />
+        </div>
       )}
 
       <div className="flex items-center justify-between">
