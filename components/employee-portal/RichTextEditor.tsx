@@ -102,16 +102,8 @@ export default function RichTextEditor({
     editable,
     editorProps: {
       attributes: {
-        class: `
-          prose prose-invert prose-sm max-w-none focus:outline-none
-          prose-p:my-2 prose-p:leading-relaxed
-          prose-ul:my-2 prose-ul:list-disc prose-ul:pl-6
-          prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-6
-          prose-li:my-1
-          prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer
-          prose-strong:text-white prose-strong:font-bold
-          prose-em:italic
-        `,
+        // Single line class to avoid DOMTokenList InvalidCharacterError
+        class: 'prose prose-invert prose-sm max-w-none focus:outline-none prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer prose-strong:text-white prose-strong:font-bold prose-em:italic',
       },
     },
     onUpdate: ({ editor }) => {
