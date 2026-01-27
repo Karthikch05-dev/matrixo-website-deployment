@@ -8,7 +8,8 @@ import {
   FaTasks, 
   FaComments, 
   FaCalendarAlt, 
-  FaCheckDouble
+  FaCheckDouble,
+  FaTrash
 } from 'react-icons/fa'
 import { 
   collection, 
@@ -19,6 +20,7 @@ import {
   updateDoc,
   doc,
   writeBatch,
+  deleteDoc,
   Timestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
@@ -46,6 +48,8 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   const [mounted, setMounted] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
   const [loading, setLoading] = useState(true)
+  const [clearing, setClearing] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -111,6 +115,26 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       await batch.commit()
     } catch (error) {
       console.error('Error marking all as read:', error)
+    }
+  }
+
+  // Clear all notifications (delete from Firestore)
+  const clearAllNotifications = async () => {
+    if (notifications.length === 0) return
+    
+    setClearing(true)
+    try {
+      // Delete notifications in batches (Firestore limit is 500 per batch)
+      const batch = writeBatch(db)
+      notifications.forEach(n => {
+        batch.delete(doc(db, 'notifications', n.id))
+      })
+      await batch.commit()
+      setShowClearConfirm(false)
+    } catch (error) {
+      console.error('Error clearing notifications:', error)
+    } finally {
+      setClearing(false)
     }
   }
 
@@ -341,6 +365,48 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
                 ))
               )}
             </div>
+
+            {/* Footer with Clear All */}
+            {notifications.length > 0 && (
+              <div className="px-4 py-3 border-t border-white/10 bg-neutral-800/30 rounded-b-2xl">
+                {showClearConfirm ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-neutral-400">Clear all notifications?</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowClearConfirm(false)}
+                        disabled={clearing}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-neutral-700 text-neutral-300 hover:bg-neutral-600 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={clearAllNotifications}
+                        disabled={clearing}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors flex items-center gap-1"
+                      >
+                        {clearing ? (
+                          <>
+                            <span className="animate-spin w-3 h-3 border border-red-400 border-t-transparent rounded-full"></span>
+                            Clearing...
+                          </>
+                        ) : (
+                          'Confirm'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowClearConfirm(true)}
+                    className="w-full text-xs text-red-400 hover:text-red-300 flex items-center justify-center gap-1.5 py-1 transition-colors"
+                  >
+                    <FaTrash size={10} />
+                    Clear all notifications
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
         </div>,
         document.body

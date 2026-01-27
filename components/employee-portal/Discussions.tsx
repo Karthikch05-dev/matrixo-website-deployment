@@ -468,6 +468,7 @@ function DiscussionPost({
   const [submitting, setSubmitting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showReactionPicker, setShowReactionPicker] = useState(false)
+  const [hoveredReaction, setHoveredReaction] = useState<string | null>(null)
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false)
@@ -773,19 +774,62 @@ function DiscussionPost({
           <div className="flex flex-wrap gap-2 mt-3">
             {Object.entries(discussion.reactions).map(([emoji, userIds]) => {
               const hasReacted = userIds.includes(employee?.employeeId || '')
+              const reactedUsers = userIds.map(id => employees.find(e => e.employeeId === id)).filter(Boolean)
+              
               return (
-                <button
-                  key={emoji}
-                  onClick={() => discussion.id && toggleDiscussionReaction(discussion.id, emoji)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm transition-all ${
-                    hasReacted 
-                      ? 'bg-primary-500/20 border border-primary-500/50 text-primary-300' 
-                      : 'bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700'
-                  }`}
+                <div 
+                  key={emoji} 
+                  className="relative"
+                  onMouseEnter={() => setHoveredReaction(emoji)}
+                  onMouseLeave={() => setHoveredReaction(null)}
                 >
-                  <span className="text-base">{emoji}</span>
-                  <span className="text-xs font-medium">{userIds.length}</span>
-                </button>
+                  <button
+                    onClick={() => discussion.id && toggleDiscussionReaction(discussion.id, emoji)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm transition-all ${
+                      hasReacted 
+                        ? 'bg-primary-500/20 border border-primary-500/50 text-primary-300' 
+                        : 'bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+                    }`}
+                  >
+                    <span className="text-base">{emoji}</span>
+                    <span className="text-xs font-medium">{userIds.length}</span>
+                  </button>
+                  
+                  {/* Hover Popup - Users who reacted */}
+                  <AnimatePresence>
+                    {hoveredReaction === emoji && reactedUsers.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-[100] min-w-[180px] max-w-[250px]"
+                      >
+                        <div className="text-xs text-neutral-400 mb-2 px-1 flex items-center gap-1.5">
+                          <span className="text-base">{emoji}</span>
+                          <span>Reacted by</span>
+                        </div>
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {reactedUsers.map((user) => (
+                            <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-neutral-700/50">
+                              <img
+                                src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=32`}
+                                alt={user!.name}
+                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-white font-medium truncate">{user!.name}</p>
+                                <p className="text-[10px] text-neutral-500 truncate capitalize">{user!.role || user!.department || 'Employee'}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Arrow pointer */}
+                        <div className="absolute -bottom-1 left-4 w-2 h-2 bg-neutral-800 border-r border-b border-neutral-700 transform rotate-45"></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               )
             })}
           </div>
