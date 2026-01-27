@@ -29,16 +29,16 @@ const db = getFirestore()
 export interface Notification {
   id?: string
   type: 'task' | 'discussion' | 'calendar'
+  action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied'
   title: string
   message: string
-  targetId: string // ID of task/discussion/calendar event
+  relatedEntityId: string // ID of task/discussion/calendar event
   targetUrl?: string // Deep link to the item
-  recipientId: string // Employee ID who should receive this
-  senderId: string // Employee ID who triggered it
-  senderName: string
+  createdBy: string // Employee ID who triggered it
+  createdByName: string // Display name
+  createdByRole?: string // Role/department
   read: boolean
   createdAt: Timestamp
-  icon?: string
 }
 
 interface NotificationContextType {
@@ -75,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ============================================
-  // REALTIME NOTIFICATION LISTENER
+  // REALTIME NOTIFICATION LISTENER (GLOBAL FEED)
   // ============================================
   
   useEffect(() => {
@@ -84,14 +84,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Subscribe to notifications for this user
+    // Subscribe to ALL global notifications (no filtering by recipient)
     const notificationsRef = collection(db, 'notifications')
     const q = query(
       notificationsRef,
-      where('recipientId', '==', employee.employeeId),
-      // Note: orderBy removed to avoid requiring composite index
-      // Sorting is done client-side
-      limit(50)
+      orderBy('createdAt', 'desc'),
+      limit(100)
     )
 
     const unsubscribe = onSnapshot(
@@ -102,26 +100,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           ...doc.data()
         })) as Notification[]
         
-        // Sort by createdAt descending (newest first)
-        notificationsData.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis?.() || 0
-          const bTime = b.createdAt?.toMillis?.() || 0
-          return bTime - aTime
-        })
-        
         setNotifications(notificationsData)
 
-        // Show browser push notification for new unread notifications
+        // Show browser push notification for new notifications
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
             const notification = { id: change.doc.id, ...change.doc.data() } as Notification
             
-            // Only show push for new notifications (not on initial load)
-            if (!notification.read && permissionState === 'granted') {
+            // Only show push for new notifications (not created by current user)
+            if (!notification.read && permissionState === 'granted' && notification.createdBy !== employee.employeeId) {
               sendBrowserNotification(
                 notification.title,
                 notification.message,
-                notification.icon,
+                undefined,
                 notification.targetUrl
               )
             }
@@ -221,66 +212,36 @@ export function useNotifications() {
 }
 
 // ============================================
-// HELPER: CREATE NOTIFICATION (Used in employeePortalContext)
+// HELPER: CREATE GLOBAL NOTIFICATION
 // ============================================
 
-/**
- * Creates a notification in Firestore
- * Called from employeePortalContext when tasks/discussions/events are created
- */
-export async function createNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) {
-  try {
-    // Don't notify if sender is the same as recipient (self-notification)
-    if (notification.senderId === notification.recipientId) {
-      return
-    }
+export interface CreateNotificationParams {
+  type: 'task' | 'discussion' | 'calendar'
+  action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied'
+  title: string
+  message: string
+  relatedEntityId: string
+  targetUrl?: string
+  createdBy: string
+  createdByName: string
+  createdByRole?: string
+}
 
+/**
+ * Creates a GLOBAL notification visible to ALL users
+ * This is a single document in Firestore, not per-user
+ */
+export async function createGlobalNotification(params: CreateNotificationParams) {
+  try {
     await addDoc(collection(db, 'notifications'), {
-      ...notification,
+      ...params,
       read: false,
       createdAt: Timestamp.now()
     })
   } catch (error) {
-    console.error('Error creating notification:', error)
+    console.error('Error creating global notification:', error)
   }
 }
 
-// ============================================
-// HELPER: BROADCAST TO ALL USERS (GLOBAL)
-// ============================================
-
-/**
- * Broadcasts a notification to ALL active users
- * Used for global announcements: tasks, discussions, holidays, etc.
- * @param allEmployees Array of all employee profiles
- * @param notification Base notification data (without recipientId)
- */
-export async function notifyAllUsers(
-  allEmployees: any[],
-  notificationData: Omit<Notification, 'id' | 'createdAt' | 'read' | 'recipientId'>
-) {
-  try {
-    const batch = writeBatch(db)
-    const notificationsRef = collection(db, 'notifications')
-    
-    // Create notification for each employee
-    for (const emp of allEmployees) {
-      // Skip sender (no self-notification)
-      if (emp.employeeId === notificationData.senderId) {
-        continue
-      }
-      
-      const docRef = doc(notificationsRef)
-      batch.set(docRef, {
-        ...notificationData,
-        recipientId: emp.employeeId,
-        read: false,
-        createdAt: Timestamp.now()
-      })
-    }
-    
-    await batch.commit()
-  } catch (error) {
-    console.error('Error broadcasting notifications to all users:', error)
-  }
-}
+// Legacy alias for backward compatibility
+export const createNotification = createGlobalNotification

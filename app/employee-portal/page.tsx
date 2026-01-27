@@ -361,7 +361,7 @@ function TopNavbar({
           {/* Right side */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Notification Bell */}
-            <NotificationBell />
+            <NotificationBell onNavigate={setActiveTab} />
             
             {/* Time Display - Only visible on Attendance tab */}
             {activeTab === 'attendance' && (

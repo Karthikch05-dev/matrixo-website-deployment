@@ -11,10 +11,14 @@ import {
   FaCheck,
   FaCheckDouble
 } from 'react-icons/fa'
-import { useNotifications } from '@/lib/notificationContext'
+import { useNotifications, Notification } from '@/lib/notificationContext'
 import { formatDistanceToNow } from 'date-fns'
 
-export default function NotificationBell() {
+interface NotificationBellProps {
+  onNavigate?: (tab: string) => void
+}
+
+export default function NotificationBell({ onNavigate }: NotificationBellProps) {
   const { 
     notifications, 
     unreadCount, 
@@ -93,13 +97,26 @@ export default function NotificationBell() {
     }
   }, [isOpen])
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read && notification.id) {
       await markAsRead(notification.id)
     }
-    if (notification.targetUrl) {
-      window.location.hash = notification.targetUrl
+    
+    // Navigate to the appropriate tab based on notification type
+    if (onNavigate) {
+      switch (notification.type) {
+        case 'task':
+          onNavigate('tasks')
+          break
+        case 'discussion':
+          onNavigate('discussions')
+          break
+        case 'calendar':
+          onNavigate('calendar')
+          break
+      }
     }
+    
     setIsOpen(false)
   }
 
@@ -110,6 +127,33 @@ export default function NotificationBell() {
       case 'calendar': return <FaCalendarAlt className="text-purple-400" />
       default: return <FaBell className="text-neutral-400" />
     }
+  }
+
+  const getActionBadge = (action?: string) => {
+    if (!action) return null
+    const colors: Record<string, string> = {
+      created: 'bg-green-500/20 text-green-400',
+      updated: 'bg-blue-500/20 text-blue-400',
+      deleted: 'bg-red-500/20 text-red-400',
+      assigned: 'bg-purple-500/20 text-purple-400',
+      mentioned: 'bg-amber-500/20 text-amber-400',
+      status_changed: 'bg-cyan-500/20 text-cyan-400',
+      replied: 'bg-indigo-500/20 text-indigo-400'
+    }
+    const labels: Record<string, string> = {
+      created: 'New',
+      updated: 'Updated',
+      deleted: 'Deleted',
+      assigned: 'Assigned',
+      mentioned: 'Mention',
+      status_changed: 'Status',
+      replied: 'Reply'
+    }
+    return (
+      <span className={`text-[10px] px-1.5 py-0.5 rounded ${colors[action] || 'bg-neutral-500/20 text-neutral-400'}`}>
+        {labels[action] || action}
+      </span>
+    )
   }
 
   return (
@@ -203,9 +247,12 @@ export default function NotificationBell() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <h4 className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-neutral-300'}`}>
-                              {notification.title}
-                            </h4>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-neutral-300'}`}>
+                                {notification.title}
+                              </h4>
+                              {getActionBadge(notification.action)}
+                            </div>
                             
                             {!notification.read && (
                               <button
@@ -230,9 +277,9 @@ export default function NotificationBell() {
                               {notification.createdAt && formatDistanceToNow(notification.createdAt.toDate(), { addSuffix: true })}
                             </span>
                             
-                            {notification.senderName && (
+                            {notification.createdByName && (
                               <span className="text-xs text-neutral-500">
-                                by {notification.senderName}
+                                by {notification.createdByName}
                               </span>
                             )}
                           </div>

@@ -25,7 +25,7 @@ import {
 } from 'firebase/firestore'
 import { auth } from './firebaseConfig'
 import { getFirestore } from 'firebase/firestore'
-import { createNotification, notifyAllUsers } from './notificationContext'
+import { createGlobalNotification } from './notificationContext'
 
 // Initialize Firestore
 const db = getFirestore()
@@ -950,17 +950,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       description: `Added holiday: ${holiday.name} on ${holiday.date}`,
     })
 
-    // 🔔 GLOBAL BROADCAST: Notify ALL users about office closure/holiday
-    const allEmployees = await getAllEmployees()
-    await notifyAllUsers(allEmployees, {
+    // 🔔 GLOBAL NOTIFICATION: Holiday added
+    await createGlobalNotification({
       type: 'calendar',
-      title: '🏖️ Holiday/Office Closed',
+      action: 'created',
+      title: '🏖️ Holiday Added',
       message: `${holiday.name} on ${new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
-      targetId: holidayDoc.id,
+      relatedEntityId: holidayDoc.id,
       targetUrl: '#calendar',
-      senderId: employee.employeeId,
-      senderName: employee.name,
-      icon: '/logos/logo-dark.png'
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
     })
   }
 
@@ -988,21 +988,18 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdAt: Timestamp.now()
     })
 
-    // 🔔 Notify all employees about new calendar event
-    const allEmployees = await getAllEmployees()
-    for (const emp of allEmployees) {
-      await createNotification({
-        type: 'calendar',
-        title: 'New Calendar Event',
-        message: `${event.title} on ${event.date}`,
-        targetId: eventDoc.id,
-        targetUrl: '#calendar',
-        recipientId: emp.employeeId,
-        senderId: employee.employeeId,
-        senderName: employee.name,
-        icon: '/logos/logo-dark.png'
-      })
-    }
+    // 🔔 GLOBAL NOTIFICATION: Calendar event created
+    await createGlobalNotification({
+      type: 'calendar',
+      action: 'created',
+      title: 'New Calendar Event',
+      message: `${event.title} on ${event.date}`,
+      relatedEntityId: eventDoc.id,
+      targetUrl: '#calendar',
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
+    })
   }
 
   const updateCalendarEvent = async (id: string, updates: Partial<CalendarEvent>) => {
@@ -1037,17 +1034,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       description: `Created task: ${task.title}`,
     })
 
-    // 🔔 GLOBAL BROADCAST: Notify ALL users about new task
-    const allEmployees = await getAllEmployees()
-    await notifyAllUsers(allEmployees, {
+    // 🔔 GLOBAL NOTIFICATION: Task created
+    await createGlobalNotification({
       type: 'task',
+      action: 'created',
       title: 'New Task Created',
       message: `${employee.name} created: ${task.title}`,
-      targetId: taskDoc.id,
+      relatedEntityId: taskDoc.id,
       targetUrl: '#tasks',
-      senderId: employee.employeeId,
-      senderName: employee.name,
-      icon: '/logos/logo-dark.png'
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
     })
   }
 
@@ -1065,34 +1062,33 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       updatedAt: Timestamp.now()
     })
     
-    // 🔔 GLOBAL BROADCAST: Notify ALL users about task updates
-    const allEmployees = await getAllEmployees()
-    
-    // Notify on status change
+    // 🔔 GLOBAL NOTIFICATION: Status change
     if (updates.status && updates.status !== oldTask.status) {
-      await notifyAllUsers(allEmployees, {
+      await createGlobalNotification({
         type: 'task',
+        action: 'status_changed',
         title: 'Task Status Updated',
-        message: `${employee.name} changed status of "${oldTask.title}" to ${updates.status}`,
-        targetId: id,
+        message: `${employee.name} changed "${oldTask.title}" to ${updates.status}`,
+        relatedEntityId: id,
         targetUrl: '#tasks',
-        senderId: employee.employeeId,
-        senderName: employee.name,
-        icon: '/logos/logo-dark.png'
+        createdBy: employee.employeeId,
+        createdByName: employee.name,
+        createdByRole: employee.role
       })
     }
     
-    // Notify on deadline change
-    if (updates.dueDate && updates.dueDate !== oldTask.dueDate) {
-      await notifyAllUsers(allEmployees, {
+    // 🔔 GLOBAL NOTIFICATION: Assignment change
+    if (updates.assignedTo && JSON.stringify(updates.assignedTo) !== JSON.stringify(oldTask.assignedTo)) {
+      await createGlobalNotification({
         type: 'task',
-        title: 'Task Deadline Updated',
-        message: `${employee.name} updated deadline for "${oldTask.title}" to ${new Date(updates.dueDate).toLocaleDateString()}`,
-        targetId: id,
+        action: 'assigned',
+        title: 'Task Assigned',
+        message: `${employee.name} updated assignment for "${oldTask.title}"`,
+        relatedEntityId: id,
         targetUrl: '#tasks',
-        senderId: employee.employeeId,
-        senderName: employee.name,
-        icon: '/logos/logo-dark.png'
+        createdBy: employee.employeeId,
+        createdByName: employee.name,
+        createdByRole: employee.role
       })
     }
   }
@@ -1111,6 +1107,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     }
     
     await deleteDoc(doc(db, 'tasks', id))
+    
+    // 🔔 GLOBAL NOTIFICATION: Task deleted
+    await createGlobalNotification({
+      type: 'task',
+      action: 'deleted',
+      title: 'Task Deleted',
+      message: `${employee.name} deleted task: "${task.title}"`,
+      relatedEntityId: id,
+      targetUrl: '#tasks',
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
+    })
   }
 
   const addTaskComment = async (taskId: string, text: string) => {
@@ -1179,17 +1188,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       isPinned: false
     })
 
-    // 🔔 GLOBAL BROADCAST: Notify ALL users about new discussion
-    const allEmployees = await getAllEmployees()
-    await notifyAllUsers(allEmployees, {
+    // 🔔 GLOBAL NOTIFICATION: New discussion
+    await createGlobalNotification({
       type: 'discussion',
+      action: 'created',
       title: 'New Discussion Posted',
       message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-      targetId: discussionDoc.id,
+      relatedEntityId: discussionDoc.id,
       targetUrl: '#discussions',
-      senderId: employee.employeeId,
-      senderName: employee.name,
-      icon: '/logos/logo-dark.png'
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
     })
   }
 
@@ -1251,17 +1260,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [...(discussion.replies || []), newReply]
     })
 
-    // 🔔 GLOBAL BROADCAST: Notify ALL users about new reply
-    const allEmployees = await getAllEmployees()
-    await notifyAllUsers(allEmployees, {
+    // 🔔 GLOBAL NOTIFICATION: New reply
+    await createGlobalNotification({
       type: 'discussion',
+      action: 'replied',
       title: 'New Reply Posted',
       message: `${employee.name} replied: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
-      targetId: discussionId,
+      relatedEntityId: discussionId,
       targetUrl: '#discussions',
-      senderId: employee.employeeId,
-      senderName: employee.name,
-      icon: '/logos/logo-dark.png'
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
     })
   }
 
