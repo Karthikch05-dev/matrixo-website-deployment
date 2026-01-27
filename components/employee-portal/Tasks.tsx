@@ -110,30 +110,35 @@ function TaskModal({
         employees.find(e => e.employeeId === id)?.name || id
       )
 
+      // Build base task payload - NEVER include undefined values for Firestore
+      const basePayload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        priority: form.priority as Task['priority'],
+        status: form.status as Task['status'],
+        assignedTo: form.assignedTo,
+        assignedToNames,
+        department: form.department || ''
+      }
+
+      // Conditionally add optional fields ONLY if they have valid values
+      const taskPayload: any = { ...basePayload }
+      
+      // Only include dueDate if it has a value
+      if (form.dueDate) {
+        taskPayload.dueDate = form.dueDate
+      }
+      
+      // Only include specialization for Intern department AND if it has a value
+      if (form.department === 'Intern' && form.specialization) {
+        taskPayload.specialization = form.specialization
+      }
+
       if (editingTask?.id) {
-        await updateTask(editingTask.id, {
-          title: form.title,
-          description: form.description,
-          priority: form.priority as Task['priority'],
-          status: form.status as Task['status'],
-          assignedTo: form.assignedTo,
-          assignedToNames,
-          dueDate: form.dueDate || undefined,
-          department: form.department
-        })
+        await updateTask(editingTask.id, taskPayload)
         toast.success('Task updated successfully')
       } else {
-        await addTask({
-          title: form.title,
-          description: form.description,
-          priority: form.priority as Task['priority'],
-          status: form.status as Task['status'],
-          assignedTo: form.assignedTo,
-          assignedToNames,
-          dueDate: form.dueDate || undefined,
-          department: form.department,
-          specialization: form.department === 'Intern' ? form.specialization : undefined
-        })
+        await addTask(taskPayload)
         toast.success('Task created successfully')
       }
       onClose()
