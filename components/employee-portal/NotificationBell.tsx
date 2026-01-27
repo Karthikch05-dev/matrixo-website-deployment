@@ -47,6 +47,17 @@ export default function NotificationBell() {
     }
   }, [isOpen])
 
+  // ESC key handler to close dropdown
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
   // Request permission on first interaction
   const handleBellClick = async () => {
     setIsOpen(!isOpen)
