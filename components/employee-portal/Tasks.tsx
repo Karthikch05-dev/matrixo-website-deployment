@@ -92,6 +92,18 @@ function TaskModal({
       return
     }
 
+    // Validate assignees belong to selected department (if department is selected)
+    if (form.department && form.assignedTo.length > 0) {
+      const validAssignees = form.assignedTo.filter(id => {
+        const emp = employees.find(e => e.employeeId === id)
+        return emp && emp.department === form.department
+      })
+      if (validAssignees.length !== form.assignedTo.length) {
+        toast.error('Some assignees do not belong to the selected department')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const assignedToNames = form.assignedTo.map(id => 
@@ -125,8 +137,9 @@ function TaskModal({
         toast.success('Task created successfully')
       }
       onClose()
-    } catch (error) {
-      toast.error('Failed to save task')
+    } catch (error: any) {
+      console.error('Task save error:', error)
+      toast.error(error?.message || 'Failed to save task')
     } finally {
       setLoading(false)
     }
@@ -141,8 +154,24 @@ function TaskModal({
     }))
   }
 
+  // Handle department change - clear assignees when department changes
+  const handleDepartmentChange = (value: string) => {
+    setForm(prev => ({
+      ...prev,
+      department: value,
+      specialization: value === 'Intern' ? prev.specialization : '',
+      // Clear assignees when department changes (unless "All Departments" selected)
+      assignedTo: value ? [] : prev.assignedTo
+    }))
+  }
+
   // Get unique departments
   const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+  
+  // Filter employees by selected department
+  const filteredEmployees = form.department 
+    ? employees.filter(emp => emp.department === form.department)
+    : employees
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editingTask ? 'Edit Task' : 'Create New Task'} size="lg">
@@ -204,9 +233,7 @@ function TaskModal({
               ...departments.map(d => ({ value: d, label: d }))
             ]}
             value={form.department}
-            onChange={(value) => {
-              setForm({ ...form, department: value, specialization: value === 'Intern' ? form.specialization : '' })
-            }}
+            onChange={handleDepartmentChange}
           />
         </div>
 
@@ -236,32 +263,38 @@ function TaskModal({
         {/* Assignees */}
         <div>
           <label className="block text-sm font-medium text-neutral-300 mb-2">
-            Assign To
+            Assign To {form.department && <span className="text-neutral-500">({form.department})</span>}
           </label>
           <div className="max-h-40 overflow-y-auto bg-neutral-800 rounded-lg p-2 space-y-1">
-            {employees.map(emp => (
-              <button
-                key={emp.employeeId}
-                type="button"
-                onClick={() => toggleAssignee(emp.employeeId)}
-                className={`
-                  w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left
-                  ${form.assignedTo.includes(emp.employeeId) 
-                    ? 'bg-primary-500/20 border border-primary-500/50' 
-                    : 'hover:bg-neutral-700'
-                  }
-                `}
-              >
-                <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">{emp.name}</p>
-                  <p className="text-xs text-neutral-500">{emp.department}</p>
-                </div>
-                {form.assignedTo.includes(emp.employeeId) && (
-                  <FaCheckCircle className="text-primary-500" />
-                )}
-              </button>
-            ))}
+            {filteredEmployees.length === 0 ? (
+              <p className="text-sm text-neutral-500 p-2 text-center">
+                {form.department ? `No employees in ${form.department}` : 'No employees found'}
+              </p>
+            ) : (
+              filteredEmployees.map(emp => (
+                <button
+                  key={emp.employeeId}
+                  type="button"
+                  onClick={() => toggleAssignee(emp.employeeId)}
+                  className={`
+                    w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left
+                    ${form.assignedTo.includes(emp.employeeId) 
+                      ? 'bg-primary-500/20 border border-primary-500/50' 
+                      : 'hover:bg-neutral-700'
+                    }
+                  `}
+                >
+                  <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{emp.name}</p>
+                    <p className="text-xs text-neutral-500">{emp.department}</p>
+                  </div>
+                  {form.assignedTo.includes(emp.employeeId) && (
+                    <FaCheckCircle className="text-primary-500" />
+                  )}
+                </button>
+              ))
+            )}
           </div>
           {form.assignedTo.length > 0 && (
             <p className="text-xs text-neutral-500 mt-2">
