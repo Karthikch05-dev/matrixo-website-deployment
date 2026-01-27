@@ -2,7 +2,7 @@
 
 > ⚠️ **PROPRIETARY SOFTWARE - ALL RIGHTS RESERVED** ⚠️
 
-A modern, responsive event ticketing and ed-tech platform for **matriXO** - An Ed-Tech Startup supported by KPRISE (KPR Foundation for Innovation and Social Empowerment).
+A modern, responsive event ticketing and ed-tech platform for **matriXO** - An Ed-Tech Startup.
 
 🌐 **Live**: [matrixo.in](https://matrixo.in)  
 🧪 **Beta**: [beta.matrixo.in](https://beta.matrixo.in)  
@@ -17,7 +17,7 @@ A modern, responsive event ticketing and ed-tech platform for **matriXO** - An E
 ║                                                                              ║
 ║   🚨 THIS IS PROPRIETARY SOFTWARE - UNAUTHORIZED USE IS STRICTLY PROHIBITED  ║
 ║                                                                              ║
-║   Copyright © 2024-2026 matriXO (KPRISE - KPR Foundation). ALL RIGHTS RESERVED.  ║
+║   Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                            ║
 ║                                                                              ║
 ║   This repository and ALL its contents including but not limited to:         ║
 ║   • Source code, algorithms, and logic                                       ║
@@ -28,7 +28,7 @@ A modern, responsive event ticketing and ed-tech platform for **matriXO** - An E
 ║   • Employee portal systems and workflows                                    ║
 ║   • All assets, images, logos, and branding                                  ║
 ║                                                                              ║
-║   Are the EXCLUSIVE INTELLECTUAL PROPERTY of matriXO and KPRISE Foundation.  ║
+║   Are the EXCLUSIVE INTELLECTUAL PROPERTY of matriXO.                        ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
@@ -372,7 +372,6 @@ npm start
 
 ## Acknowledgments
 
-- Supported by **KPRISE** (KPR Foundation for Innovation and Social Empowerment)
 - Partners: TEDxKPRIT, TEDxIARE, TEDxCMRIT, Smartzy Edu
 - Built with ❤️ using modern web technologies
 
@@ -382,7 +381,7 @@ npm start
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║                        PROPRIETARY LICENSE                                  ║
 ║                                                                            ║
-║  Copyright © 2024-2026 matriXO / KPRISE Foundation. ALL RIGHTS RESERVED.   ║
+║  Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                        ║
 ║                                                                            ║
 ║  This software is proprietary and confidential. Unauthorized copying,     ║
 ║  modification, distribution, or use of this software, via any medium,     ║
@@ -401,8 +400,7 @@ npm start
 
 ### Ownership Declaration
 
-- **Owner**: matriXO (A venture of KPRISE - KPR Foundation for Innovation and Social Empowerment)
-- **Registered Entity**: KPRISE Foundation
+- **Owner**: matriXO
 - **Jurisdiction**: India
 - **Original Authors**: Shiva Ganesh T & matriXO Development Team
 - **Registration**: All original works are timestamped and documented
@@ -468,7 +466,7 @@ The Employee Portal is a comprehensive internal management system built with Rea
 ---
 
 <p align="center">
-  <strong>© 2024-2026 matriXO / KPRISE Foundation. ALL RIGHTS RESERVED.</strong><br>
+  <strong>© 2024-2026 matriXO. ALL RIGHTS RESERVED.</strong><br>
   <em>Unauthorized use is prohibited and will be prosecuted.</em><br><br>
   <strong>Last Updated: January 26, 2026</strong>
 </p>

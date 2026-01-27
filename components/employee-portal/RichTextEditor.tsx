@@ -10,9 +10,7 @@ import {
   FaItalic, 
   FaUnderline, 
   FaListUl, 
-  FaListOl,
-  FaLink,
-  FaUnlink
+  FaListOl
 } from 'react-icons/fa'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -193,22 +191,6 @@ export default function RichTextEditor({
             icon={FaListOl}
             title="Numbered List"
           />
-          
-          <div className="w-px h-6 bg-neutral-600 mx-1" />
-          
-          <ToolbarButton
-            onClick={setLink}
-            isActive={editor.isActive('link')}
-            icon={FaLink}
-            title="Add Link"
-          />
-          {editor.isActive('link') && (
-            <ToolbarButton
-              onClick={() => editor.chain().focus().unsetLink().run()}
-              icon={FaUnlink}
-              title="Remove Link"
-            />
-          )}
         </div>
       )}
 

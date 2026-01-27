@@ -696,7 +696,12 @@ function TaskCard({
 // MAIN TASKS COMPONENT
 // ============================================
 
-export function Tasks() {
+interface TasksProps {
+  selectedTaskId?: string | null
+  onTaskOpened?: () => void
+}
+
+export function Tasks({ selectedTaskId, onTaskOpened }: TasksProps = {}) {
   const { employee, tasks = [], getAllEmployees } = useEmployeeAuth()
   const [employees, setEmployees] = useState<EmployeeProfile[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -716,6 +721,17 @@ export function Tasks() {
   useEffect(() => {
     getAllEmployees().then(setEmployees).catch(console.error)
   }, [getAllEmployees])
+
+  // Auto-select task if selectedTaskId is provided (from Dashboard pending tasks)
+  useEffect(() => {
+    if (selectedTaskId && tasks.length > 0) {
+      const taskToOpen = tasks.find(t => t.id === selectedTaskId)
+      if (taskToOpen) {
+        setSelectedTask(taskToOpen)
+        onTaskOpened?.()
+      }
+    }
+  }, [selectedTaskId, tasks, onTaskOpened])
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {

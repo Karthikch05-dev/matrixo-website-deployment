@@ -506,7 +506,7 @@ function TopNavbar({
 // DASHBOARD OVERVIEW (for Dashboard tab)
 // ============================================
 
-function DashboardOverview() {
+function DashboardOverview({ onTaskClick }: { onTaskClick?: (taskId: string) => void }) {
   const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -663,7 +663,11 @@ function DashboardOverview() {
           ) : (
             <div className="space-y-3">
               {myTasks.slice(0, 4).map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl">
+                <div 
+                  key={task.id} 
+                  className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl cursor-pointer hover:bg-neutral-800/50 transition-colors"
+                  onClick={() => onTaskClick?.(task.id!)}
+                >
                   <div>
                     <p className="text-white font-medium">{task.title}</p>
                     <p className="text-xs text-neutral-500">
@@ -912,7 +916,21 @@ function StatCard({ title, value, icon: Icon, color }: {
 function Dashboard() {
   const { employee } = useEmployeeAuth()
   const [activeTab, setActiveTab] = useState('attendance')
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const isAdmin = employee?.role === 'admin'
+
+  // Handler for pending task click from Dashboard
+  const handlePendingTaskClick = (taskId: string) => {
+    setSelectedTaskId(taskId)
+    setActiveTab('tasks')
+  }
+
+  // Clear selected task when leaving tasks tab
+  useEffect(() => {
+    if (activeTab !== 'tasks') {
+      setSelectedTaskId(null)
+    }
+  }, [activeTab])
 
   // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION ON FIRST LOAD
   useEffect(() => {
@@ -947,10 +965,10 @@ function Dashboard() {
             className="w-full"
           >
             {activeTab === 'attendance' && <Attendance />}
-            {activeTab === 'dashboard' && <DashboardOverview />}
+            {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} />}
             {activeTab === 'history' && <HistoryTab />}
             {activeTab === 'calendar' && <Calendar />}
-            {activeTab === 'tasks' && <Tasks />}
+            {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} />}
             {activeTab === 'discussions' && <Discussions />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>
