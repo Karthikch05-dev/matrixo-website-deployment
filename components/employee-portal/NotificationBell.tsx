@@ -1,23 +1,18 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { 
   FaBell, 
   FaTasks, 
   FaComments, 
   FaCalendarAlt, 
   FaCheck,
-  FaCheckDouble,
-  FaTimes
+  FaCheckDouble
 } from 'react-icons/fa'
 import { useNotifications } from '@/lib/notificationContext'
 import { formatDistanceToNow } from 'date-fns'
-
-// ============================================
-// NOTIFICATION BELL COMPONENT
-// ============================================
 
 export default function NotificationBell() {
   const { 
@@ -25,115 +20,137 @@ export default function NotificationBell() {
     unreadCount, 
     markAsRead, 
     markAllAsRead, 
-    deleteNotification,
     requestPermission,
     permissionState
   } = useNotifications()
   
   const [isOpen, setIsOpen] = useState(false)
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [position, setPosition] = useState({ top: 0, right: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // ESC key handler to close dropdown
+  // Ensure we're on client side for portal
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+    setMounted(true)
+  }, [])
+
+  // Calculate position relative to button
+  const updatePosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      })
+    }
+  }, [])
+
+  // Handle button click
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!isOpen) {
+      updatePosition()
+      if (permissionState === 'default') {
+        requestPermission()
+      }
+    }
+    setIsOpen(prev => !prev)
+  }
+
+  // Close on ESC and outside click
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setIsOpen(false)
       }
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    // Use setTimeout to avoid closing on the same click that opened
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside)
+    }, 0)
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('mousedown', handleClickOutside)
+      clearTimeout(timer)
+    }
   }, [isOpen])
 
-  // Request permission on first interaction and calculate position synchronously
-  const handleBellClick = async () => {
-    if (!isOpen && buttonRef.current) {
-      // Calculate position BEFORE opening to avoid flicker
-      const rect = buttonRef.current.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      setDropdownPosition({
-        top: rect.bottom + 8,
-        right: viewportWidth - rect.right
-      })
-    }
-    
-    setIsOpen(!isOpen)
-    
-    if (permissionState === 'default') {
-      await requestPermission()
-    }
-  }
-
   const handleNotificationClick = async (notification: any) => {
-    // Mark as read
     if (!notification.read && notification.id) {
       await markAsRead(notification.id)
     }
-
-    // Navigate to target (if URL exists)
     if (notification.targetUrl) {
       window.location.hash = notification.targetUrl
     }
-
     setIsOpen(false)
   }
 
-  const getNotificationIcon = (type: string) => {
+  const getIcon = (type: string) => {
     switch (type) {
-      case 'task':
-        return <FaTasks className="text-blue-400" />
-      case 'discussion':
-        return <FaComments className="text-green-400" />
-      case 'calendar':
-        return <FaCalendarAlt className="text-purple-400" />
-      default:
-        return <FaBell className="text-neutral-400" />
+      case 'task': return <FaTasks className="text-blue-400" />
+      case 'discussion': return <FaComments className="text-green-400" />
+      case 'calendar': return <FaCalendarAlt className="text-purple-400" />
+      default: return <FaBell className="text-neutral-400" />
     }
   }
 
   return (
-    <div className="relative">
+    <>
       {/* Bell Button */}
       <button
         ref={buttonRef}
-        onClick={handleBellClick}
-        className="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
+        onClick={handleClick}
+        type="button"
+        className="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group cursor-pointer"
         aria-label="Notifications"
+        aria-expanded={isOpen}
       >
         <FaBell className="text-lg text-neutral-400 group-hover:text-white transition-colors" />
         
-        {/* Unread Badge */}
         {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg"
-          >
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
-          </motion.span>
+          </span>
         )}
       </button>
 
-      {/* Dropdown Panel - Rendered via Portal to escape navbar stacking context */}
-      <AnimatePresence>
-        {isOpen && dropdownPosition && typeof window !== 'undefined' && createPortal(
-          <>
-            <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setIsOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
-              style={{ 
-                position: 'fixed',
-                top: dropdownPosition.top,
-                right: dropdownPosition.right,
-                zIndex: 99991 
-              }}
-            >
+      {/* Dropdown via Portal - renders to document.body */}
+      {mounted && isOpen && createPortal(
+        <div 
+          ref={dropdownRef}
+          style={{ 
+            position: 'fixed',
+            top: position.top,
+            right: position.right,
+            zIndex: 999999
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.15 }}
+            className="w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
+          >
             {/* Header */}
-            <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50">
+            <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-semibold flex items-center gap-2">
                   <FaBell className="text-primary-400" />
@@ -147,7 +164,10 @@ export default function NotificationBell() {
                 
                 {unreadCount > 0 && (
                   <button
-                    onClick={markAllAsRead}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      markAllAsRead()
+                    }}
                     className="text-xs text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
                   >
                     <FaCheckDouble className="text-xs" />
@@ -167,28 +187,20 @@ export default function NotificationBell() {
               ) : (
                 <div className="divide-y divide-white/5">
                   {notifications.map((notification) => (
-                    <motion.div
+                    <div
                       key={notification.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className={`
-                        px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer relative
-                        ${!notification.read ? 'bg-primary-500/5' : ''}
-                      `}
+                      className={`px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer relative ${!notification.read ? 'bg-primary-500/5' : ''}`}
                       onClick={() => handleNotificationClick(notification)}
                     >
-                      {/* Unread indicator */}
                       {!notification.read && (
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500" />
                       )}
 
                       <div className="flex gap-3">
-                        {/* Icon */}
                         <div className="flex-shrink-0 mt-1">
-                          {getNotificationIcon(notification.type)}
+                          {getIcon(notification.type)}
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <h4 className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-neutral-300'}`}>
@@ -226,7 +238,7 @@ export default function NotificationBell() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -234,10 +246,11 @@ export default function NotificationBell() {
 
             {/* Footer - Permission Request */}
             {permissionState === 'default' && (
-              <div className="px-4 py-3 border-t border-white/10 bg-neutral-800/50">
+              <div className="px-4 py-3 border-t border-white/10 bg-neutral-800/50 rounded-b-2xl">
                 <button
-                  onClick={async () => {
-                    await requestPermission()
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    requestPermission()
                   }}
                   className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
@@ -248,17 +261,16 @@ export default function NotificationBell() {
             )}
 
             {permissionState === 'denied' && (
-              <div className="px-4 py-3 border-t border-white/10 bg-amber-500/10">
+              <div className="px-4 py-3 border-t border-white/10 bg-amber-500/10 rounded-b-2xl">
                 <p className="text-xs text-amber-400 text-center">
                   Browser notifications are blocked. Enable them in your browser settings.
                 </p>
               </div>
             )}
           </motion.div>
-          </>,
-          document.body
-        )}
-      </AnimatePresence>
-    </div>
+        </div>,
+        document.body
+      )}
+    </>
   )
 }

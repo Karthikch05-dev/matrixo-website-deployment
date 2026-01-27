@@ -227,33 +227,64 @@ function TopNavbar({
   const { employee, logout } = useEmployeeAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [userMenuPosition, setUserMenuPosition] = useState<{ top: number; right: number } | null>(null)
+  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0 })
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const userMenuDropdownRef = useRef<HTMLDivElement>(null)
   const isAdmin = employee?.role === 'admin'
 
-  // ESC key handler to close user menu
+  // Ensure mounted for portal
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && userMenuOpen) {
+    setMounted(true)
+  }, [])
+
+  // Close user menu on ESC and outside click
+  useEffect(() => {
+    if (!userMenuOpen) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setUserMenuOpen(false)
       }
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (
+        userMenuButtonRef.current && !userMenuButtonRef.current.contains(target) &&
+        userMenuDropdownRef.current && !userMenuDropdownRef.current.contains(target)
+      ) {
+        setUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    // Delay adding click listener to avoid closing on same click
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside)
+    }, 0)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('mousedown', handleClickOutside)
+      clearTimeout(timer)
+    }
   }, [userMenuOpen])
 
-  // Handle user menu toggle - calculate position synchronously
-  const handleUserMenuClick = () => {
+  // Handle user menu click
+  const handleUserMenuClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     if (!userMenuOpen && userMenuButtonRef.current) {
       const rect = userMenuButtonRef.current.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
       setUserMenuPosition({
         top: rect.bottom + 8,
-        right: viewportWidth - rect.right
+        right: window.innerWidth - rect.right
       })
     }
-    setUserMenuOpen(!userMenuOpen)
+    setUserMenuOpen(prev => !prev)
   }
 
   useEffect(() => {
@@ -346,69 +377,68 @@ function TopNavbar({
               </div>
             )}
 
-            {/* User Menu - Hover disabled outside Discussions */}
+            {/* User Menu */}
             <div className="relative">
               <button
                 ref={userMenuButtonRef}
                 onClick={handleUserMenuClick}
-                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
-                >
-                  <img
-                    src={getProfileImageUrl(employee?.profileImage, employee?.name)}
-                    alt={employee?.name}
-                    className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
-                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
-                  />
-                  <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
-                  <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
+                type="button"
+                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200 cursor-pointer"
+              >
+                <img
+                  src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+                  alt={employee?.name}
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
+                  onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
+                />
+                <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
+                <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-              {/* User Dropdown - Quick Actions - Rendered via Portal */}
-              <AnimatePresence>
-                {userMenuOpen && userMenuPosition && typeof window !== 'undefined' && createPortal(
-                  <>
-                    <div className="fixed inset-0" style={{ zIndex: 99990 }} onClick={() => setUserMenuOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="w-64 bg-neutral-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl"
-                      style={{ 
-                        position: 'fixed',
-                        top: userMenuPosition.top,
-                        right: userMenuPosition.right,
-                        zIndex: 99991 
-                      }}
-                    >
-                      <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent rounded-t-2xl">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={getProfileImageUrl(employee?.profileImage, employee?.name)}
-                            alt={employee?.name}
-                            className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary-500/50"
-                          />
-                          <div className="min-w-0">
-                            <p className="text-white font-semibold truncate">{employee?.name}</p>
-                            <p className="text-xs text-primary-400">{employee?.department}</p>
-                            <p className="text-xs text-neutral-500 font-mono">{employee?.employeeId}</p>
-                          </div>
+              {/* User Dropdown - Rendered via Portal */}
+              {mounted && userMenuOpen && createPortal(
+                <div
+                  ref={userMenuDropdownRef}
+                  style={{ 
+                    position: 'fixed',
+                    top: userMenuPosition.top,
+                    right: userMenuPosition.right,
+                    zIndex: 999999
+                  }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-64 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
+                  >
+                    <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent rounded-t-2xl">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+                          alt={employee?.name}
+                          className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary-500/50"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-white font-semibold truncate">{employee?.name}</p>
+                          <p className="text-xs text-primary-400">{employee?.department}</p>
+                          <p className="text-xs text-neutral-500 font-mono">{employee?.employeeId}</p>
                         </div>
                       </div>
-                      <div className="p-2">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-                        >
-                          <FaSignOutAlt />
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>,
-                  document.body
-                )}
-              </AnimatePresence>
+                    </div>
+                    <div className="p-2">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                      >
+                        <FaSignOutAlt />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>,
+                document.body
+              )}
             </div>
 
             {/* Mobile Menu Button */}
