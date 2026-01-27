@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaTasks, 
@@ -24,9 +25,20 @@ import {
 } from 'react-icons/fa'
 import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
-import RichTextEditor, { RichTextRenderer } from './RichTextEditor'
+import { RichTextRenderer } from './RichTextEditor'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
+
+// Dynamic import of RichTextEditor to prevent SSR issues with TipTap
+const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 animate-pulse" style={{ minHeight: '150px' }}>
+      <div className="h-4 bg-neutral-700 rounded w-3/4 mb-2" />
+      <div className="h-4 bg-neutral-700 rounded w-1/2" />
+    </div>
+  )
+})
 
 // ============================================
 // PRIORITY CONFIGURATION

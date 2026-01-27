@@ -14,7 +14,7 @@ import {
   FaLink,
   FaUnlink
 } from 'react-icons/fa'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // ============================================
 // RICH TEXT EDITOR COMPONENT
@@ -64,6 +64,12 @@ export default function RichTextEditor({
   editable = true,
   minHeight = '150px'
 }: RichTextEditorProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -111,6 +117,7 @@ export default function RichTextEditor({
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
+    immediatelyRender: false, // Prevent SSR hydration mismatch
   })
 
   // Update content when prop changes
@@ -144,7 +151,7 @@ export default function RichTextEditor({
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }, [editor])
 
-  if (!editor) {
+  if (!mounted || !editor) {
     return (
       <div 
         className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 animate-pulse"
@@ -234,25 +241,43 @@ export default function RichTextEditor({
 // For displaying task descriptions
 // ============================================
 
-import DOMPurify from 'dompurify'
-
 interface RichTextRendererProps {
   content: string
   className?: string
 }
 
 export function RichTextRenderer({ content, className = '' }: RichTextRendererProps) {
+  const [mounted, setMounted] = useState(false)
+  const [sanitizedHTML, setSanitizedHTML] = useState('')
+
+  useEffect(() => {
+    setMounted(true)
+    if (content && content !== '<p></p>') {
+      // Sanitize HTML to prevent XSS - only on client side
+      import('dompurify').then((DOMPurify) => {
+        const sanitized = DOMPurify.default.sanitize(content, {
+          ADD_ATTR: ['target', 'rel'],
+          ADD_TAGS: ['a'],
+        })
+        setSanitizedHTML(sanitized)
+      })
+    }
+  }, [content])
+
   if (!content || content === '<p></p>') {
     return (
       <p className="text-neutral-500 text-sm italic">No description provided</p>
     )
   }
 
-  // Sanitize HTML to prevent XSS
-  const sanitizedHTML = DOMPurify.sanitize(content, {
-    ADD_ATTR: ['target', 'rel'],
-    ADD_TAGS: ['a'],
-  })
+  if (!mounted) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-4 bg-neutral-700 rounded w-3/4 mb-2" />
+        <div className="h-4 bg-neutral-700 rounded w-1/2" />
+      </div>
+    )
+  }
 
   return (
     <div 
@@ -267,7 +292,7 @@ export function RichTextRenderer({ content, className = '' }: RichTextRendererPr
         prose-em:italic prose-em:text-neutral-300
         ${className}
       `}
-      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML || content }}
       onClick={(e) => {
         // Handle link clicks to open in new tab
         const target = e.target as HTMLElement
