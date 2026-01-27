@@ -43,12 +43,18 @@ function MentionInput({
   loading?: boolean
   buttonText?: string
 }) {
+  const [mounted, setMounted] = useState(false)
   const [showMentions, setShowMentions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionType, setMentionType] = useState<'user' | 'department'>('user')
   const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number; width: number; openBelow: boolean } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Mounted check for SSR-safe portal rendering
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Helper to calculate mention dropdown position synchronously
   const calculateMentionPosition = () => {
@@ -97,15 +103,22 @@ function MentionInput({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === '@') {
-      setShowMentions(true)
       setMentionQuery('')
       setMentionType('user')
+      // Use setTimeout to let the character be typed first, then calculate position
+      setTimeout(() => {
+        showMentionsDropdown()
+      }, 0)
     } else if (e.key === '#') {
-      setShowMentions(true)
       setMentionQuery('')
       setMentionType('department')
+      // Use setTimeout to let the character be typed first, then calculate position
+      setTimeout(() => {
+        showMentionsDropdown()
+      }, 0)
     } else if (e.key === 'Escape') {
       setShowMentions(false)
+      setMentionPosition(null)
     } else if (e.key === 'Enter' && !e.shiftKey && !showMentions) {
       e.preventDefault()
       handleSubmit()
@@ -182,7 +195,7 @@ function MentionInput({
       
       {/* Mentions Dropdown - Rendered via Portal to escape parent stacking contexts */}
       <AnimatePresence>
-        {showMentions && mentionPosition && typeof window !== 'undefined' && createPortal(
+        {mounted && showMentions && mentionPosition && createPortal(
           <>
             {/* Backdrop to close on outside click */}
             <div 

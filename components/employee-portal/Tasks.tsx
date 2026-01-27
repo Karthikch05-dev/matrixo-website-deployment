@@ -345,11 +345,13 @@ function TaskModal({
 function TaskDetailModal({
   isOpen,
   onClose,
-  task
+  task,
+  onEditClick
 }: {
   isOpen: boolean
   onClose: () => void
   task: Task | null
+  onEditClick?: () => void
 }) {
   const { employee, updateTask, deleteTask, addTaskComment, deleteTaskComment } = useEmployeeAuth()
   const [newComment, setNewComment] = useState('')
@@ -361,7 +363,7 @@ function TaskDetailModal({
   const isAdmin = employee?.role === 'admin'
   const isOwner = task.createdBy === employee?.employeeId
   const isAssignee = task.assignedTo?.includes(employee?.employeeId || '')
-  const canEdit = isAdmin || isOwner
+  const canEdit = isAdmin
   const canDelete = isAdmin || isOwner
 
   const handleStatusChange = async (newStatus: Task['status']) => {
@@ -458,6 +460,19 @@ function TaskDetailModal({
                 onClick={handleDeleteTask}
               >
                 Delete
+              </Button>
+            )}
+            {canEdit && onEditClick && (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<FaEdit />}
+                onClick={() => {
+                  onClose()
+                  onEditClick()
+                }}
+              >
+                Edit
               </Button>
             )}
           </div>
@@ -949,6 +964,11 @@ export function Tasks() {
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
         task={selectedTask}
+        onEditClick={() => {
+          if (selectedTask) {
+            setEditingTask(selectedTask)
+          }
+        }}
       />
     </div>
   )

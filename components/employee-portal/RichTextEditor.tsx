@@ -233,6 +233,21 @@ export default function RichTextEditor({
 // For displaying task descriptions
 // ============================================
 
+// Helper function to auto-link plain text URLs (for backward compatibility)
+function autoLinkUrls(text: string): string {
+  // If already contains anchor tags, don't double-process
+  if (text.includes('<a ')) {
+    return text
+  }
+  
+  // URL regex pattern
+  const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi
+  
+  return text.replace(urlPattern, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-primary-400 underline hover:text-primary-300 cursor-pointer">${url}</a>`
+  })
+}
+
 interface RichTextRendererProps {
   content: string
   className?: string
@@ -245,10 +260,13 @@ export function RichTextRenderer({ content, className = '' }: RichTextRendererPr
   useEffect(() => {
     setMounted(true)
     if (content && content !== '<p></p>') {
+      // Auto-link plain text URLs for backward compatibility with old tasks
+      const linkedContent = autoLinkUrls(content)
+      
       // Sanitize HTML to prevent XSS - only on client side
       import('dompurify').then((DOMPurify) => {
-        const sanitized = DOMPurify.default.sanitize(content, {
-          ADD_ATTR: ['target', 'rel'],
+        const sanitized = DOMPurify.default.sanitize(linkedContent, {
+          ADD_ATTR: ['target', 'rel', 'class'],
           ADD_TAGS: ['a'],
         })
         setSanitizedHTML(sanitized)
