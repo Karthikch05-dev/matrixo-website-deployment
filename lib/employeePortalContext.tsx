@@ -139,6 +139,7 @@ export interface Discussion {
   mentionedDepartments: string[]
   replies: DiscussionReply[]
   isPinned?: boolean
+  reactions?: Record<string, string[]> // emoji -> array of employee IDs
 }
 
 export interface DiscussionReply {
@@ -308,6 +309,7 @@ interface EmployeeAuthContextType {
   updateDiscussionReply: (discussionId: string, replyId: string, content: string) => Promise<void>
   deleteDiscussionReply: (discussionId: string, replyId: string) => Promise<void>
   togglePinDiscussion: (id: string) => Promise<void>
+  toggleDiscussionReaction: (discussionId: string, emoji: string) => Promise<void>
   
   // Activity Logs
   logActivity: (log: Omit<ActivityLog, 'id' | 'timestamp' | 'performedBy' | 'performedByName'>) => Promise<void>
@@ -1340,6 +1342,34 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const toggleDiscussionReaction = async (discussionId: string, emoji: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const discussionDoc = await getDoc(doc(db, 'discussions', discussionId))
+    if (!discussionDoc.exists()) throw new Error('Discussion not found')
+    
+    const discussion = discussionDoc.data() as Discussion
+    const reactions = discussion.reactions || {}
+    const emojiReactions = reactions[emoji] || []
+    
+    // Toggle: add if not present, remove if present
+    const hasReacted = emojiReactions.includes(employee.employeeId)
+    
+    if (hasReacted) {
+      // Remove reaction
+      reactions[emoji] = emojiReactions.filter((id: string) => id !== employee.employeeId)
+      // Clean up empty arrays
+      if (reactions[emoji].length === 0) {
+        delete reactions[emoji]
+      }
+    } else {
+      // Add reaction
+      reactions[emoji] = [...emojiReactions, employee.employeeId]
+    }
+    
+    await updateDoc(doc(db, 'discussions', discussionId), { reactions })
+  }
+
   // ============================================
   // PERSONAL TODO FUNCTIONS
   // ============================================
@@ -1538,6 +1568,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       deleteDiscussionReply,
       updateDiscussionReply,
       togglePinDiscussion,
+      toggleDiscussionReaction,
       logActivity,
       getActivityLogs,
       personalTodos,

@@ -13,7 +13,8 @@ import {
   FaEdit,
   FaEllipsisV,
   FaSearch,
-  FaTimes
+  FaTimes,
+  FaSmile
 } from 'react-icons/fa'
 import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile } from '@/lib/employeePortalContext'
 import { Card, Button, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo } from './ui'
@@ -460,12 +461,13 @@ function DiscussionPost({
   onReply: (discussionId: string) => void
   employees: EmployeeProfile[]
 }) {
-  const { employee, deleteDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply, updateDiscussion } = useEmployeeAuth()
+  const { employee, deleteDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply, updateDiscussion, toggleDiscussionReaction } = useEmployeeAuth()
   const [showReplies, setShowReplies] = useState(false)
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyContent, setReplyContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [showReactionPicker, setShowReactionPicker] = useState(false)
   
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false)
@@ -766,8 +768,71 @@ function DiscussionPost({
           </div>
         )}
 
+        {/* Reactions Display */}
+        {discussion.reactions && Object.keys(discussion.reactions).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {Object.entries(discussion.reactions).map(([emoji, userIds]) => {
+              const hasReacted = userIds.includes(employee?.employeeId || '')
+              return (
+                <button
+                  key={emoji}
+                  onClick={() => discussion.id && toggleDiscussionReaction(discussion.id, emoji)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm transition-all ${
+                    hasReacted 
+                      ? 'bg-primary-500/20 border border-primary-500/50 text-primary-300' 
+                      : 'bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+                  }`}
+                >
+                  <span className="text-base">{emoji}</span>
+                  <span className="text-xs font-medium">{userIds.length}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-neutral-700/50">
+          {/* Reaction Button with Picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowReactionPicker(!showReactionPicker)}
+              className="flex items-center gap-2 text-sm text-neutral-400 hover:text-amber-400 transition-colors"
+            >
+              <FaSmile />
+              React
+            </button>
+            
+            {/* Emoji Picker */}
+            <AnimatePresence>
+              {showReactionPicker && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                  className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-50"
+                >
+                  <div className="flex gap-1">
+                    {['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => {
+                          if (discussion.id) {
+                            toggleDiscussionReaction(discussion.id, emoji)
+                          }
+                          setShowReactionPicker(false)
+                        }}
+                        className="text-xl p-1.5 hover:bg-neutral-700 rounded-lg transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button
             onClick={() => setShowReplyInput(!showReplyInput)}
             className="flex items-center gap-2 text-sm text-neutral-400 hover:text-primary-400 transition-colors"
