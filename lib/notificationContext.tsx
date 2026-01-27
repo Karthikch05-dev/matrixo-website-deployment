@@ -4,16 +4,13 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { 
   collection,
   query,
-  where,
   orderBy,
   onSnapshot,
-  addDoc,
   updateDoc,
   doc,
-  Timestamp,
-  getDocs,
   limit,
-  writeBatch
+  writeBatch,
+  Timestamp
 } from 'firebase/firestore'
 import { db } from './firebaseConfig'
 import { useEmployeeAuth } from './employeePortalContext'
@@ -77,11 +74,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // ============================================
   
   useEffect(() => {
+    console.log('🔔 NotificationProvider effect running. User:', !!user, 'Employee:', !!employee)
+    
     if (!user || !employee) {
+      console.log('🔔 No user/employee, clearing notifications')
       setNotifications([])
       return
     }
 
+    console.log('🔔 Setting up Firestore listener for notifications collection')
+    
     // Subscribe to ALL global notifications (no filtering by recipient)
     const notificationsRef = collection(db, 'notifications')
     const q = query(
@@ -119,7 +121,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           }
         })
       },
-      (error) => console.error('Error fetching notifications:', error)
+      (error) => {
+        console.error('❌ Error fetching notifications:', error)
+        console.error('❌ Error message:', error.message)
+        console.error('❌ Error code:', (error as any).code)
+      }
     )
 
     return () => unsubscribe()
@@ -211,39 +217,5 @@ export function useNotifications() {
   return context
 }
 
-// ============================================
-// HELPER: CREATE GLOBAL NOTIFICATION
-// ============================================
-
-export interface CreateNotificationParams {
-  type: 'task' | 'discussion' | 'calendar'
-  action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied'
-  title: string
-  message: string
-  relatedEntityId: string
-  targetUrl?: string
-  createdBy: string
-  createdByName: string
-  createdByRole?: string
-}
-
-/**
- * Creates a GLOBAL notification visible to ALL users
- * This is a single document in Firestore, not per-user
- */
-export async function createGlobalNotification(params: CreateNotificationParams) {
-  try {
-    console.log('🔔 Creating global notification:', params)
-    const docRef = await addDoc(collection(db, 'notifications'), {
-      ...params,
-      read: false,
-      createdAt: Timestamp.now()
-    })
-    console.log('✅ Notification created with ID:', docRef.id)
-  } catch (error) {
-    console.error('❌ Error creating global notification:', error)
-  }
-}
-
-// Legacy alias for backward compatibility
-export const createNotification = createGlobalNotification
+// Re-export notification creation utilities for backwards compatibility
+export { createGlobalNotification, createNotification, type CreateNotificationParams } from './notificationUtils'

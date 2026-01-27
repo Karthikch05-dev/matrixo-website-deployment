@@ -25,7 +25,7 @@ import {
   Firestore
 } from 'firebase/firestore'
 import { auth, db } from './firebaseConfig'
-import { createGlobalNotification } from './notificationContext'
+import { createGlobalNotification } from './notificationUtils'
 
 // ============================================
 // TYPE DEFINITIONS
@@ -1172,6 +1172,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const addDiscussion = async (content: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
     
+    console.log('📝 Adding discussion...')
     const discussionDoc = await addDoc(collection(db, 'discussions'), {
       content,
       authorId: employee.employeeId,
@@ -1184,8 +1185,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [],
       isPinned: false
     })
+    console.log('📝 Discussion created with ID:', discussionDoc.id)
 
     // 🔔 GLOBAL NOTIFICATION: New discussion
+    console.log('🔔 Calling createGlobalNotification...')
     await createGlobalNotification({
       type: 'discussion',
       action: 'created',
@@ -1197,6 +1200,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdByName: employee.name,
       createdByRole: employee.role
     })
+    console.log('🔔 createGlobalNotification completed')
   }
 
   const updateDiscussion = async (id: string, content: string) => {
