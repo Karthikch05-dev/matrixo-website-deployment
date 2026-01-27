@@ -15,12 +15,10 @@ import {
   limit,
   writeBatch
 } from 'firebase/firestore'
-import { getFirestore } from 'firebase/firestore'
+import { db } from './firebaseConfig'
 import { useEmployeeAuth } from './employeePortalContext'
 import { requestNotificationPermission, sendBrowserNotification } from './pushNotifications'
 import { registerServiceWorker } from './serviceWorkerRegistration'
-
-const db = getFirestore()
 
 // ============================================
 // TYPE DEFINITIONS
@@ -95,11 +93,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('📬 Notifications snapshot received:', snapshot.docs.length, 'docs')
         const notificationsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Notification[]
         
+        console.log('📬 Notifications data:', notificationsData)
         setNotifications(notificationsData)
 
         // Show browser push notification for new notifications
@@ -233,13 +233,15 @@ export interface CreateNotificationParams {
  */
 export async function createGlobalNotification(params: CreateNotificationParams) {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    console.log('🔔 Creating global notification:', params)
+    const docRef = await addDoc(collection(db, 'notifications'), {
       ...params,
       read: false,
       createdAt: Timestamp.now()
     })
+    console.log('✅ Notification created with ID:', docRef.id)
   } catch (error) {
-    console.error('Error creating global notification:', error)
+    console.error('❌ Error creating global notification:', error)
   }
 }
 

@@ -21,14 +21,11 @@ import {
   deleteDoc,
   onSnapshot,
   addDoc,
-  writeBatch
+  writeBatch,
+  Firestore
 } from 'firebase/firestore'
-import { auth } from './firebaseConfig'
-import { getFirestore } from 'firebase/firestore'
+import { auth, db } from './firebaseConfig'
 import { createGlobalNotification } from './notificationContext'
-
-// Initialize Firestore
-const db = getFirestore()
 
 // ============================================
 // TYPE DEFINITIONS
@@ -258,7 +255,7 @@ interface EmployeeAuthContextType {
   user: User | null
   employee: EmployeeProfile | null
   loading: boolean
-  db: ReturnType<typeof getFirestore>
+  db: Firestore
   signIn: (employeeId: string, password: string) => Promise<void>
   logout: () => Promise<void>
   
