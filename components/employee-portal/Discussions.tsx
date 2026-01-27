@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaComments, 
@@ -43,30 +42,12 @@ function MentionInput({
   loading?: boolean
   buttonText?: string
 }) {
-  const [mounted, setMounted] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownType, setDropdownType] = useState<'user' | 'department'>('user')
   const [searchQuery, setSearchQuery] = useState('')
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 300 })
+  const [triggerIndex, setTriggerIndex] = useState(-1)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // SSR-safe mounting
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Calculate dropdown position relative to viewport (for fixed positioning)
-  const updateDropdownPosition = () => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    // For fixed positioning, use viewport coordinates directly (no scroll offset needed)
-    setDropdownPosition({
-      top: rect.bottom + 4,
-      left: rect.left,
-      width: Math.max(rect.width, 300)
-    })
-  }
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   // Filter suggestions based on search query
   const suggestions = useMemo(() => {
@@ -83,9 +64,6 @@ function MentionInput({
     }
   }, [searchQuery, dropdownType, employees, departments])
 
-  // Track current trigger position for proper text replacement
-  const [triggerIndex, setTriggerIndex] = useState(-1)
-
   // Handle text input change - detect @ and # patterns at cursor position
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
@@ -98,11 +76,7 @@ function MentionInput({
     
     for (let i = cursorPos - 1; i >= 0; i--) {
       const char = newValue[i]
-      // Stop if we hit a space or newline (means no active mention at cursor)
-      if (char === ' ' || char === '\n') {
-        break
-      }
-      // Found a trigger character
+      if (char === ' ' || char === '\n') break
       if (char === '@' || char === '#') {
         foundTrigger = i
         triggerChar = char
@@ -115,12 +89,10 @@ function MentionInput({
       setSearchQuery(query)
       setDropdownType(triggerChar === '@' ? 'user' : 'department')
       setTriggerIndex(foundTrigger)
-      updateDropdownPosition()
       setShowDropdown(true)
       return
     }
     
-    // Hide dropdown if no active mention
     setShowDropdown(false)
     setTriggerIndex(-1)
   }
@@ -135,7 +107,7 @@ function MentionInput({
     }
   }
 
-  // Insert selected mention into text - uses tracked trigger position
+  // Insert selected mention into text
   const selectMention = (mention: string) => {
     if (triggerIndex < 0) return
     
@@ -144,11 +116,9 @@ function MentionInput({
     const cursorPos = textareaRef.current?.selectionStart || value.length
     const afterCursor = value.slice(cursorPos)
     
-    // Replace from trigger to cursor with the full mention name + space
     const newValue = beforeTrigger + symbol + mention + ' ' + afterCursor
     onChange(newValue)
     
-    // Set cursor position after the inserted mention
     const newCursorPos = beforeTrigger.length + symbol.length + mention.length + 1
     setTimeout(() => {
       textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos)
@@ -163,12 +133,9 @@ function MentionInput({
   const handleSubmit = () => {
     if (!value.trim()) return
     
-    // Extract all @mentions - handles names with spaces (e.g., "@Karthik Chinthakindi")
-    // Pattern: @ followed by word characters and spaces, until end or another @/#/newline
     const userMentionPattern = /@([A-Za-z][A-Za-z0-9 ]*?)(?=\s*[@#\n]|$)/g
     const deptMentionPattern = /#([A-Za-z][A-Za-z0-9 ]*?)(?=\s*[@#\n]|$)/g
     
-    // Use exec loop instead of matchAll for compatibility
     const userMentions: string[] = []
     const deptMentions: string[] = []
     
@@ -180,7 +147,6 @@ function MentionInput({
       deptMentions.push(match[1].trim())
     }
     
-    // Map mention names to employee IDs
     const mentionIds = userMentions.map(name => {
       const emp = employees.find(e => 
         e.name.toLowerCase() === name.toLowerCase() ||
@@ -196,7 +162,7 @@ function MentionInput({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setShowDropdown(false)
       }
     }
@@ -208,69 +174,65 @@ function MentionInput({
   }, [showDropdown])
 
   return (
-    <div className="relative" ref={containerRef}>
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        rows={3}
-        className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
-      />
-      
-      {/* Mention Suggestions Dropdown */}
-      {mounted && showDropdown && suggestions.length > 0 && createPortal(
-        <div
-          className="fixed bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden"
-          style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-            width: dropdownPosition.width,
-            maxWidth: 400,
-            zIndex: 99999
-          }}
-        >
-          <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-700">
-            <p className="text-xs text-neutral-400 font-medium">
-              {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
-            </p>
+    <div ref={wrapperRef}>
+      {/* Input area wrapper - relative for dropdown positioning */}
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          rows={3}
+          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
+        />
+        
+        {/* Mention Suggestions Dropdown - absolutely positioned below textarea */}
+        {showDropdown && suggestions.length > 0 && (
+          <div
+            className="absolute left-0 right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden"
+            style={{ zIndex: 9999 }}
+          >
+            <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-700">
+              <p className="text-xs text-neutral-400 font-medium">
+                {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
+              </p>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {dropdownType === 'user' ? (
+                (suggestions as EmployeeProfile[]).map((emp) => (
+                  <button
+                    key={emp.employeeId}
+                    type="button"
+                    onClick={() => selectMention(emp.name)}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+                  >
+                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                    <div>
+                      <p className="text-sm text-white font-medium">{emp.name}</p>
+                      <p className="text-xs text-neutral-500">{emp.department} • {emp.role}</p>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                (suggestions as string[]).map((dept) => (
+                  <button
+                    key={dept}
+                    type="button"
+                    onClick={() => selectMention(dept)}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
+                      <FaAt className="text-primary-400" />
+                    </div>
+                    <p className="text-sm text-white">{dept}</p>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
-          <div className="max-h-64 overflow-y-auto">
-            {dropdownType === 'user' ? (
-              (suggestions as EmployeeProfile[]).map((emp) => (
-                <button
-                  key={emp.employeeId}
-                  type="button"
-                  onClick={() => selectMention(emp.name)}
-                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
-                >
-                  <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                  <div>
-                    <p className="text-sm text-white font-medium">{emp.name}</p>
-                    <p className="text-xs text-neutral-500">{emp.department} • {emp.role}</p>
-                  </div>
-                </button>
-              ))
-            ) : (
-              (suggestions as string[]).map((dept) => (
-                <button
-                  key={dept}
-                  type="button"
-                  onClick={() => selectMention(dept)}
-                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
-                    <FaAt className="text-primary-400" />
-                  </div>
-                  <p className="text-sm text-white">{dept}</p>
-                </button>
-              ))
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </div>
 
       <div className="flex items-center justify-between mt-2">
         <p className="text-xs text-neutral-500">
