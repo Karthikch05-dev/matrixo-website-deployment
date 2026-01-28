@@ -505,7 +505,7 @@ function TopNavbar({
 // DASHBOARD OVERVIEW (for Dashboard tab)
 // ============================================
 
-function DashboardOverview({ onTaskClick }: { onTaskClick?: (taskId: string) => void }) {
+function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void }) {
   const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -647,6 +647,7 @@ function DashboardOverview({ onTaskClick }: { onTaskClick?: (taskId: string) => 
           value={myTasks.length}
           icon={FaTasks}
           color="bg-primary-500"
+          onClick={onShowMyTasks}
         />
       </div>
 
@@ -884,16 +885,18 @@ function HistoryTab() {
 // STAT CARD COMPONENT
 // ============================================
 
-function StatCard({ title, value, icon: Icon, color }: { 
+function StatCard({ title, value, icon: Icon, color, onClick }: { 
   title: string
   value: string | number
   icon: any
   color: string
+  onClick?: () => void
 }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6"
+      onClick={onClick}
+      className={`bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6 ${onClick ? 'cursor-pointer hover:border-primary-500/50 transition-colors' : ''}`}
     >
       <div className="flex items-start justify-between">
         <div>
@@ -916,6 +919,7 @@ function Dashboard() {
   const { employee } = useEmployeeAuth()
   const [activeTab, setActiveTab] = useState('attendance')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false)
   const isAdmin = employee?.role === 'admin'
 
   // Handler for pending task click from Dashboard
@@ -924,10 +928,17 @@ function Dashboard() {
     setActiveTab('tasks')
   }
 
+  // Handler for clicking on Pending Tasks stat card
+  const handleShowMyTasks = () => {
+    setShowOnlyMyTasks(true)
+    setActiveTab('tasks')
+  }
+
   // Clear selected task when leaving tasks tab
   useEffect(() => {
     if (activeTab !== 'tasks') {
       setSelectedTaskId(null)
+      setShowOnlyMyTasks(false)
     }
   }, [activeTab])
 
@@ -964,10 +975,10 @@ function Dashboard() {
             className="w-full"
           >
             {activeTab === 'attendance' && <Attendance />}
-            {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} />}
+            {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} onShowMyTasks={handleShowMyTasks} />}
             {activeTab === 'history' && <HistoryTab />}
             {activeTab === 'calendar' && <Calendar />}
-            {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} />}
+            {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
             {activeTab === 'discussions' && <Discussions />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>

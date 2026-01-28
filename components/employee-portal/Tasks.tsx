@@ -184,13 +184,25 @@ function TaskModal({
     }))
   }
 
-  // Get unique departments
-  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+  // Get unique departments (excluding Admin)
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean))).filter(d => d !== 'Admin')
   
-  // Filter employees by selected department
-  const filteredEmployees = form.department 
-    ? employees.filter(emp => emp.department === form.department)
-    : employees
+  // Filter employees by selected department and specialization (for Interns)
+  const filteredEmployees = useMemo(() => {
+    let result = employees
+    
+    // Filter by department if selected
+    if (form.department) {
+      result = result.filter(emp => emp.department === form.department)
+      
+      // If department is Intern and specialization is selected, further filter by designation
+      if (form.department === 'Intern' && form.specialization) {
+        result = result.filter(emp => emp.designation === form.specialization)
+      }
+    }
+    
+    return result
+  }, [employees, form.department, form.specialization])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editingTask ? 'Edit Task' : 'Create New Task'} size="lg">
@@ -278,7 +290,7 @@ function TaskModal({
                   ...INTERN_SPECIALIZATIONS.map(spec => ({ value: spec, label: spec }))
                 ]}
                 value={form.specialization}
-                onChange={(value) => setForm({ ...form, specialization: value })}
+                onChange={(value) => setForm({ ...form, specialization: value, assignedTo: [] })}
               />
             </motion.div>
           )}
@@ -699,9 +711,10 @@ function TaskCard({
 interface TasksProps {
   selectedTaskId?: string | null
   onTaskOpened?: () => void
+  showOnlyMyTasks?: boolean
 }
 
-export function Tasks({ selectedTaskId, onTaskOpened }: TasksProps = {}) {
+export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }: TasksProps = {}) {
   const { employee, tasks = [], getAllEmployees } = useEmployeeAuth()
   const [employees, setEmployees] = useState<EmployeeProfile[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -715,7 +728,7 @@ export function Tasks({ selectedTaskId, onTaskOpened }: TasksProps = {}) {
   const [filterAssignee, setFilterAssignee] = useState<string>('')
   const [filterRole, setFilterRole] = useState<string>('')
   const [filterInternSpecialization, setFilterInternSpecialization] = useState<string>('')
-  const [showMyTasks, setShowMyTasks] = useState(false)
+  const [showMyTasks, setShowMyTasks] = useState(showOnlyMyTasks)
 
   // Fetch employees on mount
   useEffect(() => {
