@@ -185,7 +185,16 @@ function TaskModal({
   }
 
   // Get unique departments (excluding Admin)
-  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean))).filter(d => d !== 'Admin')
+  // Also add 'Intern' if there are any employees with role 'Intern'
+  const departments = useMemo(() => {
+    const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
+    // Check if there are any interns by role
+    const hasInterns = employees.some(e => e.role === 'Intern')
+    if (hasInterns) {
+      deptSet.add('Intern')
+    }
+    return Array.from(deptSet).filter(d => d !== 'Admin').sort()
+  }, [employees])
   
   // Filter employees by selected department and specialization (for Interns)
   const filteredEmployees = useMemo(() => {
@@ -193,11 +202,20 @@ function TaskModal({
     
     // Filter by department if selected
     if (form.department) {
-      result = result.filter(emp => emp.department === form.department)
-      
-      // If department is Intern and specialization is selected, further filter by designation
-      if (form.department === 'Intern' && form.specialization) {
-        result = result.filter(emp => emp.designation === form.specialization)
+      if (form.department === 'Intern') {
+        // For Intern department, filter by role = 'Intern'
+        result = result.filter(emp => emp.role === 'Intern')
+        
+        // If specialization is selected, further filter by designation (contains match)
+        if (form.specialization) {
+          result = result.filter(emp => 
+            emp.designation?.toLowerCase().includes(form.specialization.toLowerCase()) ||
+            emp.designation?.toLowerCase() === form.specialization.toLowerCase()
+          )
+        }
+      } else {
+        // For other departments, filter by department
+        result = result.filter(emp => emp.department === form.department)
       }
     }
     
