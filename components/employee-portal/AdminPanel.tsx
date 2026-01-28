@@ -125,9 +125,7 @@ function EmployeeProfileModal({
       {/* Employee Header */}
       <div className="flex items-center gap-5 p-5 bg-gradient-to-r from-neutral-800/80 to-neutral-900/80 backdrop-blur-xl rounded-2xl mb-6 border border-white/10">
         <div className="relative">
-          {/* Gradient ring around avatar */}
-          <div className="absolute -inset-1.5 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full opacity-40"></div>
-          <Avatar src={employee.profileImage} name={employee.name} size="xl" />
+          <Avatar src={employee.profileImage} name={employee.name} size="xl" showBorder={false} />
           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-neutral-900" />
         </div>
         <div className="flex-1 min-w-0">

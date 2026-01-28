@@ -1052,7 +1052,7 @@ export const ProfileInfo = ({
               <img
                 src={data.profileImage || fallbackUrl}
                 alt={data.name}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500/50"
+                className="w-12 h-12 rounded-full object-cover"
                 onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
               />
               <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
@@ -1121,11 +1121,10 @@ export const ProfileInfo = ({
             <div className="p-5 bg-gradient-to-br from-primary-600/20 via-primary-500/10 to-transparent border-b border-white/5">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full opacity-40 blur-sm" />
                   <img
                     src={data.profileImage || fallbackUrl}
                     alt={data.name}
-                    className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
+                    className="relative w-16 h-16 rounded-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
                   />
                   <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
