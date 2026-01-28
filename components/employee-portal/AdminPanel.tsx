@@ -759,9 +759,10 @@ export function AdminPanel() {
         )
       ])
       
-      // Deduplicate employees by employeeId
+      // Deduplicate employees by employeeId and hide test/developer accounts
       const uniqueEmps = emps.filter((emp, index, self) => 
-        index === self.findIndex(e => e.employeeId === emp.employeeId)
+        index === self.findIndex(e => e.employeeId === emp.employeeId) &&
+        emp.employeeId !== 'Admin' // Hide admin test account from employee list
       )
       
       // Deduplicate attendance records - use employeeId + date as unique key
