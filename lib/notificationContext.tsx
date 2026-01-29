@@ -96,17 +96,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       q,
       (snapshot) => {
         console.log('📬 Notifications snapshot received:', snapshot.docs.length, 'docs')
+        console.log('📬 Current employee ID:', employee.employeeId)
         const notificationsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Notification[]
+        
+        console.log('📬 All notifications before filter:', notificationsData.map(n => ({ 
+          title: n.title, 
+          createdBy: n.createdBy, 
+          createdByName: n.createdByName 
+        })))
         
         // Filter out notifications created by the current user
         const filteredNotifications = notificationsData.filter(
           notification => notification.createdBy !== employee.employeeId
         )
         
-        console.log('📬 Filtered notifications data:', filteredNotifications)
+        console.log('📬 Filtered notifications data:', filteredNotifications.map(n => ({ 
+          title: n.title, 
+          createdBy: n.createdBy, 
+          createdByName: n.createdByName 
+        })))
         setNotifications(filteredNotifications)
 
         // Show browser push notification for new notifications
