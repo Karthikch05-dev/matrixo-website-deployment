@@ -665,6 +665,21 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const attendanceId = `${employee.employeeId}_${dateString}`
     const deviceInfo = `${navigator.userAgent.substring(0, 100)}`
     
+    // Delete any duplicate records for this date (cleanup)
+    const attendanceRef = collection(db, 'attendance')
+    const q = query(
+      attendanceRef, 
+      where('employeeId', '==', employee.employeeId),
+      where('date', '==', dateString)
+    )
+    const existingDocs = await getDocs(q)
+    const batch = writeBatch(db)
+    existingDocs.docs.forEach(doc => {
+      if (doc.id !== attendanceId) {
+        batch.delete(doc.ref)
+      }
+    })
+    
     const attendanceData: AttendanceRecord = {
       employeeId: employee.employeeId,
       date: dateString,
@@ -676,7 +691,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       ...extraData
     }
 
-    await setDoc(doc(db, 'attendance', attendanceId), attendanceData)
+    // Write the new/updated attendance record
+    batch.set(doc(db, 'attendance', attendanceId), attendanceData)
+    await batch.commit()
     
     // Log activity
     await logActivity({
@@ -806,6 +823,35 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       ...doc.data()
     })) as AttendanceRecord[]
 
+    // Deduplicate: keep only one record per date
+    // Priority: If multiple records for same date, prefer non-Absent status (Present, Leave, On Duty)
+    // If all are same status, keep the most recent timestamp
+    const recordsByDate = new Map<string, AttendanceRecord>()
+    records.forEach(record => {
+      const existing = recordsByDate.get(record.date)
+      if (!existing) {
+        recordsByDate.set(record.date, record)
+      } else {
+        // If existing is Absent and new is not, replace with non-Absent
+        if (existing.status === 'A' && record.status !== 'A') {
+          recordsByDate.set(record.date, record)
+        }
+        // If new is Absent and existing is not, keep existing
+        else if (record.status === 'A' && existing.status !== 'A') {
+          // Keep existing
+        }
+        // If both same status type, keep the one with later timestamp
+        else {
+          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
+          const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+          if (recordTime > existingTime) {
+            recordsByDate.set(record.date, record)
+          }
+        }
+      }
+    })
+    
+    records = Array.from(recordsByDate.values())
     records.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
     if (startDate && endDate) {
@@ -860,13 +906,41 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const attendanceRef = collection(db, 'attendance')
     const querySnapshot = await getDocs(attendanceRef)
     
-    const records = querySnapshot.docs.map(doc => ({
+    let records = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as AttendanceRecord[]
     
-    return records
+    // Filter by date range
+    records = records
       .filter(r => r.date && r.date >= startDate && r.date <= endDate)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    
+    // Deduplicate: keep only one record per employee per date
+    const uniqueRecords = new Map<string, AttendanceRecord>()
+    records.forEach(record => {
+      const key = `${record.employeeId}_${record.date}`
+      const existing = uniqueRecords.get(key)
+      if (!existing) {
+        uniqueRecords.set(key, record)
+      } else {
+        // Prefer non-Absent over Absent
+        if (existing.status === 'A' && record.status !== 'A') {
+          uniqueRecords.set(key, record)
+        } else if (record.status === 'A' && existing.status !== 'A') {
+          // Keep existing
+        } else {
+          // Keep the one with later timestamp
+          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
+          const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+          if (recordTime > existingTime) {
+            uniqueRecords.set(key, record)
+          }
+        }
+      }
+    })
+    
+    return Array.from(uniqueRecords.values())
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   }
 
@@ -875,11 +949,39 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const q = query(attendanceRef, where('employeeId', '==', employeeId))
     const querySnapshot = await getDocs(q)
     
-    const records = querySnapshot.docs.map(doc => ({
+    let records = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as AttendanceRecord[]
     
+    // Deduplicate: keep only one record per date
+    // Priority: prefer non-Absent status if person marked attendance
+    const recordsByDate = new Map<string, AttendanceRecord>()
+    records.forEach(record => {
+      const existing = recordsByDate.get(record.date)
+      if (!existing) {
+        recordsByDate.set(record.date, record)
+      } else {
+        // If existing is Absent and new is not, replace
+        if (existing.status === 'A' && record.status !== 'A') {
+          recordsByDate.set(record.date, record)
+        }
+        // If new is Absent and existing is not, keep existing
+        else if (record.status === 'A' && existing.status !== 'A') {
+          // Keep existing
+        }
+        // If both same status, keep the one with later timestamp
+        else {
+          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
+          const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+          if (recordTime > existingTime) {
+            recordsByDate.set(record.date, record)
+          }
+        }
+      }
+    })
+    
+    records = Array.from(recordsByDate.values())
     return records.sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, limit)
   }
 
@@ -1497,9 +1599,18 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     for (const emp of allEmployees) {
       const attendanceId = `${emp.employeeId}_${dateString}`
-      const existingDoc = await getDoc(doc(db, 'attendance', attendanceId))
       
-      if (!existingDoc.exists()) {
+      // Check for any existing records for this employee on this date
+      const attendanceRef = collection(db, 'attendance')
+      const q = query(
+        attendanceRef,
+        where('employeeId', '==', emp.employeeId),
+        where('date', '==', dateString)
+      )
+      const existingDocs = await getDocs(q)
+      
+      // If there's no attendance record at all, mark as absent
+      if (existingDocs.empty) {
         const attendanceData: AttendanceRecord = {
           employeeId: emp.employeeId,
           date: dateString,
@@ -1511,18 +1622,56 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         
         batch.set(doc(db, 'attendance', attendanceId), attendanceData)
         markedCount++
+      } 
+      // If there are multiple records (duplicates), clean them up
+      else if (existingDocs.size > 1) {
+        // Keep the non-Absent record if it exists, otherwise keep the latest
+        let recordToKeep: any = null
+        const docsToDelete: any[] = []
+        
+        existingDocs.docs.forEach(docSnapshot => {
+          const record = docSnapshot.data()
+          if (!recordToKeep) {
+            recordToKeep = { docId: docSnapshot.id, ...record }
+          } else {
+            // Prefer non-Absent over Absent
+            if (recordToKeep.status === 'A' && record.status !== 'A') {
+              docsToDelete.push(recordToKeep.docId)
+              recordToKeep = { docId: docSnapshot.id, ...record }
+            } else if (record.status === 'A' && recordToKeep.status !== 'A') {
+              docsToDelete.push(docSnapshot.id)
+            } else {
+              // Both same status, keep latest timestamp
+              const existingTime = recordToKeep.timestamp?.toDate?.()?.getTime?.() || 0
+              const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+              if (recordTime > existingTime) {
+                docsToDelete.push(recordToKeep.docId)
+                recordToKeep = { docId: docSnapshot.id, ...record }
+              } else {
+                docsToDelete.push(docSnapshot.id)
+              }
+            }
+          }
+        })
+        
+        // Delete duplicate records
+        docsToDelete.forEach(docId => {
+          batch.delete(doc(db, 'attendance', docId))
+        })
       }
     }
     
-    if (markedCount > 0) {
+    if (markedCount > 0 || batch) {
       await batch.commit()
       
-      await logActivity({
-        type: 'system',
-        action: 'auto-absent',
-        description: `Auto-marked ${markedCount} employees as absent for ${dateString}`,
-        metadata: { date: dateString, count: markedCount }
-      })
+      if (markedCount > 0) {
+        await logActivity({
+          type: 'system',
+          action: 'auto-absent',
+          description: `Auto-marked ${markedCount} employees as absent for ${dateString}`,
+          metadata: { date: dateString, count: markedCount }
+        })
+      }
     }
   }
 
