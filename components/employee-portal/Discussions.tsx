@@ -59,20 +59,38 @@ function MentionInput({
     setMounted(true)
   }, [])
 
-  // Filter suggestions (show all matching, exclude only admin)
+  // Filter suggestions (show ALL employees, only exclude "admin" role)
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
+    
     if (dropdownType === 'user') {
-      // Show ALL employees except admin role
+      // Debug: Log all employees with their details
+      if (employees.length > 0) {
+        console.log('📋 === MENTION DEBUG ===')
+        console.log('📋 Total employees received:', employees.length)
+        employees.forEach(e => {
+          console.log(`   - ${e.name} | Role: "${e.role}" | Dept: "${e.department}"`)
+        })
+      }
+      
+      // Show ALL employees - only exclude if role is EXACTLY "admin" (case insensitive)
       const filtered = employees.filter(e => {
-        const isAdmin = e.role?.toLowerCase() === 'admin'
-        if (isAdmin) return false
-        if (!query) return true // Show all if no search query
-        return e.name.toLowerCase().includes(query) ||
-               e.employeeId.toLowerCase().includes(query) ||
-               e.department?.toLowerCase().includes(query)
+        const role = (e.role || '').toLowerCase().trim()
+        // Only exclude if role is exactly "admin"
+        if (role === 'admin') {
+          console.log('⏭️ Excluding (admin role):', e.name)
+          return false
+        }
+        // Include everyone else
+        if (!query) return true
+        // Apply search filter
+        const matchesName = e.name.toLowerCase().includes(query)
+        const matchesId = e.employeeId.toLowerCase().includes(query)
+        const matchesDept = (e.department || '').toLowerCase().includes(query)
+        return matchesName || matchesId || matchesDept
       })
-      console.log('📋 Filtered employees for mentions:', filtered.length, 'from', employees.length)
+      
+      console.log('📋 After filter:', filtered.length, 'employees shown')
       return filtered
     } else {
       // Show ALL departments except Admin
@@ -1011,7 +1029,8 @@ export function Discussions() {
   useEffect(() => {
     getAllEmployees()
       .then(data => {
-        console.log('Fetched employees for mentions:', data?.length || 0)
+        console.log('🔍 Fetched employees for mentions:', data?.length || 0)
+        console.log('🔍 All employees data:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
         setEmployees(data || [])
       })
       .catch(err => {

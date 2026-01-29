@@ -81,15 +81,21 @@ function MentionInput({
 
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
+    
     if (dropdownType === 'user') {
-      // Show ALL employees except admin role
+      // Debug log
+      if (employees.length > 0) {
+        console.log('📋 Tasks MentionInput - Total employees:', employees.length)
+      }
+      
+      // Show ALL employees - only exclude if role is EXACTLY "admin"
       return employees.filter(e => {
-        const isAdmin = e.role?.toLowerCase() === 'admin'
-        if (isAdmin) return false
+        const role = (e.role || '').toLowerCase().trim()
+        if (role === 'admin') return false
         if (!query) return true
         return e.name.toLowerCase().includes(query) ||
                e.employeeId.toLowerCase().includes(query) ||
-               e.department?.toLowerCase().includes(query)
+               (e.department || '').toLowerCase().includes(query)
       })
     } else {
       // Show ALL departments except Admin
@@ -1199,7 +1205,13 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
 
   // Fetch employees on mount
   useEffect(() => {
-    getAllEmployees().then(setEmployees).catch(console.error)
+    getAllEmployees()
+      .then(data => {
+        console.log('🔍 Tasks: Fetched employees:', data?.length || 0)
+        console.log('🔍 Tasks: All employees:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
+        setEmployees(data || [])
+      })
+      .catch(console.error)
   }, [getAllEmployees])
 
   // Auto-select task if selectedTaskId is provided (from Dashboard pending tasks)

@@ -994,9 +994,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const getAllEmployees = async (): Promise<EmployeeProfile[]> => {
+    console.log('🔍 getAllEmployees: Fetching from Firestore...')
     const employeesRef = collection(db, 'Employees')
     const querySnapshot = await getDocs(employeesRef)
-    return querySnapshot.docs.map(doc => doc.data() as EmployeeProfile)
+    const allEmployees = querySnapshot.docs.map(doc => doc.data() as EmployeeProfile)
+    console.log('🔍 getAllEmployees: Found', allEmployees.length, 'employees')
+    allEmployees.forEach(e => {
+      console.log(`   📌 ${e.name} - Role: "${e.role}" - Dept: "${e.department}"`)
+    })
+    return allEmployees
   }
 
   const getEmployeeById = async (employeeId: string): Promise<EmployeeProfile | null> => {
