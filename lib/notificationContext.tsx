@@ -10,7 +10,9 @@ import {
   doc,
   limit,
   writeBatch,
-  Timestamp
+  Timestamp,
+  where,
+  deleteDoc
 } from 'firebase/firestore'
 import { db } from './firebaseConfig'
 import { useEmployeeAuth } from './employeePortalContext'
@@ -32,6 +34,7 @@ export interface Notification {
   createdBy: string // Employee ID who triggered it
   createdByName: string // Display name
   createdByRole?: string // Role/department
+  recipientId: string // Employee ID who should see this notification
   read: boolean
   createdAt: Timestamp
 }
@@ -42,6 +45,7 @@ interface NotificationContextType {
   markAsRead: (notificationId: string) => Promise<void>
   markAllAsRead: () => Promise<void>
   deleteNotification: (notificationId: string) => Promise<void>
+  clearAllNotifications: () => Promise<void>
   requestPermission: () => Promise<NotificationPermission>
   permissionState: NotificationPermission
 }
@@ -70,7 +74,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ============================================
-  // REALTIME NOTIFICATION LISTENER (GLOBAL FEED)
+  // REALTIME NOTIFICATION LISTENER (PER-USER)
   // ============================================
   
   useEffect(() => {
@@ -82,12 +86,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    console.log('🔔 Setting up Firestore listener for notifications collection')
+    console.log('🔔 Setting up Firestore listener for userNotifications, recipientId:', employee.employeeId)
     
-    // Subscribe to ALL global notifications (no filtering by recipient)
-    const notificationsRef = collection(db, 'notifications')
+    // Subscribe to notifications for THIS USER ONLY
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(
       notificationsRef,
+      where('recipientId', '==', employee.employeeId),
       orderBy('createdAt', 'desc'),
       limit(100)
     )
@@ -95,38 +100,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log('📬 Notifications snapshot received:', snapshot.docs.length, 'docs')
-        console.log('📬 Current employee ID:', employee.employeeId)
+        console.log('📬 User notifications snapshot received:', snapshot.docs.length, 'docs')
         const notificationsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Notification[]
         
-        console.log('📬 All notifications before filter:', notificationsData.map(n => ({ 
-          title: n.title, 
-          createdBy: n.createdBy, 
-          createdByName: n.createdByName 
-        })))
-        
-        // Filter out notifications created by the current user
-        const filteredNotifications = notificationsData.filter(
-          notification => notification.createdBy !== employee.employeeId
-        )
-        
-        console.log('📬 Filtered notifications data:', filteredNotifications.map(n => ({ 
-          title: n.title, 
-          createdBy: n.createdBy, 
-          createdByName: n.createdByName 
-        })))
-        setNotifications(filteredNotifications)
+        console.log('📬 User notifications:', notificationsData.length)
+        setNotifications(notificationsData)
 
         // Show browser push notification for new notifications
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
             const notification = { id: change.doc.id, ...change.doc.data() } as Notification
             
-            // Only show push for new notifications (not created by current user)
-            if (!notification.read && permissionState === 'granted' && notification.createdBy !== employee.employeeId) {
+            // Show push for new unread notifications
+            if (!notification.read && permissionState === 'granted') {
               sendBrowserNotification(
                 notification.title,
                 notification.message,
@@ -138,7 +127,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         })
       },
       (error) => {
-        console.error('❌ Error fetching notifications:', error)
+        console.error('❌ Error fetching user notifications:', error)
         console.error('❌ Error message:', error.message)
         console.error('❌ Error code:', (error as any).code)
       }
@@ -159,7 +148,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      await updateDoc(doc(db, 'notifications', notificationId), {
+      await updateDoc(doc(db, 'userNotifications', notificationId), {
         read: true
       })
     } catch (error) {
@@ -176,7 +165,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       unreadNotifications.forEach(notification => {
         if (notification.id) {
-          batch.update(doc(db, 'notifications', notification.id), { read: true })
+          batch.update(doc(db, 'userNotifications', notification.id), { read: true })
         }
       })
 
@@ -188,15 +177,31 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      // Soft delete by marking as read and filtering client-side
-      // Or implement hard delete if preferred
-      await updateDoc(doc(db, 'notifications', notificationId), {
-        read: true
-      })
+      // Hard delete the notification document
+      await deleteDoc(doc(db, 'userNotifications', notificationId))
     } catch (error) {
       console.error('Error deleting notification:', error)
     }
   }, [])
+
+  const clearAllNotifications = useCallback(async () => {
+    if (!employee) return
+
+    try {
+      const batch = writeBatch(db)
+
+      notifications.forEach(notification => {
+        if (notification.id) {
+          batch.delete(doc(db, 'userNotifications', notification.id))
+        }
+      })
+
+      await batch.commit()
+      console.log('✅ Cleared all notifications for user:', employee.employeeId)
+    } catch (error) {
+      console.error('Error clearing all notifications:', error)
+    }
+  }, [employee, notifications])
 
   const requestPermission = useCallback(async () => {
     const permission = await requestNotificationPermission()
@@ -216,6 +221,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        clearAllNotifications,
         requestPermission,
         permissionState
       }}

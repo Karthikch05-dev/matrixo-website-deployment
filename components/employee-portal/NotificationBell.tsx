@@ -21,9 +21,11 @@ import {
   doc,
   writeBatch,
   deleteDoc,
-  Timestamp
+  Timestamp,
+  where
 } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
+import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import { formatDistanceToNow } from 'date-fns'
 
 // Notification type
@@ -43,6 +45,7 @@ interface NotificationBellProps {
 }
 
 export default function NotificationBell({ onNavigate }: NotificationBellProps) {
+  const { employee } = useEmployeeAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -53,13 +56,21 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch notifications directly from Firestore
+  // Fetch notifications for current user from Firestore
   useEffect(() => {
-    console.log('🔔 NotificationBell: Setting up Firestore listener...')
+    if (!employee?.employeeId) {
+      console.log('🔔 NotificationBell: No employee, clearing notifications')
+      setNotifications([])
+      setLoading(false)
+      return
+    }
+
+    console.log('🔔 NotificationBell: Setting up Firestore listener for user:', employee.employeeId)
     
-    const notificationsRef = collection(db, 'notifications')
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(
       notificationsRef,
+      where('recipientId', '==', employee.employeeId),
       orderBy('createdAt', 'desc'),
       limit(50)
     )
@@ -67,7 +78,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log('📬 NotificationBell: Received', snapshot.docs.length, 'notifications')
+        console.log('📬 NotificationBell: Received', snapshot.docs.length, 'notifications for user')
         const data = snapshot.docs.map(docSnap => ({
           id: docSnap.id,
           ...docSnap.data()
@@ -87,7 +98,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       console.log('🔔 NotificationBell: Cleaning up listener')
       unsubscribe()
     }
-  }, [])
+  }, [employee?.employeeId])
 
   // Ensure we're on client side for portal
   useEffect(() => {
@@ -99,7 +110,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   // Mark single notification as read
   const markAsRead = async (notificationId: string) => {
     try {
-      await updateDoc(doc(db, 'notifications', notificationId), { read: true })
+      await updateDoc(doc(db, 'userNotifications', notificationId), { read: true })
     } catch (error) {
       console.error('Error marking as read:', error)
     }
@@ -110,7 +121,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     try {
       const batch = writeBatch(db)
       notifications.filter(n => !n.read).forEach(n => {
-        batch.update(doc(db, 'notifications', n.id), { read: true })
+        batch.update(doc(db, 'userNotifications', n.id), { read: true })
       })
       await batch.commit()
     } catch (error) {
@@ -127,7 +138,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       // Delete notifications in batches (Firestore limit is 500 per batch)
       const batch = writeBatch(db)
       notifications.forEach(n => {
-        batch.delete(doc(db, 'notifications', n.id))
+        batch.delete(doc(db, 'userNotifications', n.id))
       })
       await batch.commit()
       setShowClearConfirm(false)

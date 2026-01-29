@@ -1,6 +1,6 @@
 'use client'
 
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
+import { collection, addDoc, Timestamp, getDocs } from 'firebase/firestore'
 import { db } from './firebaseConfig'
 
 // ============================================
@@ -20,26 +20,56 @@ export interface CreateNotificationParams {
 }
 
 // ============================================
-// CREATE GLOBAL NOTIFICATION
+// CREATE PER-USER NOTIFICATIONS
 // ============================================
 
 /**
- * Creates a GLOBAL notification visible to ALL users
- * This is a single document in Firestore, not per-user
+ * Creates a notification for EACH employee EXCEPT the one who triggered it.
+ * Each employee gets their own notification document they can individually manage.
+ * Stored in 'userNotifications' collection with a 'recipientId' field.
  */
-export async function createGlobalNotification(params: CreateNotificationParams): Promise<string | null> {
+export async function createGlobalNotification(params: CreateNotificationParams): Promise<boolean> {
   try {
-    console.log('🔔 Creating global notification:', params)
-    const docRef = await addDoc(collection(db, 'notifications'), {
-      ...params,
-      read: false,
-      createdAt: Timestamp.now()
+    console.log('🔔 Creating per-user notifications:', params)
+    
+    // Get all employees
+    const employeesRef = collection(db, 'Employees')
+    const employeesSnapshot = await getDocs(employeesRef)
+    
+    if (employeesSnapshot.empty) {
+      console.log('⚠️ No employees found')
+      return false
+    }
+
+    const notificationsRef = collection(db, 'userNotifications')
+    const addPromises: Promise<any>[] = []
+    
+    employeesSnapshot.docs.forEach((empDoc) => {
+      const empData = empDoc.data()
+      const recipientId = empData.employeeId
+      
+      // Skip the creator - they shouldn't get their own notification
+      if (recipientId === params.createdBy) {
+        console.log('⏭️ Skipping notification for creator:', recipientId)
+        return
+      }
+
+      addPromises.push(
+        addDoc(notificationsRef, {
+          ...params,
+          recipientId: recipientId,
+          read: false,
+          createdAt: Timestamp.now()
+        })
+      )
     })
-    console.log('✅ Notification created with ID:', docRef.id)
-    return docRef.id
+
+    await Promise.all(addPromises)
+    console.log(`✅ Created ${addPromises.length} notifications for all employees (except creator)`)
+    return true
   } catch (error) {
-    console.error('❌ Error creating global notification:', error)
-    return null
+    console.error('❌ Error creating per-user notifications:', error)
+    return false
   }
 }
 
