@@ -730,11 +730,23 @@ function ExportReportModal({
   const { getEmployeeAttendanceHistory } = useEmployeeAuth()
   const [exportType, setExportType] = useState<'all' | 'individual'>('all')
   const [selectedEmployee, setSelectedEmployee] = useState<string>('')
+  const [employeeSearch, setEmployeeSearch] = useState('')
   const [dateRange, setDateRange] = useState<'full' | 'monthly' | 'custom'>('monthly')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [format, setFormat] = useState<'pdf' | 'csv' | 'xlsx'>('pdf')
   const [exporting, setExporting] = useState(false)
+
+  // Filter employees based on search
+  const filteredEmployees = useMemo(() => {
+    if (!employeeSearch.trim()) return employees
+    const query = employeeSearch.toLowerCase()
+    return employees.filter(e => 
+      e.name.toLowerCase().includes(query) ||
+      e.employeeId.toLowerCase().includes(query) ||
+      e.department?.toLowerCase().includes(query)
+    )
+  }, [employees, employeeSearch])
 
   // Set default dates (current month)
   useEffect(() => {
@@ -820,9 +832,12 @@ function ExportReportModal({
     
     // Summary section
     rows.push(['SUMMARY'])
-    rows.push(['Employee ID', 'Name', 'Department', 'Role', 'Attendance %', 'Present', 'Absent', 'Leave', 'On Duty', 'Total Days'])
+    rows.push(['Employee ID', 'Name', 'Department', 'Role', 'Attendance %', 'Present', 'Absent', 'Leave', 'On Duty', 'Total Days', 'Verified Days', 'Unverified Days'])
     
     data.forEach(emp => {
+      const verifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === true).length || 0
+      const unverifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === false).length || 0
+      
       rows.push([
         emp.employeeId,
         emp.name,
@@ -833,7 +848,9 @@ function ExportReportModal({
         emp.absentDays,
         emp.lateDays,
         emp.onDutyDays,
-        emp.totalDays
+        emp.totalDays,
+        verifiedDays,
+        unverifiedDays
       ])
     })
     
@@ -843,17 +860,19 @@ function ExportReportModal({
     data.forEach(emp => {
       rows.push([])
       rows.push([`DETAILED ATTENDANCE: ${emp.name} (${emp.employeeId})`])
-      rows.push(['Date', 'Status', 'Check In', 'Notes'])
+      rows.push(['Date', 'Status', 'Check In', 'Verification', 'Notes'])
       
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
         const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
+        const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         
         rows.push([
           date,
           statusMap[record.status] || record.status,
           time,
+          verification,
           record.notes || ''
         ])
       })
@@ -885,23 +904,28 @@ function ExportReportModal({
     html += '<tr style="background:#9ca3af;font-weight:bold;"><td>Employee ID</td><td>Name</td><td>Department</td><td>Role</td><td>Attendance %</td><td>Present</td><td>Absent</td><td>Leave</td><td>On Duty</td><td>Total Days</td></tr>'
     
     data.forEach(emp => {
+      const verifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === true).length || 0
+      const unverifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === false).length || 0
       const color = emp.attendancePercentage >= 90 ? '#10b981' : emp.attendancePercentage >= 75 ? '#f59e0b' : '#ef4444'
       html += `<tr><td>${emp.employeeId}</td><td>${emp.name}</td><td>${emp.department || 'N/A'}</td><td>${emp.role}</td><td style="color:${color};font-weight:bold;">${emp.attendancePercentage.toFixed(2)}%</td><td>${emp.presentDays}</td><td>${emp.absentDays}</td><td>${emp.lateDays}</td><td>${emp.onDutyDays}</td><td>${emp.totalDays}</td></tr>`
+      html += `<tr><td colspan="5" style="text-align:right;background:#f3f4f6;"><em>Location Verification:</em></td><td colspan="2" style="background:#f3f4f6;color:#10b981;font-weight:bold;">✓ Verified: ${verifiedDays}</td><td colspan="3" style="background:#f3f4f6;color:#f59e0b;font-weight:bold;">⚠ Not in range: ${unverifiedDays}</td></tr>`
     })
     
     // Detailed records
     data.forEach(emp => {
       html += '<tr><td colspan="10"></td></tr>'
       html += `<tr><th colspan="10" style="background:#4f46e5;color:white;">DETAILED ATTENDANCE: ${emp.name} (${emp.employeeId})</th></tr>`
-      html += '<tr style="background:#9ca3af;font-weight:bold;"><td>Date</td><td>Status</td><td>Check In</td><td colspan="7">Notes</td></tr>'
+      html += '<tr style="background:#9ca3af;font-weight:bold;"><td>Date</td><td>Status</td><td>Check In</td><td>Verification</td><td colspan="6">Notes</td></tr>'
       
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
         const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
         const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : '#3b82f6'
+        const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
+        const verificationColor = record.locationVerified === true ? '#10b981' : record.locationVerified === false ? '#f59e0b' : '#6b7280'
         
-        html += `<tr><td>${date}</td><td style="color:${statusColor};font-weight:bold;">${statusMap[record.status] || record.status}</td><td>${time}</td><td colspan="7">${record.notes || ''}</td></tr>`
+        html += `<tr><td>${date}</td><td style="color:${statusColor};font-weight:bold;">${statusMap[record.status] || record.status}</td><td>${time}</td><td style="color:${verificationColor};font-weight:bold;">${verification}</td><td colspan="6">${record.notes || ''}</td></tr>`
       })
     })
     
@@ -976,6 +1000,8 @@ function ExportReportModal({
     `
     
     data.forEach(emp => {
+      const verifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === true).length || 0
+      const unverifiedDays = emp.attendanceHistory?.filter((r: AttendanceRecord) => r.locationVerified === false).length || 0
       const colorClass = emp.attendancePercentage >= 90 ? 'high' : emp.attendancePercentage >= 75 ? 'medium' : 'low'
       html += `
         <tr class="summary-row">
@@ -988,6 +1014,11 @@ function ExportReportModal({
           <td>${emp.absentDays}</td>
           <td>${emp.lateDays}</td>
           <td>${emp.onDutyDays}</td>
+        </tr>
+        <tr style="background-color:#f9fafb;">
+          <td colspan="5" style="text-align:right;font-style:italic;color:#6b7280;">Location Verification:</td>
+          <td colspan="2" style="color:#10b981;font-weight:bold;">✅ Verified: ${verifiedDays}</td>
+          <td colspan="2" style="color:#f59e0b;font-weight:bold;">⚠️ Not in range: ${unverifiedDays}</td>
         </tr>
       `
     })
@@ -1005,6 +1036,7 @@ function ExportReportModal({
                 <th>Date</th>
                 <th>Status</th>
                 <th>Check In Time</th>
+                <th>Verification</th>
                 <th>Notes</th>
               </tr>
             </thead>
@@ -1020,12 +1052,19 @@ function ExportReportModal({
           'L': '🏖️ Leave', 
           'O': '💼 On Duty' 
         }
+        const verification = record.locationVerified === true 
+          ? '✅ Verified' 
+          : record.locationVerified === false 
+            ? '⚠️ Not in range' 
+            : '-'
+        const verificationColor = record.locationVerified === true ? '#10b981' : record.locationVerified === false ? '#f59e0b' : '#6b7280'
         
         html += `
           <tr>
             <td>${date}</td>
             <td>${statusMap[record.status] || record.status}</td>
             <td>${time}</td>
+            <td style="color:${verificationColor};font-weight:bold;">${verification}</td>
             <td>${record.notes || '-'}</td>
           </tr>
         `
@@ -1088,15 +1127,62 @@ function ExportReportModal({
 
         {/* Individual Employee Selection */}
         {exportType === 'individual' && (
-          <Select
-            label="Select Employee"
-            options={[
-              { value: '', label: 'Choose an employee...' },
-              ...employees.map(e => ({ value: e.employeeId, label: `${e.name} (${e.employeeId})` }))
-            ]}
-            value={selectedEmployee}
-            onChange={setSelectedEmployee}
-          />
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Select Employee</label>
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-3.5 text-neutral-500 z-10" />
+              <input
+                type="text"
+                placeholder="Search by name, ID, or department..."
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              />
+            </div>
+            <div className="mt-2 max-h-60 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-xl">
+              {filteredEmployees.length === 0 ? (
+                <div className="p-4 text-center text-neutral-500">No employees found</div>
+              ) : (
+                filteredEmployees.map((emp) => (
+                  <button
+                    key={emp.employeeId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedEmployee(emp.employeeId)
+                      setEmployeeSearch('')
+                    }}
+                    className={`w-full p-3 text-left transition-all flex items-center gap-3 border-b border-neutral-700/50 last:border-0 ${
+                      selectedEmployee === emp.employeeId
+                        ? 'bg-primary-500/20 text-primary-400'
+                        : 'hover:bg-neutral-700/50 text-white'
+                    }`}
+                  >
+                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{emp.name}</div>
+                      <div className="text-xs text-neutral-500 truncate">{emp.employeeId} • {emp.department}</div>
+                    </div>
+                    {selectedEmployee === emp.employeeId && (
+                      <FaCheckCircle className="text-primary-500" />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+            {selectedEmployee && (
+              <div className="mt-2 p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg flex items-center justify-between">
+                <span className="text-sm text-white">
+                  Selected: {employees.find(e => e.employeeId === selectedEmployee)?.name}
+                </span>
+                <button
+                  onClick={() => setSelectedEmployee('')}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Date Range */}
