@@ -31,10 +31,13 @@ export interface CreateNotificationParams {
 export async function createGlobalNotification(params: CreateNotificationParams): Promise<boolean> {
   try {
     console.log('🔔 Creating per-user notifications:', params)
+    console.log('🔔 Creator ID:', params.createdBy)
     
     // Get all employees
     const employeesRef = collection(db, 'Employees')
     const employeesSnapshot = await getDocs(employeesRef)
+    
+    console.log('🔔 Found', employeesSnapshot.docs.length, 'employees')
     
     if (employeesSnapshot.empty) {
       console.log('⚠️ No employees found')
@@ -48,12 +51,15 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       const empData = empDoc.data()
       const recipientId = empData.employeeId
       
+      console.log('🔔 Checking employee:', empData.name, 'ID:', recipientId, 'vs Creator:', params.createdBy)
+      
       // Skip the creator - they shouldn't get their own notification
       if (recipientId === params.createdBy) {
         console.log('⏭️ Skipping notification for creator:', recipientId)
         return
       }
 
+      console.log('✅ Creating notification for:', empData.name, recipientId)
       addPromises.push(
         addDoc(notificationsRef, {
           ...params,

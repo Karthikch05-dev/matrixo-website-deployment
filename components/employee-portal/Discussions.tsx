@@ -58,7 +58,7 @@ function MentionInput({
     setMounted(true)
   }, [])
 
-  // Filter suggestions (limit to 5)
+  // Filter suggestions (show all matching)
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
     if (dropdownType === 'user') {
@@ -66,12 +66,12 @@ function MentionInput({
         e.role !== 'admin' &&
         (e.name.toLowerCase().includes(query) ||
         e.employeeId.toLowerCase().includes(query))
-      ).slice(0, 5)
+      )
     } else {
       return departments.filter(d => 
         d.toLowerCase() !== 'admin' &&
         d.toLowerCase().includes(query)
-      ).slice(0, 5)
+      )
     }
   }, [searchQuery, dropdownType, employees, departments])
 
@@ -215,7 +215,7 @@ function MentionInput({
           {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
         </p>
       </div>
-      <div className="max-h-40 overflow-y-auto">
+      <div className="max-h-64 overflow-y-auto">
         {dropdownType === 'user' ? (
           (suggestions as EmployeeProfile[]).map((emp) => (
             <button
