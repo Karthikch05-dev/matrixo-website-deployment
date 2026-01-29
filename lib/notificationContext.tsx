@@ -101,8 +101,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           ...doc.data()
         })) as Notification[]
         
-        console.log('📬 Notifications data:', notificationsData)
-        setNotifications(notificationsData)
+        // Filter out notifications created by the current user
+        const filteredNotifications = notificationsData.filter(
+          notification => notification.createdBy !== employee.employeeId
+        )
+        
+        console.log('📬 Filtered notifications data:', filteredNotifications)
+        setNotifications(filteredNotifications)
 
         // Show browser push notification for new notifications
         snapshot.docChanges().forEach((change) => {
