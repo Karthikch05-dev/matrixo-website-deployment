@@ -63,8 +63,9 @@ function MentionInput({
     const query = searchQuery.toLowerCase()
     if (dropdownType === 'user') {
       return employees.filter(e => 
-        e.name.toLowerCase().includes(query) ||
-        e.employeeId.toLowerCase().includes(query)
+        e.role !== 'admin' &&
+        (e.name.toLowerCase().includes(query) ||
+        e.employeeId.toLowerCase().includes(query))
       ).slice(0, 5)
     } else {
       return departments.filter(d => 
