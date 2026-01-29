@@ -71,6 +71,7 @@ function MentionInput({
   const [searchQuery, setSearchQuery] = useState('')
   const [triggerIndex, setTriggerIndex] = useState(-1)
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -81,18 +82,29 @@ function MentionInput({
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
     if (dropdownType === 'user') {
-      return employees.filter(e => 
-        e.role !== 'admin' &&
-        (e.name.toLowerCase().includes(query) ||
-        e.employeeId.toLowerCase().includes(query))
-      ).slice(0, 5)
+      // Show ALL employees except admin role
+      return employees.filter(e => {
+        const isAdmin = e.role?.toLowerCase() === 'admin'
+        if (isAdmin) return false
+        if (!query) return true
+        return e.name.toLowerCase().includes(query) ||
+               e.employeeId.toLowerCase().includes(query) ||
+               e.department?.toLowerCase().includes(query)
+      })
     } else {
-      return departments.filter(d => 
-        d.toLowerCase() !== 'admin' &&
-        d.toLowerCase().includes(query)
-      ).slice(0, 5)
+      // Show ALL departments except Admin
+      return departments.filter(d => {
+        if (d.toLowerCase() === 'admin') return false
+        if (!query) return true
+        return d.toLowerCase().includes(query)
+      })
     }
   }, [searchQuery, dropdownType, employees, departments])
+
+  // Reset selected index when suggestions change
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [suggestions])
 
   const updateDropdownPosition = () => {
     if (!textareaRef.current) return
@@ -128,6 +140,7 @@ function MentionInput({
       setTriggerIndex(foundTrigger)
       updateDropdownPosition()
       setShowDropdown(true)
+      setSelectedIndex(0)
       return
     }
     
@@ -138,6 +151,24 @@ function MentionInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       setShowDropdown(false)
+    } else if (showDropdown && suggestions.length > 0) {
+      // Arrow key navigation
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex(prev => (prev + 1) % suggestions.length)
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length)
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        if (dropdownType === 'user') {
+          const emp = suggestions[selectedIndex] as EmployeeProfile
+          if (emp) selectMention(emp.name)
+        } else {
+          const dept = suggestions[selectedIndex] as string
+          if (dept) selectMention(dept)
+        }
+      }
     } else if (e.key === 'Enter' && !e.shiftKey && !showDropdown) {
       e.preventDefault()
       handleSubmit()
@@ -219,31 +250,40 @@ function MentionInput({
         top: `${dropdownPos.top}px`,
         left: `${dropdownPos.left}px`,
         zIndex: 9999,
-        maxHeight: '200px',
+        maxHeight: '256px',
         overflowY: 'auto'
       }}
       className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl w-72"
     >
+      <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
+        <p className="text-xs text-neutral-400 font-medium">
+          {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
+        </p>
+      </div>
       {dropdownType === 'user' ? (
-        (suggestions as EmployeeProfile[]).map((emp) => (
+        (suggestions as EmployeeProfile[]).map((emp, index) => (
           <button
             key={emp.employeeId}
             onClick={() => selectMention(emp.name)}
-            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+            className={`w-full flex items-center gap-3 px-3 py-2 transition-colors text-left ${
+              index === selectedIndex ? 'bg-primary-500/30 border-l-2 border-primary-500' : 'hover:bg-neutral-700'
+            }`}
           >
             <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white font-medium truncate">{emp.name}</p>
-              <p className="text-xs text-neutral-500 truncate">{emp.employeeId}</p>
+              <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
             </div>
           </button>
         ))
       ) : (
-        (suggestions as string[]).map((dept) => (
+        (suggestions as string[]).map((dept, index) => (
           <button
             key={dept}
             onClick={() => selectMention(dept)}
-            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+            className={`w-full flex items-center gap-3 px-3 py-2 transition-colors text-left ${
+              index === selectedIndex ? 'bg-primary-500/30 border-l-2 border-primary-500' : 'hover:bg-neutral-700'
+            }`}
           >
             <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-amber-400 text-sm">#</span>
