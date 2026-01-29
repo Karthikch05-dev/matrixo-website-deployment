@@ -762,6 +762,14 @@ function ExportReportModal({
     }
   }, [dateRange])
 
+  // Reset selection when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedEmployee('')
+      setEmployeeSearch('')
+    }
+  }, [isOpen])
+
   const handleExport = async () => {
     setExporting(true)
     try {
@@ -812,6 +820,11 @@ function ExportReportModal({
       }
 
       toast.success('Report exported successfully')
+      
+      // Reset selection after export
+      setSelectedEmployee('')
+      setEmployeeSearch('')
+      
       onClose()
     } catch (error) {
       console.error('Export error:', error)
@@ -864,7 +877,7 @@ function ExportReportModal({
       
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
-        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
         const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         
@@ -919,7 +932,7 @@ function ExportReportModal({
       
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
-        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
         const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
         const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : '#3b82f6'
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
@@ -1045,7 +1058,7 @@ function ExportReportModal({
       
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
-        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
         const statusMap: Record<string, string> = { 
           'P': '✅ Present', 
           'A': '❌ Absent', 
