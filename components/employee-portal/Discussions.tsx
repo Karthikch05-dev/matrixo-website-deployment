@@ -69,6 +69,7 @@ function MentionInput({
       ).slice(0, 5)
     } else {
       return departments.filter(d => 
+        d.toLowerCase() !== 'admin' &&
         d.toLowerCase().includes(query)
       ).slice(0, 5)
     }
