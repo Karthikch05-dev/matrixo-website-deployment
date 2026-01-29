@@ -1424,21 +1424,33 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (!employee) throw new Error('Not authenticated')
     if (!discussion.id) throw new Error('Discussion ID is required for restore')
     
-    // Restore the discussion with its original ID
-    await setDoc(doc(db, 'discussions', discussion.id), {
-      content: discussion.content,
-      authorId: discussion.authorId,
-      authorName: discussion.authorName,
-      authorImage: discussion.authorImage,
-      authorDepartment: discussion.authorDepartment,
-      createdAt: discussion.createdAt,
-      updatedAt: discussion.updatedAt,
-      mentions: discussion.mentions || [],
-      mentionedDepartments: discussion.mentionedDepartments || [],
-      replies: discussion.replies || [],
-      isPinned: discussion.isPinned || false,
-      reactions: discussion.reactions || {}
-    })
+    try {
+      // Prepare the data, ensuring Timestamps are handled properly
+      const restoreData: Record<string, unknown> = {
+        content: discussion.content || '',
+        authorId: discussion.authorId,
+        authorName: discussion.authorName,
+        authorImage: discussion.authorImage || null,
+        authorDepartment: discussion.authorDepartment || null,
+        createdAt: discussion.createdAt || Timestamp.now(),
+        mentions: discussion.mentions || [],
+        mentionedDepartments: discussion.mentionedDepartments || [],
+        replies: discussion.replies || [],
+        isPinned: discussion.isPinned || false,
+        reactions: discussion.reactions || {}
+      }
+      
+      // Only include updatedAt if it exists
+      if (discussion.updatedAt) {
+        restoreData.updatedAt = discussion.updatedAt
+      }
+      
+      // Restore the discussion with its original ID
+      await setDoc(doc(db, 'discussions', discussion.id), restoreData)
+    } catch (error) {
+      console.error('Error restoring discussion:', error)
+      throw error
+    }
   }
 
   const addDiscussionReply = async (discussionId: string, content: string, mentions: string[] = []) => {

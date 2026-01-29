@@ -548,8 +548,22 @@ function DiscussionPost({
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this post?')) return
     
-    // Store the discussion data for potential undo
-    const deletedDiscussion = { ...discussion }
+    // Store the discussion data for potential undo - create a proper copy of all fields
+    const deletedDiscussion: Discussion = {
+      id: discussion.id,
+      content: discussion.content,
+      authorId: discussion.authorId,
+      authorName: discussion.authorName,
+      authorImage: discussion.authorImage,
+      authorDepartment: discussion.authorDepartment,
+      createdAt: discussion.createdAt,
+      updatedAt: discussion.updatedAt,
+      mentions: [...(discussion.mentions || [])],
+      mentionedDepartments: [...(discussion.mentionedDepartments || [])],
+      replies: discussion.replies ? discussion.replies.map(reply => ({ ...reply })) : [],
+      isPinned: discussion.isPinned,
+      reactions: discussion.reactions ? { ...discussion.reactions } : {}
+    }
     
     try {
       await deleteDiscussion(discussion.id!)
@@ -562,6 +576,7 @@ function DiscussionPost({
               await restoreDiscussion(deletedDiscussion)
               toast.success('Post restored')
             } catch (error) {
+              console.error('Restore error:', error)
               toast.error('Failed to restore post')
             }
           }
