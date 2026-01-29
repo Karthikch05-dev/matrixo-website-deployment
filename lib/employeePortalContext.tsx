@@ -310,6 +310,7 @@ interface EmployeeAuthContextType {
   addDiscussion: (content: string, mentions?: string[], mentionedDepartments?: string[]) => Promise<void>
   updateDiscussion: (id: string, content: string) => Promise<void>
   deleteDiscussion: (id: string) => Promise<void>
+  restoreDiscussion: (discussion: Discussion) => Promise<void>
   addDiscussionReply: (discussionId: string, content: string, mentions?: string[]) => Promise<void>
   updateDiscussionReply: (discussionId: string, replyId: string, content: string) => Promise<void>
   deleteDiscussionReply: (discussionId: string, replyId: string) => Promise<void>
@@ -1419,6 +1420,27 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'discussions', id))
   }
 
+  const restoreDiscussion = async (discussion: Discussion) => {
+    if (!employee) throw new Error('Not authenticated')
+    if (!discussion.id) throw new Error('Discussion ID is required for restore')
+    
+    // Restore the discussion with its original ID
+    await setDoc(doc(db, 'discussions', discussion.id), {
+      content: discussion.content,
+      authorId: discussion.authorId,
+      authorName: discussion.authorName,
+      authorImage: discussion.authorImage,
+      authorDepartment: discussion.authorDepartment,
+      createdAt: discussion.createdAt,
+      updatedAt: discussion.updatedAt,
+      mentions: discussion.mentions || [],
+      mentionedDepartments: discussion.mentionedDepartments || [],
+      replies: discussion.replies || [],
+      isPinned: discussion.isPinned || false,
+      reactions: discussion.reactions || {}
+    })
+  }
+
   const addDiscussionReply = async (discussionId: string, content: string, mentions: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
     
@@ -1796,6 +1818,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       addDiscussion,
       updateDiscussion,
       deleteDiscussion,
+      restoreDiscussion,
       addDiscussionReply,
       deleteDiscussionReply,
       updateDiscussionReply,

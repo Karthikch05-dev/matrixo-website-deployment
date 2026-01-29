@@ -508,7 +508,7 @@ function DiscussionPost({
   onReply: (discussionId: string) => void
   employees: EmployeeProfile[]
 }) {
-  const { employee, deleteDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply, updateDiscussion, toggleDiscussionReaction } = useEmployeeAuth()
+  const { employee, deleteDiscussion, restoreDiscussion, deleteDiscussionReply, togglePinDiscussion, addDiscussionReply, updateDiscussion, toggleDiscussionReaction } = useEmployeeAuth()
   const [showReplies, setShowReplies] = useState(false)
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyContent, setReplyContent] = useState('')
@@ -547,9 +547,26 @@ function DiscussionPost({
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this post?')) return
+    
+    // Store the discussion data for potential undo
+    const deletedDiscussion = { ...discussion }
+    
     try {
       await deleteDiscussion(discussion.id!)
-      toast.success('Post deleted')
+      toast.success('Post deleted', {
+        duration: 5000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await restoreDiscussion(deletedDiscussion)
+              toast.success('Post restored')
+            } catch (error) {
+              toast.error('Failed to restore post')
+            }
+          }
+        }
+      })
     } catch (error) {
       toast.error('Failed to delete post')
     }
