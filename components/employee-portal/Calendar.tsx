@@ -507,6 +507,8 @@ export function Calendar() {
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [viewMode, setViewMode] = useState<'month' | 'list'>('month')
+  // State for the day details panel (right side)
+  const [panelSelectedDay, setPanelSelectedDay] = useState<CalendarDay | null>(null)
 
   const isAdmin = employee?.role === 'admin'
 
@@ -602,6 +604,14 @@ export function Calendar() {
     return days
   }, [currentDate, holidays, calendarEvents])
 
+  // Get today's CalendarDay from the calendar grid (for default panel display)
+  const todayCalendarDay = useMemo(() => {
+    return calendarDays.find(day => day.isToday && day.isCurrentMonth) || calendarDays.find(day => day.isToday) || null
+  }, [calendarDays])
+
+  // The day to display in the panel - selected day or today
+  const panelDisplayDay = panelSelectedDay || todayCalendarDay
+
   // Upcoming events for list view
   const upcomingEvents = useMemo(() => {
     const today = getLocalDateString(new Date())
@@ -621,17 +631,26 @@ export function Calendar() {
 
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+    setPanelSelectedDay(null) // Reset selection to show today (if visible) or empty state
   }
 
   const goToNextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+    setPanelSelectedDay(null) // Reset selection to show today (if visible) or empty state
   }
 
   const goToToday = () => {
     setCurrentDate(new Date())
+    setPanelSelectedDay(null) // Reset to show today by default
   }
 
   const handleDayClick = (day: CalendarDay) => {
+    // Update the panel to show clicked day's details
+    setPanelSelectedDay(day)
+  }
+
+  // Open the modal for detailed view (double-click or dedicated action)
+  const handleDayModalOpen = (day: CalendarDay) => {
     setSelectedDay(day)
   }
 
@@ -687,103 +706,214 @@ export function Calendar() {
       </div>
 
       {viewMode === 'month' ? (
-        <Card padding="lg">
-          {/* Month Navigation */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-white">
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </h3>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={goToPreviousMonth}>
-                <FaChevronLeft />
-              </Button>
-              <Button variant="secondary" size="sm" onClick={goToToday}>
-                Today
-              </Button>
-              <Button variant="ghost" size="sm" onClick={goToNextMonth}>
-                <FaChevronRight />
-              </Button>
-            </div>
-          </div>
-
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-px bg-neutral-800 rounded-lg overflow-hidden">
-            {/* Weekday Headers */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="bg-neutral-900 py-3 text-center text-sm font-medium text-neutral-400">
-                {day}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Side - Calendar */}
+          <Card padding="lg" className="lg:w-[38%] flex-shrink-0">
+            {/* Month Navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h3>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={goToPreviousMonth}>
+                  <FaChevronLeft />
+                </Button>
+                <Button variant="secondary" size="sm" onClick={goToToday}>
+                  Today
+                </Button>
+                <Button variant="ghost" size="sm" onClick={goToNextMonth}>
+                  <FaChevronRight />
+                </Button>
               </div>
-            ))}
-            
-            {/* Calendar Days */}
-            {calendarDays.map((day, index) => (
-              <motion.button
-                key={index}
-                onClick={() => handleDayClick(day)}
-                whileHover={{ scale: 1.02 }}
-                className={`
-                  min-h-[100px] p-2 text-left transition-colors relative
-                  ${day.isCurrentMonth ? 'bg-neutral-900' : 'bg-neutral-900/50'}
-                  ${day.isToday ? 'ring-2 ring-primary-500 ring-inset' : ''}
-                  ${day.holiday ? 'bg-amber-500/10' : ''}
-                  hover:bg-neutral-800
-                `}
-              >
-                <span className={`
-                  inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium
-                  ${day.isToday ? 'bg-primary-600 text-white' : ''}
-                  ${day.isWeekend && !day.isToday ? 'text-neutral-500' : ''}
-                  ${!day.isCurrentMonth ? 'text-neutral-600' : 'text-neutral-300'}
-                `}>
-                  {day.date.getDate()}
-                </span>
-                
-                {/* Holiday indicator */}
-                {day.holiday && (
-                  <div className="mt-1">
-                    <div className="flex items-center gap-1 text-xs text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded truncate">
-                      <FaUmbrellaBeach className="flex-shrink-0" />
-                      <span className="truncate">{day.holiday.name}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Event indicators */}
-                {day.events.slice(0, 2).map(event => (
-                  <div
-                    key={event.id}
-                    className="mt-1 text-xs px-1.5 py-0.5 rounded truncate text-white"
-                    style={{ backgroundColor: event.color || '#6366f1' }}
-                  >
-                    {event.title}
-                  </div>
-                ))}
-                
-                {day.events.length > 2 && (
-                  <div className="mt-1 text-xs text-neutral-400">
-                    +{day.events.length - 2} more
-                  </div>
-                )}
-              </motion.button>
-            ))}
-          </div>
+            </div>
 
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-neutral-800 text-sm text-neutral-400">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-amber-500/50 rounded" />
-              <span>Holiday</span>
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-px bg-neutral-800 rounded-lg overflow-hidden">
+              {/* Weekday Headers */}
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="bg-neutral-900 py-2 text-center text-xs font-medium text-neutral-400">
+                  {day}
+                </div>
+              ))}
+              
+              {/* Calendar Days */}
+              {calendarDays.map((day, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => handleDayClick(day)}
+                  onDoubleClick={() => handleDayModalOpen(day)}
+                  whileHover={{ scale: 1.02 }}
+                  className={`
+                    min-h-[70px] p-1.5 text-left transition-colors relative
+                    ${day.isCurrentMonth ? 'bg-neutral-900' : 'bg-neutral-900/50'}
+                    ${day.isToday ? 'ring-2 ring-primary-500 ring-inset' : ''}
+                    ${day.holiday ? 'bg-amber-500/10' : ''}
+                    ${panelSelectedDay?.dateString === day.dateString ? 'bg-primary-500/20' : ''}
+                    hover:bg-neutral-800
+                  `}
+                >
+                  <span className={`
+                    inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
+                    ${day.isToday ? 'bg-primary-600 text-white' : ''}
+                    ${day.isWeekend && !day.isToday ? 'text-neutral-500' : ''}
+                    ${!day.isCurrentMonth ? 'text-neutral-600' : 'text-neutral-300'}
+                  `}>
+                    {day.date.getDate()}
+                  </span>
+                  
+                  {/* Holiday indicator */}
+                  {day.holiday && (
+                    <div className="mt-0.5">
+                      <div className="flex items-center gap-0.5 text-[10px] text-amber-400 bg-amber-500/20 px-1 py-0.5 rounded truncate">
+                        <FaUmbrellaBeach className="flex-shrink-0 text-[8px]" />
+                        <span className="truncate">{day.holiday.name}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Event indicators */}
+                  {day.events.slice(0, 1).map(event => (
+                    <div
+                      key={event.id}
+                      className="mt-0.5 text-[10px] px-1 py-0.5 rounded truncate text-white"
+                      style={{ backgroundColor: event.color || '#6366f1' }}
+                    >
+                      {event.title}
+                    </div>
+                  ))}
+                  
+                  {day.events.length > 1 && (
+                    <div className="mt-0.5 text-[10px] text-neutral-400">
+                      +{day.events.length - 1} more
+                    </div>
+                  )}
+                </motion.button>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary-600 rounded" />
-              <span>Event</span>
+
+            {/* Legend */}
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-neutral-800 text-xs text-neutral-400">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-amber-500/50 rounded" />
+                <span>Holiday</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-primary-600 rounded" />
+                <span>Event</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 ring-2 ring-primary-500 rounded" />
+                <span>Today</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 ring-2 ring-primary-500 rounded" />
-              <span>Today</span>
-            </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Right Side - Day Details Panel */}
+          <Card padding="lg" className="lg:flex-1">
+            {panelDisplayDay ? (
+              <div className="h-full flex flex-col">
+                {/* Panel Header */}
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-neutral-800">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      {panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </h3>
+                    {panelDisplayDay.isToday && (
+                      <Badge variant="primary" size="sm" className="mt-1">Today</Badge>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <Button size="sm" variant="secondary" icon={<FaPlus />} onClick={() => handleAddEventForDate(panelDisplayDay.dateString)}>
+                      Add Event
+                    </Button>
+                  )}
+                </div>
+
+                {/* Day Content */}
+                <div className="flex-1 overflow-y-auto">
+                  {/* Holiday Section */}
+                  {panelDisplayDay.holiday && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-neutral-400 mb-2">Holiday</h4>
+                      <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                        <div className="p-2 bg-amber-500/20 rounded-lg">
+                          <FaUmbrellaBeach className="text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-white">{panelDisplayDay.holiday.name}</h5>
+                          <Badge variant="warning" size="sm" className="mt-1">
+                            {panelDisplayDay.holiday.type === 'public' ? 'Public Holiday' : 
+                             panelDisplayDay.holiday.type === 'company' ? 'Company Holiday' : 'Optional'}
+                          </Badge>
+                          {panelDisplayDay.holiday.description && (
+                            <p className="text-neutral-400 text-sm mt-2">{panelDisplayDay.holiday.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Events Section */}
+                  {panelDisplayDay.events.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-neutral-400 mb-2">Events & Tasks</h4>
+                      <div className="space-y-2">
+                        {panelDisplayDay.events.map(event => (
+                          <div
+                            key={event.id}
+                            className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg"
+                            style={{ borderLeftWidth: '4px', borderLeftColor: event.color || '#6366f1' }}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h5 className="font-medium text-white">{event.title}</h5>
+                                <div className="flex flex-wrap items-center gap-2 mt-1">
+                                  <Badge size="sm" variant="info">{event.type}</Badge>
+                                  <Badge size="sm" variant="default">
+                                    {departmentVisibilityLabels[event.departmentVisibility || 'all']}
+                                  </Badge>
+                                </div>
+                                {event.description && (
+                                  <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
+                                )}
+                                {event.endDate && event.endDate !== event.date && (
+                                  <p className="text-neutral-500 text-xs mt-2 flex items-center gap-1">
+                                    <FaClock className="text-neutral-600" />
+                                    Until {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </p>
+                                )}
+                                <p className="text-neutral-500 text-xs mt-1">
+                                  By {event.createdByName}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!panelDisplayDay.holiday && panelDisplayDay.events.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <FaCalendarAlt className="text-4xl text-neutral-600 mb-4" />
+                      <p className="text-neutral-300 font-medium">
+                        No extra tasks for today, all the best for your work.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                <FaCalendarAlt className="text-4xl text-neutral-600 mb-4" />
+                <p className="text-neutral-300 font-medium">
+                  No extra tasks for today, all the best for your work.
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
       ) : (
         /* List View */
         <Card>
