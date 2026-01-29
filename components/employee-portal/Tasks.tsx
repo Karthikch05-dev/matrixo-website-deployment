@@ -724,6 +724,7 @@ function TaskDetailModal({
           return (
             <ProfileInfo
               key={i}
+              inline={true}
               data={employeeToProfileData(emp)}
               isAdmin={false}
             >
