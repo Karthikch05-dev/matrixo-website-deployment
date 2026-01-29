@@ -115,6 +115,17 @@ function EmployeeProfileModal({
     })
   }
 
+  const formatHistoryTime = (record: AttendanceRecord) => {
+    if (record.status !== 'A') return formatTime(record.timestamp)
+    if (!record.timestamp?.toDate) return '-'
+    const absentTime = new Date(record.timestamp.toDate())
+    absentTime.setHours(23, 59, 0, 0)
+    return absentTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
   return (
     <Modal
       isOpen={true}
@@ -267,7 +278,7 @@ function EmployeeProfileModal({
                            record.status === 'H' ? 'Holiday' : record.status}
                         </Badge>
                       </td>
-                      <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
+                      <td className="p-3 text-neutral-400">{formatHistoryTime(record)}</td>
                       <td className="p-3">
                         {record.locationVerified ? (
                           <Badge variant="success" size="sm">
@@ -1028,28 +1039,6 @@ export function AdminPanel() {
       </Card>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : activeTab === 'attendance' ? (
-        <Card padding="none">
-          <AttendanceTable
-            attendanceRecords={filteredAttendance}
-            employees={employees}
-            employeesWithStats={employeesWithStats}
-            onEditRecord={(record, emp) => setEditingRecord({ record, employee: emp })}
-            onViewProfile={setSelectedEmployee}
-          />
-        </Card>
-      ) : (
-        <EmployeeList
-          employees={filteredEmployees}
-          onViewProfile={setSelectedEmployee}
-        />
-      )}
-
       {/* Stats Summary */}
       {activeTab === 'attendance' && !loading && (
         <Card padding="md">
@@ -1082,6 +1071,28 @@ export function AdminPanel() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : activeTab === 'attendance' ? (
+        <Card padding="none">
+          <AttendanceTable
+            attendanceRecords={filteredAttendance}
+            employees={employees}
+            employeesWithStats={employeesWithStats}
+            onEditRecord={(record, emp) => setEditingRecord({ record, employee: emp })}
+            onViewProfile={setSelectedEmployee}
+          />
+        </Card>
+      ) : (
+        <EmployeeList
+          employees={filteredEmployees}
+          onViewProfile={setSelectedEmployee}
+        />
       )}
 
       {/* Modals */}

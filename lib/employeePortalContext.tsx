@@ -92,6 +92,7 @@ export interface CalendarEvent {
   date: string
   endDate?: string
   type: 'event' | 'deadline' | 'meeting' | 'announcement'
+  departmentVisibility?: 'all' | 'interns' | 'management'
   createdBy: string
   createdByName: string
   createdAt: Timestamp

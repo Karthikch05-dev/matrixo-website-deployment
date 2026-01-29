@@ -37,6 +37,12 @@ interface CalendarDay {
   events: CalendarEvent[]
 }
 
+const departmentVisibilityLabels: Record<string, string> = {
+  all: 'All Departments',
+  interns: 'Interns',
+  management: 'Management'
+}
+
 // ============================================
 // ADD HOLIDAY MODAL
 // ============================================
@@ -161,7 +167,8 @@ function AddEventModal({
     date: editingEvent?.date || selectedDate || '',
     endDate: editingEvent?.endDate || '',
     type: editingEvent?.type || 'event',
-    color: editingEvent?.color || '#6366f1'
+    color: editingEvent?.color || '#6366f1',
+    departmentVisibility: editingEvent?.departmentVisibility || 'all'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,7 +187,8 @@ function AddEventModal({
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color || undefined
+          color: form.color || undefined,
+          departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility']
         })
         toast.success('Event updated successfully')
       } else {
@@ -190,7 +198,8 @@ function AddEventModal({
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
-          color: form.color || undefined
+          color: form.color || undefined,
+          departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility']
         })
         toast.success('Event added successfully')
       }
@@ -252,6 +261,16 @@ function AddEventModal({
           ]}
           value={form.type}
           onChange={(value) => setForm({ ...form, type: value as 'event' | 'deadline' | 'meeting' | 'announcement' })}
+        />
+        <Select
+          label="Department Visibility"
+          options={[
+            { value: 'all', label: 'All Departments' },
+            { value: 'interns', label: 'Interns' },
+            { value: 'management', label: 'Management' }
+          ]}
+          value={form.departmentVisibility}
+          onChange={(value) => setForm({ ...form, departmentVisibility: value as 'all' | 'interns' | 'management' })}
         />
         <div className="flex justify-end gap-3 pt-4">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -400,7 +419,12 @@ function DayDetailModal({
                   <div className="flex items-start justify-between">
                     <div>
                       <h5 className="font-medium text-white">{event.title}</h5>
-                      <Badge size="sm" variant="info" className="mt-1">{event.type}</Badge>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <Badge size="sm" variant="info">{event.type}</Badge>
+                        <Badge size="sm" variant="default">
+                          {departmentVisibilityLabels[event.departmentVisibility || 'all']}
+                        </Badge>
+                      </div>
                       {event.description && (
                         <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
                       )}
@@ -815,15 +839,22 @@ export function Calendar() {
                           })}
                         </p>
                       </div>
-                      <Badge 
-                        variant={item.type === 'holiday' ? 'warning' : 'info'}
-                        size="sm"
-                      >
-                        {item.type === 'holiday' 
-                          ? (item.item as Holiday).type 
-                          : (item.item as CalendarEvent).type
-                        }
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge 
+                          variant={item.type === 'holiday' ? 'warning' : 'info'}
+                          size="sm"
+                        >
+                          {item.type === 'holiday' 
+                            ? (item.item as Holiday).type 
+                            : (item.item as CalendarEvent).type
+                          }
+                        </Badge>
+                        {item.type === 'event' && (
+                          <Badge variant="default" size="sm">
+                            {departmentVisibilityLabels[(item.item as CalendarEvent).departmentVisibility || 'all']}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
                     {item.type === 'event' && (item.item as CalendarEvent).description && (
