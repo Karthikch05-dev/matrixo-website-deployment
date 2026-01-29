@@ -662,16 +662,16 @@ export function Calendar() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <FaCalendarAlt className="text-primary-500" />
             Calendar
           </h2>
-          <p className="text-neutral-400 mt-1">View holidays, events, and deadlines</p>
+          <p className="text-neutral-400 text-sm sm:text-base mt-1">View holidays, events, and deadlines</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* View Toggle */}
           <div className="flex items-center bg-neutral-800 rounded-lg p-1">
             <button
@@ -694,11 +694,11 @@ export function Calendar() {
           
           {isAdmin && (
             <>
-              <Button variant="secondary" icon={<FaUmbrellaBeach />} onClick={() => setShowAddHoliday(true)}>
-                Add Holiday
+              <Button variant="secondary" size="sm" icon={<FaUmbrellaBeach />} onClick={() => setShowAddHoliday(true)} className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Add </span>Holiday
               </Button>
-              <Button icon={<FaPlus />} onClick={() => setShowAddEvent(true)}>
-                Add Event
+              <Button size="sm" icon={<FaPlus />} onClick={() => setShowAddEvent(true)} className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Add </span>Event
               </Button>
             </>
           )}
@@ -706,23 +706,23 @@ export function Calendar() {
       </div>
 
       {viewMode === 'month' ? (
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col xl:flex-row gap-4 xl:gap-6">
           {/* Left Side - Calendar */}
-          <Card padding="lg" className="lg:w-[38%] flex-shrink-0">
+          <Card padding="md" className="xl:w-[40%] flex-shrink-0">
             {/* Month Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-white">
                 {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h3>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={goToPreviousMonth}>
-                  <FaChevronLeft />
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <Button variant="ghost" size="sm" onClick={goToPreviousMonth} className="p-1.5 sm:p-2">
+                  <FaChevronLeft className="text-xs sm:text-sm" />
                 </Button>
-                <Button variant="secondary" size="sm" onClick={goToToday}>
+                <Button variant="secondary" size="sm" onClick={goToToday} className="px-2 py-1 text-xs sm:text-sm">
                   Today
                 </Button>
-                <Button variant="ghost" size="sm" onClick={goToNextMonth}>
-                  <FaChevronRight />
+                <Button variant="ghost" size="sm" onClick={goToNextMonth} className="p-1.5 sm:p-2">
+                  <FaChevronRight className="text-xs sm:text-sm" />
                 </Button>
               </div>
             </div>
@@ -744,7 +744,7 @@ export function Calendar() {
                   onDoubleClick={() => handleDayModalOpen(day)}
                   whileHover={{ scale: 1.02 }}
                   className={`
-                    min-h-[70px] p-1.5 text-left transition-colors relative
+                    min-h-[50px] sm:min-h-[70px] p-1 sm:p-1.5 text-left transition-colors relative
                     ${day.isCurrentMonth ? 'bg-neutral-900' : 'bg-neutral-900/50'}
                     ${day.isToday ? 'ring-2 ring-primary-500 ring-inset' : ''}
                     ${day.holiday ? 'bg-amber-500/10' : ''}
@@ -753,7 +753,7 @@ export function Calendar() {
                   `}
                 >
                   <span className={`
-                    inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
+                    inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium
                     ${day.isToday ? 'bg-primary-600 text-white' : ''}
                     ${day.isWeekend && !day.isToday ? 'text-neutral-500' : ''}
                     ${!day.isCurrentMonth ? 'text-neutral-600' : 'text-neutral-300'}
@@ -761,30 +761,31 @@ export function Calendar() {
                     {day.date.getDate()}
                   </span>
                   
-                  {/* Holiday indicator */}
+                  {/* Holiday indicator - hidden on very small screens, show just icon */}
                   {day.holiday && (
                     <div className="mt-0.5">
-                      <div className="flex items-center gap-0.5 text-[10px] text-amber-400 bg-amber-500/20 px-1 py-0.5 rounded truncate">
-                        <FaUmbrellaBeach className="flex-shrink-0 text-[8px]" />
-                        <span className="truncate">{day.holiday.name}</span>
+                      <div className="flex items-center gap-0.5 text-[8px] sm:text-[10px] text-amber-400 bg-amber-500/20 px-0.5 sm:px-1 py-0.5 rounded truncate">
+                        <FaUmbrellaBeach className="flex-shrink-0 text-[7px] sm:text-[8px]" />
+                        <span className="truncate hidden sm:inline">{day.holiday.name}</span>
                       </div>
                     </div>
                   )}
                   
-                  {/* Event indicators */}
+                  {/* Event indicators - show simplified on mobile */}
                   {day.events.slice(0, 1).map(event => (
                     <div
                       key={event.id}
-                      className="mt-0.5 text-[10px] px-1 py-0.5 rounded truncate text-white"
+                      className="mt-0.5 text-[8px] sm:text-[10px] px-0.5 sm:px-1 py-0.5 rounded truncate text-white"
                       style={{ backgroundColor: event.color || '#6366f1' }}
                     >
-                      {event.title}
+                      <span className="hidden sm:inline">{event.title}</span>
+                      <span className="sm:hidden">•</span>
                     </div>
                   ))}
                   
                   {day.events.length > 1 && (
-                    <div className="mt-0.5 text-[10px] text-neutral-400">
-                      +{day.events.length - 1} more
+                    <div className="mt-0.5 text-[8px] sm:text-[10px] text-neutral-400">
+                      +{day.events.length - 1}
                     </div>
                   )}
                 </motion.button>
@@ -809,22 +810,24 @@ export function Calendar() {
           </Card>
 
           {/* Right Side - Day Details Panel */}
-          <Card padding="lg" className="lg:flex-1">
+          <Card padding="md" className="xl:flex-1 min-h-[300px] xl:min-h-0">
             {panelDisplayDay ? (
               <div className="h-full flex flex-col">
                 {/* Panel Header */}
-                <div className="flex items-center justify-between mb-4 pb-4 border-b border-neutral-800">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 pb-3 border-b border-neutral-800 gap-2">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    <h3 className="text-base sm:text-lg font-semibold text-white">
+                      <span className="hidden sm:inline">{panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="sm:hidden">{panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                     </h3>
                     {panelDisplayDay.isToday && (
                       <Badge variant="primary" size="sm" className="mt-1">Today</Badge>
                     )}
                   </div>
                   {isAdmin && (
-                    <Button size="sm" variant="secondary" icon={<FaPlus />} onClick={() => handleAddEventForDate(panelDisplayDay.dateString)}>
-                      Add Event
+                    <Button size="sm" variant="secondary" icon={<FaPlus />} onClick={() => handleAddEventForDate(panelDisplayDay.dateString)} className="text-xs sm:text-sm">
+                      <span className="hidden sm:inline">Add Event</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   )}
                 </div>

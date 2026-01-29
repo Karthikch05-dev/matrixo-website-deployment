@@ -49,7 +49,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [position, setPosition] = useState({ top: 0, right: 0 })
+  const [position, setPosition] = useState({ top: 0, right: 0, isMobile: false })
   const [loading, setLoading] = useState(true)
   const [clearing, setClearing] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -153,9 +153,25 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
   const updatePosition = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
+      const isMobile = window.innerWidth < 640 // sm breakpoint
+      const dropdownWidth = Math.min(384, window.innerWidth - 16) // 384px = w-96, with 16px margin
+      
+      // Calculate right position, ensure dropdown doesn't overflow on the left
+      let rightPos = window.innerWidth - rect.right
+      
+      // On mobile, center the dropdown or ensure it doesn't overflow
+      if (isMobile) {
+        // Position from the right edge with some padding
+        rightPos = 8 // 8px from right edge on mobile
+      } else if (rightPos + dropdownWidth > window.innerWidth - 16) {
+        // Ensure dropdown doesn't overflow on the left side
+        rightPos = Math.max(8, window.innerWidth - dropdownWidth - 16)
+      }
+      
       setPosition({
         top: rect.bottom + 8,
-        right: window.innerWidth - rect.right
+        right: rightPos,
+        isMobile
       })
     }
   }, [])
@@ -288,7 +304,8 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
           style={{ 
             position: 'fixed',
             top: position.top,
-            right: position.right,
+            right: position.isMobile ? 8 : position.right,
+            left: position.isMobile ? 8 : 'auto',
             zIndex: 999999
           }}
         >
@@ -296,7 +313,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.15 }}
-            className="w-96 max-w-[calc(100vw-2rem)] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
+            className={`bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl ${position.isMobile ? 'w-auto' : 'w-96 max-w-[calc(100vw-2rem)]'}`}
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/10 bg-neutral-800/50 rounded-t-2xl">
