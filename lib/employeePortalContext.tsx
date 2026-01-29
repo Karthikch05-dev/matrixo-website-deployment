@@ -125,6 +125,9 @@ export interface TaskComment {
   authorName: string
   authorImage?: string
   createdAt: Timestamp
+  mentions?: string[] // Employee IDs mentioned
+  mentionedDepartments?: string[] // Departments mentioned
+  reactions?: { [emoji: string]: string[] } // emoji -> array of employeeIds
 }
 
 export interface Discussion {
@@ -298,8 +301,9 @@ interface EmployeeAuthContextType {
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName' | 'comments'>) => Promise<void>
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>
   deleteTask: (id: string) => Promise<void>
-  addTaskComment: (taskId: string, text: string) => Promise<void>
+  addTaskComment: (taskId: string, text: string, mentions?: string[], mentionedDepartments?: string[]) => Promise<void>
   deleteTaskComment: (taskId: string, commentId: string) => Promise<void>
+  toggleTaskCommentReaction: (taskId: string, commentId: string, emoji: string) => Promise<void>
   
   // Discussions
   discussions: Discussion[]
@@ -1224,7 +1228,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const addTaskComment = async (taskId: string, text: string) => {
+  const addTaskComment = async (taskId: string, text: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
     
     const taskRef = doc(db, 'tasks', taskId)
@@ -1239,13 +1243,41 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       authorId: employee.employeeId,
       authorName: employee.name,
       authorImage: employee.profileImage,
-      createdAt: Timestamp.now()
+      createdAt: Timestamp.now(),
+      mentions,
+      mentionedDepartments,
+      reactions: {}
     }
     
     await updateDoc(taskRef, {
       comments: [...(task.comments || []), newComment],
       updatedAt: Timestamp.now()
     })
+    
+    // Create notifications for mentioned users
+    if (mentions.length > 0) {
+      const batch = writeBatch(db)
+      mentions.forEach(mentionedId => {
+        if (mentionedId !== employee.employeeId) {
+          const notifRef = doc(collection(db, 'notifications'))
+          batch.set(notifRef, {
+            recipientId: mentionedId,
+            type: 'mention',
+            title: 'Mentioned in Task Comment',
+            message: `${employee.name} mentioned you in a comment on "${task.title}"`,
+            read: false,
+            createdAt: Timestamp.now(),
+            targetType: 'task',
+            targetId: taskId,
+            targetUrl: '#tasks',
+            createdBy: employee.employeeId,
+            createdByName: employee.name,
+            createdByRole: employee.role
+          })
+        }
+      })
+      await batch.commit()
+    }
   }
 
   const deleteTaskComment = async (taskId: string, commentId: string) => {
@@ -1266,6 +1298,44 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     await updateDoc(taskRef, {
       comments: task.comments?.filter(c => c.id !== commentId) || [],
+      updatedAt: Timestamp.now()
+    })
+  }
+
+  const toggleTaskCommentReaction = async (taskId: string, commentId: string, emoji: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const taskRef = doc(db, 'tasks', taskId)
+    const taskDoc = await getDoc(taskRef)
+    
+    if (!taskDoc.exists()) throw new Error('Task not found')
+    
+    const task = taskDoc.data() as Task
+    const comments = task.comments || []
+    const commentIndex = comments.findIndex(c => c.id === commentId)
+    
+    if (commentIndex === -1) throw new Error('Comment not found')
+    
+    const comment = comments[commentIndex]
+    const reactions = comment.reactions || {}
+    const userReactions = reactions[emoji] || []
+    
+    // Toggle reaction
+    if (userReactions.includes(employee.employeeId)) {
+      // Remove reaction
+      reactions[emoji] = userReactions.filter(id => id !== employee.employeeId)
+      if (reactions[emoji].length === 0) {
+        delete reactions[emoji]
+      }
+    } else {
+      // Add reaction
+      reactions[emoji] = [...userReactions, employee.employeeId]
+    }
+    
+    comments[commentIndex] = { ...comment, reactions }
+    
+    await updateDoc(taskRef, {
+      comments,
       updatedAt: Timestamp.now()
     })
   }
@@ -1715,6 +1785,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       deleteTask,
       addTaskComment,
       deleteTaskComment,
+      toggleTaskCommentReaction,
       discussions,
       addDiscussion,
       updateDiscussion,

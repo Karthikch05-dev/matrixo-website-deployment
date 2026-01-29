@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -21,7 +22,8 @@ import {
   FaExclamationCircle,
   FaArrowUp,
   FaArrowDown,
-  FaSearch
+  FaSearch,
+  FaSmile
 } from 'react-icons/fa'
 import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
@@ -39,6 +41,250 @@ const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
     </div>
   )
 })
+
+// ============================================
+// MENTION INPUT COMPONENT (FOR TASK COMMENTS)
+// ============================================
+
+function MentionInput({
+  value,
+  onChange,
+  onSubmit,
+  placeholder,
+  employees,
+  departments,
+  loading,
+  buttonText = 'Send'
+}: {
+  value: string
+  onChange: (value: string) => void
+  onSubmit: (mentions: string[], mentionedDepartments: string[]) => void
+  placeholder: string
+  employees: EmployeeProfile[]
+  departments: string[]
+  loading?: boolean
+  buttonText?: string
+}) {
+  const [mounted, setMounted] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [dropdownType, setDropdownType] = useState<'user' | 'department'>('user')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [triggerIndex, setTriggerIndex] = useState(-1)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const suggestions = useMemo(() => {
+    const query = searchQuery.toLowerCase()
+    if (dropdownType === 'user') {
+      return employees.filter(e => 
+        e.name.toLowerCase().includes(query) ||
+        e.employeeId.toLowerCase().includes(query)
+      ).slice(0, 5)
+    } else {
+      return departments.filter(d => 
+        d.toLowerCase().includes(query)
+      ).slice(0, 5)
+    }
+  }, [searchQuery, dropdownType, employees, departments])
+
+  const updateDropdownPosition = () => {
+    if (!textareaRef.current) return
+    const rect = textareaRef.current.getBoundingClientRect()
+    setDropdownPos({
+      top: rect.bottom + 4,
+      left: rect.left
+    })
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+    const cursorPos = e.target.selectionStart || 0
+    onChange(newValue)
+    
+    let foundTrigger = -1
+    let triggerChar = ''
+    
+    for (let i = cursorPos - 1; i >= 0; i--) {
+      const char = newValue[i]
+      if (char === ' ' || char === '\n') break
+      if (char === '@' || char === '#') {
+        foundTrigger = i
+        triggerChar = char
+        break
+      }
+    }
+    
+    if (foundTrigger >= 0) {
+      const query = newValue.slice(foundTrigger + 1, cursorPos)
+      setSearchQuery(query)
+      setDropdownType(triggerChar === '@' ? 'user' : 'department')
+      setTriggerIndex(foundTrigger)
+      updateDropdownPosition()
+      setShowDropdown(true)
+      return
+    }
+    
+    setShowDropdown(false)
+    setTriggerIndex(-1)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      setShowDropdown(false)
+    } else if (e.key === 'Enter' && !e.shiftKey && !showDropdown) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  const selectMention = (mention: string) => {
+    if (triggerIndex < 0) return
+    
+    const symbol = dropdownType === 'user' ? '@' : '#'
+    const beforeTrigger = value.slice(0, triggerIndex)
+    const cursorPos = textareaRef.current?.selectionStart || value.length
+    const afterCursor = value.slice(cursorPos)
+    
+    const mentionNoSpaces = mention.replace(/\s+/g, '')
+    const newValue = beforeTrigger + symbol + mentionNoSpaces + ' ' + afterCursor
+    onChange(newValue)
+    
+    const newCursorPos = beforeTrigger.length + symbol.length + mentionNoSpaces.length + 1
+    setTimeout(() => {
+      textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos)
+      textareaRef.current?.focus()
+    }, 0)
+    
+    setShowDropdown(false)
+    setTriggerIndex(-1)
+  }
+
+  const handleSubmit = () => {
+    if (!value.trim()) return
+    
+    const userMentionPattern = /@(\w+)/g
+    const deptMentionPattern = /#(\w+)/g
+    
+    const userMentions: string[] = []
+    const deptMentions: string[] = []
+    
+    let match
+    while ((match = userMentionPattern.exec(value)) !== null) {
+      userMentions.push(match[1].trim())
+    }
+    while ((match = deptMentionPattern.exec(value)) !== null) {
+      deptMentions.push(match[1].trim())
+    }
+    
+    const mentionIds = userMentions.map(name => {
+      const emp = employees.find(e => 
+        e.name.toLowerCase() === name.toLowerCase() ||
+        e.name.toLowerCase().replace(/\s/g, '').includes(name.toLowerCase().replace(/\s/g, '')) ||
+        e.employeeId.toLowerCase() === name.toLowerCase()
+      )
+      return emp?.employeeId
+    }).filter(Boolean) as string[]
+    
+    onSubmit(mentionIds, deptMentions)
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      const isTextarea = textareaRef.current?.contains(target)
+      const isDropdown = dropdownRef.current?.contains(target)
+      if (!isTextarea && !isDropdown) {
+        setShowDropdown(false)
+      }
+    }
+    
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showDropdown])
+
+  const dropdownContent = showDropdown && suggestions.length > 0 && mounted ? (
+    <div
+      ref={dropdownRef}
+      style={{
+        position: 'fixed',
+        top: `${dropdownPos.top}px`,
+        left: `${dropdownPos.left}px`,
+        zIndex: 9999
+      }}
+      className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden w-72"
+    >
+      {dropdownType === 'user' ? (
+        (suggestions as EmployeeProfile[]).map((emp) => (
+          <button
+            key={emp.employeeId}
+            onClick={() => selectMention(emp.name)}
+            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+          >
+            <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-medium truncate">{emp.name}</p>
+              <p className="text-xs text-neutral-500 truncate">{emp.employeeId}</p>
+            </div>
+          </button>
+        ))
+      ) : (
+        (suggestions as string[]).map((dept) => (
+          <button
+            key={dept}
+            onClick={() => selectMention(dept)}
+            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-700 transition-colors text-left"
+          >
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-amber-400 text-sm">#</span>
+            </div>
+            <div>
+              <p className="text-sm text-white font-medium">{dept}</p>
+              <p className="text-xs text-neutral-500">Department</p>
+            </div>
+          </button>
+        ))
+      )}
+    </div>
+  ) : null
+
+  return (
+    <div>
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        rows={2}
+        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y text-sm"
+      />
+      
+      {mounted && dropdownContent && createPortal(dropdownContent, document.body)}
+
+      <div className="flex items-center justify-between mt-2">
+        <p className="text-xs text-neutral-500">
+          Use @name to mention people, #department to mention teams
+        </p>
+        <Button
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!value.trim()}
+          icon={<FaPaperPlane />}
+          size="sm"
+        >
+          {buttonText}
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 // ============================================
 // PRIORITY CONFIGURATION
@@ -376,17 +622,21 @@ function TaskDetailModal({
   isOpen,
   onClose,
   task,
-  onEditClick
+  onEditClick,
+  employees
 }: {
   isOpen: boolean
   onClose: () => void
   task: Task | null
   onEditClick?: () => void
+  employees: EmployeeProfile[]
 }) {
-  const { employee, updateTask, deleteTask, addTaskComment, deleteTaskComment } = useEmployeeAuth()
+  const { employee, updateTask, deleteTask, addTaskComment, deleteTaskComment, toggleTaskCommentReaction } = useEmployeeAuth()
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
+  const [hoveredReaction, setHoveredReaction] = useState<string | null>(null)
 
   if (!task) return null
 
@@ -395,6 +645,7 @@ function TaskDetailModal({
   const isAssignee = task.assignedTo?.includes(employee?.employeeId || '')
   const canEdit = isAdmin
   const canDelete = isAdmin || isOwner
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
 
   const handleStatusChange = async (newStatus: Task['status']) => {
     try {
@@ -405,12 +656,12 @@ function TaskDetailModal({
     }
   }
 
-  const handleAddComment = async () => {
+  const handleAddComment = async (mentions: string[], mentionedDepartments: string[]) => {
     if (!newComment.trim()) return
     
     setSubmitting(true)
     try {
-      await addTaskComment(task.id!, newComment)
+      await addTaskComment(task.id!, newComment, mentions, mentionedDepartments)
       setNewComment('')
       toast.success('Comment added')
     } catch (error) {
@@ -453,6 +704,37 @@ function TaskDetailModal({
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit'
+    })
+  }
+
+  // Render comment text with mentions highlighted
+  const renderCommentContent = (text: string) => {
+    const parts = text.split(/(@\w+|#\w+)/)
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        const mentionName = part.slice(1)
+        const emp = employees.find(e => 
+          e.name.toLowerCase().replace(/\s/g, '') === mentionName.toLowerCase() ||
+          e.employeeId.toLowerCase() === mentionName.toLowerCase()
+        )
+        if (emp) {
+          const displayName = emp.name
+          return (
+            <ProfileInfo
+              key={i}
+              data={employeeToProfileData(emp)}
+              isAdmin={false}
+            >
+              <span className="text-primary-400 font-medium cursor-pointer hover:underline">{displayName}</span>
+            </ProfileInfo>
+          )
+        }
+        return <span key={i} className="text-primary-400 font-medium">{part.slice(1)}</span>
+      }
+      if (part.startsWith('#')) {
+        return <span key={i} className="text-amber-400 font-medium">{part}</span>
+      }
+      return part
     })
   }
 
@@ -566,53 +848,175 @@ function TaskDetailModal({
             Comments ({task.comments?.length || 0})
           </h3>
           
-          <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
+          <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
             {task.comments?.length === 0 && (
               <p className="text-neutral-500 text-sm text-center py-4">No comments yet</p>
             )}
             {task.comments?.map((comment) => (
-              <div key={comment.id} className="flex gap-3 p-3 bg-neutral-800/50 rounded-lg">
-                <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-white">{comment.authorName}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-neutral-500">
-                        {formatTimestamp(comment.createdAt)}
-                      </span>
-                      {(comment.authorId === employee?.employeeId || isAdmin) && (
-                        <button
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="text-neutral-500 hover:text-red-400 transition-colors"
-                        >
-                          <FaTrash className="text-xs" />
-                        </button>
-                      )}
+              <div key={comment.id} className="p-3 bg-neutral-800/50 rounded-lg">
+                <div className="flex gap-3">
+                  <ProfileInfo
+                    data={{
+                      employeeId: comment.authorId,
+                      name: comment.authorName,
+                      profileImage: comment.authorImage,
+                      role: 'employee',
+                      status: 'Active'
+                    }}
+                    isAdmin={false}
+                  >
+                    <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
+                  </ProfileInfo>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <ProfileInfo
+                        data={{
+                          employeeId: comment.authorId,
+                          name: comment.authorName,
+                          profileImage: comment.authorImage,
+                          role: 'employee',
+                          status: 'Active'
+                        }}
+                        isAdmin={false}
+                      >
+                        <p className="text-sm font-medium text-white hover:text-primary-400 cursor-pointer">{comment.authorName}</p>
+                      </ProfileInfo>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-neutral-500">
+                          {formatTimestamp(comment.createdAt)}
+                        </span>
+                        {(comment.authorId === employee?.employeeId || isAdmin) && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-neutral-500 hover:text-red-400 transition-colors"
+                          >
+                            <FaTrash className="text-xs" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-neutral-300 text-sm mt-1">
+                      {renderCommentContent(comment.text)}
+                    </div>
+
+                    {/* Reactions Display */}
+                    {comment.reactions && Object.keys(comment.reactions).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {Object.entries(comment.reactions).map(([emoji, userIds]) => {
+                          const hasReacted = userIds.includes(employee?.employeeId || '')
+                          const reactedUsers = userIds.map(id => employees.find(e => e.employeeId === id)).filter(Boolean)
+                          
+                          return (
+                            <div 
+                              key={emoji} 
+                              className="relative"
+                              onMouseEnter={() => setHoveredReaction(`${comment.id}_${emoji}`)}
+                              onMouseLeave={() => setHoveredReaction(null)}
+                            >
+                              <button
+                                onClick={() => task.id && toggleTaskCommentReaction(task.id, comment.id, emoji)}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all ${
+                                  hasReacted 
+                                    ? 'bg-primary-500/20 border border-primary-500/50 text-primary-300' 
+                                    : 'bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+                                }`}
+                              >
+                                <span className="text-sm">{emoji}</span>
+                                <span className="text-xs font-medium">{userIds.length}</span>
+                              </button>
+                              
+                              {/* Hover Popup */}
+                              <AnimatePresence>
+                                {hoveredReaction === `${comment.id}_${emoji}` && reactedUsers.length > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 5 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-[100] min-w-[160px] max-w-[220px]"
+                                  >
+                                    <div className="text-xs text-neutral-400 mb-1.5 px-1 flex items-center gap-1.5">
+                                      <span className="text-sm">{emoji}</span>
+                                      <span>Reacted by</span>
+                                    </div>
+                                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                                      {reactedUsers.map((user) => (
+                                        <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-neutral-700/50">
+                                          <img
+                                            src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=24`}
+                                            alt={user!.name}
+                                            className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                                          />
+                                          <p className="text-xs text-white font-medium truncate">{user!.name}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="absolute -bottom-1 left-3 w-2 h-2 bg-neutral-800 border-r border-b border-neutral-700 transform rotate-45"></div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Reaction Button */}
+                    <div className="relative mt-2">
+                      <button
+                        onClick={() => setShowReactionPicker(showReactionPicker === comment.id ? null : comment.id)}
+                        className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-amber-400 transition-colors"
+                      >
+                        <FaSmile className="text-xs" />
+                        React
+                      </button>
+                      
+                      {/* Emoji Picker */}
+                      <AnimatePresence>
+                        {showReactionPicker === comment.id && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                            className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-50"
+                          >
+                            <div className="flex gap-1">
+                              {['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'].map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => {
+                                    if (task.id) {
+                                      toggleTaskCommentReaction(task.id, comment.id, emoji)
+                                    }
+                                    setShowReactionPicker(null)
+                                  }}
+                                  className="text-xl p-1.5 hover:bg-neutral-700 rounded-lg transition-colors"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
-                  <p className="text-neutral-300 text-sm mt-1">{comment.text}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Add Comment */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleAddComment}
-              loading={submitting}
-              disabled={!newComment.trim()}
-              icon={<FaPaperPlane />}
-            >
-              Send
-            </Button>
-          </div>
+          <MentionInput
+            value={newComment}
+            onChange={setNewComment}
+            onSubmit={handleAddComment}
+            placeholder="Add a comment... Use @ to mention people"
+            employees={employees}
+            departments={departments}
+            loading={submitting}
+            buttonText="Send"
+          />
         </div>
       </div>
     </Modal>
@@ -1016,6 +1420,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
             setEditingTask(selectedTask)
           }
         }}
+        employees={employees}
       />
     </div>
   )
