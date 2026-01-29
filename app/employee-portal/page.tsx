@@ -226,7 +226,7 @@ function TopNavbar({
   const { employee, logout } = useEmployeeAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0 })
+  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0, isMobile: false })
   const [currentTime, setCurrentTime] = useState(new Date())
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
@@ -278,9 +278,11 @@ function TopNavbar({
     
     if (!userMenuOpen && userMenuButtonRef.current) {
       const rect = userMenuButtonRef.current.getBoundingClientRect()
+      const isMobile = window.innerWidth < 640
       setUserMenuPosition({
         top: rect.bottom + 8,
-        right: window.innerWidth - rect.right
+        right: isMobile ? 8 : window.innerWidth - rect.right,
+        isMobile
       })
     }
     setUserMenuOpen(prev => !prev)
@@ -401,7 +403,8 @@ function TopNavbar({
                   style={{ 
                     position: 'fixed',
                     top: userMenuPosition.top,
-                    right: userMenuPosition.right,
+                    right: userMenuPosition.isMobile ? 8 : userMenuPosition.right,
+                    left: userMenuPosition.isMobile ? 8 : 'auto',
                     zIndex: 999999
                   }}
                 >
@@ -409,7 +412,7 @@ function TopNavbar({
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.15 }}
-                    className="w-64 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl"
+                    className={`bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl ${userMenuPosition.isMobile ? 'w-auto' : 'w-64'}`}
                   >
                     <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent rounded-t-2xl">
                       <div className="flex items-center gap-3">
@@ -603,19 +606,19 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
-        <div className="flex items-center gap-4">
+      <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-4 sm:p-6">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={getProfileImageUrl(employee?.profileImage, employee?.name)}
             alt={employee?.name}
-            className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-500"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-primary-500"
             onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
           />
-          <div>
-            <h2 className="text-2xl font-bold text-white">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-2xl font-bold text-white truncate">
               Welcome back, {employee?.name?.split(' ')[0]}!
             </h2>
-            <p className="text-neutral-400">
+            <p className="text-neutral-400 text-sm sm:text-base truncate">
               {employee?.department} • {employee?.designation}
             </p>
           </div>
@@ -653,29 +656,29 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
 
       {/* My Tasks & Holidays */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
             <FaTasks className="text-primary-400" />
             My Pending Tasks
           </h3>
           {myTasks.length === 0 ? (
-            <p className="text-neutral-500 text-center py-4">No pending tasks</p>
+            <p className="text-neutral-500 text-center py-4 text-sm sm:text-base">No pending tasks</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {myTasks.slice(0, 4).map((task) => (
                 <div 
                   key={task.id} 
-                  className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl cursor-pointer hover:bg-neutral-800/50 transition-colors"
+                  className="flex items-center justify-between p-2.5 sm:p-3 bg-neutral-900/50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-neutral-800/50 transition-colors gap-2"
                   onClick={() => onTaskClick?.(task.id!)}
                 >
-                  <div>
-                    <p className="text-white font-medium">{task.title}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white font-medium text-sm sm:text-base truncate">{task.title}</p>
                     <p className="text-xs text-neutral-500">
                       Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
                     </p>
                   </div>
                   <span className={`
-                    px-2 py-1 text-xs rounded-full font-medium
+                    px-2 py-1 text-xs rounded-full font-medium flex-shrink-0
                     ${task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
                       task.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
                       task.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
@@ -689,26 +692,26 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           )}
         </div>
 
-        <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
             <FaListAlt className="text-primary-400" />
             My Todo List
           </h3>
           
           {/* Add Todo Input */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-3 sm:mb-4">
             <input
               type="text"
               value={newTodoTitle}
               onChange={(e) => setNewTodoTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
               placeholder="Add a new todo..."
-              className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-lg sm:rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 min-w-0"
             />
             <button
               onClick={handleAddTodo}
               disabled={addingTodo || !newTodoTitle.trim()}
-              className="px-3 py-2 bg-primary-500 hover:bg-primary-400 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+              className="px-3 py-2 bg-primary-500 hover:bg-primary-400 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-lg sm:rounded-xl transition-colors flex-shrink-0"
             >
               {addingTodo ? <FaSpinner className="animate-spin" /> : <FaPlus />}
             </button>
@@ -813,10 +816,10 @@ function HistoryTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
             <FaHistory className="text-primary-400" />
             Attendance History
           </h2>
@@ -824,7 +827,7 @@ function HistoryTab() {
             type="month"
             value={`${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`}
             onChange={(e) => setSelectedMonth(new Date(e.target.value))}
-            className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
@@ -835,28 +838,28 @@ function HistoryTab() {
         ) : records.length === 0 ? (
           <p className="text-neutral-500 text-center py-8">No attendance records for this month</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {records.map((record) => {
               const config = statusConfig[record.status] || statusConfig.P
               const StatusIcon = config.icon
               return (
-                <div key={record.id} className="flex items-center justify-between p-4 bg-neutral-900/50 rounded-xl">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center`}>
-                      <StatusIcon className="text-white" />
+                <div key={record.id} className="flex items-center justify-between p-3 sm:p-4 bg-neutral-900/50 rounded-lg sm:rounded-xl gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${config.color} flex items-center justify-center flex-shrink-0`}>
+                      <StatusIcon className="text-white text-sm sm:text-base" />
                     </div>
-                    <div>
-                      <p className="text-white font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white font-medium text-sm sm:text-base truncate">
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleDateString('en-US', {
-                            weekday: 'long',
+                            weekday: 'short',
                             month: 'short',
                             day: 'numeric'
                           })
                         })()}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-neutral-500 truncate">
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleTimeString('en-US', {
@@ -864,11 +867,11 @@ function HistoryTab() {
                             minute: '2-digit'
                           })
                         })()}
-                        {record.notes && ` • ${record.notes}`}
+                        {record.notes && <span className="hidden sm:inline"> • {record.notes}</span>}
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${config.color}/20 text-white`}>
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${config.color}/20 text-white flex-shrink-0`}>
                     {config.label}
                   </span>
                 </div>
@@ -896,15 +899,15 @@ function StatCard({ title, value, icon: Icon, color, onClick }: {
     <motion.div
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className={`bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6 ${onClick ? 'cursor-pointer hover:border-primary-500/50 transition-colors' : ''}`}
+      className={`bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 ${onClick ? 'cursor-pointer hover:border-primary-500/50 transition-colors' : ''}`}
     >
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-neutral-400 text-sm">{title}</p>
-          <p className="text-3xl font-bold text-white mt-2">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-neutral-400 text-xs sm:text-sm truncate">{title}</p>
+          <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">{value}</p>
         </div>
-        <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
-          <Icon className="text-xl text-white" />
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
+          <Icon className="text-lg sm:text-xl text-white" />
         </div>
       </div>
     </motion.div>

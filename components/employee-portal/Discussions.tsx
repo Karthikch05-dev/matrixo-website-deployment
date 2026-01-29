@@ -666,7 +666,7 @@ function DiscussionPost({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`
-        rounded-xl border overflow-hidden
+        rounded-lg sm:rounded-xl border overflow-hidden
         ${discussion.isPinned 
           ? 'bg-amber-500/5 border-amber-500/30' 
           : isMentioned 
@@ -676,8 +676,8 @@ function DiscussionPost({
       `}
     >
       {/* Header */}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
+      <div className="p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
           <ProfileInfo
             data={{
               employeeId: discussion.authorId,
@@ -1068,16 +1068,16 @@ export function Discussions() {
   }, [discussions, searchQuery, filterMentioned, employee])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <FaComments className="text-primary-500" />
             Discussions
           </h2>
-          <p className="text-neutral-400 mt-1">
-            Share updates, ask questions, and collaborate with your team
+          <p className="text-neutral-400 text-sm sm:text-base mt-1">
+            Share updates, ask questions, and collaborate
           </p>
         </div>
       </div>
@@ -1102,8 +1102,8 @@ export function Discussions() {
       </Card>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
+        <div className="flex-1 min-w-0 sm:min-w-[200px]">
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
             <input
@@ -1111,29 +1111,32 @@ export function Discussions() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search discussions..."
-              className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
         
-        <Button
-          variant={filterMentioned ? 'primary' : 'secondary'}
-          size="sm"
-          icon={<FaAt />}
-          onClick={() => setFilterMentioned(!filterMentioned)}
-        >
-          Mentioned
-        </Button>
-
-        {(searchQuery || filterMentioned) && (
+        <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant={filterMentioned ? 'primary' : 'secondary'}
             size="sm"
-            onClick={() => { setSearchQuery(''); setFilterMentioned(false) }}
+            icon={<FaAt />}
+            onClick={() => setFilterMentioned(!filterMentioned)}
+            className="flex-1 sm:flex-none"
           >
-            Clear
+            Mentioned
           </Button>
-        )}
+
+          {(searchQuery || filterMentioned) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSearchQuery(''); setFilterMentioned(false) }}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Discussions List */}

@@ -138,14 +138,14 @@ function EmployeeProfileModal({
       size="xl"
     >
       {/* Employee Header */}
-      <div className="flex items-center gap-5 p-5 bg-gradient-to-r from-neutral-800/80 to-neutral-900/80 backdrop-blur-xl rounded-2xl mb-6 border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 p-4 sm:p-5 bg-gradient-to-r from-neutral-800/80 to-neutral-900/80 backdrop-blur-xl rounded-xl sm:rounded-2xl mb-4 sm:mb-6 border border-white/10">
         <div className="relative">
           <Avatar src={employee.profileImage} name={employee.name} size="xl" showBorder={false} />
           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-neutral-900" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-2xl font-bold text-white truncate">{employee.name}</h3>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
+        <div className="flex-1 min-w-0 text-center sm:text-left">
+          <h3 className="text-xl sm:text-2xl font-bold text-white truncate">{employee.name}</h3>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
             <Badge variant="primary">{employee.employeeId}</Badge>
             {employee.department && <Badge variant="info">{employee.department}</Badge>}
             <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
@@ -1538,24 +1538,25 @@ export function AdminPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <FaUsers className="text-primary-500" />
             Admin Panel
           </h2>
-          <p className="text-neutral-400 mt-1">
-            Manage employees and attendance records
+          <p className="text-neutral-400 text-sm sm:text-base mt-1">
+            Manage employees and attendance
           </p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="primary"
             onClick={() => setShowExportModal(true)}
             icon={<FaDownload />}
+            className="w-full sm:w-auto"
           >
             Export Reports
           </Button>
@@ -1564,6 +1565,7 @@ export function AdminPanel() {
             variant="secondary"
             onClick={fetchData}
             loading={loading}
+            className="w-full sm:w-auto"
           >
             Refresh Data
           </Button>
@@ -1670,32 +1672,32 @@ export function AdminPanel() {
       {/* Stats Summary */}
       {activeTab === 'attendance' && !loading && (
         <Card padding="md">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <FaChartBar className="text-neutral-400" />
-            <span className="font-medium text-white">Summary</span>
+            <span className="font-medium text-white text-sm sm:text-base">Summary</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{filteredAttendance.length}</div>
-              <p className="text-sm text-neutral-400">Total Records</p>
+              <div className="text-xl sm:text-2xl font-bold text-white">{filteredAttendance.length}</div>
+              <p className="text-xs sm:text-sm text-neutral-400">Total Records</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">
+              <div className="text-xl sm:text-2xl font-bold text-green-400">
                 {filteredAttendance.filter(r => r.status === 'P').length}
               </div>
-              <p className="text-sm text-neutral-400">Present</p>
+              <p className="text-xs sm:text-sm text-neutral-400">Present</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">
+              <div className="text-xl sm:text-2xl font-bold text-red-400">
                 {filteredAttendance.filter(r => r.status === 'A').length}
               </div>
-              <p className="text-sm text-neutral-400">Absent</p>
+              <p className="text-xs sm:text-sm text-neutral-400">Absent</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-amber-400">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">
                 {filteredAttendance.filter(r => r.status === 'L').length}
               </div>
-              <p className="text-sm text-neutral-400">Leave</p>
+              <p className="text-xs sm:text-sm text-neutral-400">Leave</p>
             </div>
           </div>
         </Card>

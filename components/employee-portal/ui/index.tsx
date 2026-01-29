@@ -483,16 +483,16 @@ interface CardProps {
 export const Card = ({ children, className = '', padding = 'md', hover = false, glow = false }: CardProps) => {
   const paddings = {
     none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
+    sm: 'p-3 sm:p-4',
+    md: 'p-4 sm:p-6',
+    lg: 'p-5 sm:p-8',
   }
   
   return (
     <motion.div
       whileHover={hover ? { y: -4, scale: 1.01 } : undefined}
       className={`
-        bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl
+        bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl
         ${paddings[padding]}
         ${hover ? 'transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 hover:border-white/20' : ''}
         ${glow ? 'shadow-lg shadow-primary-500/10' : ''}
@@ -566,18 +566,18 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${sizes[size]} bg-neutral-900/95 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/10 ${className}`}
+            className={`relative w-full ${sizes[size]} bg-neutral-900/95 backdrop-blur-3xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/10 max-h-[90vh] flex flex-col ${className}`}
           >
             {/* Gradient accent */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent pointer-events-none" />
             
             {/* Header */}
             {title && (
-              <div className="relative flex items-center justify-between px-6 py-4 border-b border-white/10">
-                <h3 className="text-xl font-bold text-white">{title}</h3>
+              <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex-shrink-0">
+                <h3 className="text-lg sm:text-xl font-bold text-white truncate pr-2">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                  className="p-1.5 sm:p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-200 flex-shrink-0"
                 >
                   <FaTimes />
                 </button>
@@ -585,7 +585,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             )}
             
             {/* Body */}
-            <div className="relative p-6 max-h-[70vh] overflow-y-auto">
+            <div className="relative p-4 sm:p-6 overflow-y-auto flex-1">
               {children}
             </div>
           </motion.div>

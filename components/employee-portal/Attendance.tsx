@@ -359,20 +359,20 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       )}
 
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <FaCalendarCheck className="text-primary-500" />
             Mark Attendance
           </h2>
-          <p className="text-neutral-400 mt-1">{formattedDate}</p>
+          <p className="text-neutral-400 text-sm sm:text-base mt-1">{formattedDate}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Location Status Indicator */}
           <button
             onClick={locationStatus !== 'granted' ? requestLocationPermission : undefined}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap
+              flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap
               ${locationStatus === 'granted' 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
                 : locationStatus === 'denied' 
@@ -389,36 +389,36 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             </span>
           </button>
           
-          <div className="flex items-center gap-2 text-white bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap">
-            <FaClock className="text-primary-400" />
-            <span className="text-lg font-mono tabular-nums">{formattedTime}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-white bg-white/5 backdrop-blur-xl border border-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl whitespace-nowrap">
+            <FaClock className="text-primary-400 text-sm sm:text-base" />
+            <span className="text-base sm:text-lg font-mono tabular-nums">{formattedTime}</span>
           </div>
         </div>
       </div>
 
       {todayAttendance ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Attendance Status Card */}
-          <div className="bg-neutral-800/50 rounded-xl p-6 border border-neutral-700">
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-xl ${statusConfig[todayAttendance.status].color} flex items-center justify-center`}>
+          <div className="bg-neutral-800/50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-neutral-700">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl ${statusConfig[todayAttendance.status].color} flex items-center justify-center flex-shrink-0`}>
                 {(() => {
                   const Icon = statusConfig[todayAttendance.status].icon
-                  return <Icon className="text-3xl text-white" />
+                  return <Icon className="text-xl sm:text-3xl text-white" />
                 })()}
               </div>
-              <div className="flex-1">
-                <p className="text-neutral-400 text-sm">Today's Status</p>
-                <p className="text-2xl font-bold text-white">
+              <div className="flex-1 min-w-0">
+                <p className="text-neutral-400 text-xs sm:text-sm">Today's Status</p>
+                <p className="text-xl sm:text-2xl font-bold text-white">
                   {statusConfig[todayAttendance.status].label}
                 </p>
                 {todayAttendance.checkInTime && (
-                  <p className="text-neutral-400 text-sm mt-1">
+                  <p className="text-neutral-400 text-xs sm:text-sm mt-1">
                     Checked in at {todayAttendance.checkInTime}
                   </p>
                 )}
                 {todayAttendance.onDutyLocation && (
-                  <p className="text-blue-400 text-sm mt-1">
+                  <p className="text-blue-400 text-xs sm:text-sm mt-1 truncate">
                     📍 {todayAttendance.onDutyLocation}
                   </p>
                 )}
@@ -433,12 +433,12 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                   />
                 </div>
               </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-emerald-400 text-sm">
+              <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0 w-full sm:w-auto mt-2 sm:mt-0">
+                <div className="flex items-center gap-1 text-emerald-400 text-xs sm:text-sm">
                   <FaShieldAlt />
                   <span>Verified</span>
                 </div>
-                <p className="text-neutral-500 text-xs mt-1">Cannot re-mark</p>
+                <p className="text-neutral-500 text-xs mt-0 sm:mt-1">Cannot re-mark</p>
               </div>
             </div>
           </div>

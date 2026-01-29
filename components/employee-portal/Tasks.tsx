@@ -1093,7 +1093,7 @@ function TaskCard({
       whileHover={{ y: -2 }}
       onClick={onClick}
       className={`
-        p-4 rounded-xl border cursor-pointer transition-all
+        p-3 sm:p-4 rounded-lg sm:rounded-xl border cursor-pointer transition-all
         ${isHighlighted 
           ? 'bg-primary-500/10 border-primary-500/50 ring-2 ring-primary-500/30' 
           : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
@@ -1315,30 +1315,30 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
   const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterInternSpecialization || showMyTasks
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <FaTasks className="text-primary-500" />
             Tasks
           </h2>
-          <p className="text-neutral-400 mt-1">
+          <p className="text-neutral-400 text-sm sm:text-base mt-1">
             {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
             {hasActiveFilters && ' (filtered)'}
           </p>
         </div>
         
-        <Button icon={<FaPlus />} onClick={() => setShowCreateModal(true)}>
+        <Button icon={<FaPlus />} onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
           Create Task
         </Button>
       </div>
 
       {/* Search & Filters */}
       <Card padding="md">
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
-          <div className="flex-1">
+          <div className="w-full">
             <Input
               placeholder="Search tasks..."
               value={searchQuery}
@@ -1348,7 +1348,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
           </div>
 
           {/* Filter Controls */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
             <Select
               options={[
                 { value: '', label: 'All Priorities' },
