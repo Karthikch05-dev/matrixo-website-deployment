@@ -1490,6 +1490,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const batch = writeBatch(db)
     let markedCount = 0
     
+    // Create timestamp for 11:59 PM of the absent day (yesterday)
+    const absentDayEnd = new Date(yesterday)
+    absentDayEnd.setHours(23, 59, 0, 0)
+    const absentTimestamp = Timestamp.fromDate(absentDayEnd)
+    
     for (const emp of allEmployees) {
       const attendanceId = `${emp.employeeId}_${dateString}`
       const existingDoc = await getDoc(doc(db, 'attendance', attendanceId))
@@ -1498,7 +1503,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         const attendanceData: AttendanceRecord = {
           employeeId: emp.employeeId,
           date: dateString,
-          timestamp: Timestamp.now(),
+          timestamp: absentTimestamp, // Set to 11:59 PM of the absent day
           status: 'A',
           notes: 'Auto-marked as absent (no attendance recorded)',
           deviceInfo: 'System - Auto Absent Job'
