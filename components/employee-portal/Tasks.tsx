@@ -216,9 +216,11 @@ function MentionInput({
         position: 'fixed',
         top: `${dropdownPos.top}px`,
         left: `${dropdownPos.left}px`,
-        zIndex: 9999
+        zIndex: 9999,
+        maxHeight: '200px',
+        overflowY: 'auto'
       }}
-      className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden w-72"
+      className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl w-72"
     >
       {dropdownType === 'user' ? (
         (suggestions as EmployeeProfile[]).map((emp) => (
@@ -1167,6 +1169,16 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
       }
     }
   }, [selectedTaskId, tasks, onTaskOpened])
+
+  // Keep selectedTask in sync with tasks array (for real-time updates like comments)
+  useEffect(() => {
+    if (selectedTask?.id && tasks.length > 0) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id)
+      if (updatedTask) {
+        setSelectedTask(updatedTask)
+      }
+    }
+  }, [tasks, selectedTask?.id])
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {
