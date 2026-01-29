@@ -1139,36 +1139,38 @@ function ExportReportModal({
                 className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
               />
             </div>
-            <div className="mt-2 max-h-60 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-xl">
-              {filteredEmployees.length === 0 ? (
-                <div className="p-4 text-center text-neutral-500">No employees found</div>
-              ) : (
-                filteredEmployees.map((emp) => (
-                  <button
-                    key={emp.employeeId}
-                    type="button"
-                    onClick={() => {
-                      setSelectedEmployee(emp.employeeId)
-                      setEmployeeSearch('')
-                    }}
-                    className={`w-full p-3 text-left transition-all flex items-center gap-3 border-b border-neutral-700/50 last:border-0 ${
-                      selectedEmployee === emp.employeeId
-                        ? 'bg-primary-500/20 text-primary-400'
-                        : 'hover:bg-neutral-700/50 text-white'
-                    }`}
-                  >
-                    <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{emp.name}</div>
-                      <div className="text-xs text-neutral-500 truncate">{emp.employeeId} • {emp.department}</div>
-                    </div>
-                    {selectedEmployee === emp.employeeId && (
-                      <FaCheckCircle className="text-primary-500" />
-                    )}
-                  </button>
-                ))
-              )}
-            </div>
+            {employeeSearch && (
+              <div className="mt-2 max-h-60 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-xl">
+                {filteredEmployees.length === 0 ? (
+                  <div className="p-4 text-center text-neutral-500">No employees found</div>
+                ) : (
+                  filteredEmployees.map((emp) => (
+                    <button
+                      key={emp.employeeId}
+                      type="button"
+                      onClick={() => {
+                        setSelectedEmployee(emp.employeeId)
+                        setEmployeeSearch('')
+                      }}
+                      className={`w-full p-3 text-left transition-all flex items-center gap-3 border-b border-neutral-700/50 last:border-0 ${
+                        selectedEmployee === emp.employeeId
+                          ? 'bg-primary-500/20 text-primary-400'
+                          : 'hover:bg-neutral-700/50 text-white'
+                      }`}
+                    >
+                      <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{emp.name}</div>
+                        <div className="text-xs text-neutral-500 truncate">{emp.employeeId} • {emp.department}</div>
+                      </div>
+                      {selectedEmployee === emp.employeeId && (
+                        <FaCheckCircle className="text-primary-500" />
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
             {selectedEmployee && (
               <div className="mt-2 p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg flex items-center justify-between">
                 <span className="text-sm text-white">
