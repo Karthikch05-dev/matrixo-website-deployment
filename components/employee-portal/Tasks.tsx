@@ -83,24 +83,18 @@ function MentionInput({
     const query = searchQuery.toLowerCase()
     
     if (dropdownType === 'user') {
-      // Debug log
-      if (employees.length > 0) {
-        console.log('📋 Tasks MentionInput - Total employees:', employees.length)
-      }
-      
-      // Show ALL employees - only exclude if role is EXACTLY "admin"
+      // Show ALL employees - only exclude username "Admin"
       return employees.filter(e => {
-        const role = (e.role || '').toLowerCase().trim()
-        if (role === 'admin') return false
+        const name = (e.name || '').toLowerCase().trim()
+        if (name === 'admin') return false
         if (!query) return true
         return e.name.toLowerCase().includes(query) ||
                e.employeeId.toLowerCase().includes(query) ||
                (e.department || '').toLowerCase().includes(query)
       })
     } else {
-      // Show ALL departments except Admin
+      // Show ALL departments
       return departments.filter(d => {
-        if (d.toLowerCase() === 'admin') return false
         if (!query) return true
         return d.toLowerCase().includes(query)
       })

@@ -59,26 +59,16 @@ function MentionInput({
     setMounted(true)
   }, [])
 
-  // Filter suggestions (show ALL employees, only exclude "admin" role)
+  // Filter suggestions (show ALL employees, only exclude username "Admin")
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase()
     
     if (dropdownType === 'user') {
-      // Debug: Log all employees with their details
-      if (employees.length > 0) {
-        console.log('📋 === MENTION DEBUG ===')
-        console.log('📋 Total employees received:', employees.length)
-        employees.forEach(e => {
-          console.log(`   - ${e.name} | Role: "${e.role}" | Dept: "${e.department}"`)
-        })
-      }
-      
-      // Show ALL employees - only exclude if role is EXACTLY "admin" (case insensitive)
+      // Show ALL employees - only exclude username "Admin"
       const filtered = employees.filter(e => {
-        const role = (e.role || '').toLowerCase().trim()
-        // Only exclude if role is exactly "admin"
-        if (role === 'admin') {
-          console.log('⏭️ Excluding (admin role):', e.name)
+        const name = (e.name || '').toLowerCase().trim()
+        // Only exclude if name is exactly "admin"
+        if (name === 'admin') {
           return false
         }
         // Include everyone else
@@ -90,16 +80,13 @@ function MentionInput({
         return matchesName || matchesId || matchesDept
       })
       
-      console.log('📋 After filter:', filtered.length, 'employees shown')
       return filtered
     } else {
-      // Show ALL departments except Admin
+      // Show ALL departments
       const filtered = departments.filter(d => {
-        if (d.toLowerCase() === 'admin') return false
         if (!query) return true // Show all if no search query
         return d.toLowerCase().includes(query)
       })
-      console.log('📋 Filtered departments:', filtered.length, 'from', departments.length)
       return filtered
     }
   }, [searchQuery, dropdownType, employees, departments])
