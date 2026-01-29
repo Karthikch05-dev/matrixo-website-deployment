@@ -23,7 +23,11 @@ import {
   FaMapMarkerAlt,
   FaSortAlphaDown,
   FaSortAmountDown,
-  FaEye
+  FaEye,
+  FaDownload,
+  FaFilePdf,
+  FaFileExcel,
+  FaFileCsv
 } from 'react-icons/fa'
 import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
@@ -709,6 +713,518 @@ function EmployeeList({
 }
 
 // ============================================
+// EXPORT REPORT MODAL
+// ============================================
+
+function ExportReportModal({
+  isOpen,
+  onClose,
+  employees,
+  employeesWithStats
+}: {
+  isOpen: boolean
+  onClose: () => void
+  employees: EmployeeProfile[]
+  employeesWithStats: EmployeeWithStats[]
+}) {
+  const { getEmployeeAttendanceHistory } = useEmployeeAuth()
+  const [exportType, setExportType] = useState<'all' | 'individual'>('all')
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('')
+  const [dateRange, setDateRange] = useState<'full' | 'monthly' | 'custom'>('monthly')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [format, setFormat] = useState<'pdf' | 'csv' | 'xlsx'>('pdf')
+  const [exporting, setExporting] = useState(false)
+
+  // Set default dates (current month)
+  useEffect(() => {
+    if (dateRange === 'monthly') {
+      const now = new Date()
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      setStartDate(firstDay.toISOString().split('T')[0])
+      setEndDate(lastDay.toISOString().split('T')[0])
+    } else if (dateRange === 'full') {
+      setStartDate('')
+      setEndDate('')
+    }
+  }, [dateRange])
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      let dataToExport: EmployeeWithStats[] = []
+      
+      // Determine which employees to export
+      if (exportType === 'all') {
+        dataToExport = employeesWithStats
+      } else if (selectedEmployee) {
+        const emp = employeesWithStats.find(e => e.employeeId === selectedEmployee)
+        if (emp) dataToExport = [emp]
+      }
+
+      if (dataToExport.length === 0) {
+        toast.error('No data to export')
+        setExporting(false)
+        return
+      }
+
+      // Fetch detailed attendance for date range
+      const detailedData = await Promise.all(
+        dataToExport.map(async (emp) => {
+          let history: AttendanceRecord[] = []
+          if (dateRange === 'full') {
+            history = await getEmployeeAttendanceHistory(emp.employeeId, 365)
+          } else if (startDate && endDate) {
+            history = await getEmployeeAttendanceHistory(emp.employeeId, 365)
+            // Filter by date range
+            history = history.filter(record => {
+              const recordDate = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0]
+              return recordDate && recordDate >= startDate && recordDate <= endDate
+            })
+          } else {
+            history = emp.recentAttendance
+          }
+          
+          return { ...emp, attendanceHistory: history }
+        })
+      )
+
+      // Generate export based on format
+      if (format === 'csv') {
+        exportToCSV(detailedData, startDate, endDate)
+      } else if (format === 'xlsx') {
+        exportToExcel(detailedData, startDate, endDate)
+      } else if (format === 'pdf') {
+        exportToPDF(detailedData, startDate, endDate)
+      }
+
+      toast.success('Report exported successfully')
+      onClose()
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export report')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const exportToCSV = (data: any[], start: string, end: string) => {
+    const rows = []
+    
+    // Header
+    rows.push(['Employee Report'])
+    rows.push([`Date Range: ${start || 'All Time'} to ${end || 'Present'}`])
+    rows.push([`Generated: ${new Date().toLocaleString()}`])
+    rows.push([])
+    
+    // Summary section
+    rows.push(['SUMMARY'])
+    rows.push(['Employee ID', 'Name', 'Department', 'Role', 'Attendance %', 'Present', 'Absent', 'Leave', 'On Duty', 'Total Days'])
+    
+    data.forEach(emp => {
+      rows.push([
+        emp.employeeId,
+        emp.name,
+        emp.department || 'N/A',
+        emp.role,
+        `${emp.attendancePercentage.toFixed(2)}%`,
+        emp.presentDays,
+        emp.absentDays,
+        emp.lateDays,
+        emp.onDutyDays,
+        emp.totalDays
+      ])
+    })
+    
+    rows.push([])
+    
+    // Detailed attendance records
+    data.forEach(emp => {
+      rows.push([])
+      rows.push([`DETAILED ATTENDANCE: ${emp.name} (${emp.employeeId})`])
+      rows.push(['Date', 'Status', 'Check In', 'Notes'])
+      
+      emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
+        const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
+        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
+        
+        rows.push([
+          date,
+          statusMap[record.status] || record.status,
+          time,
+          record.notes || ''
+        ])
+      })
+    })
+    
+    // Convert to CSV
+    const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `employee-report-${start || 'all'}-${end || 'present'}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportToExcel = (data: any[], start: string, end: string) => {
+    // Create HTML table (browser will convert to Excel)
+    let html = '<table border="1" cellspacing="0" cellpadding="5">'
+    
+    // Title
+    html += '<tr><th colspan="10" style="background:#4f46e5;color:white;font-size:16px;">Employee Attendance Report</th></tr>'
+    html += `<tr><td colspan="10">Date Range: ${start || 'All Time'} to ${end || 'Present'}</td></tr>`
+    html += `<tr><td colspan="10">Generated: ${new Date().toLocaleString()}</td></tr>`
+    html += '<tr><td colspan="10"></td></tr>'
+    
+    // Summary
+    html += '<tr><th colspan="10" style="background:#6b7280;color:white;">SUMMARY</th></tr>'
+    html += '<tr style="background:#9ca3af;font-weight:bold;"><td>Employee ID</td><td>Name</td><td>Department</td><td>Role</td><td>Attendance %</td><td>Present</td><td>Absent</td><td>Leave</td><td>On Duty</td><td>Total Days</td></tr>'
+    
+    data.forEach(emp => {
+      const color = emp.attendancePercentage >= 90 ? '#10b981' : emp.attendancePercentage >= 75 ? '#f59e0b' : '#ef4444'
+      html += `<tr><td>${emp.employeeId}</td><td>${emp.name}</td><td>${emp.department || 'N/A'}</td><td>${emp.role}</td><td style="color:${color};font-weight:bold;">${emp.attendancePercentage.toFixed(2)}%</td><td>${emp.presentDays}</td><td>${emp.absentDays}</td><td>${emp.lateDays}</td><td>${emp.onDutyDays}</td><td>${emp.totalDays}</td></tr>`
+    })
+    
+    // Detailed records
+    data.forEach(emp => {
+      html += '<tr><td colspan="10"></td></tr>'
+      html += `<tr><th colspan="10" style="background:#4f46e5;color:white;">DETAILED ATTENDANCE: ${emp.name} (${emp.employeeId})</th></tr>`
+      html += '<tr style="background:#9ca3af;font-weight:bold;"><td>Date</td><td>Status</td><td>Check In</td><td colspan="7">Notes</td></tr>'
+      
+      emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
+        const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
+        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
+        const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : '#3b82f6'
+        
+        html += `<tr><td>${date}</td><td style="color:${statusColor};font-weight:bold;">${statusMap[record.status] || record.status}</td><td>${time}</td><td colspan="7">${record.notes || ''}</td></tr>`
+      })
+    })
+    
+    html += '</table>'
+    
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `employee-report-${start || 'all'}-${end || 'present'}.xls`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportToPDF = (data: any[], start: string, end: string) => {
+    // Create printable HTML
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      toast.error('Please allow popups to download PDF')
+      return
+    }
+    
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Employee Attendance Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }
+          h2 { color: #6b7280; margin-top: 30px; }
+          .meta { color: #6b7280; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; page-break-inside: auto; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #4f46e5; color: white; font-weight: bold; }
+          .summary-row { background-color: #f3f4f6; }
+          .high { color: #10b981; font-weight: bold; }
+          .medium { color: #f59e0b; font-weight: bold; }
+          .low { color: #ef4444; font-weight: bold; }
+          .section-break { page-break-before: always; }
+          @media print {
+            body { padding: 0; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>📊 Employee Attendance Report</h1>
+        <div class="meta">
+          <p><strong>Date Range:</strong> ${start || 'All Time'} to ${end || 'Present'}</p>
+          <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Total Employees:</strong> ${data.length}</p>
+        </div>
+        
+        <h2>📈 Summary</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Role</th>
+              <th>Attendance %</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Leave</th>
+              <th>On Duty</th>
+            </tr>
+          </thead>
+          <tbody>
+    `
+    
+    data.forEach(emp => {
+      const colorClass = emp.attendancePercentage >= 90 ? 'high' : emp.attendancePercentage >= 75 ? 'medium' : 'low'
+      html += `
+        <tr class="summary-row">
+          <td>${emp.employeeId}</td>
+          <td>${emp.name}</td>
+          <td>${emp.department || 'N/A'}</td>
+          <td>${emp.role}</td>
+          <td class="${colorClass}">${emp.attendancePercentage.toFixed(2)}%</td>
+          <td>${emp.presentDays}</td>
+          <td>${emp.absentDays}</td>
+          <td>${emp.lateDays}</td>
+          <td>${emp.onDutyDays}</td>
+        </tr>
+      `
+    })
+    
+    html += '</tbody></table>'
+    
+    // Detailed attendance for each employee
+    data.forEach((emp, index) => {
+      html += `
+        <div class="${index > 0 ? 'section-break' : ''}">
+          <h2>📅 Detailed Attendance: ${emp.name} (${emp.employeeId})</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Check In Time</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+      `
+      
+      emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
+        const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
+        const time = record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A'
+        const statusMap: Record<string, string> = { 
+          'P': '✅ Present', 
+          'A': '❌ Absent', 
+          'L': '🏖️ Leave', 
+          'O': '💼 On Duty' 
+        }
+        
+        html += `
+          <tr>
+            <td>${date}</td>
+            <td>${statusMap[record.status] || record.status}</td>
+            <td>${time}</td>
+            <td>${record.notes || '-'}</td>
+          </tr>
+        `
+      })
+      
+      html += '</tbody></table></div>'
+    })
+    
+    html += `
+        <div style="margin-top: 40px; text-align: center; color: #6b7280; border-top: 1px solid #ddd; padding-top: 20px;">
+          <p><em>Generated by matriXO Employee Portal on ${new Date().toLocaleString()}</em></p>
+          <button onclick="window.print()" style="background: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Print / Save as PDF</button>
+        </div>
+      </body>
+      </html>
+    `
+    
+    printWindow.document.write(html)
+    printWindow.document.close()
+    
+    // Auto-print after a short delay
+    setTimeout(() => {
+      printWindow.print()
+    }, 500)
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Export Attendance Report" size="md">
+      <div className="space-y-6">
+        {/* Export Type */}
+        <div>
+          <label className="block text-sm font-medium text-white mb-2">Export Data For</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setExportType('all')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                exportType === 'all'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaUsers className="text-2xl mb-2 mx-auto" />
+              <div className="font-medium">All Employees</div>
+              <div className="text-xs mt-1">Complete report</div>
+            </button>
+            <button
+              onClick={() => setExportType('individual')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                exportType === 'individual'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaUserCircle className="text-2xl mb-2 mx-auto" />
+              <div className="font-medium">Individual</div>
+              <div className="text-xs mt-1">Single employee</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Individual Employee Selection */}
+        {exportType === 'individual' && (
+          <Select
+            label="Select Employee"
+            options={[
+              { value: '', label: 'Choose an employee...' },
+              ...employees.map(e => ({ value: e.employeeId, label: `${e.name} (${e.employeeId})` }))
+            ]}
+            value={selectedEmployee}
+            onChange={setSelectedEmployee}
+          />
+        )}
+
+        {/* Date Range */}
+        <div>
+          <label className="block text-sm font-medium text-white mb-2">Date Range</label>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setDateRange('monthly')}
+              className={`p-3 rounded-lg border-2 transition-all ${
+                dateRange === 'monthly'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaCalendarAlt className="text-xl mb-1 mx-auto" />
+              <div className="text-sm font-medium">This Month</div>
+            </button>
+            <button
+              onClick={() => setDateRange('custom')}
+              className={`p-3 rounded-lg border-2 transition-all ${
+                dateRange === 'custom'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaFilter className="text-xl mb-1 mx-auto" />
+              <div className="text-sm font-medium">Custom</div>
+            </button>
+            <button
+              onClick={() => setDateRange('full')}
+              className={`p-3 rounded-lg border-2 transition-all ${
+                dateRange === 'full'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaHistory className="text-xl mb-1 mx-auto" />
+              <div className="text-sm font-medium">All Time</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Custom Date Inputs */}
+        {dateRange === 'custom' && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              type="date"
+              label="Start Date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <Input
+              type="date"
+              label="End Date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Export Format */}
+        <div>
+          <label className="block text-sm font-medium text-white mb-2">Export Format</label>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setFormat('pdf')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                format === 'pdf'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaFilePdf className="text-2xl mb-2 mx-auto text-red-500" />
+              <div className="font-medium">PDF</div>
+              <div className="text-xs mt-1">Print-ready</div>
+            </button>
+            <button
+              onClick={() => setFormat('csv')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                format === 'csv'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaFileCsv className="text-2xl mb-2 mx-auto text-green-500" />
+              <div className="font-medium">CSV</div>
+              <div className="text-xs mt-1">Spreadsheet</div>
+            </button>
+            <button
+              onClick={() => setFormat('xlsx')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                format === 'xlsx'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              <FaFileExcel className="text-2xl mb-2 mx-auto text-emerald-500" />
+              <div className="font-medium">Excel</div>
+              <div className="text-xs mt-1">Formatted XLS</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4 border-t border-neutral-700">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleExport}
+            loading={exporting}
+            disabled={exportType === 'individual' && !selectedEmployee}
+            className="flex-1"
+            icon={<FaDownload />}
+          >
+            Export Report
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ============================================
 // MAIN ADMIN PANEL COMPONENT
 // ============================================
 
@@ -737,6 +1253,7 @@ export function AdminPanel() {
   // Modals
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithStats | null>(null)
   const [editingRecord, setEditingRecord] = useState<{ record: AttendanceRecord, employee: EmployeeProfile } | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   // Auto-absent job: Run once when AdminPanel loads (marks yesterday's missing as absent)
   useEffect(() => {
@@ -933,13 +1450,23 @@ export function AdminPanel() {
           </p>
         </div>
         
-        <Button
-          variant="secondary"
-          onClick={fetchData}
-          loading={loading}
-        >
-          Refresh Data
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="primary"
+            onClick={() => setShowExportModal(true)}
+            icon={<FaDownload />}
+          >
+            Export Reports
+          </Button>
+          
+          <Button
+            variant="secondary"
+            onClick={fetchData}
+            loading={loading}
+          >
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -1106,6 +1633,13 @@ export function AdminPanel() {
         employee={editingRecord?.employee || null}
         onClose={() => setEditingRecord(null)}
         onSave={fetchData}
+      />
+      
+      <ExportReportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        employees={employees}
+        employeesWithStats={employeesWithStats}
       />
     </div>
   )
