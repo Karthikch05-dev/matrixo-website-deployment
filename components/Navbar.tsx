@@ -111,7 +111,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo with BETA Badge */}
           <button 
-            onClick={() => window.location.reload()}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              window.location.reload()
+            }}
             className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
           >
             <motion.div

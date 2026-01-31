@@ -195,27 +195,21 @@ function AddEventModal({
 
     setLoading(true)
     try {
+      const eventData = {
+        title: form.title.trim(),
+        date: form.date,
+        type: form.type as CalendarEvent['type'],
+        departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility'],
+        ...(form.description.trim() && { description: form.description.trim() }),
+        ...(form.endDate && { endDate: form.endDate }),
+        ...(form.color && { color: form.color })
+      }
+
       if (editingEvent?.id) {
-        await updateCalendarEvent(editingEvent.id, {
-          title: form.title.trim(),
-          description: form.description.trim() || undefined,
-          date: form.date,
-          endDate: form.endDate || undefined,
-          type: form.type as CalendarEvent['type'],
-          color: form.color || undefined,
-          departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility']
-        })
+        await updateCalendarEvent(editingEvent.id, eventData)
         toast.success('Event updated successfully')
       } else {
-        await addCalendarEvent({
-          title: form.title.trim(),
-          description: form.description.trim() || undefined,
-          date: form.date,
-          endDate: form.endDate || undefined,
-          type: form.type as CalendarEvent['type'],
-          color: form.color || undefined,
-          departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility']
-        })
+        await addCalendarEvent(eventData)
         toast.success('Event added successfully')
       }
       onClose()
@@ -303,7 +297,7 @@ function AddEventModal({
 // ============================================
 
 export function Calendar() {
-  const { employee, holidays, calendarEvents, isHoliday } = useEmployeeAuth()
+  const { employee, holidays, calendarEvents, isHoliday, deleteCalendarEvent } = useEmployeeAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showAddHoliday, setShowAddHoliday] = useState(false)
   const [showAddEvent, setShowAddEvent] = useState(false)
@@ -456,6 +450,17 @@ export function Calendar() {
   const handleAddEventForDate = (dateString: string) => {
     setSelectedDate(dateString)
     setShowAddEvent(true)
+  }
+
+  const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
+    if (!confirm(`Are you sure you want to delete the event "${eventTitle}"?`)) return
+    
+    try {
+      await deleteCalendarEvent(eventId)
+      toast.success('Event deleted successfully')
+    } catch (error) {
+      toast.error('Failed to delete event')
+    }
   }
 
   return (
@@ -687,6 +692,15 @@ export function Calendar() {
                                   By {event.createdByName}
                                 </p>
                               </div>
+                              {isAdmin && (
+                                <button
+                                  onClick={() => handleDeleteEvent(event.id!, event.title)}
+                                  className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors ml-2 flex-shrink-0"
+                                  title="Delete event"
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
