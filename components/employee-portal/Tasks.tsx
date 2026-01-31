@@ -689,10 +689,11 @@ function TaskDetailModal({
   onEditClick?: () => void
   employees: EmployeeProfile[]
 }) {
-  const { employee, updateTask, deleteTask, addTaskComment, deleteTaskComment, toggleTaskCommentReaction } = useEmployeeAuth()
+  const { employee, updateTask, deleteTask, addTaskComment, deleteTaskComment, toggleTaskCommentReaction, approveTask } = useEmployeeAuth()
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [approving, setApproving] = useState(false)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null)
 
@@ -751,6 +752,18 @@ function TaskDetailModal({
       toast.error('Failed to delete task')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleApproveTask = async () => {
+    setApproving(true)
+    try {
+      await approveTask(task.id!)
+      toast.success('Task approved successfully')
+    } catch (error) {
+      toast.error('Failed to approve task')
+    } finally {
+      setApproving(false)
     }
   }
 
@@ -884,7 +897,7 @@ function TaskDetailModal({
         {(canEdit || isAssignee) && (
           <div>
             <p className="text-sm text-neutral-400 mb-2">Update Status</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {Object.entries(statusConfig).map(([status, config]) => (
                 <Button
                   key={status}
@@ -895,6 +908,37 @@ function TaskDetailModal({
                   {config.label}
                 </Button>
               ))}
+              
+              {/* Approval Badge/Button for Completed Tasks */}
+              {task.status === 'completed' && (
+                <>
+                  {task.approvalStatus === 'pending' && (
+                    <>
+                      <Badge variant="error" className="flex items-center gap-1">
+                        <FaExclamationCircle className="text-xs" />
+                        Pending Approval
+                      </Badge>
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="success"
+                          loading={approving}
+                          onClick={handleApproveTask}
+                          icon={<FaCheckCircle />}
+                        >
+                          Approve
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  {task.approvalStatus === 'approved' && (
+                    <Badge variant="success" className="flex items-center gap-1">
+                      <FaCheckCircle className="text-xs" />
+                      Approved by {task.approvedByName}
+                    </Badge>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

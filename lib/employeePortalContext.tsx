@@ -113,6 +113,9 @@ export interface Task {
   updatedAt: Timestamp
   editedBy?: string // Employee ID who last edited
   editedByName?: string // Name of employee who last edited
+  approvalStatus?: 'pending' | 'approved' // Approval status when marked as completed
+  approvedBy?: string // Employee ID who approved
+  approvedByName?: string // Name of employee who approved
   dueDate?: string
   tags?: string[]
   department?: string
@@ -303,6 +306,7 @@ interface EmployeeAuthContextType {
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName' | 'comments'>) => Promise<void>
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>
   deleteTask: (id: string) => Promise<void>
+  approveTask: (id: string) => Promise<void>
   addTaskComment: (taskId: string, text: string, mentions?: string[], mentionedDepartments?: string[]) => Promise<void>
   deleteTaskComment: (taskId: string, commentId: string) => Promise<void>
   toggleTaskCommentReaction: (taskId: string, commentId: string, emoji: string) => Promise<void>
@@ -1177,12 +1181,34 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (!taskDoc.exists()) throw new Error('Task not found')
     const oldTask = taskDoc.data() as Task
     
-    await updateDoc(taskRef, {
+    // Build update payload
+    const updatePayload: any = {
       ...updates,
       updatedAt: Timestamp.now(),
       editedBy: employee.employeeId,
       editedByName: employee.name
-    })
+    }
+    
+    // If non-admin marks task as completed, set pending approval status
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role !== 'admin') {
+      updatePayload.approvalStatus = 'pending'
+    }
+    
+    // If admin marks task as completed, auto-approve
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role === 'admin') {
+      updatePayload.approvalStatus = 'approved'
+      updatePayload.approvedBy = employee.employeeId
+      updatePayload.approvedByName = employee.name
+    }
+    
+    // If status changes away from completed, clear approval
+    if (updates.status && updates.status !== 'completed' && oldTask.status === 'completed') {
+      updatePayload.approvalStatus = null
+      updatePayload.approvedBy = null
+      updatePayload.approvedByName = null
+    }
+    
+    await updateDoc(taskRef, updatePayload)
     
     // 🔔 GLOBAL NOTIFICATION: Status change
     if (updates.status && updates.status !== oldTask.status) {
@@ -1231,6 +1257,39 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'tasks', id))
     
     // Note: No notification for task deletion as per user preference
+  }
+
+  const approveTask = async (id: string) => {
+    if (!employee) throw new Error('Not authenticated')
+    if (employee.role !== 'admin') throw new Error('Only admins can approve tasks')
+    
+    const taskRef = doc(db, 'tasks', id)
+    const taskDoc = await getDoc(taskRef)
+    
+    if (!taskDoc.exists()) throw new Error('Task not found')
+    const task = taskDoc.data() as Task
+    
+    if (task.status !== 'completed') throw new Error('Task must be completed to approve')
+    
+    await updateDoc(taskRef, {
+      approvalStatus: 'approved',
+      approvedBy: employee.employeeId,
+      approvedByName: employee.name,
+      updatedAt: Timestamp.now()
+    })
+    
+    // 🔔 GLOBAL NOTIFICATION: Task approved
+    await createGlobalNotification({
+      type: 'task',
+      action: 'status_changed',
+      title: 'Task Approved',
+      message: `${employee.name} approved task: "${task.title}"`,
+      relatedEntityId: id,
+      targetUrl: '#tasks',
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
+    })
   }
 
   const addTaskComment = async (taskId: string, text: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
@@ -1821,6 +1880,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       addTask,
       updateTask,
       deleteTask,
+      approveTask,
       addTaskComment,
       deleteTaskComment,
       toggleTaskCommentReaction,
