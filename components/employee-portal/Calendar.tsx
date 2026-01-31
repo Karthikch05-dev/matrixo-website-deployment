@@ -248,7 +248,6 @@ function AddEventModal({
             type="date"
             value={form.endDate}
             onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-            min={form.date}
           />
         </div>
         <Select
