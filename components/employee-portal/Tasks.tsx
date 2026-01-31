@@ -388,6 +388,20 @@ function TaskModal({
     specialization: ''
   })
 
+  // Reset form when editingTask changes (important for editing different tasks)
+  useEffect(() => {
+    setForm({
+      title: editingTask?.title || '',
+      description: editingTask?.description || '',
+      priority: editingTask?.priority || 'medium',
+      status: editingTask?.status || 'todo',
+      assignedTo: editingTask?.assignedTo || [],
+      dueDate: editingTask?.dueDate || '',
+      department: editingTask?.department || employee?.department || '',
+      specialization: editingTask?.specialization || ''
+    })
+  }, [editingTask, employee?.department])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim()) {
@@ -845,6 +859,9 @@ function TaskDetailModal({
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created by</p>
             <p className="text-sm text-white">{task.createdByName}</p>
+            {task.editedByName && (
+              <p className="text-xs text-neutral-400 mt-1">Edited by <span className="text-neutral-300">{task.editedByName}</span></p>
+            )}
           </div>
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created</p>

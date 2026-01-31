@@ -111,6 +111,8 @@ export interface Task {
   createdByName: string
   createdAt: Timestamp
   updatedAt: Timestamp
+  editedBy?: string // Employee ID who last edited
+  editedByName?: string // Name of employee who last edited
   dueDate?: string
   tags?: string[]
   department?: string
@@ -1177,7 +1179,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     await updateDoc(taskRef, {
       ...updates,
-      updatedAt: Timestamp.now()
+      updatedAt: Timestamp.now(),
+      editedBy: employee.employeeId,
+      editedByName: employee.name
     })
     
     // 🔔 GLOBAL NOTIFICATION: Status change
