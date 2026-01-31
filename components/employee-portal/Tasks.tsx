@@ -732,7 +732,6 @@ function TaskDetailModal({
     setDeleting(true)
     try {
       await deleteTask(task.id!)
-      toast.success('Task deleted')
       onClose()
     } catch (error) {
       toast.error('Failed to delete task')
@@ -1062,6 +1061,13 @@ function TaskDetailModal({
             loading={submitting}
             buttonText="Send"
           />
+        </div>
+
+        {/* Footer - Task Created By */}
+        <div className="mt-4 pt-3 border-t border-neutral-700/50">
+          <p className="text-xs text-neutral-500 text-center">
+            Task created by <span className="text-neutral-400 font-medium">{task.createdByName}</span>
+          </p>
         </div>
       </div>
     </Modal>

@@ -78,32 +78,13 @@ function EmployeeProfileModal({
       setLoading(true)
       getEmployeeAttendanceHistory(employee.employeeId, 90)
         .then((history) => {
-          // Deduplicate: keep only one record per date
-          // Priority: If multiple records for same date, prefer non-Absent status
-          const recordsByDate = new Map<string, AttendanceRecord>()
-          history.forEach(record => {
-            const existing = recordsByDate.get(record.date)
-            if (!existing) {
-              recordsByDate.set(record.date, record)
-            } else {
-              // If existing is Absent and new is not, replace with non-Absent
-              if (existing.status === 'A' && record.status !== 'A') {
-                recordsByDate.set(record.date, record)
-              }
-              // If new is Absent and existing is not, keep existing (do nothing)
-            }
-          })
-          const dedupedHistory = Array.from(recordsByDate.values()).sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          
-          setAttendanceHistory(dedupedHistory)
-          // Calculate stats from deduped history
-          const present = dedupedHistory.filter(r => r.status === 'P').length
-          const absent = dedupedHistory.filter(r => r.status === 'A').length
-          const leave = dedupedHistory.filter(r => r.status === 'L').length
-          const onDuty = dedupedHistory.filter(r => r.status === 'O').length
-          const total = dedupedHistory.length
+          setAttendanceHistory(history)
+          // Calculate stats from history
+          const present = history.filter(r => r.status === 'P').length
+          const absent = history.filter(r => r.status === 'A').length
+          const leave = history.filter(r => r.status === 'L').length
+          const onDuty = history.filter(r => r.status === 'O').length
+          const total = history.length
           const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
           
           setStats({
@@ -251,9 +232,6 @@ function EmployeeProfileModal({
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
                            record.status === 'H' ? 'Holiday' : record.status}
-                          {record.status === 'P' && record.locationVerified && (
-                            <FaCheckCircle className="ml-1 text-xs" />
-                          )}
                         </Badge>
                         <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
                       </div>
@@ -302,9 +280,6 @@ function EmployeeProfileModal({
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
                            record.status === 'H' ? 'Holiday' : record.status}
-                          {record.status === 'P' && record.locationVerified && (
-                            <FaCheckCircle className="ml-1 text-xs" />
-                          )}
                         </Badge>
                       </td>
                       <td className="p-3 text-neutral-400">{formatHistoryTime(record)}</td>

@@ -1226,18 +1226,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     await deleteDoc(doc(db, 'tasks', id))
     
-    // 🔔 GLOBAL NOTIFICATION: Task deleted
-    await createGlobalNotification({
-      type: 'task',
-      action: 'deleted',
-      title: 'Task Deleted',
-      message: `${employee.name} deleted task: "${task.title}"`,
-      relatedEntityId: id,
-      targetUrl: '#tasks',
-      createdBy: employee.employeeId,
-      createdByName: employee.name,
-      createdByRole: employee.role
-    })
+    // Note: No notification for task deletion as per user preference
   }
 
   const addTaskComment = async (taskId: string, text: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {

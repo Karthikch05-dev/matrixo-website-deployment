@@ -276,12 +276,15 @@ export function RichTextRenderer({ content, className = '' }: RichTextRendererPr
       className={`
         prose prose-invert prose-sm max-w-none
         prose-p:my-2 prose-p:leading-relaxed prose-p:text-neutral-300
-        prose-ul:my-2 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-neutral-300
-        prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-neutral-300
+        prose-ul:my-2 prose-ul:pl-6 prose-ul:text-neutral-300
+        prose-ol:my-2 prose-ol:pl-6 prose-ol:text-neutral-300
         prose-li:my-1 prose-li:text-neutral-300
         prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer hover:prose-a:text-primary-300
         prose-strong:text-white prose-strong:font-bold
         prose-em:italic prose-em:text-neutral-300
+        [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2
+        [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2
+        [&_li]:my-1 [&_li]:text-neutral-300
         ${className}
       `}
       dangerouslySetInnerHTML={{ __html: sanitizedHTML || content }}
