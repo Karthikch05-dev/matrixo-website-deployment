@@ -299,216 +299,6 @@ function AddEventModal({
 }
 
 // ============================================
-// DAY DETAIL MODAL
-// ============================================
-
-function DayDetailModal({
-  isOpen,
-  onClose,
-  day,
-  workingDayOverride
-}: {
-  isOpen: boolean
-  onClose: () => void
-  day: CalendarDay | null
-  workingDayOverride?: Holiday | null
-}) {
-  const { employee, deleteHoliday, deleteCalendarEvent, addHoliday } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
-
-  if (!day) return null
-
-  const handleDeleteHoliday = async () => {
-    if (!day.holiday?.id) return
-    if (!confirm('Are you sure you want to delete this holiday?')) return
-    
-    try {
-      await deleteHoliday(day.holiday.id)
-      toast.success('Holiday deleted')
-      onClose()
-    } catch (error) {
-      toast.error('Failed to delete holiday')
-    }
-  }
-
-  // Mark auto-generated weekend as a working day by creating a "working day override"
-  const handleMarkAsWorkingDay = async () => {
-    if (!day.dateString) return
-    if (!confirm('Mark this weekend as a working day? Employees will need to mark attendance.')) return
-    
-    try {
-      // Create a special holiday entry that marks this as a working day
-      // We use 'optional' type with special prefix __WORKING_DAY__ to identify it
-      await addHoliday({
-        date: day.dateString,
-        name: '__WORKING_DAY__',
-        type: 'optional',
-        description: 'This weekend has been marked as a working day'
-      })
-      toast.success('Marked as working day')
-      onClose()
-    } catch (error) {
-      toast.error('Failed to update')
-    }
-  }
-
-  // Revert working day override back to a weekend
-  const handleRevertToWeekend = async () => {
-    if (!workingDayOverride?.id) return
-    if (!confirm('Revert this day back to a weekend? Attendance will not be required.')) return
-    
-    try {
-      await deleteHoliday(workingDayOverride.id)
-      toast.success('Reverted to weekend')
-      onClose()
-    } catch (error) {
-      toast.error('Failed to revert')
-    }
-  }
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return
-    
-    try {
-      await deleteCalendarEvent(eventId)
-      toast.success('Event deleted')
-    } catch (error) {
-      toast.error('Failed to delete event')
-    }
-  }
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title={day.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}>
-      <div className="space-y-4">
-        {day.isToday && (
-          <Badge variant="primary" className="mb-2">Today</Badge>
-        )}
-        
-        {day.holiday && (
-          <Card className="border-l-4 border-l-amber-500">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <FaUmbrellaBeach className="text-amber-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-white">{day.holiday.name}</h4>
-                  <Badge variant="warning" size="sm" className="mt-1">
-                    {day.holiday.type === 'public' ? 'Public Holiday' : 
-                     day.holiday.type === 'company' ? 'Company Holiday' : 'Optional'}
-                  </Badge>
-                  {day.holiday.description && (
-                    <p className="text-neutral-400 text-sm mt-2">{day.holiday.description}</p>
-                  )}
-                </div>
-              </div>
-              {isAdmin && day.holiday.id && (
-                <button
-                  onClick={handleDeleteHoliday}
-                  className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                  title="Delete holiday"
-                >
-                  <FaTrash />
-                </button>
-              )}
-              {isAdmin && !day.holiday.id && day.holiday.isAutoHoliday && (
-                <button
-                  onClick={handleMarkAsWorkingDay}
-                  className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-1"
-                  title="Mark as working day"
-                >
-                  <FaBriefcase className="text-xs" />
-                  Mark as Working Day
-                </button>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {day.events.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-neutral-400">Events</h4>
-            {day.events.map(event => (
-              <Card key={event.id} className="border-l-4">
-                <div style={{ borderLeftColor: event.color || '#6366f1' }}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h5 className="font-medium text-white">{event.title}</h5>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <Badge size="sm" variant="info">{event.type}</Badge>
-                        <Badge size="sm" variant="default">
-                          {departmentVisibilityLabels[event.departmentVisibility || 'all']}
-                        </Badge>
-                      </div>
-                      {event.description && (
-                        <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
-                      )}
-                      <p className="text-neutral-500 text-xs mt-2">
-                        By {event.createdByName}
-                      </p>
-                    </div>
-                    {isAdmin && (
-                      <button
-                        onClick={() => handleDeleteEvent(event.id!)}
-                        className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                      >
-                      <FaTrash />
-                    </button>
-                  )}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {!day.holiday && day.events.length === 0 && !workingDayOverride && (
-          <div className="text-center py-8 text-neutral-400">
-            <FaCalendarAlt className="text-3xl mx-auto mb-2 opacity-50" />
-            <p>No events on this day</p>
-          </div>
-        )}
-
-        {/* Working Day Override - Weekend marked as working day */}
-        {workingDayOverride && (
-          <Card className="border-l-4 border-l-blue-500">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <FaBriefcase className="text-blue-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-white">Working Day</h4>
-                  <Badge variant="info" size="sm" className="mt-1">
-                    Weekend Override
-                  </Badge>
-                  <p className="text-neutral-400 text-sm mt-2">This weekend has been marked as a working day</p>
-                </div>
-              </div>
-              {isAdmin && (
-                <button
-                  onClick={handleRevertToWeekend}
-                  className="px-3 py-1.5 text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors"
-                  title="Revert to weekend"
-                >
-                  Revert to Weekend
-                </button>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {day.holiday && (
-          <Alert variant="warning">
-            <strong>Holiday:</strong> Attendance marking is disabled for this day.
-          </Alert>
-        )}
-      </div>
-    </Modal>
-  )
-}
-
-// ============================================
 // MAIN CALENDAR COMPONENT
 // ============================================
 
@@ -517,7 +307,6 @@ export function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showAddHoliday, setShowAddHoliday] = useState(false)
   const [showAddEvent, setShowAddEvent] = useState(false)
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
@@ -664,11 +453,6 @@ export function Calendar() {
     setPanelSelectedDay(day)
   }
 
-  // Open the modal for detailed view (double-click or dedicated action)
-  const handleDayModalOpen = (day: CalendarDay) => {
-    setSelectedDay(day)
-  }
-
   const handleAddEventForDate = (dateString: string) => {
     setSelectedDate(dateString)
     setShowAddEvent(true)
@@ -756,7 +540,6 @@ export function Calendar() {
                 <motion.button
                   key={index}
                   onClick={() => handleDayClick(day)}
-                  onDoubleClick={() => handleDayModalOpen(day)}
                   whileHover={{ scale: 1.02 }}
                   className={`
                     min-h-[50px] sm:min-h-[70px] p-1 sm:p-1.5 text-left transition-colors relative
@@ -1037,13 +820,6 @@ export function Calendar() {
         }}
         selectedDate={selectedDate}
         editingEvent={editingEvent}
-      />
-      
-      <DayDetailModal
-        isOpen={!!selectedDay}
-        onClose={() => setSelectedDay(null)}
-        day={selectedDay}
-        workingDayOverride={selectedDay ? holidays.find(h => h.date === selectedDay.dateString && h.name === '__WORKING_DAY__') : null}
       />
     </div>
   )
