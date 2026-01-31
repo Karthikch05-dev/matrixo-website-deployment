@@ -457,6 +457,15 @@ export function Calendar() {
     
     try {
       await deleteCalendarEvent(eventId)
+      
+      // Update the panel selected day to remove the deleted event
+      if (panelSelectedDay) {
+        setPanelSelectedDay({
+          ...panelSelectedDay,
+          events: panelSelectedDay.events.filter(e => e.id !== eventId)
+        })
+      }
+      
       toast.success('Event deleted successfully')
     } catch (error) {
       toast.error('Failed to delete event')
