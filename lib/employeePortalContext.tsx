@@ -1095,7 +1095,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteHoliday = async (id: string) => {
     if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    
+    // Delete the holiday
     await deleteDoc(doc(db, 'holidays', id))
+    
+    // Delete associated notifications
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(notificationsRef, where('relatedEntityId', '==', id))
+    const snapshot = await getDocs(q)
+    
+    const deletePromises = snapshot.docs.map(docSnapshot => 
+      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+    )
+    
+    await Promise.all(deletePromises)
   }
 
   // ============================================
@@ -1133,7 +1146,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteCalendarEvent = async (id: string) => {
     if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    
+    // Delete the calendar event
     await deleteDoc(doc(db, 'calendarEvents', id))
+    
+    // Delete associated notifications
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(notificationsRef, where('relatedEntityId', '==', id))
+    const snapshot = await getDocs(q)
+    
+    const deletePromises = snapshot.docs.map(docSnapshot => 
+      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+    )
+    
+    await Promise.all(deletePromises)
   }
 
   // ============================================
@@ -1257,9 +1283,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       throw new Error('Unauthorized')
     }
     
+    // Delete the task
     await deleteDoc(doc(db, 'tasks', id))
     
-    // Note: No notification for task deletion as per user preference
+    // Delete associated notifications
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(notificationsRef, where('relatedEntityId', '==', id))
+    const snapshot = await getDocs(q)
+    
+    const deletePromises = snapshot.docs.map(docSnapshot => 
+      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+    )
+    
+    await Promise.all(deletePromises)
   }
 
   const approveTask = async (id: string) => {
@@ -1480,7 +1516,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       throw new Error('Unauthorized')
     }
     
+    // Delete the discussion
     await deleteDoc(doc(db, 'discussions', id))
+    
+    // Delete associated notifications
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(notificationsRef, where('relatedEntityId', '==', id))
+    const snapshot = await getDocs(q)
+    
+    const deletePromises = snapshot.docs.map(docSnapshot => 
+      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+    )
+    
+    await Promise.all(deletePromises)
   }
 
   const restoreDiscussion = async (discussion: Discussion) => {
