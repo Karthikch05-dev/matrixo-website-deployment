@@ -63,6 +63,7 @@ function EmployeeProfileModal({
   const [activeTab, setActiveTab] = useState('overview')
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(false)
+  const [modifyingRecord, setModifyingRecord] = useState<AttendanceRecord | null>(null)
   const [stats, setStats] = useState({
     presentDays: 0,
     absentDays: 0,
@@ -147,7 +148,7 @@ function EmployeeProfileModal({
           <h3 className="text-xl sm:text-2xl font-bold text-white truncate">{employee.name}</h3>
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
             <Badge variant="primary">{employee.employeeId}</Badge>
-            {employee.department && <Badge variant="info">{employee.department}</Badge>}
+            {employee.department && employee.department !== employee.role && <Badge variant="info">{employee.department}</Badge>}
             <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
               {employee.role === 'admin' ? '👑 Admin' : employee.role}
             </Badge>
@@ -263,6 +264,7 @@ function EmployeeProfileModal({
                     <th className="text-left p-3 text-sm font-medium text-neutral-400">Time</th>
                     <th className="text-left p-3 text-sm font-medium text-neutral-400">Location</th>
                     <th className="text-left p-3 text-sm font-medium text-neutral-400">Modified</th>
+                    <th className="text-center p-3 text-sm font-medium text-neutral-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,6 +277,9 @@ function EmployeeProfileModal({
                           record.status === 'A' ? 'error' :
                           record.status === 'L' ? 'warning' : 'default'
                         }>
+                          {record.status === 'P' && record.locationVerified && (
+                            <FaCheckCircle className="inline mr-1 text-xs" />
+                          )}
                           {record.status === 'P' ? 'Present' :
                            record.status === 'A' ? 'Absent' :
                            record.status === 'L' ? 'Leave' :
@@ -296,12 +301,27 @@ function EmployeeProfileModal({
                       </td>
                       <td className="p-3">
                         {record.modifiedBy ? (
-                          <span className="text-xs text-amber-400">
-                            By {record.modifiedByName || record.modifiedBy}
-                          </span>
+                          <div className="text-xs">
+                            <div className="text-amber-400">By {record.modifiedByName || record.modifiedBy}</div>
+                            {record.modifiedAt && (
+                              <div className="text-neutral-500">
+                                {new Date(record.modifiedAt.toDate()).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-neutral-500">-</span>
                         )}
+                      </td>
+                      <td className="p-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          icon={<FaEdit />}
+                          onClick={() => setModifyingRecord(record)}
+                        >
+                          Modify
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -311,6 +331,26 @@ function EmployeeProfileModal({
           </div>
         )}
       </div>
+      
+      {/* Modify Attendance Modal */}
+      {modifyingRecord && (
+        <EditAttendanceModal
+          record={modifyingRecord}
+          employee={employee}
+          onClose={() => setModifyingRecord(null)}
+          onSave={async () => {
+            setModifyingRecord(null)
+            if (employee) {
+              setLoading(true)
+              getEmployeeAttendanceHistory(employee.employeeId, 90)
+                .then((history) => {
+                  setAttendanceHistory(history)
+                })
+                .finally(() => setLoading(false))
+            }
+          }}
+        />
+      )}
       
       {/* Close Button at bottom */}
       <div className="flex justify-end mt-6 pt-4 border-t border-white/10">

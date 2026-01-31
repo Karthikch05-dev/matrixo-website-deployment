@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FaCalendarAlt, 
@@ -162,18 +162,33 @@ function AddEventModal({
   const { addCalendarEvent, updateCalendarEvent } = useEmployeeAuth()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    title: editingEvent?.title || '',
-    description: editingEvent?.description || '',
-    date: editingEvent?.date || selectedDate || '',
-    endDate: editingEvent?.endDate || '',
-    type: editingEvent?.type || 'event',
-    color: editingEvent?.color || '#6366f1',
-    departmentVisibility: editingEvent?.departmentVisibility || 'all'
+    title: '',
+    description: '',
+    date: '',
+    endDate: '',
+    type: 'event',
+    color: '#6366f1',
+    departmentVisibility: 'all'
   })
+
+  // Reset form when modal opens or editing event changes
+  useEffect(() => {
+    if (isOpen) {
+      setForm({
+        title: editingEvent?.title || '',
+        description: editingEvent?.description || '',
+        date: editingEvent?.date || selectedDate || '',
+        endDate: editingEvent?.endDate || '',
+        type: editingEvent?.type || 'event',
+        color: editingEvent?.color || '#6366f1',
+        departmentVisibility: editingEvent?.departmentVisibility || 'all'
+      })
+    }
+  }, [isOpen, editingEvent, selectedDate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.date || !form.title) {
+    if (!form.date || !form.title.trim()) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -182,8 +197,8 @@ function AddEventModal({
     try {
       if (editingEvent?.id) {
         await updateCalendarEvent(editingEvent.id, {
-          title: form.title,
-          description: form.description || undefined,
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
@@ -193,8 +208,8 @@ function AddEventModal({
         toast.success('Event updated successfully')
       } else {
         await addCalendarEvent({
-          title: form.title,
-          description: form.description || undefined,
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
           date: form.date,
           endDate: form.endDate || undefined,
           type: form.type as CalendarEvent['type'],
@@ -204,8 +219,9 @@ function AddEventModal({
         toast.success('Event added successfully')
       }
       onClose()
-    } catch (error) {
-      toast.error('Failed to save event')
+    } catch (error: any) {
+      console.error('Calendar event error:', error)
+      toast.error(error?.message || 'Failed to save event')
     } finally {
       setLoading(false)
     }

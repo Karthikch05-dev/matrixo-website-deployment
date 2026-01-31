@@ -110,7 +110,10 @@ export default function Navbar() {
       <div className="container-custom px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo with BETA Badge */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <button 
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+          >
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -120,13 +123,13 @@ export default function Navbar() {
               <img 
                 src="/logos/logo-light.png" 
                 alt="matriXO Logo" 
-                className="h-10 w-auto object-contain dark:hidden"
+                className="h-10 w-auto object-contain dark:hidden cursor-pointer"
               />
               {/* Dark Mode Logo (White) */}
               <img 
                 src="/logos/logo-dark.png" 
                 alt="matriXO Logo" 
-                className="h-10 w-auto object-contain hidden dark:block"
+                className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
               />
             </motion.div>
             
@@ -140,7 +143,7 @@ export default function Navbar() {
                 BETA
               </motion.span>
             )}
-          </Link>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
