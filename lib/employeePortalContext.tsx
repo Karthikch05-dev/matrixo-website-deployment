@@ -1287,15 +1287,36 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'tasks', id))
     
     // Delete associated notifications from userNotifications collection
-    const notificationsRef = collection(db, 'userNotifications')
-    const q = query(notificationsRef, where('relatedEntityId', '==', id))
-    const snapshot = await getDocs(q)
-    
-    const deletePromises = snapshot.docs.map(docSnapshot => 
-      deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
-    )
-    
-    await Promise.all(deletePromises)
+    try {
+      console.log('🗑️ Deleting notifications for task ID:', id)
+      const notificationsRef = collection(db, 'userNotifications')
+      const q = query(notificationsRef, where('relatedEntityId', '==', id))
+      
+      console.log('🗑️ Querying userNotifications with relatedEntityId:', id)
+      const snapshot = await getDocs(q)
+      
+      console.log('🗑️ Found', snapshot.docs.length, 'notifications to delete')
+      
+      // Log all found notifications for debugging
+      snapshot.docs.forEach(docSnapshot => {
+        console.log('🗑️ Found notification:', docSnapshot.id, 'data:', JSON.stringify(docSnapshot.data()))
+      })
+      
+      if (snapshot.docs.length > 0) {
+        const deletePromises = snapshot.docs.map(docSnapshot => {
+          console.log('🗑️ Deleting notification:', docSnapshot.id)
+          return deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
+        })
+        
+        await Promise.all(deletePromises)
+        console.log('🗑️ All notifications deleted successfully')
+      } else {
+        console.log('⚠️ No notifications found for this task ID')
+      }
+    } catch (notifError) {
+      console.error('❌ Error deleting notifications:', notifError)
+      // Don't throw - task is already deleted, just log the notification error
+    }
   }
 
   const approveTask = async (id: string) => {

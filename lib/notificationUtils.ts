@@ -32,6 +32,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
   try {
     console.log('🔔 Creating per-user notifications:', params)
     console.log('🔔 Creator ID:', params.createdBy)
+    console.log('🔔 Related Entity ID:', params.relatedEntityId)
     
     // Get all employees
     const employeesRef = collection(db, 'Employees')
