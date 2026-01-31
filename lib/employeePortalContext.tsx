@@ -1099,13 +1099,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Delete the holiday
     await deleteDoc(doc(db, 'holidays', id))
     
-    // Delete associated notifications
-    const notificationsRef = collection(db, 'notifications')
+    // Delete associated notifications from userNotifications collection
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
     
     const deletePromises = snapshot.docs.map(docSnapshot => 
-      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+      deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
     
     await Promise.all(deletePromises)
@@ -1150,13 +1150,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Delete the calendar event
     await deleteDoc(doc(db, 'calendarEvents', id))
     
-    // Delete associated notifications
-    const notificationsRef = collection(db, 'notifications')
+    // Delete associated notifications from userNotifications collection
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
     
     const deletePromises = snapshot.docs.map(docSnapshot => 
-      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+      deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
     
     await Promise.all(deletePromises)
@@ -1286,13 +1286,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Delete the task
     await deleteDoc(doc(db, 'tasks', id))
     
-    // Delete associated notifications
-    const notificationsRef = collection(db, 'notifications')
+    // Delete associated notifications from userNotifications collection
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
     
     const deletePromises = snapshot.docs.map(docSnapshot => 
-      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+      deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
     
     await Promise.all(deletePromises)
@@ -1519,13 +1519,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Delete the discussion
     await deleteDoc(doc(db, 'discussions', id))
     
-    // Delete associated notifications
-    const notificationsRef = collection(db, 'notifications')
+    // Delete associated notifications from userNotifications collection
+    const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
     
     const deletePromises = snapshot.docs.map(docSnapshot => 
-      deleteDoc(doc(db, 'notifications', docSnapshot.id))
+      deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
     
     await Promise.all(deletePromises)
