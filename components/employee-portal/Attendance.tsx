@@ -881,7 +881,7 @@ export function AttendanceHistory({ refreshKey }: { refreshKey?: number }) {
                       >
                         <config.icon className="mr-1 text-xs" />
                         {config.label}
-                        {(record.status === 'P' || record.status === 'A') && record.locationVerified && (
+                        {record.status === 'P' && record.locationVerified && (
                           <FaCheckCircle className="ml-1 text-xs" />
                         )}
                       </Badge>

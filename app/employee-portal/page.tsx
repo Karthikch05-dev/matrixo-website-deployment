@@ -871,8 +871,11 @@ function HistoryTab() {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${config.color}/20 text-white flex-shrink-0`}>
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${config.color}/20 text-white flex-shrink-0 flex items-center gap-1`}>
                     {config.label}
+                    {record.status === 'P' && record.locationVerified && (
+                      <FaCheckCircle className="text-xs" />
+                    )}
                   </span>
                 </div>
               )
