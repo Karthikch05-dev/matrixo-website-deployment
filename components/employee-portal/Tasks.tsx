@@ -859,9 +859,6 @@ function TaskDetailModal({
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created by</p>
             <p className="text-sm text-white">{task.createdByName}</p>
-            {task.editedByName && (
-              <p className="text-xs text-neutral-400 mt-1">Edited by <span className="text-neutral-300">{task.editedByName}</span></p>
-            )}
           </div>
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created</p>
@@ -1085,6 +1082,11 @@ function TaskDetailModal({
           <p className="text-xs text-neutral-500 text-center">
             Task created by <span className="text-neutral-400 font-medium">{task.createdByName}</span>
           </p>
+          {task.editedByName && (
+            <p className="text-xs text-neutral-500 text-center mt-1">
+              Task edited by <span className="text-neutral-400 font-medium">{task.editedByName}</span>
+            </p>
+          )}
         </div>
       </div>
     </Modal>
