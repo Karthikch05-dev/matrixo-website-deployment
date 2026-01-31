@@ -1189,8 +1189,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       editedByName: employee.name
     }
     
-    // If non-admin marks task as completed, set pending approval status
+    // If non-admin tries to mark task as completed, move to review with pending approval
     if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role !== 'admin') {
+      updatePayload.status = 'review' // Change to review instead of completed
       updatePayload.approvalStatus = 'pending'
     }
     
@@ -1201,11 +1202,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       updatePayload.approvedByName = employee.name
     }
     
-    // If status changes away from completed, clear approval
-    if (updates.status && updates.status !== 'completed' && oldTask.status === 'completed') {
-      updatePayload.approvalStatus = null
-      updatePayload.approvedBy = null
-      updatePayload.approvedByName = null
+    // If status changes away from completed or review, clear approval
+    if (updates.status && updates.status !== 'completed' && updates.status !== 'review') {
+      if (oldTask.status === 'completed' || oldTask.status === 'review') {
+        updatePayload.approvalStatus = null
+        updatePayload.approvedBy = null
+        updatePayload.approvedByName = null
+      }
     }
     
     await updateDoc(taskRef, updatePayload)
@@ -1269,9 +1272,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (!taskDoc.exists()) throw new Error('Task not found')
     const task = taskDoc.data() as Task
     
-    if (task.status !== 'completed') throw new Error('Task must be completed to approve')
+    if (task.status !== 'review' || task.approvalStatus !== 'pending') {
+      throw new Error('Task must be in review with pending approval')
+    }
     
     await updateDoc(taskRef, {
+      status: 'completed', // Move from review to completed
       approvalStatus: 'approved',
       approvedBy: employee.employeeId,
       approvedByName: employee.name,

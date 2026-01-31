@@ -909,35 +909,32 @@ function TaskDetailModal({
                 </Button>
               ))}
               
-              {/* Approval Badge/Button for Completed Tasks */}
-              {task.status === 'completed' && (
+              {/* Approval Badge/Button - Show for review (pending) or completed (approved) */}
+              {task.status === 'review' && task.approvalStatus === 'pending' && (
                 <>
-                  {task.approvalStatus === 'pending' && (
-                    <>
-                      <Badge variant="error" className="flex items-center gap-1">
-                        <FaExclamationCircle className="text-xs" />
-                        Pending Approval
-                      </Badge>
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          loading={approving}
-                          onClick={handleApproveTask}
-                          icon={<FaCheckCircle />}
-                        >
-                          Approve
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  {task.approvalStatus === 'approved' && (
-                    <Badge variant="success" className="flex items-center gap-1">
-                      <FaCheckCircle className="text-xs" />
-                      Approved by {task.approvedByName}
-                    </Badge>
+                  <Badge variant="error" className="flex items-center gap-1">
+                    <FaExclamationCircle className="text-xs" />
+                    Pending Approval
+                  </Badge>
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="success"
+                      loading={approving}
+                      onClick={handleApproveTask}
+                      icon={<FaCheckCircle />}
+                    >
+                      Approve
+                    </Button>
                   )}
                 </>
+              )}
+              
+              {task.status === 'completed' && task.approvalStatus === 'approved' && (
+                <Badge variant="success" className="flex items-center gap-1">
+                  <FaCheckCircle className="text-xs" />
+                  Approved by {task.approvedByName}
+                </Badge>
               )}
             </div>
           </div>
