@@ -1044,7 +1044,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const isHoliday = (date: string): boolean => {
-    return holidays.some(h => h.date === date)
+    // Check if there's a working day override (weekend marked as working day)
+    const hasWorkingDayOverride = holidays.some(h => h.date === date && h.name === '__WORKING_DAY__')
+    if (hasWorkingDayOverride) return false
+    
+    // Return true only if there's an actual holiday (not a working day override)
+    return holidays.some(h => h.date === date && h.name !== '__WORKING_DAY__')
   }
 
   const addHoliday = async (holiday: Omit<Holiday, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
