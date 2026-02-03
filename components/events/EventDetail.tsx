@@ -8,8 +8,18 @@ import { format } from 'date-fns'
 import { FaCalendar, FaMapMarkerAlt, FaClock, FaUsers, FaTag } from 'react-icons/fa'
 import EventRegistrationForm from './EventRegistrationForm'
 import Confetti from '../Confetti'
+import VibeCodeEventDetail from './VibeCodeEventDetail'
 
 export default function EventDetail({ event }: { event: any }) {
+  // Check if this is a VibeCode event - render dedicated component
+  if (event.isVibeCodeEvent) {
+    return <VibeCodeEventDetail event={event} />
+  }
+
+  return <DefaultEventDetail event={event} />
+}
+
+function DefaultEventDetail({ event }: { event: any }) {
   const [showRegistration, setShowRegistration] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [showConfetti, setShowConfetti] = useState(false)

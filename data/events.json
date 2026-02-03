@@ -1,5 +1,154 @@
 [
   {
+    "id": "vibecoding-irl-kprit-2026",
+    "slug": "vibecoding-irl-kprit",
+    "title": "VibeCode IRL",
+    "tagline": "Where Coding Meets the Vibe",
+    "description": "VibeCode IRL is a 2-day offline AI-assisted coding competition organized by matriXO at KPRIT. Teams of 4 will battle it out using cutting-edge AI tools to build, compete, and vibe together. This isn't your typical hackathon — it's coding culture, redefined.",
+    "date": "2026-02-11T09:00:00",
+    "endDate": "2026-02-12T18:00:00",
+    "venue": "Auditorium, D-Block, KPRIT",
+    "location": "Kommuri Pratap Reddy Institute of Technology, Hyderabad",
+    "totalCapacity": 200,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "Hackathon",
+    "isVibeCodeEvent": true,
+    "images": {
+      "banner": "/events/vibecode-irl-banner.png",
+      "thumbnail": "/events/vibecode-irl-thumbnail.png",
+      "gallery": []
+    },
+    "tickets": [
+      {
+        "id": "team-pass",
+        "name": "Team Pass (4 Members)",
+        "price": 69,
+        "originalPrice": 99,
+        "available": 200,
+        "description": "Full 2-day access for your team of 4 members",
+        "perks": [
+          "2-day full access to VibeCode IRL",
+          "AI-assisted coding environment",
+          "Participation certificates for all team members",
+          "Exclusive swag kit",
+          "Networking with mentors & peers",
+          "Refreshments included"
+        ]
+      }
+    ],
+    "partners": ["matriXO"],
+    "sponsors": [],
+    "agenda": [
+      { "time": "Day 1 - 9:00 AM", "title": "Registration & Check-in" },
+      { "time": "Day 1 - 10:00 AM", "title": "Opening Ceremony & Problem Statement Reveal" },
+      { "time": "Day 1 - 11:00 AM", "title": "Coding Sprint Begins" },
+      { "time": "Day 1 - 1:00 PM", "title": "Lunch Break" },
+      { "time": "Day 1 - 2:00 PM", "title": "Mentor Sessions & Coding Continues" },
+      { "time": "Day 1 - 6:00 PM", "title": "Day 1 Wrap-up & Progress Check" },
+      { "time": "Day 2 - 9:00 AM", "title": "Day 2 Kickoff" },
+      { "time": "Day 2 - 10:00 AM", "title": "Final Coding Sprint" },
+      { "time": "Day 2 - 1:00 PM", "title": "Lunch Break" },
+      { "time": "Day 2 - 2:00 PM", "title": "Code Freeze & Submission" },
+      { "time": "Day 2 - 3:00 PM", "title": "Project Presentations" },
+      { "time": "Day 2 - 5:00 PM", "title": "Judging & Results" },
+      { "time": "Day 2 - 6:00 PM", "title": "Prize Distribution & Closing Ceremony" }
+    ],
+    "tags": ["Hackathon", "AI Coding", "Competition", "Team Event", "matriXO"],
+    "organizer": "matriXO",
+    "ticketingPartner": "matriXO",
+    "contactEmail": "events@matrixo.in",
+    "socialLinks": {
+      "website": "https://matrixo.in",
+      "instagram": "https://www.instagram.com/matrixo.in/",
+      "linkedin": "https://www.linkedin.com/company/matrixo/"
+    },
+    "highlights": [
+      "AI-assisted coding competition",
+      "Team-based event (4 members per team)",
+      "2-day offline hackathon experience",
+      "Exclusive swag & certificates",
+      "Learn, build, and compete",
+      "Network with industry mentors"
+    ],
+    "benefits": [
+      {
+        "title": "Certificates",
+        "description": "All participants receive digital certificates of participation. Winners get special recognition certificates.",
+        "icon": "certificate"
+      },
+      {
+        "title": "Real Competition",
+        "description": "Compete against the best coders. Build something real. Get judged by industry professionals.",
+        "icon": "trophy"
+      },
+      {
+        "title": "Exclusive Swag",
+        "description": "Every registered team gets exclusive VibeCode IRL merchandise and goodies.",
+        "icon": "gift"
+      },
+      {
+        "title": "Industry Exposure",
+        "description": "Connect with tech mentors, get feedback on your work, and build your network.",
+        "icon": "network"
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is VibeCode IRL?",
+        "answer": "VibeCode IRL is a 2-day offline AI-assisted coding competition where teams of 4 build projects using AI tools. It's organized by matriXO at KPRIT, Hyderabad."
+      },
+      {
+        "question": "What is the team size?",
+        "answer": "Each team must have exactly 4 members. Solo registrations are allowed — you'll be matched with other solo participants."
+      },
+      {
+        "question": "What's the registration fee?",
+        "answer": "The registration fee is ₹69 per team (discounted from ₹99). This covers all 4 team members."
+      },
+      {
+        "question": "What do I need to bring?",
+        "answer": "Bring your laptop, charger, and your coding setup. Everything else (internet, workspace, refreshments) is provided."
+      },
+      {
+        "question": "Will food be provided?",
+        "answer": "Yes. Refreshments and lunch will be provided on both days of the event."
+      },
+      {
+        "question": "What if I don't have a team?",
+        "answer": "No worries! Register as a solo participant and we'll help you find teammates before the event."
+      },
+      {
+        "question": "Is prior coding experience required?",
+        "answer": "Basic programming knowledge is recommended. This event is designed for intermediate to advanced coders who want to push their limits with AI tools."
+      }
+    ],
+    "registrationFields": [
+      "Team Name",
+      "Team Leader Name",
+      "Team Leader Email",
+      "Team Leader Phone",
+      "Team Leader College",
+      "Team Leader Year",
+      "Member 2 Name",
+      "Member 2 Email",
+      "Member 2 Phone",
+      "Member 3 Name",
+      "Member 3 Email",
+      "Member 3 Phone",
+      "Member 4 Name",
+      "Member 4 Email",
+      "Member 4 Phone"
+    ],
+    "paymentInfo": {
+      "gateway": "Razorpay",
+      "amount": 69,
+      "currency": "INR",
+      "note": "Payment is mandatory to confirm registration. You will receive a payment link after form submission."
+    }
+  },
+  {
     "id": "tedxkprit-2025",
     "slug": "tedxkprit-2025-break-the-loop",
     "externalLink": "https://www.matrixo.in/events/tedxkprit",
