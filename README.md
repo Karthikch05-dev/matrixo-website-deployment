@@ -465,8 +465,21 @@ The Employee Portal is a comprehensive internal management system built with Rea
 
 ---
 
+## AI Coding Agent Support
+
+This project includes `.github/copilot-instructions.md` to help AI coding agents (GitHub Copilot, Cursor, etc.) be immediately productive:
+
+- **Architecture Overview**: Multi-domain setup (production, beta, employee portal)
+- **Project Structure**: Page, component, API route, and data patterns
+- **Critical Conventions**: Client components, Tailwind design tokens, event data structure
+- **Beta Feature Gating**: How features are conditionally enabled via `lib/config.ts`
+- **Integration Points**: Firebase Auth, Firestore, Resend email, Razorpay payments
+- **Key Files Reference**: Links to middleware, config, and complex components
+
+---
+
 <p align="center">
   <strong>© 2024-2026 matriXO. ALL RIGHTS RESERVED.</strong><br>
   <em>Unauthorized use is prohibited and will be prosecuted.</em><br><br>
-  <strong>Last Updated: January 26, 2026</strong>
+  <strong>Last Updated: February 3, 2026</strong>
 </p>
