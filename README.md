@@ -379,18 +379,18 @@ npm start
 
 ```
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                        PROPRIETARY LICENSE                                  ║
+║                        PROPRIETARY LICENSE                                 ║
 ║                                                                            ║
-║  Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                        ║
+║  Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                       ║
 ║                                                                            ║
-║  This software is proprietary and confidential. Unauthorized copying,     ║
-║  modification, distribution, or use of this software, via any medium,     ║
-║  is strictly prohibited without the prior written consent of matriXO.     ║
+║  This software is proprietary and confidential. Unauthorized copying,      ║
+║  modification, distribution, or use of this software, via any medium,      ║
+║  is strictly prohibited without the prior written consent of matriXO.      ║
 ║                                                                            ║
-║  This is NOT open source software. This is NOT free software.             ║
-║  No license is granted to use, copy, modify, or distribute this code.     ║
+║  This is NOT open source software. This is NOT free software.              ║
+║  No license is granted to use, copy, modify, or distribute this code.      ║
 ║                                                                            ║
-║  Violations will be prosecuted to the fullest extent of the law.          ║
+║  Violations will be prosecuted to the fullest extent of the law.           ║
 ║                                                                            ║
 ║  Legal Contact: legal@matrixo.in                                           ║
 ║  General Contact: hello@matrixo.in                                         ║
