@@ -7,7 +7,8 @@ import {
   FaCalendar, 
   FaMapMarkerAlt, 
   FaClock, 
-  FaUsers, 
+  FaUsers,
+  FaUser, 
   FaTag, 
   FaCode, 
   FaRobot, 
@@ -59,10 +60,6 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
   const toggleFaq = (index: number) => {
     setExpandedFaq(expandedFaq === index ? null : index)
   }
-
-  // Split agenda into Day 1 and Day 2
-  const day1Agenda = event.agenda?.filter((item: any) => item.time.includes('Day 1')) || []
-  const day2Agenda = event.agenda?.filter((item: any) => item.time.includes('Day 2')) || []
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f1c] via-[#0d1529] to-[#0a0f1c]">
@@ -136,20 +133,20 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             {/* Icon Highlights */}
             <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-10">
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
-                <FaCalendar className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">11-12 Feb 2026</span>
+                <FaClock className="text-cyan-400" />
+                <span className="text-white text-sm md:text-base">3-Hour Session</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                 <FaMapMarkerAlt className="text-cyan-400" />
                 <span className="text-white text-sm md:text-base">KPRIT, Hyderabad</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
-                <FaUsers className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">Team of 4</span>
+                <FaUser className="text-cyan-400" />
+                <span className="text-white text-sm md:text-base">Individual Event</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                 <FaRobot className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">AI-Assisted</span>
+                <span className="text-white text-sm md:text-base">AI-Powered</span>
               </div>
             </div>
 
@@ -209,17 +206,17 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
               <p>
-                VibeCode IRL isn't just another hackathon. It's a <span className="text-cyan-400 font-semibold">2-day offline coding experience</span> where 
-                teams of 4 compete using AI-powered tools to build real projects from scratch.
+                VibeCode IRL isn't just another workshop. It's a <span className="text-cyan-400 font-semibold">3-hour hands-on session</span> where 
+                you learn to leverage cutting-edge AI tools to supercharge your coding workflow.
               </p>
               
               <p>
-                Think fast. Code smarter. <span className="text-cyan-400 font-semibold">Vibe together.</span>
+                Learn fast. Code smarter. <span className="text-cyan-400 font-semibold">Level up your skills.</span>
               </p>
               
               <p>
                 Whether you're prompting GPT, pair-programming with Copilot, or debugging with Claude — this is where 
-                <span className="text-cyan-400 font-semibold"> AI meets human creativity</span>. No fluff. Just pure building energy.
+                <span className="text-cyan-400 font-semibold"> AI meets practical development</span>. No fluff. Just hands-on learning.
               </p>
             </div>
 
@@ -229,13 +226,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 AI-Assisted Development
               </span>
               <span className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm font-medium">
-                Real-Time Competition
+                Hands-On Practice
               </span>
               <span className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm font-medium">
-                Industry Mentorship
+                Expert Mentorship
               </span>
               <span className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 text-sm font-medium">
-                2 Days of Building
+                3 Hours of Learning
               </span>
             </div>
           </motion.div>
@@ -273,11 +270,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Certificates</h3>
               <p className="text-gray-400 text-sm">
-                All participants receive digital certificates. Winners get special recognition.
+                All participants receive digital certificates of participation from matriXO.
               </p>
             </motion.div>
 
-            {/* Competition Card */}
+            {/* Hands-On Learning Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -290,9 +287,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaTrophy className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Real Competition</h3>
+              <h3 className="text-xl font-bold text-white mb-2">Hands-On Learning</h3>
               <p className="text-gray-400 text-sm">
-                Compete against the best. Build something real. Get judged by industry pros.
+                Practical workshop with real coding exercises. Learn by doing, not just watching.
               </p>
             </motion.div>
 
@@ -311,7 +308,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Exclusive Swag</h3>
               <p className="text-gray-400 text-sm">
-                Every team gets exclusive VibeCode IRL merchandise and goodies.
+                Every participant gets exclusive VibeCode IRL merchandise and goodies.
               </p>
             </motion.div>
 
@@ -347,80 +344,44 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Event <span className="text-cyan-400">Schedule</span>
+              Workshop <span className="text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-400 text-lg">Two days. One mission. Build something epic.</p>
+            <p className="text-gray-400 text-lg">3 hours. Packed with learning. Transform your workflow.</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Day 1 */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
-                  <span className="text-xl font-bold text-cyan-400">01</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Day 1</h3>
-                  <p className="text-gray-400 text-sm">February 11, 2026</p>
-                </div>
+          {/* Single Session Schedule */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8 max-w-3xl mx-auto"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-14 h-14 bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                <FaClock className="text-2xl text-cyan-400" />
               </div>
-              
-              <div className="space-y-4">
-                {day1Agenda.map((item: any, index: number) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="w-24 flex-shrink-0">
-                      <span className="text-cyan-400 text-sm font-medium">
-                        {item.time.replace('Day 1 - ', '')}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full mb-2" />
-                      <p className="text-gray-300 text-sm">{item.title}</p>
-                    </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white">3-Hour Workshop</h3>
+                <p className="text-gray-400">Interactive learning session</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {event.agenda?.map((item: any, index: number) => (
+                <div key={index} className="flex gap-4">
+                  <div className="w-24 flex-shrink-0">
+                    <span className="text-cyan-400 text-sm font-medium">
+                      {item.time}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Day 2 */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
-                  <span className="text-xl font-bold text-cyan-400">02</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Day 2</h3>
-                  <p className="text-gray-400 text-sm">February 12, 2026</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {day2Agenda.map((item: any, index: number) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="w-24 flex-shrink-0">
-                      <span className="text-cyan-400 text-sm font-medium">
-                        {item.time.replace('Day 2 - ', '')}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full mb-2" />
-                      <p className="text-gray-300 text-sm">{item.title}</p>
-                    </div>
+                  <div className="flex-1">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full mb-2" />
+                    <p className="text-gray-300 text-sm">{item.title}</p>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -453,7 +414,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                   ₹69
                 </span>
               </div>
-              <p className="text-gray-400">Per team (4 members)</p>
+              <p className="text-gray-400">Per person</p>
               <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
                 <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
               </div>
@@ -464,29 +425,29 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Team Size: 4 Members</h4>
-                  <p className="text-gray-400 text-sm">Each team must have exactly 4 members to participate.</p>
+                  <h4 className="text-white font-semibold">Individual Registration</h4>
+                  <p className="text-gray-400 text-sm">Each person registers individually. No team required.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Solo Registration Allowed</h4>
-                  <p className="text-gray-400 text-sm">Don't have a team? Register solo and we'll match you.</p>
+                  <h4 className="text-white font-semibold">3-Hour Hands-On Workshop</h4>
+                  <p className="text-gray-400 text-sm">Intensive learning session with practical exercises.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">One Payment Per Team</h4>
-                  <p className="text-gray-400 text-sm">₹69 covers all 4 team members.</p>
+                  <h4 className="text-white font-semibold">Certificate Included</h4>
+                  <p className="text-gray-400 text-sm">₹69 includes workshop access, certificate, and swag.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="text-white font-semibold">Limited Seats</h4>
-                  <p className="text-gray-400 text-sm">Only 50 teams (200 participants) can compete.</p>
+                  <p className="text-gray-400 text-sm">Only 100 participants. Register early to secure your spot.</p>
                 </div>
               </div>
             </div>
@@ -500,7 +461,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                        font-bold text-lg text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 
                        transition-all duration-300"
             >
-              Register Your Team Now
+              Register Now
             </motion.button>
           </motion.div>
         </div>
@@ -518,7 +479,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Registration <span className="text-cyan-400">Fields</span>
             </h2>
-            <p className="text-gray-400 text-lg">What you'll need to register your team</p>
+            <p className="text-gray-400 text-lg">What you'll need to register</p>
           </motion.div>
 
           <motion.div
@@ -529,14 +490,12 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
           >
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                'Team Name',
-                'Team Leader Name',
-                'Team Leader Email',
-                'Team Leader Phone',
-                'Team Leader College & Year',
-                'Member 2: Name, Email, Phone',
-                'Member 3: Name, Email, Phone',
-                'Member 4: Name, Email, Phone'
+                'Full Name',
+                'Email Address',
+                'Phone Number',
+                'College Name',
+                'Year of Study',
+                'GitHub Profile (Optional)'
               ].map((field, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
                   <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center">
@@ -609,7 +568,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -619,7 +578,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             >
               <FaCertificate className="text-4xl text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Participation Certificate</h3>
-              <p className="text-gray-400 text-sm">Digital certificate for all team members</p>
+              <p className="text-gray-400 text-sm">Digital certificate for all participants</p>
             </motion.div>
 
             <motion.div
@@ -627,18 +586,6 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-center p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
-            >
-              <FaTrophy className="text-4xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Winner Certificates</h3>
-              <p className="text-gray-400 text-sm">Special recognition for top 3 teams</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
               className="text-center p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
             >
               <FaGift className="text-4xl text-cyan-400 mx-auto mb-4" />
@@ -775,16 +722,16 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             {/* Urgency Badge */}
             <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              <span className="text-orange-400 font-medium text-sm">Limited Seats – Only 50 Teams</span>
+              <span className="text-orange-400 font-medium text-sm">Limited Seats – Only 100 Participants</span>
             </div>
 
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Ready to <span className="text-cyan-400">Code & Compete</span>?
+              Ready to <span className="text-cyan-400">Learn & Level Up</span>?
             </h2>
 
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              This is your chance to be part of something epic. Grab your team. 
-              Lock in your spot. Let's build something legendary.
+              This is your chance to master AI-assisted coding. Join us for 3 hours. 
+              Transform your workflow. Level up your skills.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -805,7 +752,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </div>
 
             <p className="text-gray-500 text-sm mt-6">
-              11-12 February 2026 • KPRIT, Hyderabad • Offline Event
+              3-Hour Workshop • KPRIT, Hyderabad • Offline Event
             </p>
           </motion.div>
         </div>
