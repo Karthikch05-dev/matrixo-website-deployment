@@ -15,9 +15,9 @@ A modern, responsive event ticketing and ed-tech platform for **matriXO** - An E
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║   🚨 THIS IS PROPRIETARY SOFTWARE - UNAUTHORIZED USE IS STRICTLY PROHIBITED  ║
+║  🚨 THIS IS PROPRIETARY SOFTWARE - UNAUTHORIZED USE IS STRICTLY PROHIBITED   ║
 ║                                                                              ║
-║   Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                            ║
+║   Copyright © 2024-2026 matriXO. ALL RIGHTS RESERVED.                        ║
 ║                                                                              ║
 ║   This repository and ALL its contents including but not limited to:         ║
 ║   • Source code, algorithms, and logic                                       ║
