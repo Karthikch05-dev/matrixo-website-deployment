@@ -32,9 +32,7 @@
           "3-hour hands-on workshop",
           "AI tools & techniques masterclass",
           "Participation certificate",
-          "Exclusive swag kit",
-          "Networking with mentors & peers",
-          "Refreshments included"
+          "Networking with mentors & peers"
         ]
       }
     ],
@@ -46,7 +44,7 @@
       { "time": "10:45 AM", "title": "Hands-on Session: GitHub Copilot & ChatGPT" },
       { "time": "11:30 AM", "title": "Advanced Techniques & Best Practices" },
       { "time": "12:00 PM", "title": "Live Coding Demo" },
-      { "time": "12:30 PM", "title": "Q&A and Certificate Distribution" },
+      { "time": "12:30 PM", "title": "Q&A and Physical Certificate Distribution" },
       { "time": "1:00 PM", "title": "Workshop Ends" }
     ],
     "tags": ["Workshop", "AI Coding", "Learning", "Individual Event", "matriXO"],
@@ -62,25 +60,20 @@
       "3-hour hands-on workshop",
       "Individual learning experience",
       "AI tools & techniques masterclass",
-      "Exclusive swag & certificates",
+      "Certificates for all participants",
       "Learn from industry experts",
       "Network with peers & mentors"
     ],
     "benefits": [
       {
         "title": "Certificates",
-        "description": "All participants receive digital certificates of participation from matriXO.",
+        "description": "All participants receive physical certificates of participation from matriXO (distributed at the venue).",
         "icon": "certificate"
       },
       {
         "title": "Hands-On Learning",
         "description": "Practical workshop with real coding exercises. Learn by doing, not just watching.",
         "icon": "trophy"
-      },
-      {
-        "title": "Exclusive Swag",
-        "description": "Every participant gets exclusive VibeCode IRL merchandise and goodies.",
-        "icon": "gift"
       },
       {
         "title": "Industry Exposure",
@@ -99,17 +92,14 @@
       },
       {
         "question": "What's the registration fee?",
-        "answer": "The registration fee is ₹69 per person (discounted from ₹99). This includes workshop access, certificate, and swag."
+        "answer": "The registration fee is ₹69 per person (discounted from ₹99). This includes workshop access and physical certificate."
       },
       {
         "question": "What do I need to bring?",
-        "answer": "Bring your laptop and charger. We'll provide everything else including internet access, workspace, and refreshments."
+        "answer": "Bring your laptop and charger. We'll provide internet access and workspace."
       },
       {
-        "question": "Will refreshments be provided?",
-        "answer": "Yes. Light refreshments will be provided during the workshop."
-      },
-      {
+
         "question": "Is this a team event?",
         "answer": "No, this is an individual workshop. Each person registers and participates on their own."
       },
@@ -127,10 +117,10 @@
       "GitHub Profile (Optional)"
     ],
     "paymentInfo": {
-      "gateway": "Razorpay",
+      "gateway": "UPI",
       "amount": 69,
       "currency": "INR",
-      "note": "Payment is mandatory to confirm registration. You will receive a payment link after form submission."
+      "note": "Payment is mandatory to confirm registration. After form submission, you'll be redirected to your UPI app to complete payment."
     }
   },
   {
