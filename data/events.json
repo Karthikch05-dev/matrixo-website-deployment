@@ -4,9 +4,9 @@
     "slug": "vibecoding-irl-kprit",
     "title": "VibeCode IRL",
     "tagline": "Where Coding Meets the Vibe",
-    "description": "VibeCode IRL is a 3-hour interactive workshop on AI-assisted coding organized by matriXO at KPRIT. Learn how to leverage cutting-edge AI tools to supercharge your coding workflow. This isn't your typical workshop — it's hands-on, practical, and built for developers who want to level up.",
+    "description": "VibeCode IRL is a full-day interactive event on AI-assisted coding organized by matriXO at KPRIT. Learn how to leverage cutting-edge AI tools, participate in quiz competitions, showcase your skills in coding competitions, and win exciting prizes. This isn't your typical workshop — it's hands-on, competitive, and built for developers who want to level up.",
     "date": "2026-03-01T10:00:00",
-    "endDate": "2026-03-01T13:00:00",
+    "endDate": "2026-03-01T16:00:00",
     "venue": "Auditorium, D-Block, KPRIT",
     "location": "Kommuri Pratap Reddy Institute of Technology, Hyderabad",
     "totalCapacity": 100,
@@ -27,25 +27,25 @@
         "price": 69,
         "originalPrice": 99,
         "available": 100,
-        "description": "Full 3-hour workshop access",
+        "description": "Full day event access",
         "perks": [
-          "3-hour hands-on workshop",
+          "Full-day workshop + competitions",
           "AI tools & techniques masterclass",
+          "Quiz competition with prizes",
+          "Coding competition",
           "Participation certificate",
-          "Networking with mentors & peers"
+          "Chance to win swags & merit certificates",
+          "Lunch included"
         ]
       }
     ],
     "partners": ["matriXO"],
     "sponsors": [],
     "agenda": [
-      { "time": "10:00 AM", "title": "Registration & Welcome" },
-      { "time": "10:15 AM", "title": "Introduction to AI-Assisted Coding" },
-      { "time": "10:45 AM", "title": "Hands-on Session: GitHub Copilot & ChatGPT" },
-      { "time": "11:30 AM", "title": "Advanced Techniques & Best Practices" },
-      { "time": "12:00 PM", "title": "Live Coding Demo" },
-      { "time": "12:30 PM", "title": "Q&A and Physical Certificate Distribution" },
-      { "time": "1:00 PM", "title": "Workshop Ends" }
+      { "time": "10:00 AM - 1:00 PM", "title": "Workshop + Quiz Competition" },
+      { "time": "1:00 PM - 2:00 PM", "title": "Lunch Break" },
+      { "time": "2:00 PM - 3:30 PM", "title": "Coding Competition" },
+      { "time": "3:30 PM - 4:00 PM", "title": "Evaluation & Certificate Distribution" }
     ],
     "tags": ["Workshop", "AI Coding", "Learning", "Individual Event", "matriXO"],
     "organizer": "matriXO",
@@ -57,28 +57,29 @@
       "linkedin": "https://www.linkedin.com/company/matrixo/"
     },
     "highlights": [
-      "3-hour hands-on workshop",
-      "Individual learning experience",
+      "Full-day event with workshop & competitions",
+      "Quiz competition with exciting swags",
+      "Coding competition with merit certificates",
       "AI tools & techniques masterclass",
-      "Certificates for all participants",
-      "Learn from industry experts",
+      "Participation certificates for all",
+      "Lunch included",
       "Network with peers & mentors"
     ],
     "benefits": [
       {
-        "title": "Certificates",
-        "description": "All participants receive physical certificates of participation from matriXO (distributed at the venue).",
+        "title": "Participation Certificate",
+        "description": "Physical certificate for everyone who participated (distributed at the venue)",
         "icon": "certificate"
       },
       {
-        "title": "Hands-On Learning",
-        "description": "Practical workshop with real coding exercises. Learn by doing, not just watching.",
-        "icon": "trophy"
+        "title": "Swags for Top 3",
+        "description": "Exciting swags for top 3 quiz competition winners",
+        "icon": "gift"
       },
       {
-        "title": "Industry Exposure",
-        "description": "Connect with tech mentors, get feedback, and build your professional network.",
-        "icon": "network"
+        "title": "Merit Certificates",
+        "description": "Special merit certificates for top 3 competition winners",
+        "icon": "trophy"
       }
     ],
     "faqs": [

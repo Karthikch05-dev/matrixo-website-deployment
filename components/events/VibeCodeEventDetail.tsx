@@ -134,7 +134,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-10">
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                 <FaClock className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">3-Hour Session</span>
+                <span className="text-white text-sm md:text-base">Full Day Event</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                 <FaMapMarkerAlt className="text-cyan-400" />
@@ -206,7 +206,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
               <p>
-                VibeCode IRL isn't just another workshop. It's a <span className="text-cyan-400 font-semibold">3-hour hands-on session</span> where 
+                VibeCode IRL isn't just another workshop. It's a <span className="text-cyan-400 font-semibold">full-day event</span> where 
                 you learn to leverage cutting-edge AI tools to supercharge your coding workflow.
               </p>
               
@@ -327,7 +327,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Workshop <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">3 hours. Packed with learning. Transform your workflow.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Full day event. Workshop, Quiz, Competition & Certificates.</p>
           </motion.div>
 
           {/* Single Session Schedule */}
@@ -342,8 +342,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 <FaClock className="text-2xl text-cyan-500 dark:text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">3-Hour Workshop</h3>
-                <p className="text-gray-500 dark:text-gray-400">Interactive learning session</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Full Day Event</h3>
+                <p className="text-gray-500 dark:text-gray-400">Workshop, Quiz, Competition & Certificates</p>
               </div>
             </div>
             
@@ -413,15 +413,15 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">3-Hour Hands-On Workshop</h4>
-                  <p className="text-gray-400 text-sm">Intensive learning session with practical exercises.</p>
+                  <h4 className="text-white font-semibold">Full-Day Event Access</h4>
+                  <p className="text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="text-white font-semibold">Physical Certificate Included</h4>
-                  <p className="text-gray-400 text-sm">₹69 includes workshop access and physical certificate.</p>
+                  <p className="text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -546,17 +546,41 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          <div className="max-w-md mx-auto">
+          <div className="grid md:grid-cols-3 gap-6">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
+              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaCertificate className="text-5xl text-cyan-400 mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-white mb-2">Participation Certificate</h3>
-              <p className="text-gray-400">Physical certificate for all participants (distributed at the venue after completing the workshop)</p>
+              <p className="text-gray-400">Physical certificate for everyone who participated</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
+            >
+              <FaGift className="text-5xl text-cyan-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Swags</h3>
+              <p className="text-gray-400">Exciting swags for top 3 quiz competition winners</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
+            >
+              <FaTrophy className="text-5xl text-cyan-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Merit Certificate</h3>
+              <p className="text-gray-400">Special merit certificates for top 3 competition winners</p>
             </motion.div>
           </div>
         </div>
@@ -718,7 +742,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </div>
 
             <p className="text-gray-500 text-sm mt-6">
-              3-Hour Workshop • KPRIT, Hyderabad • Offline Event
+              Full-Day Event • KPRIT, Hyderabad • Offline Event
             </p>
           </motion.div>
         </div>
