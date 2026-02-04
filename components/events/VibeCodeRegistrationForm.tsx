@@ -16,7 +16,9 @@ import {
   FaLaptop,
   FaCopy,
   FaMobileAlt,
-  FaCodeBranch
+  FaCodeBranch,
+  FaUpload,
+  FaImage
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 
@@ -30,13 +32,15 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showPaymentInfo, setShowPaymentInfo] = useState(false)
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null)
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
     name: '',
     rollNumber: '',
     email: '',
     phone: '',
-    year: '',
+    year: '2nd Year',
     branch: '',
     college: '',
     hasLaptop: ''
@@ -64,6 +68,31 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     toast.success('UPI ID copied to clipboard!')
   }
 
+  // Handle screenshot upload
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file')
+        return
+      }
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size should be less than 5MB')
+        return
+      }
+      setPaymentScreenshot(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      toast.success('Screenshot uploaded!')
+    }
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -88,10 +117,6 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.error('Please enter a valid phone number')
       return false
     }
-    if (!formData.year) {
-      toast.error('Please select your year of study')
-      return false
-    }
     if (!formData.branch) {
       toast.error('Please select your branch of study')
       return false
@@ -109,13 +134,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
   const sendToGoogleSheet = async (data: any) => {
     try {
-      const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL
-
-      if (!GOOGLE_SCRIPT_URL) {
-        // Google Script URL not configured - skip this step and continue with payment
-        console.log('Google Script URL not configured - skipping sheet registration')
-        return true
-      }
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo2lczU5Jazrh74jUXcLLB-NFjYDK7rLrqJMU-uYxFP3oOL8WhhebH9pS_6ArDagz3wQ/exec'
 
       // Send to Google Apps Script
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -147,31 +166,8 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     setIsSubmitting(true)
 
     try {
-      // Prepare data for Google Sheet
-      const registrationData = {
-        timestamp: new Date().toISOString(),
-        eventId: event.id,
-        eventTitle: event.title,
-        ticketType: ticket.name,
-        ticketPrice: ticket.price,
-        
-        // Participant Info
-        name: formData.name,
-        rollNumber: formData.rollNumber,
-        email: formData.email,
-        phone: formData.phone,
-        year: formData.year,
-        branch: formData.branch,
-        college: formData.college,
-        hasLaptop: formData.hasLaptop,
-        
-        status: 'Pending Payment'
-      }
-
-      toast.info('Submitting registration...')
-      await sendToGoogleSheet(registrationData)
-
-      toast.success('Registration submitted!')
+      // Don't send to Google Sheet yet - wait for payment screenshot
+      toast.success('Please proceed to payment')
       
       // Handle payment based on device
       if (isMobile) {
@@ -189,6 +185,55 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     } catch (error: any) {
       console.error('Registration error:', error)
       toast.error(error.message || 'Registration failed. Please try again.')
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleFinalSubmit = async () => {
+    if (!paymentScreenshot) {
+      toast.error('Please upload payment screenshot')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      // Prepare data for Google Sheet with screenshot
+      const registrationData = {
+        timestamp: new Date().toISOString(),
+        eventId: event.id,
+        eventTitle: event.title,
+        ticketType: ticket.name,
+        price: ticket.price,
+        
+        // Participant Info
+        name: formData.name,
+        rollNumber: formData.rollNumber,
+        email: formData.email,
+        phone: formData.phone,
+        college: formData.college,
+        branch: formData.branch,
+        year: formData.year,
+        github: '', // Not collected but expected by script
+        hasLaptop: formData.hasLaptop,
+        paymentScreenshot: screenshotPreview || '', // Base64 image
+        
+        status: 'Pending Verification'
+      }
+
+      toast.info('Submitting registration...')
+      await sendToGoogleSheet(registrationData)
+
+      toast.success('Registration complete! You will receive confirmation within 24 hours.')
+      
+      // Close modal after short delay
+      setTimeout(() => {
+        onClose()
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      toast.error(error.message || 'Submission failed. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -298,26 +343,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               />
             </div>
 
-            {/* Year of Study */}
+            {/* Year of Study - Fixed to 2nd Year */}
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaGraduationCap className="text-cyan-400" />
-                Year of Study <span className="text-red-400">*</span>
+                Year of Study
               </label>
-              <select
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         focus:outline-none focus:border-cyan-400 transition-all"
-                disabled={isSubmitting}
-              >
-                <option value="" className="bg-[#0d1830]">Choose</option>
-                <option value="1st Year" className="bg-[#0d1830]">1st Year</option>
-                <option value="2nd Year" className="bg-[#0d1830]">2nd Year</option>
-                <option value="3rd Year" className="bg-[#0d1830]">3rd Year</option>
-                <option value="4th Year" className="bg-[#0d1830]">4th Year</option>
-              </select>
+              <div className="w-full px-4 py-3 bg-cyan-500/20 border border-cyan-500/50 rounded-xl text-cyan-400 font-medium">
+                2nd Year Only
+              </div>
+              <p className="text-xs text-gray-400 mt-1">This workshop is exclusively for 2nd year students</p>
             </div>
 
             {/* Branch of Study */}
@@ -488,16 +523,62 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               <p className="text-3xl font-bold text-white">₹{ticket.price}</p>
             </div>
 
-            <p className="text-sm text-gray-400 mb-4">
-              After payment, you'll receive confirmation via email within 24 hours.
-            </p>
+            {/* Payment Screenshot Upload */}
+            <div className="mb-4">
+              <p className="text-gray-300 text-sm mb-3">
+                After payment, upload the screenshot:
+              </p>
+              <label className="relative cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScreenshotChange}
+                  className="hidden"
+                />
+                {screenshotPreview ? (
+                  <div className="relative">
+                    <img 
+                      src={screenshotPreview} 
+                      alt="Payment Screenshot" 
+                      className="w-full max-h-48 object-contain rounded-xl border border-green-500/50"
+                    />
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <FaCheckCircle size={10} />
+                      Uploaded
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-cyan-500/50 rounded-xl p-6 hover:bg-white/5 transition-all">
+                    <FaUpload className="text-cyan-400 text-2xl mx-auto mb-2" />
+                    <p className="text-cyan-400 text-sm font-medium">Click to upload screenshot</p>
+                    <p className="text-gray-500 text-xs mt-1">PNG, JPG up to 5MB</p>
+                  </div>
+                )}
+              </label>
+            </div>
 
             <button
-              onClick={onClose}
-              className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white 
-                       font-bold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all"
+              onClick={handleFinalSubmit}
+              disabled={!paymentScreenshot || isSubmitting}
+              className={`w-full px-6 py-4 rounded-xl text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                paymentScreenshot && !isSubmitting
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-cyan-500/30 hover:shadow-cyan-500/50' 
+                  : 'bg-gray-600 cursor-not-allowed opacity-50'
+              }`}
             >
-              Done
+              {isSubmitting ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Submitting...
+                </>
+              ) : paymentScreenshot ? (
+                <>
+                  <FaCheckCircle />
+                  Submit Registration
+                </>
+              ) : (
+                'Upload Screenshot to Continue'
+              )}
             </button>
           </div>
         </motion.div>
