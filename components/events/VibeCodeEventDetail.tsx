@@ -270,7 +270,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Certificates</h3>
               <p className="text-gray-400 text-sm">
-                All participants receive digital certificates of participation from matriXO.
+                All participants receive physical certificates of participation from matriXO (distributed at the venue).
               </p>
             </motion.div>
 
@@ -439,8 +439,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Certificate Included</h4>
-                  <p className="text-gray-400 text-sm">₹69 includes workshop access, certificate, and swag.</p>
+                  <h4 className="text-white font-semibold">Physical Certificate Included</h4>
+                  <p className="text-gray-400 text-sm">₹69 includes workshop access and physical certificate.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -508,7 +508,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
             <div className="mt-6 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
               <p className="text-cyan-400 text-sm text-center">
-                After form submission, you'll be redirected to complete payment via Razorpay. 
+                After form submission, you'll be redirected to your UPI app to complete payment. 
                 Payment confirmation is mandatory to secure your spot.
               </p>
             </div>
@@ -539,16 +539,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <FaRupeeSign className="text-3xl text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Powered by Razorpay</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Secure UPI Payment</h3>
             <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-              All payments are securely processed through Razorpay. You'll receive a payment link after 
-              form submission. Payment confirmation is mandatory to confirm your registration.
+              All payments are completed via UPI. After submitting the registration form, you'll be redirected 
+              to your UPI app to complete payment. Payment confirmation is mandatory to secure your spot.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <span className="px-4 py-2 bg-white/5 rounded-full text-gray-400 text-sm">UPI</span>
-              <span className="px-4 py-2 bg-white/5 rounded-full text-gray-400 text-sm">Credit Card</span>
-              <span className="px-4 py-2 bg-white/5 rounded-full text-gray-400 text-sm">Debit Card</span>
-              <span className="px-4 py-2 bg-white/5 rounded-full text-gray-400 text-sm">Net Banking</span>
+            <div className="flex justify-center">
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">UPI Payment</span>
             </div>
           </motion.div>
         </div>
@@ -568,29 +565,17 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          <div className="max-w-md mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-center p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
+              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
             >
-              <FaCertificate className="text-4xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Participation Certificate</h3>
-              <p className="text-gray-400 text-sm">Digital certificate for all participants</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="text-center p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl"
-            >
-              <FaGift className="text-4xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Swag Kit</h3>
-              <p className="text-gray-400 text-sm">Exclusive merchandise for every participant</p>
+              <FaCertificate className="text-5xl text-cyan-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Participation Certificate</h3>
+              <p className="text-gray-400">Physical certificate for all participants (distributed at the venue after completing the workshop)</p>
             </motion.div>
           </div>
         </div>

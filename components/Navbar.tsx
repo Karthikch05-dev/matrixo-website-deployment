@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
@@ -60,6 +61,7 @@ export default function Navbar() {
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   
   const { user, logout } = useAuth()
+  const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
@@ -151,24 +153,32 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link, index) => (
-              <motion.div
-                key={link.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link
-                  href={link.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 
-                           font-medium transition-colors duration-200 relative group"
+            {navLinks.map((link, index) => {
+              const isActive = pathname === link.href
+              return (
+                <motion.div
+                  key={link.name}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  {link.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 
-                                 group-hover:w-full transition-all duration-200" />
-                </Link>
-              </motion.div>
-            ))}
+                  <Link
+                    href={link.href}
+                    className={`font-medium transition-colors duration-200 relative group ${
+                      isActive 
+                        ? 'text-blue-500 dark:text-blue-400' 
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400'
+                    }`}
+                  >
+                    {link.name}
+                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 
+                                   transition-all duration-200 ${
+                                     isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                                   }`} />
+                  </Link>
+                </motion.div>
+              )
+            })}
             
             {/* Beta Features Dropdown */}
             {isBeta && (
@@ -362,17 +372,23 @@ export default function Navbar() {
               className="md:hidden overflow-hidden"
             >
               <div className="py-4 space-y-3">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 
-                             rounded-lg transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+                {navLinks.map((link) => {
+                  const isActive = pathname === link.href
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`block px-4 py-2 rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {link.name}
+                    </Link>
+                  )
+                })}
 
                 {/* Mobile Beta Features Accordion */}
                 {isBeta && (

@@ -11,7 +11,8 @@ import {
   FaTimes,
   FaSpinner,
   FaCheckCircle,
-  FaGithub
+  FaGithub,
+  FaLaptop
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 
@@ -30,7 +31,8 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     phone: '',
     college: '',
     year: '',
-    github: ''
+    github: '',
+    hasLaptop: ''
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -63,6 +65,10 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     }
     if (!formData.github.trim()) {
       toast.error('Please enter your GitHub username')
+      return false
+    }
+    if (!formData.hasLaptop) {
+      toast.error('Please select if you have a laptop')
       return false
     }
     return true
@@ -119,6 +125,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         college: formData.college,
         year: formData.year,
         github: formData.github,
+        hasLaptop: formData.hasLaptop,
         
         status: 'Pending Payment'
       }
@@ -286,6 +293,46 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                          placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
                 disabled={isSubmitting}
               />
+            </div>
+
+            {/* Do you have a laptop? */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-medium mb-3">
+                <FaLaptop className="text-cyan-400" />
+                Do you have a laptop?
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, hasLaptop: 'YES' })}
+                  disabled={isSubmitting}
+                  className={`px-6 py-4 rounded-xl font-semibold transition-all ${
+                    formData.hasLaptop === 'YES'
+                      ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
+                      : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                  }`}
+                >
+                  YES
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, hasLaptop: 'NO' })}
+                  disabled={isSubmitting}
+                  className={`px-6 py-4 rounded-xl font-semibold transition-all ${
+                    formData.hasLaptop === 'NO'
+                      ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
+                      : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                  }`}
+                >
+                  NO
+                </button>
+              </div>
+              {formData.hasLaptop === 'NO' && (
+                <p className="text-yellow-400 text-sm mt-2 flex items-start gap-2">
+                  <span>⚠️</span>
+                  <span>Please note: This is a hands-on coding workshop. A laptop is required to participate effectively.</span>
+                </p>
+              )}
             </div>
           </div>
 
