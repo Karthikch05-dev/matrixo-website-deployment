@@ -23,10 +23,13 @@ import {
   FaLaptopCode,
   FaBolt
 } from 'react-icons/fa'
+import { useAuth } from '@/lib/AuthContext'
+import { toast } from 'sonner'
 // @ts-ignore - Import error is a VS Code cache issue, file exists
 import VibeCodeRegistrationForm from './VibeCodeRegistrationForm'
 
 export default function VibeCodeEventDetail({ event }: { event: any }) {
+  const { user } = useAuth()
   const [showRegistration, setShowRegistration] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
@@ -34,6 +37,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
   const scheduleSectionRef = useRef<HTMLDivElement>(null)
 
   const handleRegisterNow = (ticket: any) => {
+    if (!user) {
+      toast.error('Please login to register for this event')
+      setTimeout(() => {
+        window.location.href = '/auth/login'
+      }, 1500)
+      return
+    }
     setSelectedTicket(ticket)
     setShowRegistration(true)
   }

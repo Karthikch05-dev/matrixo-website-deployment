@@ -22,6 +22,9 @@ import {
   FaImage
 } from 'react-icons/fa'
 import { toast } from 'sonner'
+import { useAuth } from '@/lib/AuthContext'
+import { db } from '@/lib/firebaseConfig'
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 
 interface VibeCodeRegistrationFormProps {
   event: any
@@ -30,16 +33,19 @@ interface VibeCodeRegistrationFormProps {
 }
 
 export default function VibeCodeRegistrationForm({ event, ticket, onClose }: VibeCodeRegistrationFormProps) {
+  const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showPaymentInfo, setShowPaymentInfo] = useState(false)
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null)
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
+  const [hasRegistered, setHasRegistered] = useState(false)
+  const [checkingRegistration, setCheckingRegistration] = useState(true)
   
   const [formData, setFormData] = useState({
-    name: '',
+    name: user?.displayName || '',
     rollNumber: '',
-    email: '',
+    email: user?.email || '',
     phone: '',
     year: '2nd Year',
     branch: '',
@@ -58,6 +64,48 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   // UPI Payment Link with price locked and unique transaction code
   const transactionCode = generateUniqueCode()
   const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=${encodeURIComponent(`VibeCode IRL - ${transactionCode}`)}`
+
+  // Check if user has already registered for this event
+  useEffect(() => {
+    const checkExistingRegistration = async () => {
+      if (!user?.email) {
+        setCheckingRegistration(false)
+        return
+      }
+
+      try {
+        const registrationsRef = collection(db, 'vibecode_registrations')
+        const q = query(
+          registrationsRef,
+          where('eventId', '==', event.id),
+          where('email', '==', user.email)
+        )
+        const querySnapshot = await getDocs(q)
+        
+        if (!querySnapshot.empty) {
+          setHasRegistered(true)
+          toast.error('You have already registered for this event')
+        }
+      } catch (error) {
+        console.error('Error checking registration:', error)
+      } finally {
+        setCheckingRegistration(false)
+      }
+    }
+
+    checkExistingRegistration()
+  }, [user, event.id])
+
+  // Auto-fill user email when logged in
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email!,
+        name: user.displayName || prev.name
+      }))
+    }
+  }, [user])
 
   // Detect mobile device
   useEffect(() => {
@@ -199,6 +247,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   }
 
   const handleFinalSubmit = async () => {
+    if (!user) {
+      toast.error('Please login to register')
+      return
+    }
+
+    if (hasRegistered) {
+      toast.error('You have already registered for this event')
+      return
+    }
+
     if (!paymentScreenshot) {
       toast.error('Please upload payment screenshot')
       return
@@ -232,6 +290,15 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       }
 
       toast.info('Submitting registration...')
+      
+      // Save to Firestore to track registrations
+      await addDoc(collection(db, 'vibecode_registrations'), {
+        ...registrationData,
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      })
+
+      // Also send to Google Sheet
       await sendToGoogleSheet(registrationData)
 
       toast.success('Registration complete! You will receive confirmation within 24 hours.')
@@ -278,8 +345,43 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           <p className="text-gray-300">Fill in your details to secure your spot • ₹{ticket.price}</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8">
+        {/* Check if user is logged in */}
+        {!user ? (
+          <div className="p-8 text-center">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8">
+              <FaTimes className="mx-auto text-red-400 text-5xl mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Login Required</h3>
+              <p className="text-gray-300 mb-6">
+                You must be logged in to register for this event.
+              </p>
+              <button
+                onClick={() => window.location.href = '/auth/login'}
+                className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        ) : checkingRegistration ? (
+          <div className="p-8 text-center">
+            <FaSpinner className="animate-spin mx-auto text-cyan-400 text-5xl mb-4" />
+            <p className="text-gray-300">Checking your registration status...</p>
+          </div>
+        ) : hasRegistered ? (
+          <div className="p-8 text-center">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-8">
+              <FaCheckCircle className="mx-auto text-yellow-400 text-5xl mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Already Registered</h3>
+              <p className="text-gray-300 mb-2">
+                You have already registered for this event with this account.
+              </p>
+              <p className="text-sm text-gray-400">
+                Only one registration per account is allowed.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-8">
           <div className="space-y-6">
             {/* Full Name */}
             <div>
@@ -322,17 +424,19 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaEnvelope className="text-cyan-400" />
                 Email Address <span className="text-red-400">*</span>
+                <span className="text-xs text-gray-400">(from your account)</span>
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleChange}
                 placeholder="your.email@example.com"
                 className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
-                disabled={isSubmitting}
+                         placeholder:text-gray-500 opacity-70 cursor-not-allowed"
+                disabled={true}
+                readOnly
               />
+              <p className="text-xs text-gray-400 mt-1">Using email from your logged-in account</p>
             </div>
 
             {/* Phone */}
@@ -486,6 +590,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             By registering, you agree to our terms and conditions. Your data is secure with us.
           </p>
         </form>
+        )}
       </motion.div>
 
       {/* Payment Info Modal for Desktop */}

@@ -86,5 +86,17 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // VIBECODE REGISTRATIONS COLLECTION
+    // ================================================
+    match /vibecode_registrations/{registrationId} {
+      // Allow authenticated users to create registrations
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      // Allow users to read their own registrations
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/Employees/$(request.auth.uid)).data.role == 'admin');
+      // Only admins can update or delete
+      allow update, delete: if isAuthenticated() && get(/databases/$(database)/documents/Employees/$(request.auth.uid)).data.role == 'admin';
+    }
   }
 }
