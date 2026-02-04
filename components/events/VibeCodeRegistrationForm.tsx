@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
@@ -41,6 +41,8 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [hasRegistered, setHasRegistered] = useState(false)
   const [checkingRegistration, setCheckingRegistration] = useState(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false)
   
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
@@ -127,6 +129,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
   // Handle screenshot upload
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsFileDialogOpen(false)
     const file = e.target.files?.[0]
     if (file) {
       // Check file type
@@ -144,10 +147,26 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       const reader = new FileReader()
       reader.onloadend = () => {
         setScreenshotPreview(reader.result as string)
+        toast.success('Screenshot uploaded successfully!')
       }
       reader.readAsDataURL(file)
-      toast.success('Screenshot uploaded!')
     }
+  }
+
+  // Handle file input click
+  const handleUploadClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsFileDialogOpen(true)
+    // Add a focus listener to detect when file dialog closes
+    const handleFocus = () => {
+      setTimeout(() => {
+        setIsFileDialogOpen(false)
+      }, 300)
+      window.removeEventListener('focus', handleFocus)
+    }
+    window.addEventListener('focus', handleFocus)
+    fileInputRef.current?.click()
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -316,13 +335,22 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     }
   }
 
+  // Handle modal close - prevent closing when file dialog is open
+  const handleModalBackdropClick = (e: React.MouseEvent) => {
+    if (isFileDialogOpen) {
+      e.stopPropagation()
+      return
+    }
+    onClose()
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-      onClick={onClose}
+      onClick={handleModalBackdropClick}
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -600,8 +628,12 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl p-4"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 text-center max-w-md max-h-[90vh] overflow-y-auto bg-[#0d1830] rounded-2xl">
+          <div 
+            className="p-6 text-center max-w-md max-h-[90vh] overflow-y-auto bg-[#0d1830] rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
             
             {/* QR Code - Dynamically Generated with Unique Code */}
@@ -650,33 +682,50 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               <p className="text-gray-300 text-sm mb-3">
                 After payment, upload the screenshot:
               </p>
-              <label className="relative cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleScreenshotChange}
-                  className="hidden"
-                />
-                {screenshotPreview ? (
-                  <div className="relative">
-                    <img 
-                      src={screenshotPreview} 
-                      alt="Payment Screenshot" 
-                      className="w-full max-h-48 object-contain rounded-xl border border-green-500/50"
-                    />
-                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                      <FaCheckCircle size={10} />
-                      Uploaded
-                    </div>
+              
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleScreenshotChange}
+                onBlur={() => setIsFileDialogOpen(false)}
+                onClick={(e) => e.stopPropagation()}
+                className="hidden"
+                style={{ display: 'none' }}
+              />
+              
+              {/* Upload button/preview area */}
+              {screenshotPreview ? (
+                <div className="relative">
+                  <img 
+                    src={screenshotPreview} 
+                    alt="Payment Screenshot" 
+                    className="w-full max-h-48 object-contain rounded-xl border border-green-500/50"
+                  />
+                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                    <FaCheckCircle size={10} />
+                    Uploaded
                   </div>
-                ) : (
-                  <div className="border-2 border-dashed border-cyan-500/50 rounded-xl p-6 hover:bg-white/5 transition-all">
-                    <FaUpload className="text-cyan-400 text-2xl mx-auto mb-2" />
-                    <p className="text-cyan-400 text-sm font-medium">Click to upload screenshot</p>
-                    <p className="text-gray-500 text-xs mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-                )}
-              </label>
+                  <button
+                    type="button"
+                    onClick={handleUploadClick}
+                    className="mt-2 w-full text-center text-cyan-400 text-sm hover:underline"
+                  >
+                    Change Screenshot
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleUploadClick}
+                  className="w-full border-2 border-dashed border-cyan-500/50 rounded-xl p-6 hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  <FaUpload className="text-cyan-400 text-2xl mx-auto mb-2" />
+                  <p className="text-cyan-400 text-sm font-medium">Click to upload screenshot</p>
+                  <p className="text-gray-500 text-xs mt-1">PNG, JPG up to 5MB</p>
+                </button>
+              )}
             </div>
 
             <button
