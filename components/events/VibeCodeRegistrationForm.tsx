@@ -191,7 +191,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
   const sendToGoogleSheet = async (data: any) => {
     try {
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo2IczU5Jazrh74jUXcLLB-NFjYDK7LrqJMU-uYxFP3oOL8WhhebH9pS_6ArDagz3wQ/exec'
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo2lczU5Jazrh74jUXcLLB-NFjYDK7rLrqJMU-uYxFP3oOL8WhhebH9pS_6ArDagz3wQ/exec'
 
       // Send to Google Apps Script
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -298,15 +298,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         createdAt: serverTimestamp()
       })
 
-      // Also send to Google Sheet
+      // Also send to Google Sheet (which triggers email)
       await sendToGoogleSheet(registrationData)
 
-      toast.success('Registration complete! You will receive confirmation within 24 hours.')
+      toast.success('🎉 Registration Complete! Check your email at ' + formData.email + ' for confirmation.')
       
-      // Close modal after short delay
+      // Close modal after delay to let user see the success message
       setTimeout(() => {
         onClose()
-      }, 2000)
+        window.location.reload() // Reload to update registration status
+      }, 3000)
 
     } catch (error: any) {
       console.error('Registration error:', error)
@@ -683,24 +684,33 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               disabled={!paymentScreenshot || isSubmitting}
               className={`w-full px-6 py-4 rounded-xl text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
                 paymentScreenshot && !isSubmitting
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-cyan-500/30 hover:shadow-cyan-500/50' 
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-cyan-500/30 hover:shadow-cyan-500/50 cursor-pointer' 
                   : 'bg-gray-600 cursor-not-allowed opacity-50'
               }`}
             >
               {isSubmitting ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  Submitting...
+                  Submitting Registration...
                 </>
               ) : paymentScreenshot ? (
                 <>
                   <FaCheckCircle />
-                  Submit Registration
+                  Complete Registration
                 </>
               ) : (
-                'Upload Screenshot to Continue'
+                <>
+                  <FaUpload />
+                  Please Upload Screenshot First
+                </>
               )}
             </button>
+            
+            {!paymentScreenshot && (
+              <p className="text-center text-gray-400 text-xs mt-2">
+                ⬆️ Upload your payment screenshot above to continue
+              </p>
+            )}
           </div>
         </motion.div>
       )}
