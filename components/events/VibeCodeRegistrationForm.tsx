@@ -65,6 +65,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   const transactionCode = generateUniqueCode()
   const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=${encodeURIComponent(`VibeCode IRL - ${transactionCode}`)}`
 
+  // Check if user has already registered (using localStorage)
+  useEffect(() => {
+    if (user?.email) {
+      const registeredEmails = JSON.parse(localStorage.getItem('vibecode_registrations') || '[]')
+      if (registeredEmails.includes(user.email)) {
+        setHasRegistered(true)
+      }
+    }
+  }, [user?.email])
+
   // Auto-fill user email when logged in
   useEffect(() => {
     if (user?.email) {
@@ -238,6 +248,20 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       return
     }
 
+    // Check if already registered
+    if (hasRegistered) {
+      toast.error('You have already registered for this event!')
+      return
+    }
+
+    // Double-check localStorage
+    const registeredEmails = JSON.parse(localStorage.getItem('vibecode_registrations') || '[]')
+    if (registeredEmails.includes(formData.email)) {
+      setHasRegistered(true)
+      toast.error('You have already registered for this event!')
+      return
+    }
+
     if (!paymentScreenshot) {
       toast.error('Please upload payment screenshot')
       return
@@ -274,6 +298,14 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       
       // Send to Google Sheet (which triggers email)
       await sendToGoogleSheet(registrationData)
+
+      // Save to localStorage to prevent duplicate registration
+      const registeredEmails = JSON.parse(localStorage.getItem('vibecode_registrations') || '[]')
+      if (!registeredEmails.includes(formData.email)) {
+        registeredEmails.push(formData.email)
+        localStorage.setItem('vibecode_registrations', JSON.stringify(registeredEmails))
+      }
+      setHasRegistered(true)
 
       toast.success('🎉 Registration Complete! Check your email at ' + formData.email + ' for confirmation.')
       
@@ -342,6 +374,25 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
               >
                 Go to Login
+              </button>
+            </div>
+          </div>
+        ) : hasRegistered ? (
+          <div className="p-8 text-center">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-8">
+              <FaCheckCircle className="mx-auto text-green-400 text-5xl mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Already Registered!</h3>
+              <p className="text-gray-300 mb-4">
+                You have already registered for {event.title}.
+              </p>
+              <p className="text-cyan-300 text-sm mb-6">
+                Check your email for confirmation details. If you haven't received the email, please check your spam folder or contact us.
+              </p>
+              <button
+                onClick={onClose}
+                className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
+              >
+                Close
               </button>
             </div>
           </div>
