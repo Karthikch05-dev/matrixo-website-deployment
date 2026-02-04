@@ -493,9 +493,9 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl overflow-y-auto"
+          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl p-4"
         >
-          <div className="p-6 text-center max-w-md">
+          <div className="p-6 text-center max-w-md max-h-[90vh] overflow-y-auto bg-[#0d1830] rounded-2xl">
             <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
             
             {/* QR Code - Dynamically Generated with Unique Code */}
