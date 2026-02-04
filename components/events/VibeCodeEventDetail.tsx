@@ -38,10 +38,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
   const handleRegisterNow = (ticket: any) => {
     if (!user) {
-      toast.error('Please login to register for this event')
-      setTimeout(() => {
-        window.location.href = '/auth'
-      }, 1500)
+      window.location.href = '/auth'
       return
     }
     setSelectedTicket(ticket)
