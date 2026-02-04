@@ -4,9 +4,9 @@
     "slug": "vibecoding-irl-kprit",
     "title": "VibeCode IRL",
     "tagline": "Where Coding Meets the Vibe",
-    "description": "VibeCode IRL is a full-day interactive event on AI-assisted coding organized by matriXO at KPRIT. Learn how to leverage cutting-edge AI tools, participate in quiz competitions, showcase your skills in coding competitions, and win exciting prizes. This isn't your typical workshop — it's hands-on, competitive, and built for developers who want to level up.",
-    "date": "2026-03-01T10:00:00",
-    "endDate": "2026-03-01T16:00:00",
+    "description": "VibeCode IRL is a 2-day interactive event on AI-assisted coding organized by matriXO at KPRIT. Two separate sessions across Feb 12 & 13. Learn how to leverage cutting-edge AI tools, participate in quiz competitions, showcase your skills in coding competitions, and win exciting prizes. This isn't your typical workshop — it's hands-on, competitive, and built for developers who want to level up.",
+    "date": "2026-02-12T10:00:00",
+    "endDate": "2026-02-13T16:00:00",
     "venue": "Auditorium, D-Block, KPRIT",
     "location": "Kommuri Pratap Reddy Institute of Technology, Hyderabad",
     "totalCapacity": 100,
@@ -27,7 +27,7 @@
         "price": 69,
         "originalPrice": 99,
         "available": 100,
-        "description": "Full day event access",
+        "description": "Access to one session (choose Feb 12 or 13)",
         "perks": [
           "Full-day workshop + competitions",
           "AI tools & techniques masterclass",
@@ -42,10 +42,12 @@
     "partners": ["matriXO"],
     "sponsors": [],
     "agenda": [
-      { "time": "10:00 AM - 1:00 PM", "title": "Workshop + Quiz Competition" },
-      { "time": "1:00 PM - 2:00 PM", "title": "Lunch Break" },
-      { "time": "2:00 PM - 3:30 PM", "title": "Coding Competition" },
-      { "time": "3:30 PM - 4:00 PM", "title": "Evaluation & Certificate Distribution" }
+      { "time": "Feb 12 - 10:00 AM - 1:00 PM", "title": "Session 1: Workshop + Quiz Competition" },
+      { "time": "Feb 12 - 1:00 PM - 2:00 PM", "title": "Lunch Break" },
+      { "time": "Feb 12 - 2:00 PM - 4:00 PM", "title": "Session 1: Coding Competition & Certificates" },
+      { "time": "Feb 13 - 10:00 AM - 1:00 PM", "title": "Session 2: Workshop + Quiz Competition" },
+      { "time": "Feb 13 - 1:00 PM - 2:00 PM", "title": "Lunch Break" },
+      { "time": "Feb 13 - 2:00 PM - 4:00 PM", "title": "Session 2: Coding Competition & Certificates" }
     ],
     "tags": ["Workshop", "AI Coding", "Learning", "Individual Event", "matriXO"],
     "organizer": "matriXO",

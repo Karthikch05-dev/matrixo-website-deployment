@@ -325,9 +325,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Workshop <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
+              Event <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">Full day event. Workshop, Quiz, Competition & Certificates.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. Feb 12 & 13. Choose your day!</p>
           </motion.div>
 
           {/* Single Session Schedule */}
