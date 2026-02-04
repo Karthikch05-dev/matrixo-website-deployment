@@ -35,6 +35,9 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     hasLaptop: ''
   })
 
+  // UPI Payment Link for VibeCode IRL (₹69)
+  const UPI_PAYMENT_LINK = `upi://pay?pa=bhuvaneshwaripothuraju2005@oksbi&pn=MatriXO&am=${ticket.price}&cu=INR&tn=VibeCode%20IRL%20Registration`
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -63,10 +66,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.error('Please select your year of study')
       return false
     }
-    if (!formData.github.trim()) {
-      toast.error('Please enter your GitHub username')
-      return false
-    }
+    // GitHub is optional - no validation needed
     if (!formData.hasLaptop) {
       toast.error('Please select if you have a laptop')
       return false
@@ -137,13 +137,15 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.info('Submitting registration...')
       await sendToGoogleSheet(registrationData)
 
-      toast.success('Registration submitted! Redirecting to payment...')
+      toast.success('Registration submitted! Redirecting to UPI app...')
       
-      // Simulate payment redirect (in production, integrate with Razorpay)
+      // Redirect to UPI payment
       setTimeout(() => {
-        toast.success('You will receive a payment link shortly via email.')
+        // Open UPI app for payment
+        window.location.href = UPI_PAYMENT_LINK
+        toast.info('Complete payment in your UPI app (GPay, PhonePe, Paytm, etc.)')
         onClose()
-      }, 2000)
+      }, 1500)
 
     } catch (error: any) {
       console.error('Registration error:', error)
@@ -285,7 +287,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaGithub className="text-cyan-400" />
-                GitHub Username
+                GitHub Username <span className="text-gray-400 text-sm font-normal">(Optional)</span>
               </label>
               <input
                 type="text"

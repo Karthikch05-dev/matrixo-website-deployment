@@ -16,8 +16,8 @@
     "category": "Workshop",
     "isVibeCodeEvent": true,
     "images": {
-      "banner": "/events/vibecode-irl-banner.png",
-      "thumbnail": "/events/vibecode-irl-thumbnail.png",
+      "banner": "",
+      "thumbnail": "",
       "gallery": []
     },
     "tickets": [
