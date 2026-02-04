@@ -214,6 +214,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         eventTitle: event.title,
         ticketType: ticket.name,
         price: ticket.price,
+        transactionCode: transactionCode, // Add unique transaction code
         
         // Participant Info
         name: formData.name,
