@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FaUser, 
@@ -12,7 +12,9 @@ import {
   FaSpinner,
   FaCheckCircle,
   FaGithub,
-  FaLaptop
+  FaLaptop,
+  FaCopy,
+  FaMobileAlt
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 
@@ -24,6 +26,8 @@ interface VibeCodeRegistrationFormProps {
 
 export default function VibeCodeRegistrationForm({ event, ticket, onClose }: VibeCodeRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -35,8 +39,27 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     hasLaptop: ''
   })
 
-  // UPI Payment Link for VibeCode IRL (₹69)
-  const UPI_PAYMENT_LINK = `upi://pay?pa=bhuvaneshwaripothuraju2005@oksbi&pn=MatriXO&am=${ticket.price}&cu=INR&tn=VibeCode%20IRL%20Registration`
+  // UPI Payment details
+  const UPI_ID = 'bhuvaneshwaripothuraju2005@oksbi'
+  const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=VibeCode%20IRL%20Registration`
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
+      setIsMobile(isMobileDevice || window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Copy UPI ID to clipboard
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(UPI_ID)
+    toast.success('UPI ID copied to clipboard!')
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -137,15 +160,20 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.info('Submitting registration...')
       await sendToGoogleSheet(registrationData)
 
-      toast.success('Registration submitted! Redirecting to UPI app...')
+      toast.success('Registration submitted!')
       
-      // Redirect to UPI payment
-      setTimeout(() => {
-        // Open UPI app for payment
-        window.location.href = UPI_PAYMENT_LINK
-        toast.info('Complete payment in your UPI app (GPay, PhonePe, Paytm, etc.)')
-        onClose()
-      }, 1500)
+      // Handle payment based on device
+      if (isMobile) {
+        // On mobile, try to open UPI app
+        toast.info('Opening UPI app for payment...')
+        setTimeout(() => {
+          window.location.href = UPI_PAYMENT_LINK
+        }, 1000)
+      } else {
+        // On desktop, show payment info modal
+        setShowPaymentInfo(true)
+        setIsSubmitting(false)
+      }
 
     } catch (error: any) {
       console.error('Registration error:', error)
@@ -380,6 +408,57 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           </p>
         </form>
       </motion.div>
+
+      {/* Payment Info Modal for Desktop */}
+      {showPaymentInfo && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl"
+        >
+          <div className="p-8 text-center max-w-md">
+            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FaMobileAlt className="text-white text-3xl" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
+            <p className="text-gray-300 mb-6">
+              Open any UPI app on your phone (GPay, PhonePe, Paytm) and pay to:
+            </p>
+            
+            {/* UPI ID Box */}
+            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">
+              <p className="text-gray-400 text-sm mb-2">UPI ID</p>
+              <div className="flex items-center justify-center gap-3">
+                <code className="text-cyan-400 text-lg font-mono">{UPI_ID}</code>
+                <button
+                  onClick={copyUpiId}
+                  className="p-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg transition-all"
+                >
+                  <FaCopy className="text-cyan-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-6">
+              <p className="text-gray-400 text-sm mb-1">Amount to Pay</p>
+              <p className="text-3xl font-bold text-white">₹{ticket.price}</p>
+            </div>
+
+            <p className="text-sm text-gray-400 mb-6">
+              After payment, you'll receive confirmation via email within 24 hours.
+            </p>
+
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white 
+                       font-bold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all"
+            >
+              Done
+            </button>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   )
 }
