@@ -48,7 +48,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   })
 
   // UPI Payment details
-  const UPI_ID = 'karthikchinthakindi5-1@oksbi'
+  const UPI_ID = 'vutukurikishan.8@okaxis'
   const generateUniqueCode = () => {
     const timestamp = Date.now()
     const random = Math.floor(Math.random() * 10000)
