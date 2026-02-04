@@ -254,7 +254,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <p className="text-gray-400 text-lg">More than just code. Real value.</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Certificate Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -293,31 +293,12 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               </p>
             </motion.div>
 
-            {/* Swag Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="group p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 
-                       rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
-            >
-              <div className="w-14 h-14 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 
-                            group-hover:bg-cyan-500/20 transition-colors">
-                <FaGift className="text-2xl text-cyan-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Exclusive Swag</h3>
-              <p className="text-gray-400 text-sm">
-                Every participant gets exclusive VibeCode IRL merchandise and goodies.
-              </p>
-            </motion.div>
-
             {/* Exposure Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.3 }}
               className="group p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 
                        rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
             >

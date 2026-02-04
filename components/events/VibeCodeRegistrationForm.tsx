@@ -79,7 +79,9 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL
 
       if (!GOOGLE_SCRIPT_URL) {
-        throw new Error('Google Script URL not configured.')
+        // Google Script URL not configured - skip this step and continue with payment
+        console.log('Google Script URL not configured - skipping sheet registration')
+        return true
       }
 
       // Send to Google Apps Script
@@ -96,7 +98,9 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       
       return true
     } catch (error: any) {
-      throw error
+      // Log error but don't block registration
+      console.error('Failed to save to Google Sheet:', error)
+      return true
     }
   }
 
