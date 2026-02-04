@@ -184,13 +184,17 @@ export default function Navbar() {
               return (
                 <motion.div
                   key={link.name}
-                  initial={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ 
+                    delay: index * 0.05,
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1]
+                  }}
                 >
                   <Link
                     href={link.href}
-                    className={`font-medium transition-colors duration-200 relative group ${
+                    className={`font-medium transition-all duration-300 ease-out relative group ${
                       isActive 
                         ? 'text-blue-500 dark:text-blue-400' 
                         : 'text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400'
@@ -198,7 +202,7 @@ export default function Navbar() {
                   >
                     {link.name}
                     <span className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 
-                                   transition-all duration-200 ${
+                                   transition-all duration-300 ease-out ${
                                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
                                    }`} />
                   </Link>
@@ -215,19 +219,19 @@ export default function Navbar() {
               >
                 <button
                   className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 
-                           font-bold transition-colors duration-200 relative group px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                           font-bold transition-all duration-300 ease-out relative group px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20"
                 >
                   Features
-                  <FaChevronDown className={`text-xs transition-transform duration-200 ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
+                  <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 
                 <AnimatePresence>
                   {showFeaturesDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
                       {betaLinks.map((link, index) => (
@@ -255,31 +259,31 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {mounted && (
               <motion.button
-                whileHover={{ scale: 1.1, rotate: 180 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={toggleDarkMode}
                 className="relative p-2 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 
-                         hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
+                         hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-300 ease-out"
                 aria-label="Toggle dark mode"
               >
                 <AnimatePresence mode="wait">
                   {darkMode ? (
                     <motion.div
                       key="sun"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ rotate: -45, opacity: 0, scale: 0.8 }}
+                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                      exit={{ rotate: 45, opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
                       <FaSun className="w-5 h-5" />
                     </motion.div>
                   ) : (
                     <motion.div
                       key="moon"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ rotate: 45, opacity: 0, scale: 0.8 }}
+                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                      exit={{ rotate: -45, opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
                       <FaMoon className="w-5 h-5" />
                     </motion.div>
@@ -309,10 +313,10 @@ export default function Navbar() {
                 <AnimatePresence>
                   {showUserDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -336,7 +340,7 @@ export default function Navbar() {
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ease-out"
                       >
                         <FaSignOutAlt />
                         <span>Logout</span>
@@ -347,14 +351,14 @@ export default function Navbar() {
               </div>
             ) : (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               >
                 <Link
                   href="/auth"
                   className="inline-flex items-center gap-2 px-4 py-2 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                           rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                           rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300 ease-out"
                 >
                   <FaUser className="text-sm" />
                   Login
@@ -396,7 +400,7 @@ export default function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               className="md:hidden overflow-hidden"
             >
               <div className="py-4 space-y-3">
@@ -407,7 +411,7 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-2 rounded-lg transition-colors ${
+                      className={`block px-4 py-2 rounded-lg transition-all duration-200 ease-out ${
                         isActive
                           ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
