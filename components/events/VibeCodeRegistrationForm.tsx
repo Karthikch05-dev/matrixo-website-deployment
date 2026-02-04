@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { QRCodeSVG } from 'qrcode.react'
 import { 
   FaUser, 
   FaEnvelope, 
@@ -48,7 +49,15 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
   // UPI Payment details
   const UPI_ID = 'karthikchinthakindi5-1@oksbi'
-  const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=VibeCode%20IRL%20Registration`
+  const generateUniqueCode = () => {
+    const timestamp = Date.now()
+    const random = Math.floor(Math.random() * 10000)
+    return `VIBECODE-${timestamp}-${random}`
+  }
+  
+  // UPI Payment Link with price locked and unique transaction code
+  const transactionCode = generateUniqueCode()
+  const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=${encodeURIComponent(`VibeCode IRL - ${transactionCode}`)}`
 
   // Detect mobile device
   useEffect(() => {
@@ -488,20 +497,26 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           <div className="p-6 text-center max-w-md">
             <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
             
-            {/* QR Code */}
+            {/* QR Code - Dynamically Generated with Unique Code */}
             <div className="bg-white rounded-2xl p-4 mb-4 inline-block">
-              <Image
-                src="/images/vibecode-upi-qr.png"
-                alt="UPI QR Code"
-                width={200}
-                height={200}
+              <QRCodeSVG
+                value={UPI_PAYMENT_LINK}
+                size={200}
+                level="H"
+                includeMargin={true}
                 className="mx-auto"
               />
             </div>
             
             <p className="text-gray-300 mb-4 text-sm">
-              Scan the QR code or pay using the UPI ID below:
+              Scan this unique QR code (₹{ticket.price} locked) or pay using the UPI ID below:
             </p>
+            
+            {/* Transaction Code Display */}
+            <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-3 mb-4">
+              <p className="text-blue-300 text-xs mb-1">Your Unique Transaction Code:</p>
+              <code className="text-blue-400 text-sm font-mono break-all">{transactionCode}</code>
+            </div>
             
             {/* UPI ID Box */}
             <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">

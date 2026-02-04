@@ -34,7 +34,7 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
     hearAboutEvent: ''
   })
 
-  // UPI Payment Link for TEDxKPRIT (₹499)
+  // UPI Payment Link for TEDxKPRIT
   const UPI_PAYMENT_LINK = 'upi://pay?pa=bhuvaneshwaripothuraju2005@oksbi'
 
   // Detect mobile device
