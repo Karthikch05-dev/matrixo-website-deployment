@@ -23,8 +23,6 @@ import {
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/AuthContext'
-import { db } from '@/lib/firebaseConfig'
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 
 interface VibeCodeRegistrationFormProps {
   event: any
@@ -40,7 +38,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null)
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [hasRegistered, setHasRegistered] = useState(false)
-  const [checkingRegistration, setCheckingRegistration] = useState(true)
+  const [checkingRegistration, setCheckingRegistration] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false)
   
@@ -66,37 +64,6 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   // UPI Payment Link with price locked and unique transaction code
   const transactionCode = generateUniqueCode()
   const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=${encodeURIComponent(`VibeCode IRL - ${transactionCode}`)}`
-
-  // Check if user has already registered for this event
-  useEffect(() => {
-    const checkExistingRegistration = async () => {
-      if (!user?.email) {
-        setCheckingRegistration(false)
-        return
-      }
-
-      try {
-        const registrationsRef = collection(db, 'vibecode_registrations')
-        const q = query(
-          registrationsRef,
-          where('eventId', '==', event.id),
-          where('email', '==', user.email)
-        )
-        const querySnapshot = await getDocs(q)
-        
-        if (!querySnapshot.empty) {
-          setHasRegistered(true)
-          toast.error('You have already registered for this event')
-        }
-      } catch (error) {
-        console.error('Error checking registration:', error)
-      } finally {
-        setCheckingRegistration(false)
-      }
-    }
-
-    checkExistingRegistration()
-  }, [user, event.id])
 
   // Auto-fill user email when logged in
   useEffect(() => {
@@ -271,11 +238,6 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       return
     }
 
-    if (hasRegistered) {
-      toast.error('You have already registered for this event')
-      return
-    }
-
     if (!paymentScreenshot) {
       toast.error('Please upload payment screenshot')
       return
@@ -310,14 +272,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
       toast.info('Submitting registration...')
       
-      // Save to Firestore to track registrations
-      await addDoc(collection(db, 'vibecode_registrations'), {
-        ...registrationData,
-        userId: user.uid,
-        createdAt: serverTimestamp()
-      })
-
-      // Also send to Google Sheet (which triggers email)
+      // Send to Google Sheet (which triggers email)
       await sendToGoogleSheet(registrationData)
 
       toast.success('🎉 Registration Complete! Check your email at ' + formData.email + ' for confirmation.')
@@ -325,7 +280,6 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       // Close modal after delay to let user see the success message
       setTimeout(() => {
         onClose()
-        window.location.reload() // Reload to update registration status
       }, 3000)
 
     } catch (error: any) {
@@ -389,24 +343,6 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               >
                 Go to Login
               </button>
-            </div>
-          </div>
-        ) : checkingRegistration ? (
-          <div className="p-8 text-center">
-            <FaSpinner className="animate-spin mx-auto text-cyan-400 text-5xl mb-4" />
-            <p className="text-gray-300">Checking your registration status...</p>
-          </div>
-        ) : hasRegistered ? (
-          <div className="p-8 text-center">
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-8">
-              <FaCheckCircle className="mx-auto text-yellow-400 text-5xl mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Already Registered</h3>
-              <p className="text-gray-300 mb-2">
-                You have already registered for this event with this account.
-              </p>
-              <p className="text-sm text-gray-400">
-                Only one registration per account is allowed.
-              </p>
             </div>
           </div>
         ) : (

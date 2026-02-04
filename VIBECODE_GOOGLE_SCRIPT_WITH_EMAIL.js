@@ -11,6 +11,23 @@ function doPost(e) {
     // Open the spreadsheet
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     
+    // Check for duplicate registration by email
+    const emailColumn = 10; // Column J (email is in column 10)
+    const lastRow = sheet.getLastRow();
+    const emailValues = sheet.getRange(2, emailColumn, lastRow - 1, 1).getValues();
+    
+    // Check if email already exists
+    for (let i = 0; i < emailValues.length; i++) {
+      if (emailValues[i][0] === data.email) {
+        return ContentService
+          .createTextOutput(JSON.stringify({ 
+            success: false, 
+            error: 'You have already registered for this event. Check your email for confirmation.' 
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
     // Upload screenshot to Drive if provided
     let screenshotUrl = '';
     if (data.paymentScreenshot && data.paymentScreenshot.startsWith('data:image')) {
@@ -18,7 +35,6 @@ function doPost(e) {
     }
     
     // Get current row count to generate serial number
-    const lastRow = sheet.getLastRow();
     const serialNumber = lastRow; // Serial number (row number)
     
     // Add data to sheet
