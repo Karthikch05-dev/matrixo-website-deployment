@@ -8,6 +8,7 @@ import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, Fa
 import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
 import config from '@/lib/config'
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -59,6 +60,7 @@ export default function Navbar() {
   const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false)
   const [showMobileFeaturesDropdown, setShowMobileFeaturesDropdown] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [isEmployee, setIsEmployee] = useState(false)
   
   const { user, logout } = useAuth()
   const pathname = usePathname()
@@ -72,6 +74,30 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Check if user is an employee in Firebase
+  useEffect(() => {
+    const checkIfEmployee = async () => {
+      if (!user?.email) {
+        setIsEmployee(false)
+        return
+      }
+      
+      try {
+        const db = getFirestore()
+        const employeesRef = collection(db, 'Employees')
+        const q = query(employeesRef, where('email', '==', user.email))
+        const querySnapshot = await getDocs(q)
+        
+        setIsEmployee(!querySnapshot.empty)
+      } catch (error) {
+        console.error('Error checking employee status:', error)
+        setIsEmployee(false)
+      }
+    }
+    
+    checkIfEmployee()
+  }, [user])
 
   useEffect(() => {
     if (!mounted) return
@@ -297,15 +323,17 @@ export default function Navbar() {
                           {user.email}
                         </p>
                       </div>
-                      <a
-                        href={EMPLOYEE_PORTAL_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors border-b border-gray-200 dark:border-gray-700"
-                      >
-                        <FaIdBadge />
-                        <span>Employee Portal</span>
-                      </a>
+                      {isEmployee && (
+                        <a
+                          href={EMPLOYEE_PORTAL_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full px-4 py-3 text-left flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors border-b border-gray-200 dark:border-gray-700"
+                        >
+                          <FaIdBadge />
+                          <span>Employee Portal</span>
+                        </a>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-3 text-left flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -449,17 +477,19 @@ export default function Navbar() {
                           {user.email}
                         </p>
                       </div>
-                      <a
-                        href={EMPLOYEE_PORTAL_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                                 rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
-                      >
-                        <FaIdBadge className="text-sm" />
-                        Employee Portal
-                      </a>
+                      {isEmployee && (
+                        <a
+                          href={EMPLOYEE_PORTAL_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
+                                   rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                        >
+                          <FaIdBadge className="text-sm" />
+                          Employee Portal
+                        </a>
+                      )}
                       <button
                         onClick={() => {
                           handleLogout()
