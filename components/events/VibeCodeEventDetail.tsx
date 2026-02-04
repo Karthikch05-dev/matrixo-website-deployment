@@ -40,7 +40,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
     if (!user) {
       toast.error('Please login to register for this event')
       setTimeout(() => {
-        window.location.href = '/auth/login'
+        window.location.href = '/auth'
       }, 1500)
       return
     }

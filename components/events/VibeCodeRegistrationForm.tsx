@@ -355,7 +355,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 You must be logged in to register for this event.
               </p>
               <button
-                onClick={() => window.location.href = '/auth/login'}
+                onClick={() => window.location.href = '/auth'}
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
               >
                 Go to Login
