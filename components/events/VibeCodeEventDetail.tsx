@@ -324,10 +324,10 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Workshop <span className="text-cyan-400">Schedule</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Workshop <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-400 text-lg">3 hours. Packed with learning. Transform your workflow.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">3 hours. Packed with learning. Transform your workflow.</p>
           </motion.div>
 
           {/* Single Session Schedule */}
@@ -335,15 +335,15 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8 max-w-3xl mx-auto"
+            className="bg-white dark:bg-gradient-to-br dark:from-[#0d1830] dark:to-[#0a1525] border border-gray-200 dark:border-cyan-500/20 rounded-2xl p-8 max-w-3xl mx-auto shadow-lg dark:shadow-none"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-14 h-14 bg-cyan-500/20 rounded-xl flex items-center justify-center">
-                <FaClock className="text-2xl text-cyan-400" />
+              <div className="w-14 h-14 bg-cyan-100 dark:bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                <FaClock className="text-2xl text-cyan-500 dark:text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">3-Hour Workshop</h3>
-                <p className="text-gray-400">Interactive learning session</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">3-Hour Workshop</h3>
+                <p className="text-gray-500 dark:text-gray-400">Interactive learning session</p>
               </div>
             </div>
             
@@ -351,13 +351,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               {event.agenda?.map((item: any, index: number) => (
                 <div key={index} className="flex gap-4">
                   <div className="w-24 flex-shrink-0">
-                    <span className="text-cyan-400 text-sm font-medium">
+                    <span className="text-cyan-600 dark:text-cyan-400 text-sm font-medium">
                       {item.time}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full mb-2" />
-                    <p className="text-gray-300 text-sm">{item.title}</p>
+                    <div className="w-2 h-2 bg-cyan-500 dark:bg-cyan-400 rounded-full mb-2" />
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">{item.title}</p>
                   </div>
                 </div>
               ))}

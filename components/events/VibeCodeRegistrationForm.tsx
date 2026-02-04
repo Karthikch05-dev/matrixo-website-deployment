@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { 
   FaUser, 
   FaEnvelope, 
@@ -11,10 +12,11 @@ import {
   FaTimes,
   FaSpinner,
   FaCheckCircle,
-  FaGithub,
+  FaIdCard,
   FaLaptop,
   FaCopy,
-  FaMobileAlt
+  FaMobileAlt,
+  FaCodeBranch
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 
@@ -31,16 +33,17 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   
   const [formData, setFormData] = useState({
     name: '',
+    rollNumber: '',
     email: '',
     phone: '',
-    college: '',
     year: '',
-    github: '',
+    branch: '',
+    college: '',
     hasLaptop: ''
   })
 
   // UPI Payment details
-  const UPI_ID = 'bhuvaneshwaripothuraju2005@oksbi'
+  const UPI_ID = 'karthikchinthakindi5-1@oksbi'
   const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=VibeCode%20IRL%20Registration`
 
   // Detect mobile device
@@ -73,6 +76,10 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.error('Please enter your name')
       return false
     }
+    if (!formData.rollNumber.trim()) {
+      toast.error('Please enter your roll number')
+      return false
+    }
     if (!formData.email.trim() || !formData.email.includes('@')) {
       toast.error('Please enter a valid email')
       return false
@@ -81,15 +88,18 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       toast.error('Please enter a valid phone number')
       return false
     }
-    if (!formData.college.trim()) {
-      toast.error('Please enter your college name')
-      return false
-    }
     if (!formData.year) {
       toast.error('Please select your year of study')
       return false
     }
-    // GitHub is optional - no validation needed
+    if (!formData.branch) {
+      toast.error('Please select your branch of study')
+      return false
+    }
+    if (!formData.college.trim()) {
+      toast.error('Please enter your college name')
+      return false
+    }
     if (!formData.hasLaptop) {
       toast.error('Please select if you have a laptop')
       return false
@@ -147,11 +157,12 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         
         // Participant Info
         name: formData.name,
+        rollNumber: formData.rollNumber,
         email: formData.email,
         phone: formData.phone,
-        college: formData.college,
         year: formData.year,
-        github: formData.github,
+        branch: formData.branch,
+        college: formData.college,
         hasLaptop: formData.hasLaptop,
         
         status: 'Pending Payment'
@@ -219,7 +230,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaUser className="text-cyan-400" />
-                Full Name
+                Full Name <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -233,11 +244,29 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               />
             </div>
 
+            {/* Roll Number */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-medium mb-2">
+                <FaIdCard className="text-cyan-400" />
+                Roll Number (Full Series) <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                name="rollNumber"
+                value={formData.rollNumber}
+                onChange={handleChange}
+                placeholder="e.g., 22BD1A0501"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
+                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+                disabled={isSubmitting}
+              />
+            </div>
+
             {/* Email */}
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaEnvelope className="text-cyan-400" />
-                Email Address
+                Email Address <span className="text-red-400">*</span>
               </label>
               <input
                 type="email"
@@ -255,7 +284,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaPhone className="text-cyan-400" />
-                Phone Number
+                Phone Number (Preferably WhatsApp) <span className="text-red-400">*</span>
               </label>
               <input
                 type="tel"
@@ -269,11 +298,58 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               />
             </div>
 
+            {/* Year of Study */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-medium mb-2">
+                <FaGraduationCap className="text-cyan-400" />
+                Year of Study <span className="text-red-400">*</span>
+              </label>
+              <select
+                name="year"
+                value={formData.year}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
+                         focus:outline-none focus:border-cyan-400 transition-all"
+                disabled={isSubmitting}
+              >
+                <option value="" className="bg-[#0d1830]">Choose</option>
+                <option value="1st Year" className="bg-[#0d1830]">1st Year</option>
+                <option value="2nd Year" className="bg-[#0d1830]">2nd Year</option>
+                <option value="3rd Year" className="bg-[#0d1830]">3rd Year</option>
+                <option value="4th Year" className="bg-[#0d1830]">4th Year</option>
+              </select>
+            </div>
+
+            {/* Branch of Study */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-medium mb-3">
+                <FaCodeBranch className="text-cyan-400" />
+                Branch of Study <span className="text-red-400">*</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {['CSE', 'CSE - AIML', 'CSE - DS', 'ECE', 'EEE', 'MECH', 'CIVIL', 'Other'].map((branch) => (
+                  <button
+                    key={branch}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, branch })}
+                    disabled={isSubmitting}
+                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      formData.branch === branch
+                        ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
+                        : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                    }`}
+                  >
+                    {branch}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* College */}
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-2">
                 <FaUniversity className="text-cyan-400" />
-                College/University
+                Name of College <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -287,81 +363,39 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               />
             </div>
 
-            {/* Year of  Study */}
-            <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
-                <FaGraduationCap className="text-cyan-400" />
-                Year of Study
-              </label>
-              <select
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         focus:outline-none focus:border-cyan-400 transition-all"
-                disabled={isSubmitting}
-              >
-                <option value="" className="bg-[#0d1830]">Select Year</option>
-                <option value="1st Year" className="bg-[#0d1830]">1st Year</option>
-                <option value="2nd Year" className="bg-[#0d1830]">2nd Year</option>
-                <option value="3rd Year" className="bg-[#0d1830]">3rd Year</option>
-                <option value="4th Year" className="bg-[#0d1830]">4th Year</option>
-                <option value="Graduate" className="bg-[#0d1830]">Graduate</option>
-                <option value="Post Graduate" className="bg-[#0d1830]">Post Graduate</option>
-              </select>
-            </div>
-
-            {/* GitHub Username */}
-            <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
-                <FaGithub className="text-cyan-400" />
-                GitHub Username <span className="text-gray-400 text-sm font-normal">(Optional)</span>
-              </label>
-              <input
-                type="text"
-                name="github"
-                value={formData.github}
-                onChange={handleChange}
-                placeholder="Your GitHub username"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
-                disabled={isSubmitting}
-              />
-            </div>
-
             {/* Do you have a laptop? */}
             <div>
               <label className="flex items-center gap-2 text-white font-medium mb-3">
                 <FaLaptop className="text-cyan-400" />
-                Do you have a laptop?
+                Do You Have Laptop? <span className="text-red-400">*</span>
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, hasLaptop: 'YES' })}
+                  onClick={() => setFormData({ ...formData, hasLaptop: 'Yes' })}
                   disabled={isSubmitting}
                   className={`px-6 py-4 rounded-xl font-semibold transition-all ${
-                    formData.hasLaptop === 'YES'
+                    formData.hasLaptop === 'Yes'
                       ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
                       : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
                   }`}
                 >
-                  YES
+                  Yes
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, hasLaptop: 'NO' })}
+                  onClick={() => setFormData({ ...formData, hasLaptop: 'No' })}
                   disabled={isSubmitting}
                   className={`px-6 py-4 rounded-xl font-semibold transition-all ${
-                    formData.hasLaptop === 'NO'
+                    formData.hasLaptop === 'No'
                       ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
                       : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
                   }`}
                 >
-                  NO
+                  No
                 </button>
               </div>
-              {formData.hasLaptop === 'NO' && (
+              {formData.hasLaptop === 'No' && (
                 <p className="text-yellow-400 text-sm mt-2 flex items-start gap-2">
                   <span>⚠️</span>
                   <span>Please note: This is a hands-on coding workshop. A laptop is required to participate effectively.</span>
@@ -414,25 +448,34 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl"
+          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl overflow-y-auto"
         >
-          <div className="p-8 text-center max-w-md">
-            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaMobileAlt className="text-white text-3xl" />
-            </div>
+          <div className="p-6 text-center max-w-md">
             <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
-            <p className="text-gray-300 mb-6">
-              Open any UPI app on your phone (GPay, PhonePe, Paytm) and pay to:
+            
+            {/* QR Code */}
+            <div className="bg-white rounded-2xl p-4 mb-4 inline-block">
+              <Image
+                src="/images/vibecode-upi-qr.png"
+                alt="UPI QR Code"
+                width={200}
+                height={200}
+                className="mx-auto"
+              />
+            </div>
+            
+            <p className="text-gray-300 mb-4 text-sm">
+              Scan the QR code or pay using the UPI ID below:
             </p>
             
             {/* UPI ID Box */}
             <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">
               <p className="text-gray-400 text-sm mb-2">UPI ID</p>
               <div className="flex items-center justify-center gap-3">
-                <code className="text-cyan-400 text-lg font-mono">{UPI_ID}</code>
+                <code className="text-cyan-400 text-base font-mono break-all">{UPI_ID}</code>
                 <button
                   onClick={copyUpiId}
-                  className="p-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg transition-all"
+                  className="p-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg transition-all flex-shrink-0"
                 >
                   <FaCopy className="text-cyan-400" />
                 </button>
@@ -440,12 +483,12 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             </div>
 
             {/* Amount */}
-            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-6">
+            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">
               <p className="text-gray-400 text-sm mb-1">Amount to Pay</p>
               <p className="text-3xl font-bold text-white">₹{ticket.price}</p>
             </div>
 
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-gray-400 mb-4">
               After payment, you'll receive confirmation via email within 24 hours.
             </p>
 
