@@ -180,7 +180,10 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {navLinks.map((link, index) => {
-              const isActive = pathname === link.href
+              // Check if active: exact match for home, startsWith for other routes
+              const isActive = link.href === '/' 
+                ? pathname === '/'
+                : pathname === link.href || pathname.startsWith(link.href + '/')
               return (
                 <motion.div
                   key={link.name}
@@ -405,7 +408,10 @@ export default function Navbar() {
             >
               <div className="py-4 space-y-3">
                 {navLinks.map((link) => {
-                  const isActive = pathname === link.href
+                  // Check if active: exact match for home, startsWith for other routes
+                  const isActive = link.href === '/' 
+                    ? pathname === '/'
+                    : pathname === link.href || pathname.startsWith(link.href + '/')
                   return (
                     <Link
                       key={link.name}
