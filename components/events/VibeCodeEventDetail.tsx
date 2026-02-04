@@ -712,7 +712,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             {/* Urgency Badge */}
             <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              <span className="text-orange-400 font-medium text-sm">Limited Seats – Only 100 Participants</span>
+              <span className="text-orange-400 font-medium text-sm">Seats are limited to 140</span>
             </div>
 
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
