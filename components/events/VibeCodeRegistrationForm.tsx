@@ -177,7 +177,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
   const sendToGoogleSheet = async (data: any) => {
     try {
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo2lczU5Jazrh74jUXcLLB-NFjYDK7rLrqJMU-uYxFP3oOL8WhhebH9pS_6ArDagz3wQ/exec'
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmI_1t6i0eYpNPJ3T7litVtQmPeVbuEdug_E8dXbM1lR8ucO57wxmy4iilZUZ5BwLiYA/exec'
 
       // Send to Google Apps Script
       await fetch(GOOGLE_SCRIPT_URL, {
