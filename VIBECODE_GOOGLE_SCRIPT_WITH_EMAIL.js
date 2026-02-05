@@ -199,110 +199,6 @@ Team matriXO`;
   }
 }
 
-// Test function to verify email sending
-function testEmail() {
-  const testData = {
-    name: 'Test User',
-    registrationNumber: 999,
-    rollNumber: '22BD1A0501',
-    email: 'test@example.com',
-    phone: '9876543210',
-    college: 'KPRIT',
-    branch: 'CSE',
-    year: '2nd Year',
-    transactionCode: 'VIBECODE-TEST-123',
-    price: 69
-  };
-  
-  sendConfirmationEmail(testData);
-  Logger.log('Test email sent!');
-}
-
-// SIMPLE TEST - Run this first to check if script can access the sheet
-function simpleTest() {
-  try {
-    Logger.log('Starting simple test...');
-    
-    // Try to open the sheet
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-    Logger.log('✅ Sheet opened successfully!');
-    Logger.log('Sheet name: ' + sheet.getName());
-    Logger.log('Last row: ' + sheet.getLastRow());
-    
-    // Try to add a test row
-    sheet.appendRow([
-      new Date(),
-      'TEST-ID',
-      'TEST EVENT',
-      'TEST TICKET',
-      '69',
-      'TEST-TRANSACTION-' + Date.now(),
-      'Test Name',
-      'TEST-ROLL',
-      'test@email.com',
-      '1234567890',
-      'Test College',
-      'Test Branch',
-      '2nd Year',
-      '',
-      'Yes',
-      'No screenshot',
-      'TEST'
-    ]);
-    
-    Logger.log('✅ Test row added successfully!');
-    Logger.log('Check your sheet - you should see a new TEST row');
-    
-    return 'SUCCESS - Check the sheet!';
-  } catch (error) {
-    Logger.log('❌ ERROR: ' + error.toString());
-    return 'FAILED: ' + error.toString();
-  }
-}
-
-// Test function to verify the doPost function works
-function testDoPost() {
-  try {
-    Logger.log('Starting testDoPost...');
-    
-    const testPayload = {
-      eventId: 'vibecoding-irl-kprit-2026',
-      eventTitle: 'VibeCode IRL',
-      ticketType: 'Early Bird',
-      price: 69,
-      transactionCode: 'VIBECODE-TEST-' + Date.now(),
-      name: 'Test Student',
-      rollNumber: '22BD1A0501',
-      email: 'teststudent@example.com',
-      phone: '9876543210',
-      college: 'KPRIT',
-      branch: 'CSE',
-      year: '2nd Year',
-      github: '',
-      hasLaptop: 'Yes',
-      paymentScreenshot: '',
-      status: 'Pending Verification'
-    };
-    
-    Logger.log('Test payload created');
-    
-    const mockEvent = {
-      postData: {
-        contents: JSON.stringify(testPayload)
-      }
-    };
-    
-    Logger.log('Calling doPost...');
-    const result = doPost(mockEvent);
-    Logger.log('Test result: ' + result.getContent());
-    
-    return result.getContent();
-  } catch (error) {
-    Logger.log('❌ ERROR in testDoPost: ' + error.toString());
-    return 'FAILED: ' + error.toString();
-  }
-}
-
 // Send verification confirmation emails to all registrations marked as "Confirmed"
 function sendVerificationConfirmations() {
   const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
@@ -363,7 +259,15 @@ function sendVerificationConfirmations() {
   }
   
   Logger.log('Verification confirmations sent: ' + sentCount + ' | Skipped: ' + skippedCount);
-  SpreadsheetApp.getUi().alert('Confirmation emails sent to ' + sentCount + ' verified registrations!');
+  
+  // Try to show alert if accessed from sheet, otherwise just log
+  try {
+    SpreadsheetApp.getUi().alert('Confirmation emails sent to ' + sentCount + ' verified registrations!');
+  } catch (e) {
+    Logger.log('✅ DONE! Emails sent: ' + sentCount + ' | Check the logs above for details');
+  }
+  
+  return 'Sent ' + sentCount + ' confirmation emails';
 }
 
 // Send verified confirmation email
