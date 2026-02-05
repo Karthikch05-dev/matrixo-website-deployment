@@ -272,6 +272,9 @@ function sendVerificationConfirmations() {
 
 // Send verified confirmation email
 function sendVerifiedConfirmationEmail(data) {
+  // Generate QR code URL from transaction code using Google Charts API
+  const qrCodeUrl = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=' + encodeURIComponent(data.transactionCode);
+  
   const emailBody = `Hi ${data.name},
 
 🎉 CONGRATULATIONS! Your registration has been VERIFIED! 🎉
@@ -305,7 +308,8 @@ Your payment has been confirmed and your spot is secured for VibeCode IRL!
 2. Bring your laptop (fully charged)
 3. Arrive by 9:30 AM for check-in
 4. Screenshot this email or note your Registration Number: ${data.registrationNumber}
-5. Join our WhatsApp group for updates (link will be shared soon)
+5. Show the QR code below at the venue for quick check-in
+6. Join our WhatsApp group for updates (link will be shared soon)
 
 🎉 WHAT'S INCLUDED:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -335,11 +339,83 @@ Website: https://matrixo.in
 We're super excited to see you at VibeCode IRL! Get ready for an amazing experience! 🚀
 
 Best regards,
-Team matriXO`;
+Team matriXO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR CHECK-IN QR CODE (Show this at venue):
+View QR Code: ${qrCodeUrl}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  // HTML version with embedded QR code image
+  const htmlBody = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; color: white;">
+      <h1 style="margin: 0; font-size: 28px;">🎉 Registration VERIFIED!</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Your spot is secured for VibeCode IRL</p>
+    </div>
+    
+    <div style="background-color: white; padding: 30px; border-radius: 10px; margin-top: 20px;">
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">✅ Registration Details</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 8px 0;"><strong>Name:</strong></td><td>${data.name}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Registration #:</strong></td><td>${data.registrationNumber}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Roll Number:</strong></td><td>${data.rollNumber}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Email:</strong></td><td>${data.email}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Phone:</strong></td><td>${data.phone}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>College:</strong></td><td>${data.college}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Branch:</strong></td><td>${data.branch}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Year:</strong></td><td>${data.year}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Transaction:</strong></td><td>${data.transactionCode}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Amount Paid:</strong></td><td>₹${data.price}</td></tr>
+      </table>
+      
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">📅 Event Details</h2>
+      <p><strong>Event:</strong> VibeCode IRL - Where Coding Meets the Vibe</p>
+      <p><strong>Dates:</strong> February 12-13, 2026</p>
+      <p><strong>Time:</strong> 10:00 AM - 4:00 PM (both days)</p>
+      <p><strong>Venue:</strong> Auditorium, D-Block, KPRIT, Hyderabad</p>
+      
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">⚠️ Important Instructions</h2>
+      <ul style="line-height: 1.8;">
+        <li>Bring your college ID card (mandatory for entry)</li>
+        <li>Bring your laptop (fully charged)</li>
+        <li>Arrive by 9:30 AM for check-in</li>
+        <li><strong>Show the QR code below at the venue for quick check-in</strong></li>
+        <li>Join our WhatsApp group for updates (link will be shared soon)</li>
+      </ul>
+      
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">🎫 Your Check-In QR Code</h2>
+      <div style="text-align: center; background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
+        <img src="${qrCodeUrl}" alt="Check-in QR Code" style="max-width: 300px; width: 100%; height: auto; border: 3px solid #667eea; border-radius: 10px;" />
+        <p style="margin-top: 15px; color: #666; font-size: 14px;"><strong>Transaction Code:</strong> ${data.transactionCode}</p>
+        <p style="color: #999; font-size: 12px;">Show this QR code at the venue for quick check-in</p>
+      </div>
+      
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">📅 Schedule (Both Days)</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 5px 0;">9:30 AM</td><td>Check-in & Registration</td></tr>
+        <tr><td style="padding: 5px 0;">10:00 AM</td><td>Opening Session</td></tr>
+        <tr><td style="padding: 5px 0;">10:30 AM</td><td>Workshop Session 1</td></tr>
+        <tr><td style="padding: 5px 0;">12:30 PM</td><td>Lunch Break</td></tr>
+        <tr><td style="padding: 5px 0;">1:30 PM</td><td>Workshop Session 2</td></tr>
+        <tr><td style="padding: 5px 0;">3:00 PM</td><td>Competition Time</td></tr>
+        <tr><td style="padding: 5px 0;">4:00 PM</td><td>Closing & Certificates</td></tr>
+      </table>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+      <p><strong>Need Help?</strong></p>
+      <p>Email: hello@matrixo.in | Website: https://matrixo.in</p>
+      <p style="margin-top: 20px; font-weight: bold;">We're super excited to see you at VibeCode IRL! 🚀</p>
+      <p>Best regards,<br/>Team matriXO</p>
+    </div>
+  </div>
+  `;
 
   GmailApp.sendEmail(data.email, '✅ VERIFIED: Your VibeCode IRL Registration is CONFIRMED! 🎉', emailBody, {
     name: 'matriXO Events',
-    replyTo: 'hello@matrixo.in'
+    replyTo: 'hello@matrixo.in',
+    htmlBody: htmlBody
   });
 }
 
