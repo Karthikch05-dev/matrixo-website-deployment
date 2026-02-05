@@ -6,6 +6,17 @@ const FOLDER_ID = '12GeYPKx9sy1oxxr4McXQSolDyDbAPLfR'; // Your Google Drive fold
 
 function doPost(e) {
   try {
+    // Check if e and postData exist
+    if (!e || !e.postData || !e.postData.contents) {
+      Logger.log('Error: No data received in request');
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: false, 
+          error: 'No data received in request' 
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     const data = JSON.parse(e.postData.contents);
     
     // Log incoming data for debugging
