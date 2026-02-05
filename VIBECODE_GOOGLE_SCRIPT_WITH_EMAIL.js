@@ -386,9 +386,35 @@ View QR Code: ${qrCodeUrl}
       
       <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">🎫 Your Check-In QR Code</h2>
       <div style="text-align: center; background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
-        <img src="${qrCodeUrl}" alt="Check-in QR Code" style="max-width: 300px; width: 100%; height: auto; border: 3px solid #667eea; border-radius: 10px;" />
-        <p style="margin-top: 15px; color: #666; font-size: 14px;"><strong>Transaction Code:</strong> ${data.transactionCode}</p>
-        <p style="color: #999; font-size: 12px;">Show this QR code at the venue for quick check-in</p>
+        <p style="margin-bottom: 15px; color: #666; font-size: 16px;"><strong>Transaction Code:</strong> ${data.transactionCode}</p>
+        
+        <!-- QR Code Image -->
+        <a href="${qrCodeUrl}" target="_blank" style="display: inline-block; text-decoration: none;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.transactionCode)}" 
+               alt="Check-in QR Code" 
+               style="max-width: 300px; width: 100%; height: auto; border: 3px solid #667eea; border-radius: 10px; display: block;" 
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        </a>
+        
+        <!-- Fallback button if image doesn't load -->
+        <div style="display: none; margin-top: 20px;">
+          <a href="${qrCodeUrl}" 
+             target="_blank" 
+             style="display: inline-block; background-color: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            📱 Click to View Your QR Code
+          </a>
+        </div>
+        
+        <!-- Always show a direct link as backup -->
+        <div style="margin-top: 20px;">
+          <a href="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(data.transactionCode)}" 
+             target="_blank" 
+             style="color: #667eea; text-decoration: underline; font-size: 14px;">
+            Click here if QR code doesn't appear above
+          </a>
+        </div>
+        
+        <p style="color: #999; font-size: 12px; margin-top: 15px;">Show this QR code at the venue for quick check-in</p>
       </div>
       
       <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">📅 Schedule (Both Days)</h2>
