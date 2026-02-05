@@ -22,6 +22,17 @@ function doPost(e) {
     // Log incoming data for debugging
     Logger.log('Received data: ' + JSON.stringify(data));
     
+    // Check if this is an attendance marking request
+    if (data.action === 'markAttendance') {
+      return markAttendance(data.transactionCode);
+    }
+    
+    // Check if this is a lookup request
+    if (data.action === 'lookupAttendee') {
+      return lookupAttendee(data.transactionCode);
+    }
+    
+    // Otherwise, it's a registration request
     // Open the spreadsheet
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     
@@ -457,4 +468,180 @@ function onOpen() {
     // This will fail if run from Apps Script editor - that's normal
     Logger.log('onOpen can only run from spreadsheet context');
   }
+}
+
+// ============================================
+// ATTENDANCE MARKING FUNCTIONS
+// ============================================
+
+// Mark attendance for a transaction code
+function markAttendance(transactionCode) {
+  try {
+    Logger.log('Marking attendance for: ' + transactionCode);
+    
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    const lastRow = sheet.getLastRow();
+    
+    if (lastRow < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: false, 
+          error: 'No registrations found' 
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get all data - columns A to R (18 columns, R is Attendance)
+    const data = sheet.getRange(2, 1, lastRow - 1, 18).getValues();
+    const transactionColumn = 5; // Column F (Transaction Code) - 0-indexed = 5
+    const attendanceColumn = 18; // Column R (Attendance) - will be 18th column
+    
+    // Find the row with this transaction code
+    let foundRow = -1;
+    let attendeeData = null;
+    
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][transactionColumn] === transactionCode) {
+        foundRow = i + 2; // +2 because data starts at row 2
+        attendeeData = {
+          name: data[i][6] || '', // Column G (Name)
+          rollNumber: data[i][7] || '', // Column H
+          email: data[i][8] || '', // Column I
+          phone: data[i][9] || '', // Column J
+          college: data[i][10] || '', // Column K
+          branch: data[i][11] || '', // Column L
+          year: data[i][12] || '', // Column M
+          transactionCode: data[i][5] || '', // Column F
+          status: data[i][16] || '', // Column Q
+          rowNumber: foundRow
+        };
+        break;
+      }
+    }
+    
+    if (foundRow === -1) {
+      Logger.log('Transaction code not found: ' + transactionCode);
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: false, 
+          error: 'Transaction code not found',
+          transactionCode: transactionCode
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Check if already marked present
+    const currentAttendance = sheet.getRange(foundRow, attendanceColumn).getValue();
+    if (currentAttendance === 'Present') {
+      Logger.log('Already marked present: ' + transactionCode);
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: true,
+          alreadyMarked: true,
+          message: 'Already marked present',
+          attendee: attendeeData
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Mark as Present with timestamp
+    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    sheet.getRange(foundRow, attendanceColumn).setValue('Present');
+    
+    // Add check-in time to column S if you want
+    const checkInTimeColumn = 19; // Column S
+    sheet.getRange(foundRow, checkInTimeColumn).setValue(timestamp);
+    
+    Logger.log('Attendance marked successfully for: ' + attendeeData.name);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: true,
+        message: 'Attendance marked successfully',
+        checkInTime: timestamp,
+        attendee: attendeeData
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    Logger.log('Error marking attendance: ' + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Lookup attendee by transaction code (without marking attendance)
+function lookupAttendee(transactionCode) {
+  try {
+    Logger.log('Looking up: ' + transactionCode);
+    
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    const lastRow = sheet.getLastRow();
+    
+    if (lastRow < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: false, 
+          error: 'No registrations found' 
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get all data
+    const data = sheet.getRange(2, 1, lastRow - 1, 18).getValues();
+    const transactionColumn = 5; // Column F (Transaction Code) - 0-indexed
+    
+    // Find the row with this transaction code
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][transactionColumn] === transactionCode) {
+        const attendeeData = {
+          name: data[i][6] || '',
+          rollNumber: data[i][7] || '',
+          email: data[i][8] || '',
+          phone: data[i][9] || '',
+          college: data[i][10] || '',
+          branch: data[i][11] || '',
+          year: data[i][12] || '',
+          transactionCode: data[i][5] || '',
+          status: data[i][16] || '',
+          attendance: data[i][17] || 'Not Marked',
+          rowNumber: i + 2
+        };
+        
+        return ContentService
+          .createTextOutput(JSON.stringify({ 
+            success: true,
+            attendee: attendeeData
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: 'Transaction code not found' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    Logger.log('Error looking up attendee: ' + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Test attendance marking function
+function testMarkAttendance() {
+  const testCode = 'VIBECODE-1770274767627-5678'; // Replace with actual code from your sheet
+  const result = markAttendance(testCode);
+  Logger.log('Test result: ' + result.getContent());
 }
