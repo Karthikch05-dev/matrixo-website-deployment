@@ -4,6 +4,36 @@
 const SHEET_ID = '1OD5erQIxb-vE2NsBDs5SyFFe7NupyvtHua5O-B_ZmSY'; // Your Google Sheet ID
 const FOLDER_ID = '12GeYPKx9sy1oxxr4McXQSolDyDbAPLfR'; // Your Google Drive folder for screenshots
 
+// Handle GET requests (for lookupAttendee)
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    const transactionCode = e.parameter.transactionCode;
+    
+    Logger.log('doGet called with action: ' + action + ', transactionCode: ' + transactionCode);
+    
+    if (action === 'lookupAttendee' && transactionCode) {
+      return lookupAttendee(transactionCode);
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid action or missing transactionCode' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    Logger.log('doGet Error: ' + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doPost(e) {
   try {
     // Check if e and postData exist
