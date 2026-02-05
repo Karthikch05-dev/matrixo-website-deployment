@@ -325,19 +325,26 @@ function sendVerificationConfirmations() {
     const email = row[8]; // Column I (Email) - index 8
     const name = row[6]; // Column G (Name) - index 6
     
+    // Skip if missing essential data
+    if (!name || !email) {
+      Logger.log('Skipping row ' + (i + 2) + ' - missing name or email');
+      skippedCount++;
+      continue;
+    }
+    
     // Only send to "Confirmed" status registrations
-    if (status === 'Confirmed' && email) {
+    if (status === 'Confirmed') {
       try {
         sendVerifiedConfirmationEmail({
           name: name,
-          rollNumber: row[7], // Column H
+          rollNumber: row[7] || '', // Column H
           email: email,
-          phone: row[9], // Column J
-          college: row[10], // Column K
-          branch: row[11], // Column L
-          year: row[12], // Column M
-          transactionCode: row[5], // Column F
-          price: row[4], // Column E
+          phone: row[9] || '', // Column J
+          college: row[10] || '', // Column K
+          branch: row[11] || '', // Column L
+          year: row[12] || '', // Column M
+          transactionCode: row[5] || '', // Column F
+          price: row[4] || '69', // Column E
           registrationNumber: i + 2 // Row number
         });
         
