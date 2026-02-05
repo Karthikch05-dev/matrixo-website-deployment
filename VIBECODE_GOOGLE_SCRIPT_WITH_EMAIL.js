@@ -432,10 +432,16 @@ Team matriXO`;
   });
 }
 
-// Menu function - run this once to add a menu to your spreadsheet
+// DO NOT RUN THIS MANUALLY - It runs automatically when you open the Google Sheet
+// If you want to send confirmations, just run sendVerificationConfirmations() directly
 function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('VibeCode Registration')
-    .addItem('Send Verification Confirmations', 'sendVerificationConfirmations')
-    .addToUi();
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('VibeCode Registration')
+      .addItem('Send Verification Confirmations', 'sendVerificationConfirmations')
+      .addToUi();
+  } catch (e) {
+    // This will fail if run from Apps Script editor - that's normal
+    Logger.log('onOpen can only run from spreadsheet context');
+  }
 }
