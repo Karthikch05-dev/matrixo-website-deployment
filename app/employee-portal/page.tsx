@@ -28,7 +28,8 @@ import {
   FaChevronDown,
   FaPlus,
   FaTrash,
-  FaListAlt
+  FaListAlt,
+  FaQrcode
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { toast, Toaster } from 'sonner'
@@ -41,6 +42,7 @@ import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
+import EventQRScanner from '@/components/employee-portal/EventQRScanner'
 import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
 
 // Default avatar placeholder
@@ -210,6 +212,7 @@ const navigationItems = [
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
+  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
 ]
 
 // ============================================
@@ -986,6 +989,7 @@ function Dashboard() {
             {activeTab === 'calendar' && <Calendar />}
             {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
             {activeTab === 'discussions' && <Discussions />}
+            {activeTab === 'event-checkin' && <EventQRScanner />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>
         </AnimatePresence>
