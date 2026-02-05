@@ -8,23 +8,31 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     
+    // Log incoming data for debugging
+    Logger.log('Received data: ' + JSON.stringify(data));
+    
     // Open the spreadsheet
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     
     // Check for duplicate registration by email
-    const emailColumn = 10; // Column J (email is in column 10)
+    const emailColumn = 9; // Column I (email is in column 9 based on your headers)
     const lastRow = sheet.getLastRow();
-    const emailValues = sheet.getRange(2, emailColumn, lastRow - 1, 1).getValues();
     
-    // Check if email already exists
-    for (let i = 0; i < emailValues.length; i++) {
-      if (emailValues[i][0] === data.email) {
-        return ContentService
-          .createTextOutput(JSON.stringify({ 
-            success: false, 
-            error: 'You have already registered for this event. Check your email for confirmation.' 
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+    // Only check duplicates if there are existing registrations (more than just headers)
+    if (lastRow > 1) {
+      const emailValues = sheet.getRange(2, emailColumn, lastRow - 1, 1).getValues();
+      
+      // Check if email already exists
+      for (let i = 0; i < emailValues.length; i++) {
+        if (emailValues[i][0] === data.email) {
+          Logger.log('Duplicate email found: ' + data.email);
+          return ContentService
+            .createTextOutput(JSON.stringify({ 
+              success: false, 
+              error: 'You have already registered for this event. Check your email for confirmation.' 
+            }))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
       }
     }
     
@@ -34,47 +42,52 @@ function doPost(e) {
       screenshotUrl = uploadScreenshotToDrive(data.paymentScreenshot, data.transactionCode);
     }
     
-    // Get current row count to generate serial number
-    const serialNumber = lastRow; // Serial number (row number)
+    // Get registration number
+    const registrationNumber = lastRow; // Registration number based on row
     
-    // Add data to sheet
+    // Add data to sheet - MATCHING YOUR HEADER COLUMNS EXACTLY
+    // A: Timestamp, B: Event ID, C: Event Title, D: Ticket Type, E: Price, 
+    // F: Transaction Code, G: Name, H: Roll Number, I: Email, J: Phone,
+    // K: College, L: Branch, M: Year, N: GitHub, O: Has Laptop, P: Screenshot, Q: Status
     sheet.appendRow([
-      new Date(), // Timestamp
-      serialNumber, // Serial Number
-      data.eventId || '',
-      data.eventTitle || '',
-      data.ticketType || '',
-      data.price || '',
-      data.transactionCode || '',
-      data.name || '',
-      data.rollNumber || '',
-      data.email || '',
-      data.phone || '',
-      data.college || '',
-      data.branch || '',
-      data.year || '',
-      data.github || '',
-      data.hasLaptop || '',
-      screenshotUrl,
-      data.status || 'Pending Verification'
+      new Date(), // A: Timestamp
+      data.eventId || '', // B: Event ID
+      data.eventTitle || '', // C: Event Title
+      data.ticketType || '', // D: Ticket Type
+      data.price || '', // E: Price
+      data.transactionCode || '', // F: Transaction Code
+      data.name || '', // G: Name
+      data.rollNumber || '', // H: Roll Number
+      data.email || '', // I: Email
+      data.phone || '', // J: Phone
+      data.college || '', // K: College
+      data.branch || '', // L: Branch
+      data.year || '', // M: Year
+      data.github || '', // N: GitHub
+      data.hasLaptop || '', // O: Has Laptop
+      screenshotUrl, // P: Screenshot URL
+      data.status || 'Pending Verification' // Q: Status
     ]);
+    
+    Logger.log('Data added to sheet for: ' + data.email);
     
     // Send confirmation email
     sendConfirmationEmail({
       ...data,
-      serialNumber: serialNumber,
+      registrationNumber: registrationNumber,
       screenshotUrl: screenshotUrl
     });
     
     return ContentService
       .createTextOutput(JSON.stringify({ 
         success: true, 
-        serialNumber: serialNumber,
+        registrationNumber: registrationNumber,
         message: 'Registration successful! Check your email for confirmation.' 
       }))
       .setMimeType(ContentService.MimeType.JSON);
       
   } catch (error) {
+    Logger.log('Error in doPost: ' + error.toString());
     return ContentService
       .createTextOutput(JSON.stringify({ 
         success: false, 
@@ -115,7 +128,7 @@ Thank you for registering for VibeCode IRL at KPRIT!
 📋 REGISTRATION DETAILS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Name: ${data.name}
-• Register Number: ${data.serialNumber}
+• Registration Number: ${data.registrationNumber}
 • Roll Number: ${data.rollNumber}
 • Email: ${data.email}
 • Phone: ${data.phone}
@@ -151,7 +164,7 @@ Thank you for registering for VibeCode IRL at KPRIT!
 
 📞 NEED HELP?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Contact: events@matrixo.in
+Contact: hello@matrixo.in
 Website: https://matrixo.in
 
 See you at VibeCode IRL! 🚀
@@ -159,13 +172,14 @@ See you at VibeCode IRL! 🚀
 Best regards,
 Team matriXO`;
 
-    // Send email
-    MailApp.sendEmail({
-      to: data.email,
-      subject: '✅ VibeCode IRL Registration Received - Feb 12-13, 2026',
-      body: emailBody,
+    // Send email using GmailApp (allows sending as alias)
+    // NOTE: To send as hello@matrixo.in, you need to add it as a "Send mail as" alias
+    // in Gmail Settings > Accounts > Send mail as
+    GmailApp.sendEmail(data.email, '✅ VibeCode IRL Registration Received - Feb 12-13, 2026', emailBody, {
       name: 'matriXO Events',
-      replyTo: 'events@matrixo.in'
+      replyTo: 'hello@matrixo.in'
+      // Uncomment the line below ONLY if hello@matrixo.in is configured as a "Send mail as" alias:
+      // from: 'hello@matrixo.in'
     });
     
     Logger.log('Confirmation email sent to: ' + data.email);
@@ -178,7 +192,7 @@ Team matriXO`;
 function testEmail() {
   const testData = {
     name: 'Test User',
-    serialNumber: 999,
+    registrationNumber: 999,
     rollNumber: '22BD1A0501',
     email: 'test@example.com',
     phone: '9876543210',
@@ -191,4 +205,35 @@ function testEmail() {
   
   sendConfirmationEmail(testData);
   Logger.log('Test email sent!');
+}
+
+// Test function to verify the doPost function works
+function testDoPost() {
+  const testPayload = {
+    eventId: 'vibecoding-irl-kprit-2026',
+    eventTitle: 'VibeCode IRL',
+    ticketType: 'Early Bird',
+    price: 69,
+    transactionCode: 'VIBECODE-TEST-' + Date.now(),
+    name: 'Test Student',
+    rollNumber: '22BD1A0501',
+    email: 'teststudent@example.com',
+    phone: '9876543210',
+    college: 'KPRIT',
+    branch: 'CSE',
+    year: '2nd Year',
+    github: '',
+    hasLaptop: 'Yes',
+    paymentScreenshot: '',
+    status: 'Pending Verification'
+  };
+  
+  const mockEvent = {
+    postData: {
+      contents: JSON.stringify(testPayload)
+    }
+  };
+  
+  const result = doPost(mockEvent);
+  Logger.log('Test result: ' + result.getContent());
 }
