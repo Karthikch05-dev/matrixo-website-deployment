@@ -248,3 +248,140 @@ function testDoPost() {
   const result = doPost(mockEvent);
   Logger.log('Test result: ' + result.getContent());
 }
+
+// Send verification confirmation emails to all registrations marked as "Confirmed"
+function sendVerificationConfirmations() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+  const lastRow = sheet.getLastRow();
+  
+  if (lastRow < 2) {
+    Logger.log('No registrations found');
+    return;
+  }
+  
+  // Get all data
+  const data = sheet.getRange(2, 1, lastRow - 1, 17).getValues();
+  let sentCount = 0;
+  let skippedCount = 0;
+  
+  // Loop through each registration
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const status = row[16]; // Column Q (Status) - index 16
+    const email = row[8]; // Column I (Email) - index 8
+    const name = row[6]; // Column G (Name) - index 6
+    
+    // Only send to "Confirmed" status registrations
+    if (status === 'Confirmed' && email) {
+      try {
+        sendVerifiedConfirmationEmail({
+          name: name,
+          rollNumber: row[7], // Column H
+          email: email,
+          phone: row[9], // Column J
+          college: row[10], // Column K
+          branch: row[11], // Column L
+          year: row[12], // Column M
+          transactionCode: row[5], // Column F
+          price: row[4], // Column E
+          registrationNumber: i + 2 // Row number
+        });
+        
+        sentCount++;
+        Logger.log('Sent confirmation to: ' + email);
+        
+        // Small delay to avoid rate limits
+        Utilities.sleep(500);
+      } catch (error) {
+        Logger.log('Error sending to ' + email + ': ' + error);
+        skippedCount++;
+      }
+    } else {
+      skippedCount++;
+    }
+  }
+  
+  Logger.log('Verification confirmations sent: ' + sentCount + ' | Skipped: ' + skippedCount);
+  SpreadsheetApp.getUi().alert('Confirmation emails sent to ' + sentCount + ' verified registrations!');
+}
+
+// Send verified confirmation email
+function sendVerifiedConfirmationEmail(data) {
+  const emailBody = `Hi ${data.name},
+
+🎉 CONGRATULATIONS! Your registration has been VERIFIED! 🎉
+
+Your payment has been confirmed and your spot is secured for VibeCode IRL!
+
+✅ VERIFIED REGISTRATION DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Name: ${data.name}
+• Registration Number: ${data.registrationNumber}
+• Roll Number: ${data.rollNumber}
+• Email: ${data.email}
+• Phone: ${data.phone}
+• College: ${data.college}
+• Branch: ${data.branch}
+• Year: ${data.year}
+• Transaction Code: ${data.transactionCode}
+• Amount Paid: ₹${data.price}
+• Status: ✅ VERIFIED & CONFIRMED
+
+📅 EVENT DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Event: VibeCode IRL - Where Coding Meets the Vibe
+• Dates: February 12-13, 2026
+• Time: 10:00 AM - 4:00 PM (both days)
+• Venue: Auditorium, D-Block, KPRIT, Hyderabad
+
+⚠️ IMPORTANT INSTRUCTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Bring your college ID card (mandatory for entry)
+2. Bring your laptop (fully charged)
+3. Arrive by 9:30 AM for check-in
+4. Screenshot this email or note your Registration Number: ${data.registrationNumber}
+5. Join our WhatsApp group for updates (link will be shared soon)
+
+🎉 WHAT'S INCLUDED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Full 2-day workshop + competitions
+✅ AI tools & techniques masterclass
+✅ Quiz competition with exciting prizes
+✅ Coding competition
+✅ Official participation certificate
+✅ Chance to win swags & merit certificates
+✅ Lunch provided both days
+
+📅 SCHEDULE (Both Days):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+9:30 AM - Check-in & Registration
+10:00 AM - Opening Session
+10:30 AM - Workshop Session 1
+12:30 PM - Lunch Break
+1:30 PM - Workshop Session 2
+3:00 PM - Competition Time
+4:00 PM - Closing & Certificates
+
+📞 CONTACT & SUPPORT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Email: hello@matrixo.in
+Website: https://matrixo.in
+
+We're super excited to see you at VibeCode IRL! Get ready for an amazing experience! 🚀
+
+Best regards,
+Team matriXO`;
+
+  GmailApp.sendEmail(data.email, '✅ VERIFIED: Your VibeCode IRL Registration is CONFIRMED! 🎉', emailBody, {
+    name: 'matriXO Events',
+    replyTo: 'hello@matrixo.in'
+  });
+}
+
+// Menu function - run this once to add a menu to your spreadsheet
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('VibeCode Registration')
+    .addItem('Send Verification Confirmations', 'sendVerificationConfirmations')
+    .addToUi();
+}
