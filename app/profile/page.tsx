@@ -12,7 +12,7 @@ import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
-const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
   'CSE', 'CSE (AIML)', 'CSE (DS)', 'CSE (CS)', 'CSE (IoT)',
   'AIML', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'Other'
@@ -31,6 +31,7 @@ export default function ProfilePage() {
     college: '',
     year: '',
     branch: '',
+    graduationYear: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -42,6 +43,7 @@ export default function ProfilePage() {
         college: profile.college,
         year: profile.year,
         branch: profile.branch,
+        graduationYear: profile.graduationYear || '',
       })
     }
   }, [profile])
@@ -74,6 +76,15 @@ export default function ProfilePage() {
     else if (!/^[6-9]\d{9}$/.test(editData.phone.trim())) newErrors.phone = 'Enter a valid 10-digit phone number'
     if (!editData.college.trim()) newErrors.college = 'College name is required'
     if (!editData.year) newErrors.year = 'Select your year'
+    if (editData.year === 'Graduate' && !editData.graduationYear.trim()) {
+      newErrors.graduationYear = 'Graduation year is required'
+    } else if (editData.year === 'Graduate' && editData.graduationYear.trim()) {
+      const year = parseInt(editData.graduationYear.trim())
+      const currentYear = new Date().getFullYear()
+      if (isNaN(year) || year < 1950 || year > currentYear) {
+        newErrors.graduationYear = `Enter a valid year (1950-${currentYear})`
+      }
+    }
     if (!editData.branch) newErrors.branch = 'Select your branch'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -89,6 +100,7 @@ export default function ProfilePage() {
         college: editData.college.trim(),
         year: editData.year,
         branch: editData.branch,
+        graduationYear: editData.year === 'Graduate' ? editData.graduationYear.trim() : '',
       })
       toast.success('Profile updated successfully!')
       setIsEditing(false)
@@ -107,6 +119,7 @@ export default function ProfilePage() {
         college: profile.college,
         year: profile.year,
         branch: profile.branch,
+        graduationYear: profile.graduationYear || '',
       })
     }
     setErrors({})
@@ -275,6 +288,25 @@ export default function ProfilePage() {
                     {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch}</p>}
                   </div>
                 </div>
+
+                {/* Graduation Year - Only show if Graduate is selected */}
+                {editData.year === 'Graduate' && (
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <FaGraduationCap className="text-purple-500 text-xs" /> Year of Graduation
+                    </label>
+                    <input
+                      type="text"
+                      name="graduationYear"
+                      value={editData.graduationYear}
+                      onChange={handleChange}
+                      placeholder="e.g. 2023"
+                      maxLength={4}
+                      className={`w-full py-3 px-4 bg-gray-100 dark:bg-gray-800/50 border ${errors.graduationYear ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-900 dark:text-white placeholder-gray-400`}
+                    />
+                    {errors.graduationYear && <p className="text-red-500 text-xs mt-1">{errors.graduationYear}</p>}
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">

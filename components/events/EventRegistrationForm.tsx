@@ -26,6 +26,7 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
     collegeName: '',
     department: '',
     year: '',
+    graduationYear: '',
     emergencyContact: '',
     city: '',
     state: '',
@@ -231,6 +232,7 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
         collegeName: '',
         department: '',
         year: '',
+        graduationYear: '',
         emergencyContact: '',
         city: '',
         state: '',
@@ -481,15 +483,36 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Year</option>
+                >  <option value="">Select Year</option>
                   <option value="1st Year">1st Year</option>
                   <option value="2nd Year">2nd Year</option>
                   <option value="3rd Year">3rd Year</option>
                   <option value="4th Year">4th Year</option>
+                  <option value="Graduate">Graduate</option>
                   <option value="Postgraduate">Postgraduate</option>
                 </select>
               </div>
+
+              {/* Graduation Year - Only show if Graduate is selected */}
+              {formData.year === 'Graduate' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Year of Graduation *
+                  </label>
+                  <input
+                    type="text"
+                    name="graduationYear"
+                    value={formData.graduationYear}
+                    onChange={handleChange}
+                    placeholder="e.g. 2023"
+                    maxLength={4}
+                    required={formData.year === 'Graduate'}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
+                             bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

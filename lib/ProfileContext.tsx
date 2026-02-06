@@ -14,6 +14,7 @@ export interface UserProfile {
   college: string
   year: string
   branch: string
+  graduationYear?: string
   createdAt?: any
   updatedAt?: any
 }
@@ -24,7 +25,7 @@ interface ProfileContextType {
   profileExists: boolean
   fetchProfile: () => Promise<void>
   createProfile: (data: Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'updatedAt'>) => Promise<void>
-  updateProfile: (data: Partial<Pick<UserProfile, 'fullName' | 'phone' | 'college' | 'year' | 'branch'>>) => Promise<void>
+  updateProfile: (data: Partial<Pick<UserProfile, 'fullName' | 'phone' | 'college' | 'year' | 'branch' | 'graduationYear'>>) => Promise<void>
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
@@ -101,7 +102,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setProfileExists(true)
   }
 
-  const updateProfileData = async (data: Partial<Pick<UserProfile, 'fullName' | 'phone' | 'college' | 'year' | 'branch'>>) => {
+  const updateProfileData = async (data: Partial<Pick<UserProfile, 'fullName' | 'phone' | 'college' | 'year' | 'branch' | 'graduationYear'>>) => {
     if (!user) throw new Error('User not authenticated')
     if (!profileExists) throw new Error('Profile does not exist')
 

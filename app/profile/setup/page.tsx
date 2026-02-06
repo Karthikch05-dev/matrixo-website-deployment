@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 
-const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
   'CSE', 'CSE (AIML)', 'CSE (DS)', 'CSE (CS)', 'CSE (IoT)',
   'AIML', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'Other'
@@ -26,6 +26,7 @@ export default function ProfileSetupPage() {
     college: '',
     year: '',
     branch: '',
+    graduationYear: '',
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -53,6 +54,15 @@ export default function ProfileSetupPage() {
 
     if (!formData.college.trim()) newErrors.college = 'College name is required'
     if (!formData.year) newErrors.year = 'Select your year'
+    if (formData.year === 'Graduate' && !formData.graduationYear.trim()) {
+      newErrors.graduationYear = 'Graduation year is required'
+    } else if (formData.year === 'Graduate' && formData.graduationYear.trim()) {
+      const year = parseInt(formData.graduationYear.trim())
+      const currentYear = new Date().getFullYear()
+      if (isNaN(year) || year < 1950 || year > currentYear) {
+        newErrors.graduationYear = `Enter a valid year (1950-${currentYear})`
+      }
+    }
     if (!formData.branch) newErrors.branch = 'Select your branch'
 
     setErrors(newErrors)
@@ -72,6 +82,7 @@ export default function ProfileSetupPage() {
         college: formData.college.trim(),
         year: formData.year,
         branch: formData.branch,
+        graduationYear: formData.year === 'Graduate' ? formData.graduationYear.trim() : '',
       })
       toast.success('Profile created successfully!')
       router.push('/')
@@ -218,7 +229,24 @@ export default function ProfileSetupPage() {
                 {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch}</p>}
               </div>
             </div>
-
+            {/* Graduation Year - Only show if Graduate is selected */}
+            {formData.year === 'Graduate' && (
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  <FaGraduationCap className="text-purple-500 text-xs" /> Year of Graduation
+                </label>
+                <input
+                  type="text"
+                  name="graduationYear"
+                  value={formData.graduationYear}
+                  onChange={handleChange}
+                  placeholder="e.g. 2023"
+                  maxLength={4}
+                  className={`w-full py-3 px-4 bg-gray-100 dark:bg-gray-800/50 border ${errors.graduationYear ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-400`}
+                />
+                {errors.graduationYear && <p className="text-red-500 text-xs mt-1">{errors.graduationYear}</p>}
+              </div>
+            )}
             {/* Submit */}
             <button
               type="submit" disabled={loading}
