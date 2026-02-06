@@ -18,17 +18,20 @@ interface TeamMember {
   linkedin?: string
 }
 
-// Define role priority for sorting (Founders & Co-Founders first, then by role)
+// Define role priority for sorting (Founders & Co-Founders first, then HR & MD, then employees)
 const rolePriority: Record<string, number> = {
   'Founder': 0,
   'Co-Founder': 1,
-  'admin': 2,
-  'employee': 3,
-  'Intern': 4,
+  'HR': 2,
+  'MD': 3,
+  'Managing Director': 3,
+  'admin': 4,
+  'employee': 5,
+  'Intern': 6,
 }
 
 function getRolePriority(role: string): number {
-  return rolePriority[role] ?? 3
+  return rolePriority[role] ?? 5
 }
 
 // Display-friendly role label
@@ -38,6 +41,27 @@ function getDisplayRole(member: TeamMember): string {
   if (member.role === 'Intern') return 'Intern'
   if (member.role === 'employee') return 'Team Member'
   return member.role
+}
+
+// LinkedIn mapping by name keywords (fallback if not stored in Firestore)
+const linkedinMap: Record<string, string> = {
+  'lahari': 'https://www.linkedin.com/in/lahari-rami-reddy-950352262',
+  'yasasvi': 'https://www.linkedin.com/in/yasasvi-mandapati',
+  'shiva': 'https://www.linkedin.com/in/shivaganesht',
+  'kishan': 'https://www.linkedin.com/in/kishan-sai-vutukuri',
+  'vinod': 'https://www.linkedin.com/in/vinod-kethavath-2733a5317',
+  'karthik': 'https://www.linkedin.com/in/karthik-chinthakindi-aa93a7287',
+  'jahnavi': 'https://www.linkedin.com/in/jahnavi-mulukutla',
+  'shravya': 'https://www.linkedin.com/in/shravya-datla-388447287',
+}
+
+function getLinkedin(name: string, firestoreLinkedin?: string): string {
+  if (firestoreLinkedin) return firestoreLinkedin
+  const nameLower = name.toLowerCase()
+  for (const [key, url] of Object.entries(linkedinMap)) {
+    if (nameLower.includes(key)) return url
+  }
+  return ''
 }
 
 export default function TeamContent() {
@@ -54,16 +78,19 @@ export default function TeamContent() {
         const members: TeamMember[] = []
         querySnapshot.forEach((doc) => {
           const data = doc.data()
+          // Skip the Admin account from the team page
+          if (data.name === 'Admin' || data.employeeId === 'Admin' || data.role === 'admin' && !data.designation) return
+          const name = data.name || ''
           members.push({
             employeeId: data.employeeId || doc.id,
-            name: data.name || '',
+            name: name,
             email: data.email || '',
             department: data.department || '',
             designation: data.designation || '',
             joiningDate: data.joiningDate || '',
             profileImage: data.profileImage || '',
             role: data.role || 'employee',
-            linkedin: data.linkedin || '',
+            linkedin: getLinkedin(name, data.linkedin),
           })
         })
 
