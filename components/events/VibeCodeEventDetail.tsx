@@ -436,7 +436,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="text-white font-semibold">Limited Seats</h4>
-                  <p className="text-gray-400 text-sm">Only 100 participants. Register early to secure your spot.</p>
+                  <p className="text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
                 </div>
               </div>
             </div>
@@ -720,7 +720,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             {/* Urgency Badge */}
             <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              <span className="text-orange-400 font-medium text-sm">Seats are limited to 140</span>
+              <span className="text-orange-400 font-medium text-sm">Seats are limited to 144 per day</span>
             </div>
 
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">

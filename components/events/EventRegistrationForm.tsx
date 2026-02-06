@@ -256,7 +256,7 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
       
       // Check if it's a sold out error
       if (error.message && error.message.includes('sold out')) {
-        toast.error('🎫 SOLD OUT! This event has reached its maximum capacity of 90 registrations.', {
+        toast.error('🎫 SOLD OUT! This event has reached its maximum capacity of 144 registrations per day.', {
           duration: 5000,
         })
       } else {
