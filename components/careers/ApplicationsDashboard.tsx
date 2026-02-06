@@ -17,11 +17,12 @@ interface Application {
   phone: string
   college: string
   yearOrExperience: string
-  roleId: string
+  roleId: string | null
   roleTitle: string
   resumeURL: string
   status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected'
   submittedAt: any
+  isGeneralApplication?: boolean
 }
 
 const statusColors = {
@@ -224,10 +225,15 @@ export default function ApplicationsDashboard() {
                           {app.fullName}
                         </h3>
                         {getStatusBadge(app.status)}
+                        {app.isGeneralApplication && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-xs font-semibold rounded-full">
+                            General Interest
+                          </span>
+                        )}
                       </div>
                       
                       <p className="text-cyan-600 dark:text-cyan-400 font-semibold mb-2">
-                        Applied for: {app.roleTitle}
+                        {app.isGeneralApplication ? 'Interested in: ' : 'Applied for: '}{app.roleTitle}
                       </p>
 
                       <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -278,6 +284,11 @@ export default function ApplicationsDashboard() {
           >
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
               Application Details
+              {selectedApp.isGeneralApplication && (
+                <span className="ml-3 px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-sm font-semibold rounded-full">
+                  General Interest
+                </span>
+              )}
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -286,7 +297,9 @@ export default function ApplicationsDashboard() {
                 <p className="text-lg text-gray-900 dark:text-white">{selectedApp.fullName}</p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Applied For</label>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  {selectedApp.isGeneralApplication ? 'Interested In' : 'Applied For'}
+                </label>
                 <p className="text-lg text-cyan-600 dark:text-cyan-400 font-semibold">{selectedApp.roleTitle}</p>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
