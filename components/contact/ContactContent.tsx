@@ -52,16 +52,16 @@ export default function ContactContent() {
     <div className="min-h-screen pt-0">
       {/* Hero */}
       <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding">
-        <div className="container-custom px-6">
+        <div className="container-custom px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-4 sm:mb-6">
               Get In <span className="gradient-text">Touch</span>
             </h1>
-            <p className="text-2xl text-gray-300">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300">
               Have questions? We&apos;d love to hear from you.
             </p>
           </motion.div>
@@ -70,8 +70,8 @@ export default function ContactContent() {
 
       {/* Contact Section */}
       <section className="section-padding bg-white dark:bg-gray-950">
-        <div className="container-custom px-6">
-          <div className="grid lg:grid-cols-2 gap-12">
+        <div className="container-custom px-4 sm:px-6">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}

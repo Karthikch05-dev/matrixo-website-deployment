@@ -156,21 +156,21 @@ export default function ProfilePage() {
           className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-300 dark:border-gray-800 rounded-3xl overflow-hidden shadow-2xl"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 p-6 text-white">
+          <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 p-4 sm:p-6 text-white">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-2xl font-bold">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold">
                   {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold">{profile?.fullName}</h1>
-                  <p className="text-white/80 text-sm">{profile?.email}</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold truncate">{profile?.fullName}</h1>
+                  <p className="text-white/80 text-xs sm:text-sm truncate">{profile?.email}</p>
                 </div>
               </div>
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl transition-colors"
+                  className="p-2 sm:p-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl transition-colors flex-shrink-0"
                   title="Edit Profile"
                 >
                   <FaEdit />
@@ -180,7 +180,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {isEditing ? (
               /* Edit Mode */
               <div className="space-y-4">

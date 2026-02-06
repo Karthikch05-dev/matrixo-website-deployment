@@ -51,18 +51,18 @@
   }
 
   .btn-primary {
-    @apply px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full 
-    hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105;
+    @apply px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full 
+    hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105 text-sm sm:text-base;
   }
 
   .btn-secondary {
-    @apply px-8 py-4 border-2 border-gray-800 dark:border-gray-200 text-gray-800 dark:text-gray-200 
+    @apply px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 border-2 border-gray-800 dark:border-gray-200 text-gray-800 dark:text-gray-200 
     font-semibold rounded-full hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200 
-    dark:hover:text-gray-900 transition-all duration-200;
+    dark:hover:text-gray-900 transition-all duration-200 text-sm sm:text-base;
   }
 
   .section-padding {
-    @apply py-20 md:py-32 px-6 md:px-12 lg:px-24;
+    @apply py-16 md:py-20 lg:py-32 px-4 sm:px-6 md:px-12 lg:px-24;
   }
 
   .container-custom {

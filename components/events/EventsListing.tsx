@@ -39,17 +39,17 @@ export default function EventsListing() {
   return (
     <div className="min-h-screen pt-5 pb-20">
       {/* Header */}
-      <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white py-20">
-        <div className="container-custom px-6">
+      <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white py-16 sm:py-20">
+        <div className="container-custom px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 sm:mb-6">
               Explore <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Programs</span>
             </h1>
-            <p className="text-xl text-gray-300">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300">
               Workshops, hackathons, bootcamps, and technical events designed to accelerate your tech career
             </p>
           </motion.div>
@@ -57,8 +57,8 @@ export default function EventsListing() {
       </section>
 
       {/* Filters and Search - Compact Version */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-4 border-b border-gray-200 dark:border-gray-800">
-        <div className="container-custom px-6">
+      <section className="bg-gray-50 dark:bg-gray-900 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="container-custom px-4 sm:px-6">
           {/* Compact Filter Row */}
           <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
             {/* Search - Compact */}
@@ -132,7 +132,7 @@ export default function EventsListing() {
 
       {/* Events Grid */}
       <section className="section-padding bg-white dark:bg-gray-950">
-        <div className="container-custom px-6">
+        <div className="container-custom px-4 sm:px-6">
           {filteredAndSortedEvents.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-xl text-gray-500">No programs found matching your criteria</p>
@@ -148,7 +148,7 @@ export default function EventsListing() {
               </button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {filteredAndSortedEvents.map((event, index) => {
                 const eventLink = (event as any).externalLink || `/events/${event.slug}`
                 const isExternal = !!(event as any).externalLink
@@ -169,13 +169,13 @@ export default function EventsListing() {
                                     transition-all duration-200 hover:-translate-y-2 border-2 border-transparent 
                                     hover:border-blue-500/30 h-full flex flex-col">
                         {/* Image */}
-                        <div className="relative h-48 bg-gradient-to-br from-blue-500/20 to-purple-600/20 overflow-hidden">
+                        <div className="relative h-40 sm:h-44 md:h-48 bg-gradient-to-br from-blue-500/20 to-purple-600/20 overflow-hidden">
                           {event.images?.thumbnail ? (
                             <Image
                               src={event.images.thumbnail}
                               alt={event.title}
                               fill
-                              className="object-cover"
+                              className="object-cover object-center"
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
@@ -203,13 +203,13 @@ export default function EventsListing() {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 flex-1 flex flex-col">
-                          <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white group-hover:bg-clip-text 
+                        <div className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
+                          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900 dark:text-white group-hover:bg-clip-text 
                                        group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-500 
                                        group-hover:to-purple-600 transition-all duration-200 line-clamp-2">
                             {event.title}
                           </h3>
-                          <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 line-clamp-2">
                             {event.tagline}
                           </p>
 
@@ -231,10 +231,10 @@ export default function EventsListing() {
                               <div className="w-full">
                                 <div className="bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-red-500 rounded-xl p-4 text-center">
                                   <span className="text-3xl mb-2 block">🎉</span>
-                                  <span className="text-2xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                                  <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                                     SOLD OUT!
                                   </span>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     🎊 All tickets claimed! 🎊
                                   </p>
                                 </div>
@@ -242,13 +242,13 @@ export default function EventsListing() {
                             ) : (
                               <>
                                 <div>
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-bold gradient-text">
+                                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">From</span>
+                                  <div className="flex items-baseline gap-1 sm:gap-2">
+                                    <span className="text-xl sm:text-2xl font-bold gradient-text">
                                       ₹{Math.min(...event.tickets.map((t: any) => t.price))}
                                     </span>
                                     {event.tickets.some((t: any) => t.originalPrice) && (
-                                      <span className="text-sm text-gray-400 line-through">
+                                      <span className="text-xs sm:text-sm text-gray-400 line-through">
                                         ₹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
                                       </span>
                                     )}
@@ -257,11 +257,11 @@ export default function EventsListing() {
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
-                                  className="flex items-center space-x-2 bg-gradient-to-r from-neon-blue to-neon-purple 
-                                           text-white px-4 py-2 rounded-full font-semibold text-sm shadow-lg 
+                                  className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-neon-blue to-neon-purple 
+                                           text-white px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm shadow-lg 
                                            hover:shadow-neon-blue/50 transition-shadow"
                                 >
-                                  <FaTicketAlt />
+                                  <FaTicketAlt className="text-xs sm:text-sm" />
                                   <span>Book</span>
                                 </motion.button>
                               </>

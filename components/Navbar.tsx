@@ -137,7 +137,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 w-full z-40 transition-all duration-300 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl shadow-lg border-b border-gray-200/20 dark:border-gray-700/20`}
     >
-      <div className="container-custom px-6 py-3">
+      <div className="container-custom px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo with BETA Badge */}
           <button 
