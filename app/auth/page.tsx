@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaGoogle, FaGithub, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaPhone } from 'react-icons/fa'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || '/'
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('')
@@ -58,7 +60,7 @@ export default function AuthPage() {
       if (isLogin) {
         await signIn(formData.email, formData.password)
         toast.success('Welcome back!')
-        router.push('/')
+        router.push(returnUrl)
       } else {
         if (formData.password !== formData.confirmPassword) {
           toast.error('Passwords do not match')
@@ -67,7 +69,7 @@ export default function AuthPage() {
         }
         await signUp(formData.email, formData.password, formData.name)
         toast.success('Account created successfully!')
-        router.push('/')
+        router.push(returnUrl)
       }
     } catch (error: any) {
       console.error('Auth error:', error)
@@ -92,7 +94,7 @@ export default function AuthPage() {
     try {
       await signInWithGoogle()
       toast.success('Signed in successfully!')
-      router.push('/')
+      router.push(returnUrl)
     } catch (error: any) {
       console.error('Google sign-in error:', error)
       setLoading(false)
@@ -119,7 +121,7 @@ export default function AuthPage() {
     try {
       await signInWithGithub()
       toast.success('Signed in successfully!')
-      router.push('/')
+      router.push(returnUrl)
     } catch (error: any) {
       console.error('GitHub sign-in error:', error)
       setLoading(false)
@@ -202,7 +204,7 @@ export default function AuthPage() {
     try {
       await verifyPhoneOTP(otp)
       toast.success('Phone verified successfully!')
-      router.push('/')
+      router.push(returnUrl)
     } catch (error: any) {
       console.error('Verify OTP error:', error)
       if (error.code === 'auth/invalid-verification-code') {

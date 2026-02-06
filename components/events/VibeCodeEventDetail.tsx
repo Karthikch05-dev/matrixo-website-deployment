@@ -38,7 +38,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
   const handleRegisterNow = (ticket: any) => {
     if (!user) {
-      window.location.href = '/auth'
+      const currentUrl = window.location.pathname
+      window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
       return
     }
     setSelectedTicket(ticket)
