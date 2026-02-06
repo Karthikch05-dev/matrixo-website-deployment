@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaUpload, FaCheckCircle } from 'react-icons/fa'
+import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
 import { collection, query, where, getDocs, orderBy, addDoc, Timestamp } from 'firebase/firestore'
-import { db, storage } from '@/lib/firebaseConfig'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -35,7 +34,6 @@ export default function CareersContent() {
     interestedRole: '',
   })
   
-  const [resume, setResume] = useState<File | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -73,21 +71,6 @@ export default function CareersContent() {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        setErrors(prev => ({ ...prev, resume: 'Only PDF files are allowed' }))
-        return
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, resume: 'File size must be less than 5MB' }))
-        return
-      }
-      setResume(file)
-      setErrors(prev => ({ ...prev, resume: '' }))
-    }
-  }
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -100,7 +83,6 @@ export default function CareersContent() {
     if (!formData.college.trim()) newErrors.college = 'College/Organization is required'
     if (!formData.yearOrExperience.trim()) newErrors.yearOrExperience = 'This field is required'
     if (!formData.interestedRole.trim()) newErrors.interestedRole = 'Interested role is required'
-    if (!resume) newErrors.resume = 'Resume is required'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -117,16 +99,12 @@ export default function CareersContent() {
     setSubmitting(true)
 
     try {
-      const resumeRef = ref(storage, `resumes/general/${Date.now()}_${resume!.name}`)
-      await uploadBytes(resumeRef, resume!)
-      const resumeURL = await getDownloadURL(resumeRef)
-
       const applicationsRef = collection(db, 'applications')
       await addDoc(applicationsRef, {
         ...formData,
         roleId: null,
         roleTitle: formData.interestedRole,
-        resumeURL,
+        resumeURL: '',
         status: 'pending',
         submittedAt: Timestamp.now(),
         isGeneralApplication: true,
@@ -145,7 +123,6 @@ export default function CareersContent() {
           yearOrExperience: '',
           interestedRole: '',
         })
-        setResume(null)
       }, 3000)
 
     } catch (error) {
@@ -167,7 +144,7 @@ export default function CareersContent() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Carrier<span className="text-cyan-400">@</span>
+              Career<span className="text-cyan-400">@</span>
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">matriXO</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8">
@@ -341,28 +318,6 @@ export default function CareersContent() {
                         placeholder="e.g., Full Stack Developer, Marketing Manager, etc."
                       />
                       {errors.interestedRole && <p className="text-red-500 text-sm mt-1">{errors.interestedRole}</p>}
-                    </div>
-
-                    {/* Resume Upload */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Resume (PDF only, max 5MB) *
-                      </label>
-                      <div className="flex items-center space-x-4">
-                        <label className="flex-1 cursor-pointer">
-                          <div className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-cyan-500 transition-colors flex items-center justify-center">
-                            <FaUpload className="mr-2" />
-                            {resume ? resume.name : 'Choose File'}
-                          </div>
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                      {errors.resume && <p className="text-red-500 text-sm mt-1">{errors.resume}</p>}
                     </div>
 
                     {/* Submit Button */}
