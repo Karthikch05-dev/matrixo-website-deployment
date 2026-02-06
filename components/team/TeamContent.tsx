@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { FaLinkedin, FaEnvelope } from 'react-icons/fa'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
+import Link from 'next/link'
 
 interface TeamMember {
   employeeId: string
@@ -238,11 +239,11 @@ export default function TeamContent() {
             <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
               We&apos;re always looking for talented individuals who share our passion for education and technology.
             </p>
-            <a href="mailto:hello@matrixo.in?subject=Open%20Position%20Inquiry">
+            <Link href="/careers">
               <button className="btn-primary">
                 View Open Positions
               </button>
-            </a>
+            </Link>
           </motion.div>
         </div>
       </section>
