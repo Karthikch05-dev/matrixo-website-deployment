@@ -369,6 +369,8 @@ export default function AuthPage() {
                 </button>
               </form>
 
+              <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+                By continuing, you agree to our{' '}
                 <Link href="/terms" className="text-purple-500 dark:text-purple-400 hover:text-purple-600 dark:hover:text-purple-300">
                   Terms
                 </Link>{' '}
