@@ -5,8 +5,7 @@ import { motion } from 'framer-motion'
 import { FaArrowLeft, FaUpload, FaCheckCircle } from 'react-icons/fa'
 import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db } from '@/lib/firebaseConfig'
-import { getStorage } from 'firebase/storage'
+import { db, storage } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -117,7 +116,6 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
     try {
       // Upload resume to Firebase Storage
-      const storage = getStorage()
       const resumeRef = ref(storage, `resumes/${Date.now()}_${resume!.name}`)
       await uploadBytes(resumeRef, resume!)
       const resumeURL = await getDownloadURL(resumeRef)

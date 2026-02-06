@@ -119,8 +119,7 @@ service cloud.firestore {
     // Helper function to check if user is an employee
     function isEmployee() {
       return isAuthenticated() && 
-             exists(/databases/$(database)/documents/Employees/$(request.auth.uid)) ||
-             request.auth.token.email in get(/databases/$(database)/documents/Employees).data.values().map(e => e.email);
+             exists(/databases/$(database)/documents/Employees/$(request.auth.uid));
     }
 
     match /roles/{roleId} {

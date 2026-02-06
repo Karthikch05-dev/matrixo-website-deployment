@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaUpload, FaCheckCircle } from 'react-icons/fa'
 import { collection, query, where, getDocs, orderBy, addDoc, Timestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebaseConfig'
+import { db, storage } from '@/lib/firebaseConfig'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { getStorage } from 'firebase/storage'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -118,7 +117,6 @@ export default function CareersContent() {
     setSubmitting(true)
 
     try {
-      const storage = getStorage()
       const resumeRef = ref(storage, `resumes/general/${Date.now()}_${resume!.name}`)
       await uploadBytes(resumeRef, resume!)
       const resumeURL = await getDownloadURL(resumeRef)
