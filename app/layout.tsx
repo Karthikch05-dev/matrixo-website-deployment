@@ -4,6 +4,8 @@ import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { AuthProvider } from '@/lib/AuthContext'
+import { ProfileProvider } from '@/lib/ProfileContext'
+import ProfileGuard from '@/components/ProfileGuard'
 import { Toaster } from 'sonner'
 import Script from 'next/script'
 import config from '@/lib/config'
@@ -130,11 +132,13 @@ export default async function RootLayout({
         </Script>
 
         <AuthProvider>
-          {!isEmployeePortal && <Navbar />}
-          <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
-            {children}
-          </main>
-          {!isEmployeePortal && <Footer />}
+          <ProfileProvider>
+            {!isEmployeePortal && <Navbar />}
+            <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
+              {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
+            </main>
+            {!isEmployeePortal && <Footer />}
+          </ProfileProvider>
         </AuthProvider>
         <Toaster position="top-right" richColors />
       </body>

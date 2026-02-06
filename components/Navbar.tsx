@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
+import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import config from '@/lib/config'
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
@@ -63,6 +64,7 @@ export default function Navbar() {
   const [isEmployee, setIsEmployee] = useState(false)
   
   const { user, logout } = useAuth()
+  const { profile } = useProfile()
   const pathname = usePathname()
 
   useEffect(() => {
@@ -310,7 +312,7 @@ export default function Navbar() {
                            rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
                 >
                   <FaUser className="text-sm" />
-                  {user.displayName || user.email?.split('@')[0]}
+                  {profile?.fullName || user.displayName || user.email?.split('@')[0]}
                 </motion.button>
                 
                 <AnimatePresence>
@@ -324,12 +326,19 @@ export default function Navbar() {
                     >
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          {user.displayName || 'User'}
+                          {profile?.fullName || user.displayName || 'User'}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {user.email}
                         </p>
                       </div>
+                      <Link
+                        href="/profile"
+                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700"
+                      >
+                        <FaUser className="text-sm" />
+                        <span>Profile</span>
+                      </Link>
                       {isEmployee && (
                         <a
                           href={EMPLOYEE_PORTAL_URL}
@@ -481,12 +490,21 @@ export default function Navbar() {
                     <>
                       <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          {user.displayName || 'User'}
+                          {profile?.fullName || user.displayName || 'User'}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {user.email}
                         </p>
                       </div>
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300
+                                 rounded-full font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                      >
+                        <FaUser className="text-sm" />
+                        Profile
+                      </Link>
                       {isEmployee && (
                         <a
                           href={EMPLOYEE_PORTAL_URL}

@@ -98,5 +98,19 @@ service cloud.firestore {
       // Only admins can update or delete
       allow update, delete: if false;
     }
+
+    // ================================================
+    // USER PROFILES COLLECTION
+    // ================================================
+    match /UserProfiles/{userId} {
+      // Users can only read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Users can create their own profile (once)
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Users can update their own profile (restricted fields enforced in app)
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // Users cannot delete profiles
+      allow delete: if false;
+    }
   }
 }
