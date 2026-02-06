@@ -112,5 +112,34 @@ service cloud.firestore {
       // Users cannot delete profiles
       allow delete: if false;
     }
+
+    // ================================================
+    // CAREERS SYSTEM - ROLES COLLECTION
+    // ================================================
+    // Helper function to check if user is an employee
+    function isEmployee() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/Employees/$(request.auth.uid)) ||
+             request.auth.token.email in get(/databases/$(database)/documents/Employees).data.values().map(e => e.email);
+    }
+
+    match /roles/{roleId} {
+      // Anyone can read open roles (for public careers page)
+      allow read: if resource.data.status == 'open' || isEmployee();
+      // Only employees can create, update, and delete roles
+      allow write: if isEmployee();
+    }
+
+    // ================================================
+    // CAREERS SYSTEM - APPLICATIONS COLLECTION
+    // ================================================
+    match /applications/{applicationId} {
+      // Anyone can create an application (public apply)
+      allow create: if true;
+      // Only employees can read and update applications
+      allow read, update: if isEmployee();
+      // No one can delete applications
+      allow delete: if false;
+    }
   }
 }
