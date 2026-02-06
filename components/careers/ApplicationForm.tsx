@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaArrowLeft, FaUpload, FaCheckCircle } from 'react-icons/fa'
+import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa'
 import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '@/lib/firebaseConfig'
+import { db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -151,7 +150,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             Application Submitted!
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Thank you for your interest in matriXO. We have received your details and will contact you via email when we need your resume and want to proceed with your application.
+            Thank you for your interest in matriXO. We have received your details and will contact you via email to proceed with your application.
           </p>
           <Link href="/careers">
             <button className="btn-primary">
@@ -290,7 +289,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
               {/* Info Note */}
               <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
                 <p className="text-sm text-cyan-800 dark:text-cyan-300">
-                  📧 No resume needed at this stage! We'll collect your details and reach out via email when we need your resume.
+                  📧 We'll review your details and reach out via email to proceed with the next steps!
                 </p>
               </div>
 
