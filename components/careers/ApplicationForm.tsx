@@ -40,7 +40,6 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     yearOrExperience: '',
   })
   
-  const [resume, setResume] = useState<File | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -72,21 +71,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        setErrors(prev => ({ ...prev, resume: 'Only PDF files are allowed' }))
-        return
-      }
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        setErrors(prev => ({ ...prev, resume: 'File size must be less than 5MB' }))
-        return
-      }
-      setResume(file)
-      setErrors(prev => ({ ...prev, resume: '' }))
-    }
-  }
+
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -98,7 +83,6 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     else if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ''))) newErrors.phone = 'Invalid phone number'
     if (!formData.college.trim()) newErrors.college = 'College/Organization is required'
     if (!formData.yearOrExperience.trim()) newErrors.yearOrExperience = 'This field is required'
-    if (!resume) newErrors.resume = 'Resume is required'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -115,18 +99,13 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     setSubmitting(true)
 
     try {
-      // Upload resume to Firebase Storage
-      const resumeRef = ref(storage, `resumes/${Date.now()}_${resume!.name}`)
-      await uploadBytes(resumeRef, resume!)
-      const resumeURL = await getDownloadURL(resumeRef)
-
       // Save application to Firestore
       const applicationsRef = collection(db, 'applications')
       await addDoc(applicationsRef, {
         ...formData,
         roleId,
         roleTitle: role?.title,
-        resumeURL,
+        resumeURL: '',
         status: 'pending',
         submittedAt: Timestamp.now(),
       })
@@ -172,7 +151,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             Application Submitted!
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Thank you for applying to matriXO. We'll review your application and get back to you soon.
+            Thank you for your interest in matriXO. We have received your details and will contact you via email when we need your resume and want to proceed with your application.
           </p>
           <Link href="/careers">
             <button className="btn-primary">
@@ -308,26 +287,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                 {errors.yearOrExperience && <p className="text-red-500 text-sm mt-1">{errors.yearOrExperience}</p>}
               </div>
 
-              {/* Resume Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Resume (PDF only) *
-                </label>
-                <div className="flex items-center space-x-4">
-                  <label className="flex-1 cursor-pointer">
-                    <div className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-cyan-500 transition-colors flex items-center justify-center">
-                      <FaUpload className="mr-2" />
-                      {resume ? resume.name : 'Choose File'}
-                    </div>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                {errors.resume && <p className="text-red-500 text-sm mt-1">{errors.resume}</p>}
+              {/* Info Note */}
+              <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
+                <p className="text-sm text-cyan-800 dark:text-cyan-300">
+                  📧 No resume needed at this stage! We'll collect your details and reach out via email when we need your resume.
+                </p>
               </div>
 
               {/* Submit Button */}
