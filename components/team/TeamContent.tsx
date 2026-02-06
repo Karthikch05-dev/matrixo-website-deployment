@@ -22,9 +22,10 @@ interface TeamMember {
 const rolePriority: Record<string, number> = {
   'Founder': 0,
   'Co-Founder': 1,
-  'HR': 2,
-  'MD': 3,
-  'Managing Director': 3,
+  'MD': 2,
+  'Managing Director': 2,
+  'HR': 3,
+  'HR Executive': 3,
   'admin': 4,
   'employee': 5,
   'Intern': 6,
