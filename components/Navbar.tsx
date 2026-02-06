@@ -18,7 +18,7 @@ const navLinks = [
   { name: 'About', href: '/about' },
   { name: 'Team', href: '/team' },
   { name: 'Contact', href: '/contact' },
-  { name: 'Carrier@matriXO', href: '/careers' },
+  { name: 'Career@matriXO', href: '/careers' },
 ]
 
 // Employee Portal URL - external domain
