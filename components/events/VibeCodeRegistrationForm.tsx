@@ -678,11 +678,11 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                capture="environment"
                 onChange={handleScreenshotChange}
                 onBlur={() => setIsFileDialogOpen(false)}
                 onClick={(e) => e.stopPropagation()}
                 className="hidden"
-                style={{ display: 'none' }}
               />
               
               {/* Upload button/preview area */}

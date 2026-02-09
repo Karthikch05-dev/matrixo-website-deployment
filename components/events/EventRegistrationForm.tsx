@@ -673,6 +673,7 @@ export default function EventRegistrationForm({ event, ticket, onClose }: EventR
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
+                      capture="environment"
                       onChange={handleFileChange}
                       className="hidden"
                     />
