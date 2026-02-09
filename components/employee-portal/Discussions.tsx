@@ -691,7 +691,11 @@ function DiscussionPost({
     })
   }
 
-  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+  // Include core departments
+  const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
+  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  coreDepartments.forEach(dept => deptSet.add(dept))
+  const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 
   return (
     <motion.div
@@ -1058,7 +1062,11 @@ export function Discussions() {
       })
   }, []) // Remove getAllEmployees from deps to avoid infinite loop
 
-  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+  // Include core departments
+  const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
+  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  coreDepartments.forEach(dept => deptSet.add(dept))
+  const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 
   const handleCreatePost = async (mentions: string[], mentionedDepartments: string[]) => {
     if (!newPostContent.trim()) return

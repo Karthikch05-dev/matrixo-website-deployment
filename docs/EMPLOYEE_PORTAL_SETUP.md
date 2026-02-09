@@ -164,7 +164,7 @@ service cloud.firestore {
 | employeeId | string | MXO001 |
 | name | string | John Doe |
 | email | string | john@matrixo.in |
-| department | string | Engineering |
+| department | string | Engineering (or Design, Operations, HR, Marketing) |
 | designation | string | Software Developer |
 | joiningDate | string | 2024-01-15 |
 | phone | string | +91 9876543210 |

@@ -1499,9 +1499,12 @@ export function AdminPanel() {
     fetchData()
   }, [fetchData])
 
-  // Get unique departments
+  // Get unique departments (including core departments)
   const departments = useMemo(() => {
-    return Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+    const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
+    const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+    coreDepartments.forEach(dept => deptSet.add(dept))
+    return Array.from(deptSet).filter(d => d !== 'Admin').sort()
   }, [employees])
 
   // Filter attendance records

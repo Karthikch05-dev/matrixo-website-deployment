@@ -490,6 +490,7 @@ function TaskModal({
 
   // Get unique departments (excluding Admin)
   // Also add 'Intern' if there are any employees with role 'Intern'
+  // Always include core departments even if no employees exist yet
   const departments = useMemo(() => {
     const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
     // Check if there are any interns by role
@@ -497,6 +498,9 @@ function TaskModal({
     if (hasInterns) {
       deptSet.add('Intern')
     }
+    // Always include core departments
+    const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+    coreDepartments.forEach(dept => deptSet.add(dept))
     return Array.from(deptSet).filter(d => d !== 'Admin').sort()
   }, [employees])
   
@@ -704,7 +708,11 @@ function TaskDetailModal({
   const isAssignee = task.assignedTo?.includes(employee?.employeeId || '')
   const canEdit = isAdmin
   const canDelete = isAdmin || isOwner
-  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)))
+  // Include core departments
+  const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
+  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  coreDepartments.forEach(dept => deptSet.add(dept))
+  const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 
   const handleStatusChange = async (newStatus: Task['status']) => {
     try {
