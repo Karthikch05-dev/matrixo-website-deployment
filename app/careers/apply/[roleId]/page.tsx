@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import ApplicationForm from '@/components/careers/ApplicationForm'
 
 export const metadata: Metadata = {
-  title: 'Apply - Career@matriXO',
+  title: 'Apply - Careers | matriXO',
   description: 'Submit your application to join the matriXO team.',
 }
 

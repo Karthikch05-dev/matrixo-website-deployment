@@ -143,7 +143,7 @@ export default function CareersContent() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
               Careers
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8">

@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import ApplicationsDashboard from '@/components/careers/ApplicationsDashboard'
 
 export const metadata: Metadata = {
-  title: 'Applications Dashboard - Career@matriXO',
+  title: 'Applications Dashboard - Careers | matriXO',
   description: 'View and manage job applications.',
 }
 
