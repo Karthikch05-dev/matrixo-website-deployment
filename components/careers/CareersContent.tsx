@@ -137,20 +137,19 @@ export default function CareersContent() {
     <div className="min-h-screen pt-20">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white py-20">
-        <div className="container-custom px-6">
+        <div className="container-custom px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Career<span className="text-cyan-400">@</span>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">matriXO</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6">
+              Careers
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8">
               Join matriXO and help shape the future of technical education
             </p>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
               We're building innovative solutions that empower students and educational institutions. 
               Be part of a team that's making a real difference in how people learn and grow.
             </p>
@@ -160,7 +159,7 @@ export default function CareersContent() {
 
       {/* Open Roles Section */}
       <section className="py-20 bg-white dark:bg-gray-950">
-        <div className="container-custom px-6">
+        <div className="container-custom px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -382,7 +381,7 @@ export default function CareersContent() {
 
       {/* Why Join Section */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom px-6">
+        <div className="container-custom px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

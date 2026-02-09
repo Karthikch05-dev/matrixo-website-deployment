@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import CareersContent from '@/components/careers/CareersContent'
 
 export const metadata: Metadata = {
-  title: 'Career@matriXO - Join Our Team',
+  title: 'Careers - Join Our Team | matriXO',
   description: 'Explore career opportunities at matriXO and help shape the future of technical education.',
 }
 
