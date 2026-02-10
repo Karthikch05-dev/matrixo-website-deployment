@@ -140,5 +140,29 @@ service cloud.firestore {
       // No one can delete applications
       allow delete: if false;
     }
+
+    // ================================================
+    // HIDDEN MEETINGS COLLECTION (admin-only write)
+    // ================================================
+    match /hiddenMeetings/{meetingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // REMOVED MEETINGS COLLECTION (per-user removal)
+    // ================================================
+    match /removedMeetings/{meetingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // MEETING TASK STATUS COLLECTION
+    // ================================================
+    match /meetingTaskStatus/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }

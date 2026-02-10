@@ -23,10 +23,12 @@ export async function GET(request: Request) {
     }
 
     if (action === 'list') {
-      // List recent meetings with summaries and action items
+      // List recent meetings with summaries, action items, and speakers
       const params = new URLSearchParams({
         include_summary: 'true',
         include_action_items: 'true',
+        include_speakers: 'true',
+        include_calendar_invitees: 'true',
       })
       if (cursor) params.set('cursor', cursor)
       url = `${FATHOM_BASE_URL}/meetings?${params.toString()}`
