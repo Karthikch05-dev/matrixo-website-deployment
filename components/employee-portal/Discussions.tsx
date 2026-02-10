@@ -644,50 +644,74 @@ function DiscussionPost({
     }
   }
 
-  // Highlight mentions in content with hover support for @mentions
+  // Highlight mentions in content with hover support for @mentions, and make URLs clickable
   const renderContent = (content: string) => {
     if (!content || typeof content !== 'string') return content || ''
     
-    const parts = content.split(/(@\w+|#\w+)/g)
-    return parts.map((part, i) => {
-      if (part.startsWith('@')) {
-        const mentionName = part.slice(1).toLowerCase()
-        // Find employee matching the mention
-        const mentionedEmployee = employees.find(e => 
-          e.name.toLowerCase().replace(/\s/g, '').includes(mentionName) ||
-          e.employeeId.toLowerCase() === mentionName ||
-          e.name.split(' ')[0].toLowerCase() === mentionName
+    // First split by URLs, then process mentions within non-URL parts
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const urlParts = content.split(urlRegex)
+    
+    return urlParts.map((urlPart, urlIndex) => {
+      // If this part is a URL, make it clickable
+      if (urlRegex.test(urlPart)) {
+        urlRegex.lastIndex = 0 // Reset regex state
+        return (
+          <a
+            key={`url-${urlIndex}`}
+            href={urlPart}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-400 hover:text-primary-300 underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {urlPart}
+          </a>
         )
-        
-        if (mentionedEmployee) {
-          // Display name WITHOUT @ symbol, but keep hover functionality
-          const displayName = mentionedEmployee.name.split(' ')[0] // Show first name
-          return (
-            <ProfileInfo
-              key={i}
-              inline={true}
-              data={{
-                employeeId: mentionedEmployee.employeeId,
-                name: mentionedEmployee.name,
-                profileImage: mentionedEmployee.profileImage,
-                department: mentionedEmployee.department,
-                designation: mentionedEmployee.designation,
-                role: mentionedEmployee.role || 'employee',
-                status: 'Active'
-              }}
-              isAdmin={false}
-            >
-              <span className="text-primary-400 font-medium cursor-pointer hover:underline">{displayName}</span>
-            </ProfileInfo>
+      }
+      
+      // Otherwise, process mentions
+      const parts = urlPart.split(/(@\w+|#\w+)/g)
+      return parts.map((part, i) => {
+        if (part.startsWith('@')) {
+          const mentionName = part.slice(1).toLowerCase()
+          // Find employee matching the mention
+          const mentionedEmployee = employees.find(e => 
+            e.name.toLowerCase().replace(/\s/g, '').includes(mentionName) ||
+            e.employeeId.toLowerCase() === mentionName ||
+            e.name.split(' ')[0].toLowerCase() === mentionName
           )
+          
+          if (mentionedEmployee) {
+            // Display name WITHOUT @ symbol, but keep hover functionality
+            const displayName = mentionedEmployee.name.split(' ')[0] // Show first name
+            return (
+              <ProfileInfo
+                key={`mention-${urlIndex}-${i}`}
+                inline={true}
+                data={{
+                  employeeId: mentionedEmployee.employeeId,
+                  name: mentionedEmployee.name,
+                  profileImage: mentionedEmployee.profileImage,
+                  department: mentionedEmployee.department,
+                  designation: mentionedEmployee.designation,
+                  role: mentionedEmployee.role || 'employee',
+                  status: 'Active'
+                }}
+                isAdmin={false}
+              >
+                <span className="text-primary-400 font-medium cursor-pointer hover:underline">{displayName}</span>
+              </ProfileInfo>
+            )
+          }
+          // If employee not found, show without @ symbol
+          return <span key={`mention-${urlIndex}-${i}`} className="text-primary-400 font-medium">{part.slice(1)}</span>
         }
-        // If employee not found, show without @ symbol
-        return <span key={i} className="text-primary-400 font-medium">{part.slice(1)}</span>
-      }
-      if (part.startsWith('#')) {
-        return <span key={i} className="text-amber-400 font-medium">{part}</span>
-      }
-      return part
+        if (part.startsWith('#')) {
+          return <span key={`dept-${urlIndex}-${i}`} className="text-amber-400 font-medium">{part}</span>
+        }
+        return part
+      })
     })
   }
 
@@ -1054,7 +1078,12 @@ export function Discussions() {
       .then(data => {
         console.log('🔍 Fetched employees for mentions:', data?.length || 0)
         console.log('🔍 All employees data:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
-        setEmployees(data || [])
+        // Deduplicate employees by employeeId to prevent duplicates
+        const uniqueEmployees = (data || []).filter((emp, index, self) => 
+          index === self.findIndex(e => e.employeeId === emp.employeeId)
+        )
+        console.log('🔍 After deduplication:', uniqueEmployees.length)
+        setEmployees(uniqueEmployees)
       })
       .catch(err => {
         console.error('Failed to fetch employees:', err)
