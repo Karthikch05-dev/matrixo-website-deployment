@@ -379,23 +379,17 @@ function EditAttendanceModal({
 }) {
   const { updateEmployeeAttendance, employee: currentAdmin } = useEmployeeAuth()
   const [status, setStatus] = useState(record?.status || 'present')
-  const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
 
   if (!record || !employee) return null
 
   const handleSave = async () => {
-    if (!reason.trim()) {
-      toast.error('Please provide a reason for the change')
-      return
-    }
-
     setSaving(true)
     try {
       await updateEmployeeAttendance(
         record.id!,
         { status: status as 'P' | 'A' | 'L' | 'O' | 'H' },
-        reason
+        'Attendance updated by admin' // Default reason
       )
       toast.success('Attendance updated')
       onSave()
@@ -471,21 +465,6 @@ function EditAttendanceModal({
               ]}
             />
           </div>
-        </div>
-
-        {/* Reason */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-1">
-            Reason for Change <span className="text-red-400">*</span>
-          </label>
-          <Input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g., Medical leave approved, System error correction"
-          />
-          <p className="text-xs text-neutral-500 mt-1">
-            This will be recorded in the audit trail
-          </p>
         </div>
 
         {/* Audit Notice */}
