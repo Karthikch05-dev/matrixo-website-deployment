@@ -8,7 +8,7 @@ import { db } from './firebaseConfig'
 // ============================================
 
 export interface CreateNotificationParams {
-  type: 'task' | 'discussion' | 'calendar'
+  type: 'task' | 'discussion' | 'calendar' | 'meeting'
   action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied'
   title: string
   message: string

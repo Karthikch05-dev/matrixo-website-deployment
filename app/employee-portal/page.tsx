@@ -29,7 +29,8 @@ import {
   FaPlus,
   FaTrash,
   FaListAlt,
-  FaQrcode
+  FaQrcode,
+  FaVideo
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { toast, Toaster } from 'sonner'
@@ -40,6 +41,7 @@ import Calendar from '@/components/employee-portal/Calendar'
 import Attendance from '@/components/employee-portal/Attendance'
 import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
+import Meetings from '@/components/employee-portal/Meetings'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
@@ -211,6 +213,7 @@ const navigationItems = [
   { id: 'history', label: 'History', icon: FaHistory },
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
+  { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
   { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
 ]
@@ -989,6 +992,7 @@ function Dashboard() {
             {activeTab === 'calendar' && <Calendar />}
             {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
             {activeTab === 'discussions' && <Discussions />}
+            {activeTab === 'meetings' && <Meetings />}
             {activeTab === 'event-checkin' && <EventQRScanner />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>
