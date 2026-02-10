@@ -32,6 +32,7 @@ import {
   FaVideo
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -933,21 +934,30 @@ function Dashboard() {
     }
   }, [activeTab])
 
-  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION ON FIRST LOAD
+  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION + REGISTER PUSH ON FIRST LOAD
   useEffect(() => {
-    const requestPermissionOnLoad = async () => {
-      if (typeof window !== 'undefined' && 'Notification' in window) {
+    const setupPushNotifications = async () => {
+      if (typeof window === 'undefined' || !('Notification' in window)) return
+      if (!employee?.employeeId) return
+
+      try {
+        // Request notification permission if not yet decided
         if (Notification.permission === 'default') {
-          try {
-            await Notification.requestPermission()
-          } catch (error) {
-            console.error('Failed to request notification permission:', error)
-          }
+          await Notification.requestPermission()
         }
+
+        // If permission granted, register SW and subscribe to push
+        if (Notification.permission === 'granted') {
+          await registerServiceWorker()
+          await subscribeToPush(employee.employeeId)
+          console.log('🔔 Push notifications set up successfully')
+        }
+      } catch (error) {
+        console.error('Failed to set up push notifications:', error)
       }
     }
-    requestPermissionOnLoad()
-  }, [])
+    setupPushNotifications()
+  }, [employee?.employeeId])
 
   return (
     <div className="min-h-screen bg-neutral-950 overflow-x-hidden max-w-[100vw]">

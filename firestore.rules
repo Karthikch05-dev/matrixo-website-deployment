@@ -164,5 +164,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // PUSH SUBSCRIPTIONS COLLECTION (Web Push)
+    // ================================================
+    match /pushSubscriptions/{subscriptionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }

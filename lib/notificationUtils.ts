@@ -1,6 +1,6 @@
 'use client'
 
-import { collection, addDoc, Timestamp, getDocs } from 'firebase/firestore'
+import { collection, addDoc, Timestamp, getDocs, query, where } from 'firebase/firestore'
 import { db } from './firebaseConfig'
 
 // ============================================
@@ -20,6 +20,77 @@ export interface CreateNotificationParams {
 }
 
 // ============================================
+// SEND PUSH NOTIFICATIONS VIA API
+// ============================================
+
+/**
+ * Fetches push subscriptions for the given recipient IDs from Firestore
+ * and sends push notifications via the /api/push/send endpoint.
+ */
+async function sendPushToRecipients(
+  recipientIds: string[],
+  payload: { title: string; message: string; targetUrl?: string; type?: string }
+): Promise<void> {
+  try {
+    if (recipientIds.length === 0) return
+
+    // Fetch all push subscriptions for these recipients
+    // Firestore 'in' query supports up to 30 items per query
+    const allSubscriptions: any[] = []
+    const batchSize = 30
+
+    for (let i = 0; i < recipientIds.length; i += batchSize) {
+      const batch = recipientIds.slice(i, i + batchSize)
+      const subsRef = collection(db, 'pushSubscriptions')
+      const q = query(subsRef, where('employeeId', 'in', batch))
+      const snapshot = await getDocs(q)
+      
+      snapshot.docs.forEach(doc => {
+        allSubscriptions.push(doc.data())
+      })
+    }
+
+    if (allSubscriptions.length === 0) {
+      console.log('[Push] No push subscriptions found for recipients')
+      return
+    }
+
+    console.log(`[Push] Found ${allSubscriptions.length} push subscriptions, sending...`)
+
+    // Call the push API endpoint
+    const response = await fetch('/api/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscriptions: allSubscriptions,
+        payload: {
+          title: payload.title,
+          body: payload.message,
+          tag: `${payload.type || 'notification'}-${Date.now()}`,
+          data: {
+            url: payload.targetUrl || '/employee-portal',
+            type: payload.type
+          }
+        }
+      })
+    })
+
+    const result = await response.json()
+    console.log('[Push] Send result:', result)
+
+    // Clean up expired subscriptions if any
+    if (result.expiredEmployees && result.expiredEmployees.length > 0) {
+      console.log('[Push] Cleaning up expired subscriptions for:', result.expiredEmployees)
+      // We could delete them here but it's not critical - they'll fail silently next time
+    }
+
+  } catch (error) {
+    console.error('[Push] Error sending push notifications:', error)
+    // Don't throw - push failure shouldn't block the notification creation
+  }
+}
+
+// ============================================
 // CREATE PER-USER NOTIFICATIONS
 // ============================================
 
@@ -27,6 +98,7 @@ export interface CreateNotificationParams {
  * Creates a notification for EACH employee EXCEPT the one who triggered it.
  * Each employee gets their own notification document they can individually manage.
  * Stored in 'userNotifications' collection with a 'recipientId' field.
+ * Also sends Web Push notifications to all recipients' devices.
  */
 export async function createGlobalNotification(params: CreateNotificationParams): Promise<boolean> {
   try {
@@ -47,6 +119,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
 
     const notificationsRef = collection(db, 'userNotifications')
     const addPromises: Promise<any>[] = []
+    const recipientIds: string[] = []
     
     employeesSnapshot.docs.forEach((empDoc) => {
       const empData = empDoc.data()
@@ -61,6 +134,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       }
 
       console.log('✅ Creating notification for:', empData.name, recipientId)
+      recipientIds.push(recipientId)
       addPromises.push(
         addDoc(notificationsRef, {
           ...params,
@@ -73,6 +147,15 @@ export async function createGlobalNotification(params: CreateNotificationParams)
 
     await Promise.all(addPromises)
     console.log(`✅ Created ${addPromises.length} notifications for all employees (except creator)`)
+
+    // Send Web Push notifications to all recipients
+    await sendPushToRecipients(recipientIds, {
+      title: params.title,
+      message: params.message,
+      targetUrl: params.targetUrl,
+      type: params.type
+    })
+
     return true
   } catch (error) {
     console.error('❌ Error creating per-user notifications:', error)

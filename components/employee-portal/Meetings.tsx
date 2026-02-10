@@ -339,7 +339,8 @@ function MeetingCard({
   onToggleHide,
   onRemove,
   onViewDetails,
-  employees
+  employees,
+  completedTaskIds
 }: {
   meeting: FathomMeeting
   isHidden: boolean
@@ -348,9 +349,11 @@ function MeetingCard({
   onRemove: (recordingId: number) => void
   onViewDetails: (meeting: FathomMeeting) => void
   employees: EmployeeInfo[]
+  completedTaskIds: Set<string>
 }) {
-  const pendingCount = (meeting.action_items || []).filter(a => a && !a.completed).length
-  const completedCount = (meeting.action_items || []).filter(a => a && a.completed).length
+  const allItems = (meeting.action_items || []).filter(a => a)
+  const pendingCount = allItems.filter((a, i) => !a.completed && !completedTaskIds.has(`${meeting.recording_id}_${i}`)).length
+  const completedCount = allItems.filter((a, i) => a.completed || completedTaskIds.has(`${meeting.recording_id}_${i}`)).length
   const duration = formatDuration(meeting.recording_start_time, meeting.recording_end_time)
   const allAttendees = getAllAttendees(meeting)
 
@@ -1116,6 +1119,7 @@ export function Meetings() {
                 onRemove={handleRemove}
                 onViewDetails={handleViewDetails}
                 employees={employees}
+                completedTaskIds={completedTaskIds}
               />
             ))}
           </AnimatePresence>
