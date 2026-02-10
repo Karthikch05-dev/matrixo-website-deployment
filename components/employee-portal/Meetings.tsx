@@ -36,6 +36,7 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  getDocs,
   onSnapshot,
   Timestamp
 } from 'firebase/firestore'
@@ -197,35 +198,38 @@ function renderMarkdownClean(md: string): string {
 function getAllAttendees(meeting: FathomMeeting): { name: string; email?: string; isExternal?: boolean }[] {
   const attendees = new Map<string, { name: string; email?: string; isExternal?: boolean }>()
 
+  const addAttendee = (name: string, email?: string, isExternal?: boolean) => {
+    if (!name && !email) return
+    const key = (email || name || '').toLowerCase()
+    if (!key) return
+    // Check if already exists by email or name
+    if (attendees.has(key)) return
+    const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === name.toLowerCase())
+    if (existsByName) return
+    attendees.set(key, { name: name || email?.split('@')[0] || 'Unknown', email, isExternal })
+  }
+
   // Add calendar invitees
   meeting.calendar_invitees?.forEach(inv => {
-    const key = (inv.email || inv.name || '').toLowerCase()
-    if (key) {
-      attendees.set(key, { name: inv.name || inv.email?.split('@')[0] || 'Unknown', email: inv.email, isExternal: inv.is_external })
-    }
+    addAttendee(inv.name || inv.email?.split('@')[0] || '', inv.email, inv.is_external)
   })
 
   // Add speakers
   meeting.speakers?.forEach(sp => {
-    const emailKey = sp.matched_calendar_invitee_email?.toLowerCase()
-    const nameKey = sp.display_name.toLowerCase()
-    if (emailKey && attendees.has(emailKey)) return
-    const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === nameKey)
-    if (!existsByName) {
-      attendees.set(emailKey || nameKey, { name: sp.display_name, email: sp.matched_calendar_invitee_email })
-    }
+    addAttendee(sp.display_name, sp.matched_calendar_invitee_email)
   })
 
   // Add recorded_by
   if (meeting.recorded_by) {
-    const key = (meeting.recorded_by.email || meeting.recorded_by.name || '').toLowerCase()
-    if (key && !attendees.has(key)) {
-      const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === meeting.recorded_by!.name.toLowerCase())
-      if (!existsByName) {
-        attendees.set(key, { name: meeting.recorded_by.name, email: meeting.recorded_by.email })
-      }
-    }
+    addAttendee(meeting.recorded_by.name, meeting.recorded_by.email)
   }
+
+  // Add action item assignees (mentioned people)
+  meeting.action_items?.forEach(item => {
+    if (item?.assignee?.name) {
+      addAttendee(item.assignee.name, item.assignee.email)
+    }
+  })
 
   return Array.from(attendees.values())
 }
@@ -870,6 +874,8 @@ export function Meetings() {
   }, [])
 
   // Fetch meetings
+  const notifiedMeetingsRef = useRef<Set<number>>(new Set())
+  
   const fetchMeetings = useCallback(async (cursor?: string) => {
     try {
       if (!cursor) setLoading(true)
@@ -887,6 +893,11 @@ export function Meetings() {
         setMeetings(prev => [...prev, ...data.items])
       } else {
         setMeetings(data.items)
+        
+        // Auto-notify for new meetings with summaries (only on first load, only admin triggers this)
+        if (isAdmin && employee && data.items.length > 0) {
+          autoNotifyNewMeetings(data.items)
+        }
       }
       setNextCursor(data.next_cursor)
       setError(null)
@@ -898,7 +909,90 @@ export function Meetings() {
       setLoadingMore(false)
       setRefreshing(false)
     }
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, employee])
+
+  // Auto-send notifications for new meeting summaries to all mentioned people
+  const autoNotifyNewMeetings = useCallback(async (fetchedMeetings: FathomMeeting[]) => {
+    if (!employee) return
+
+    try {
+      // Check which meetings we haven't notified about yet
+      const notifiedRef = collection(db, 'meetingNotified')
+      const notifiedSnapshot = await getDocs(notifiedRef)
+      const alreadyNotified = new Set<number>()
+      notifiedSnapshot.docs.forEach(d => {
+        alreadyNotified.add(Number(d.data().recordingId))
+      })
+
+      // Only process meetings from the last 24 hours that have summaries
+      const oneDayAgo = new Date()
+      oneDayAgo.setHours(oneDayAgo.getHours() - 24)
+
+      const newMeetings = fetchedMeetings.filter(m => 
+        m.default_summary?.markdown_formatted &&
+        !alreadyNotified.has(m.recording_id) &&
+        !notifiedMeetingsRef.current.has(m.recording_id) &&
+        new Date(m.created_at) > oneDayAgo
+      )
+
+      if (newMeetings.length === 0) return
+
+      console.log(`🔔 Found ${newMeetings.length} new meetings to notify about`)
+
+      for (const meeting of newMeetings) {
+        // Mark as notified immediately to prevent duplicates
+        notifiedMeetingsRef.current.add(meeting.recording_id)
+
+        // Get all attendees + assignees
+        const allPeople = getAllAttendees(meeting)
+        
+        // Match to employees
+        const matchedEmployeeIds = allPeople
+          .map(person => {
+            const matched = employees.find(
+              emp => (person.email && emp.email.toLowerCase() === person.email.toLowerCase()) ||
+                     emp.name.toLowerCase() === person.name.toLowerCase() ||
+                     emp.name.toLowerCase().includes(person.name.toLowerCase()) ||
+                     person.name.toLowerCase().includes(emp.name.toLowerCase())
+            )
+            return matched?.employeeId
+          })
+          .filter((id): id is string => !!id && id !== employee.employeeId)
+
+        if (matchedEmployeeIds.length === 0) continue
+
+        const meetingTitle = meeting.meeting_title || meeting.title || 'Untitled Meeting'
+        const taskCount = (meeting.action_items || []).filter(a => a).length
+
+        // Create notification for matched employees
+        await createGlobalNotification({
+          type: 'meeting',
+          action: 'created',
+          title: `📋 Meeting Summary Ready: ${meetingTitle}`,
+          message: `The MoM for "${meetingTitle}" is ready with ${taskCount} action item${taskCount !== 1 ? 's' : ''}. Check your tasks!`,
+          relatedEntityId: String(meeting.recording_id),
+          targetUrl: '#meetings',
+          createdBy: employee.employeeId,
+          createdByName: employee.name,
+          createdByRole: employee.role
+        })
+
+        // Store in Firestore so we don't re-notify
+        await setDoc(doc(db, 'meetingNotified', String(meeting.recording_id)), {
+          recordingId: meeting.recording_id,
+          title: meetingTitle,
+          notifiedBy: employee.employeeId,
+          notifiedAt: Timestamp.now(),
+          recipientCount: matchedEmployeeIds.length
+        })
+
+        console.log(`✅ Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
+      }
+    } catch (err) {
+      console.error('Error auto-notifying meetings:', err)
+    }
+  }, [employee, employees])
 
   useEffect(() => { fetchMeetings() }, [fetchMeetings])
 

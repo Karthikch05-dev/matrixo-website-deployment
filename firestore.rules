@@ -172,5 +172,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // MEETING NOTIFIED COLLECTION (auto-notification tracking)
+    // ================================================
+    match /meetingNotified/{meetingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }

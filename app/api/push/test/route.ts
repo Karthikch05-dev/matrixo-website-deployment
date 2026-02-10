@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
 import webPush from 'web-push'
 
 export const dynamic = 'force-dynamic'
