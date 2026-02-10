@@ -717,7 +717,7 @@ function DiscussionPost({
 
   // Include core departments
   const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
-  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  const coreDepartments = ['Operations', 'HR', 'Marketing', 'webdeveloper', 'content Curriculum']
   coreDepartments.forEach(dept => deptSet.add(dept))
   const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 
@@ -1093,7 +1093,7 @@ export function Discussions() {
 
   // Include core departments
   const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
-  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  const coreDepartments = ['Operations', 'HR', 'Marketing', 'webdeveloper', 'content Curriculum']
   coreDepartments.forEach(dept => deptSet.add(dept))
   const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 
