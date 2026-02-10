@@ -337,42 +337,82 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     { status: 'O' as const, ...statusConfig.O }
   ]
 
-  // Request location permission
+  // Request location permission with iOS PWA workarounds
   const requestLocationPermission = () => {
-    if (navigator.geolocation) {
-      // For iOS PWA, show instructions first if denied
-      if (isIOSPWAMode && locationStatus === 'denied') {
-        setShowIOSInstructions(true)
-        return
-      }
-      
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setLocationStatus('granted')
-          setShowIOSInstructions(false)
-          toast.success('Location enabled successfully!')
-        },
-        (error) => {
-          setLocationStatus('denied')
-          if (error.code === error.PERMISSION_DENIED) {
-            // On iOS PWA, show instructions since we can't trigger the permission popup
-            if (isIOSPWAMode) {
-              setShowIOSInstructions(true)
-              toast.error('Please enable location in iOS Settings for this app.')
-            } else {
-              toast.error('Location permission denied. Please enable it in browser settings.')
-            }
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            toast.error('Location unavailable. Please check if GPS is enabled.')
-          } else if (error.code === error.TIMEOUT) {
-            toast.error('Location request timed out. Please try again.')
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      )
-    } else {
+    if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by this device.')
+      return
     }
+
+    // For iOS PWA with denied status, show instructions
+    if (isIOSPWAMode && locationStatus === 'denied') {
+      setShowIOSInstructions(true)
+      return
+    }
+    
+    // Show loading state
+    toast.loading('Requesting location access...', { id: 'location-request' })
+    
+    // Use watchPosition as it sometimes triggers permission prompt better on iOS
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        // Success - got location
+        navigator.geolocation.clearWatch(watchId)
+        setLocationStatus('granted')
+        setShowIOSInstructions(false)
+        toast.success('Location enabled successfully!', { id: 'location-request' })
+      },
+      (error) => {
+        navigator.geolocation.clearWatch(watchId)
+        
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationStatus('denied')
+          // On iOS, show instructions
+          if (isIOSPWAMode || isIOSDevice()) {
+            setShowIOSInstructions(true)
+            toast.error('Location blocked. See instructions to fix.', { id: 'location-request' })
+          } else {
+            toast.error('Location permission denied. Please enable it in browser settings.', { id: 'location-request' })
+          }
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          // Position unavailable but permission might be granted
+          // Try getCurrentPosition as fallback
+          navigator.geolocation.getCurrentPosition(
+            () => {
+              setLocationStatus('granted')
+              toast.success('Location enabled!', { id: 'location-request' })
+            },
+            () => {
+              toast.error('Location unavailable. Please check if GPS/Location Services is enabled in Settings.', { id: 'location-request' })
+            },
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+          )
+        } else if (error.code === error.TIMEOUT) {
+          // Timeout - try with lower accuracy
+          navigator.geolocation.getCurrentPosition(
+            () => {
+              setLocationStatus('granted')
+              toast.success('Location enabled!', { id: 'location-request' })
+            },
+            () => {
+              if (isIOSPWAMode || isIOSDevice()) {
+                setShowIOSInstructions(true)
+                toast.error('Location request timed out. See instructions.', { id: 'location-request' })
+              } else {
+                toast.error('Location request timed out. Please try again.', { id: 'location-request' })
+              }
+            },
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+          )
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    )
+    
+    // Auto-clear watch after 20 seconds to prevent hanging
+    setTimeout(() => {
+      navigator.geolocation.clearWatch(watchId)
+    }, 20000)
   }
 
   if (loading) {
@@ -424,7 +464,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 max-w-md w-full"
+              className="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-4">
@@ -432,42 +472,71 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                   <FaApple className="text-2xl text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Enable Location Access</h3>
+                  <h3 className="text-xl font-bold text-white">Fix Location Access</h3>
                   <p className="text-sm text-neutral-400">For iOS Home Screen App</p>
                 </div>
               </div>
               
               <div className="space-y-4 mb-6">
-                <p className="text-neutral-300 text-sm">
-                  Since you're using this app from the Home Screen, you need to enable location in iOS Settings:
-                </p>
-                
-                <div className="bg-neutral-800/50 rounded-xl p-4 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">1</div>
-                    <p className="text-sm text-neutral-300">Open iPhone <strong className="text-white">Settings</strong></p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                  <p className="text-xs text-red-400">
+                    <strong>Known iOS Issue:</strong> Home Screen apps sometimes don't show location prompts. Follow these steps to fix:
+                  </p>
+                </div>
+
+                {/* Method 1: Reset via Safari */}
+                <div>
+                  <p className="text-sm font-semibold text-emerald-400 mb-2">✅ Method 1: Reset Permission (Recommended)</p>
+                  <div className="bg-neutral-800/50 rounded-xl p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">1</div>
+                      <p className="text-sm text-neutral-300">Open <strong className="text-white">Safari</strong> browser</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">2</div>
+                      <p className="text-sm text-neutral-300">Go to <strong className="text-white">team-auth.matrixo.in</strong></p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">3</div>
+                      <p className="text-sm text-neutral-300">Tap <strong className="text-white">Enable Location</strong> and <strong className="text-white">Allow</strong> the popup</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">4</div>
+                      <p className="text-sm text-neutral-300">Now open the <strong className="text-white">Home Screen app</strong> - it should work!</p>
+                    </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">2</div>
-                    <p className="text-sm text-neutral-300">Scroll down and tap <strong className="text-white">Safari</strong></p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">3</div>
-                    <p className="text-sm text-neutral-300">Tap <strong className="text-white">Location</strong> under "Settings for Websites"</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">4</div>
-                    <p className="text-sm text-neutral-300">Select <strong className="text-white">Allow</strong> or <strong className="text-white">Ask</strong></p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">5</div>
-                    <p className="text-sm text-neutral-300">Close and reopen this app from Home Screen</p>
+                </div>
+
+                {/* Method 2: Reinstall app */}
+                <div>
+                  <p className="text-sm font-semibold text-blue-400 mb-2">🔄 Method 2: Reinstall Home Screen App</p>
+                  <div className="bg-neutral-800/50 rounded-xl p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">1</div>
+                      <p className="text-sm text-neutral-300"><strong className="text-white">Delete</strong> the matriXO app from Home Screen</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">2</div>
+                      <p className="text-sm text-neutral-300">Go to <strong className="text-white">Settings → Safari → Clear History and Website Data</strong></p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">3</div>
+                      <p className="text-sm text-neutral-300">Open Safari, visit <strong className="text-white">team-auth.matrixo.in</strong></p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">4</div>
+                      <p className="text-sm text-neutral-300">Allow location when prompted</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">5</div>
+                      <p className="text-sm text-neutral-300">Add to Home Screen again (Share → Add to Home Screen)</p>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
                   <p className="text-xs text-amber-400">
-                    <strong>Note:</strong> If location still doesn't work, try using Safari directly instead of the Home Screen app.
+                    <strong>Quick Alternative:</strong> You can always use Safari directly to mark attendance if the Home Screen app has issues.
                   </p>
                 </div>
               </div>
@@ -482,7 +551,10 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 <button
                   onClick={() => {
                     setShowIOSInstructions(false)
-                    requestLocationPermission()
+                    // Try with a slight delay to help iOS trigger the prompt
+                    setTimeout(() => {
+                      requestLocationPermission()
+                    }, 500)
                   }}
                   className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-400 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
                 >
