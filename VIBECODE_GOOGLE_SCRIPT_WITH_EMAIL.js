@@ -177,7 +177,7 @@ function sendConfirmationEmail(data) {
 
 Thank you for registering for VibeCode IRL at KPRIT!
 
-📋 REGISTRATION DETAILS:
+REGISTRATION DETAILS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Name: ${data.name}
 • Registration Number: ${data.registrationNumber}
@@ -188,38 +188,38 @@ Thank you for registering for VibeCode IRL at KPRIT!
 • Branch: ${data.branch}
 • Year: ${data.year}
 • Transaction Code: ${data.transactionCode}
-• Amount Paid: ₹${data.price}
+• Amount Paid: Rs.${data.price}
 • Status: Pending Verification
 
-📅 EVENT DETAILS:
+EVENT DETAILS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Event: VibeCode IRL - Where Coding Meets the Vibe
 • Dates: February 12-13, 2026
 • Time: 10:00 AM - 4:00 PM (both days)
 • Venue: Auditorium, D-Block, KPRIT, Hyderabad
 
-⏳ NEXT STEPS:
+NEXT STEPS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Your payment screenshot is being verified
 2. You'll receive final confirmation within 24 hours
 3. Look out for event updates via email/WhatsApp
 
-🎉 WHAT YOU'LL GET:
+WHAT YOU'LL GET:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Full-day workshop + competitions
-✅ AI tools & techniques masterclass
-✅ Quiz competition with prizes
-✅ Coding competition
-✅ Participation certificate
-✅ Chance to win swags & merit certificates
-✅ Lunch included
+- Full-day workshop + competitions
+- AI tools & techniques masterclass
+- Quiz competition with prizes
+- Coding competition
+- Participation certificate
+- Chance to win swags & merit certificates
+- Lunch included
 
-📞 NEED HELP?
+NEED HELP?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Contact: hello@matrixo.in
 Website: https://matrixo.in
 
-See you at VibeCode IRL! 🚀
+See you at VibeCode IRL!
 
 Best regards,
 Team matriXO`;
@@ -227,7 +227,7 @@ Team matriXO`;
     // Send email using GmailApp (allows sending as alias)
     // NOTE: To send as hello@matrixo.in, you need to add it as a "Send mail as" alias
     // in Gmail Settings > Accounts > Send mail as
-    GmailApp.sendEmail(data.email, '✅ VibeCode IRL Registration Received - Feb 12-13, 2026', emailBody, {
+    GmailApp.sendEmail(data.email, 'VERIFIED: Your VibeCode IRL Registration is Received - Feb 12-13, 2026', emailBody, {
       name: 'matriXO Events',
       replyTo: 'hello@matrixo.in'
       // Uncomment the line below ONLY if hello@matrixo.in is configured as a "Send mail as" alias:
@@ -318,11 +318,11 @@ function sendVerifiedConfirmationEmail(data) {
   
   const emailBody = `Hi ${data.name},
 
-🎉 CONGRATULATIONS! Your registration has been VERIFIED! 🎉
+CONGRATULATIONS! Your registration has been VERIFIED!
 
 Your payment has been confirmed and your spot is secured for VibeCode IRL!
 
-✅ VERIFIED REGISTRATION DETAILS:
+VERIFIED REGISTRATION DETAILS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Name: ${data.name}
 • Registration Number: ${data.registrationNumber}
@@ -333,17 +333,17 @@ Your payment has been confirmed and your spot is secured for VibeCode IRL!
 • Branch: ${data.branch}
 • Year: ${data.year}
 • Transaction Code: ${data.transactionCode}
-• Amount Paid: ₹${data.price}
-• Status: ✅ VERIFIED & CONFIRMED
+• Amount Paid: Rs.${data.price}
+• Status: VERIFIED & CONFIRMED
 
-📅 EVENT DETAILS:
+EVENT DETAILS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Event: VibeCode IRL - Where Coding Meets the Vibe
 • Dates: February 12-13, 2026
 • Time: 10:00 AM - 4:00 PM (both days)
 • Venue: Auditorium, D-Block, KPRIT, Hyderabad
 
-⚠️ IMPORTANT INSTRUCTIONS:
+IMPORTANT INSTRUCTIONS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Bring your college ID card (mandatory for entry)
 2. Bring your laptop (fully charged)
@@ -352,17 +352,17 @@ Your payment has been confirmed and your spot is secured for VibeCode IRL!
 5. Show the QR code below at the venue for quick check-in
 6. Join our WhatsApp group for updates (link will be shared soon)
 
-🎉 WHAT'S INCLUDED:
+WHAT'S INCLUDED:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Full 2-day workshop + competitions
-✅ AI tools & techniques masterclass
-✅ Quiz competition with exciting prizes
-✅ Coding competition
-✅ Official participation certificate
-✅ Chance to win swags & merit certificates
-✅ Lunch provided both days
+- Full 2-day workshop + competitions
+- AI tools & techniques masterclass
+- Quiz competition with exciting prizes
+- Coding competition
+- Official participation certificate
+- Chance to win swags & merit certificates
+- Lunch provided both days
 
-📅 SCHEDULE (Both Days):
+SCHEDULE (Both Days):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 9:30 AM - Check-in & Registration
 10:00 AM - Opening Session
@@ -372,12 +372,12 @@ Your payment has been confirmed and your spot is secured for VibeCode IRL!
 3:00 PM - Competition Time
 4:00 PM - Closing & Certificates
 
-📞 CONTACT & SUPPORT:
+CONTACT & SUPPORT:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Email: hello@matrixo.in
 Website: https://matrixo.in
 
-We're super excited to see you at VibeCode IRL! Get ready for an amazing experience! 🚀
+We're super excited to see you at VibeCode IRL! Get ready for an amazing experience!
 
 Best regards,
 Team matriXO
@@ -391,12 +391,12 @@ View QR Code: ${qrCodeUrl}
   const htmlBody = `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; color: white;">
-      <h1 style="margin: 0; font-size: 28px;">🎉 Registration VERIFIED!</h1>
+      <h1 style="margin: 0; font-size: 28px;">Registration VERIFIED!</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Your spot is secured for VibeCode IRL</p>
     </div>
     
     <div style="background-color: white; padding: 30px; border-radius: 10px; margin-top: 20px;">
-      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">✅ Registration Details</h2>
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Registration Details</h2>
       <table style="width: 100%; border-collapse: collapse;">
         <tr><td style="padding: 8px 0;"><strong>Name:</strong></td><td>${data.name}</td></tr>
         <tr><td style="padding: 8px 0;"><strong>Registration #:</strong></td><td>${data.registrationNumber}</td></tr>
@@ -407,16 +407,16 @@ View QR Code: ${qrCodeUrl}
         <tr><td style="padding: 8px 0;"><strong>Branch:</strong></td><td>${data.branch}</td></tr>
         <tr><td style="padding: 8px 0;"><strong>Year:</strong></td><td>${data.year}</td></tr>
         <tr><td style="padding: 8px 0;"><strong>Transaction:</strong></td><td>${data.transactionCode}</td></tr>
-        <tr><td style="padding: 8px 0;"><strong>Amount Paid:</strong></td><td>₹${data.price}</td></tr>
+        <tr><td style="padding: 8px 0;"><strong>Amount Paid:</strong></td><td>Rs.${data.price}</td></tr>
       </table>
       
-      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">📅 Event Details</h2>
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Event Details</h2>
       <p><strong>Event:</strong> VibeCode IRL - Where Coding Meets the Vibe</p>
       <p><strong>Dates:</strong> February 12-13, 2026</p>
       <p><strong>Time:</strong> 10:00 AM - 4:00 PM (both days)</p>
       <p><strong>Venue:</strong> Auditorium, D-Block, KPRIT, Hyderabad</p>
       
-      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">⚠️ Important Instructions</h2>
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Important Instructions</h2>
       <ul style="line-height: 1.8;">
         <li>Bring your college ID card (mandatory for entry)</li>
         <li>Bring your laptop (fully charged)</li>
@@ -425,7 +425,7 @@ View QR Code: ${qrCodeUrl}
         <li>Join our WhatsApp group for updates (link will be shared soon)</li>
       </ul>
       
-      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">🎫 Your Check-In QR Code</h2>
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Your Check-In QR Code</h2>
       <div style="text-align: center; background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
         <p style="margin-bottom: 15px; color: #666; font-size: 16px;"><strong>Transaction Code:</strong> ${data.transactionCode}</p>
         
@@ -442,7 +442,7 @@ View QR Code: ${qrCodeUrl}
           <a href="${qrCodeUrl}" 
              target="_blank" 
              style="display: inline-block; background-color: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-            📱 Click to View Your QR Code
+            Click to View Your QR Code
           </a>
         </div>
         
@@ -458,7 +458,7 @@ View QR Code: ${qrCodeUrl}
         <p style="color: #999; font-size: 12px; margin-top: 15px;">Show this QR code at the venue for quick check-in</p>
       </div>
       
-      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">📅 Schedule (Both Days)</h2>
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Schedule (Both Days)</h2>
       <table style="width: 100%; border-collapse: collapse;">
         <tr><td style="padding: 5px 0;">9:30 AM</td><td>Check-in & Registration</td></tr>
         <tr><td style="padding: 5px 0;">10:00 AM</td><td>Opening Session</td></tr>
@@ -473,13 +473,13 @@ View QR Code: ${qrCodeUrl}
     <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
       <p><strong>Need Help?</strong></p>
       <p>Email: hello@matrixo.in | Website: https://matrixo.in</p>
-      <p style="margin-top: 20px; font-weight: bold;">We're super excited to see you at VibeCode IRL! 🚀</p>
+      <p style="margin-top: 20px; font-weight: bold;">We're super excited to see you at VibeCode IRL!</p>
       <p>Best regards,<br/>Team matriXO</p>
     </div>
   </div>
   `;
 
-  GmailApp.sendEmail(data.email, '✅ VERIFIED: Your VibeCode IRL Registration is CONFIRMED! 🎉', emailBody, {
+  GmailApp.sendEmail(data.email, 'VERIFIED: Your VibeCode IRL Registration is CONFIRMED!', emailBody, {
     name: 'matriXO Events',
     replyTo: 'hello@matrixo.in',
     htmlBody: htmlBody
