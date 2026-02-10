@@ -101,6 +101,18 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <head>
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* iOS PWA Configuration - Required for location & other permissions in standalone mode */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="matriXO Team Auth" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+        
+        {/* Theme color for PWA */}
+        <meta name="theme-color" content="#0a0a0a" />
+        
         {/* Dark Mode Script */}
         <script
           dangerouslySetInnerHTML={{

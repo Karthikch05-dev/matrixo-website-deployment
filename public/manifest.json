@@ -1,0 +1,28 @@
+{
+  "name": "matriXO Team Auth",
+  "short_name": "matriXO Team",
+  "description": "matriXO Employee Portal - Attendance & Team Management",
+  "start_url": "/employee-portal",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/logos/logo-dark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "permissions": [
+    "geolocation"
+  ]
+}
