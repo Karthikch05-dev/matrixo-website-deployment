@@ -10,7 +10,6 @@ import {
   FaCalendarCheck, 
   FaChartLine, 
   FaHistory,
-  FaClock,
   FaCheckCircle,
   FaTimesCircle,
   FaPlane,
@@ -233,7 +232,6 @@ function TopNavbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0, isMobile: false })
-  const [currentTime, setCurrentTime] = useState(new Date())
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
@@ -293,11 +291,6 @@ function TopNavbar({
     }
     setUserMenuOpen(prev => !prev)
   }
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   const handleLogout = async () => {
     try {
@@ -369,20 +362,6 @@ function TopNavbar({
           <div className="flex items-center gap-2 shrink-0">
             {/* Notification Bell */}
             <NotificationBell onNavigate={setActiveTab} />
-            
-            {/* Time Display - Only visible on Attendance tab */}
-            {activeTab === 'attendance' && (
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
-                <FaClock className="text-primary-400 text-sm" />
-                <span className="font-mono tabular-nums text-white text-sm">
-                  {currentTime.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit'
-                  })}
-                </span>
-              </div>
-            )}
 
             {/* User Menu */}
             <div className="relative">

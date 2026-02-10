@@ -83,6 +83,7 @@ interface FathomMeeting {
   recording_start_time?: string
   recording_end_time?: string
   calendar_invitees?: FathomInvitee[]
+  speakers?: FathomSpeaker[]
   recorded_by?: {
     name: string
     email: string
@@ -128,14 +129,65 @@ function formatDuration(start?: string, end?: string): string {
 }
 
 function renderMarkdownSimple(md: string): string {
-  // Very lightweight markdown → HTML for summaries
+  // Lightweight markdown → HTML for summaries
   return md
+    // Strip markdown links: [text](url) → text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Strip bare URLs in parentheses: (https://...)
+    .replace(/\(https?:\/\/[^)]+\)/g, '')
+    // Strip any remaining standalone URLs
+    .replace(/https?:\/\/\S+/g, '')
+    // Headings
     .replace(/^## (.*$)/gm, '<h3 class="text-lg font-semibold text-white mt-4 mb-2">$1</h3>')
     .replace(/^### (.*$)/gm, '<h4 class="text-base font-semibold text-neutral-200 mt-3 mb-1">$1</h4>')
+    // Lists
     .replace(/^\* (.*$)/gm, '<li class="ml-4 text-neutral-300 text-sm list-disc">$1</li>')
     .replace(/^- (.*$)/gm, '<li class="ml-4 text-neutral-300 text-sm list-disc">$1</li>')
+    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+    // Double newlines
     .replace(/\n\n/g, '<br/>')
+    // Clean up double spaces from stripped URLs
+    .replace(/ {2,}/g, ' ')
+    .trim()
+}
+
+function getAllAttendees(meeting: FathomMeeting): { name: string; email?: string; isExternal?: boolean }[] {
+  const attendees = new Map<string, { name: string; email?: string; isExternal?: boolean }>()
+
+  // Add calendar invitees
+  meeting.calendar_invitees?.forEach(inv => {
+    const key = (inv.email || inv.name || '').toLowerCase()
+    if (key) {
+      attendees.set(key, { name: inv.name || inv.email?.split('@')[0] || 'Unknown', email: inv.email, isExternal: inv.is_external })
+    }
+  })
+
+  // Add speakers (may not be in calendar_invitees)
+  meeting.speakers?.forEach(sp => {
+    const emailKey = sp.matched_calendar_invitee_email?.toLowerCase()
+    const nameKey = sp.display_name.toLowerCase()
+    // Only add if not already present via email match
+    if (emailKey && attendees.has(emailKey)) return
+    // Check by name
+    const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === nameKey)
+    if (!existsByName) {
+      attendees.set(nameKey, { name: sp.display_name, email: sp.matched_calendar_invitee_email })
+    }
+  })
+
+  // Add recorded_by if not already present
+  if (meeting.recorded_by) {
+    const key = (meeting.recorded_by.email || meeting.recorded_by.name || '').toLowerCase()
+    if (key && !attendees.has(key)) {
+      const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === meeting.recorded_by!.name.toLowerCase())
+      if (!existsByName) {
+        attendees.set(key, { name: meeting.recorded_by.name, email: meeting.recorded_by.email })
+      }
+    }
+  }
+
+  return Array.from(attendees.values())
 }
 
 // ============================================
@@ -159,8 +211,8 @@ function MeetingCard({
   onSendMentionNotification: (meeting: FathomMeeting, actionItem: FathomActionItem) => void
   employees: { employeeId: string; name: string; email: string }[]
 }) {
-  const pendingActions = meeting.action_items?.filter(a => !a.completed) || []
-  const completedActions = meeting.action_items?.filter(a => a.completed) || []
+  const pendingActions = (meeting.action_items || []).filter(a => a && !a.completed)
+  const completedActions = (meeting.action_items || []).filter(a => a && a.completed)
   const duration = formatDuration(meeting.recording_start_time, meeting.recording_end_time)
 
   return (
@@ -170,7 +222,7 @@ function MeetingCard({
       exit={{ opacity: 0, y: -10 }}
     >
       <Card className={`relative ${isHidden ? 'opacity-60 border-l-4 border-l-red-500/50' : ''}`}>
-        <div className="p-4 sm:p-5">
+        <div className="p-3 sm:p-4">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -235,26 +287,29 @@ function MeetingCard({
             </div>
           </div>
 
-          {/* Attendees */}
-          {meeting.calendar_invitees && meeting.calendar_invitees.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {meeting.calendar_invitees.slice(0, 6).map((inv, i) => (
-                <span
-                  key={i}
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    inv.is_external
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                      : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                  }`}
-                >
-                  {inv.name || inv.email.split('@')[0]}
-                </span>
-              ))}
-              {meeting.calendar_invitees.length > 6 && (
-                <span className="text-xs text-neutral-500">+{meeting.calendar_invitees.length - 6} more</span>
-              )}
-            </div>
-          )}
+          {/* Attendees (merged from speakers + calendar invitees) */}
+          {(() => {
+            const allAttendees = getAllAttendees(meeting)
+            return allAttendees.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {allAttendees.slice(0, 6).map((att, i) => (
+                  <span
+                    key={i}
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      att.isExternal
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                    }`}
+                  >
+                    {att.name}
+                  </span>
+                ))}
+                {allAttendees.length > 6 && (
+                  <span className="text-xs text-neutral-500">+{allAttendees.length - 6} more</span>
+                )}
+              </div>
+            ) : null
+          })()}
 
           {/* Action Items Summary */}
           {meeting.action_items && meeting.action_items.length > 0 && (
@@ -311,16 +366,16 @@ function MeetingDetailModal({
 
   if (!meeting) return null
 
-  const pendingActions = meeting.action_items?.filter(a => !a.completed) || []
-  const completedActions = meeting.action_items?.filter(a => a.completed) || []
+  const pendingActions = (meeting.action_items || []).filter(a => a && !a.completed)
+  const completedActions = (meeting.action_items || []).filter(a => a && a.completed)
   const duration = formatDuration(meeting.recording_start_time, meeting.recording_end_time)
 
   // Match action item assignees to employee portal users
-  const matchAssigneeToEmployee = (assignee?: { name: string; email: string }) => {
-    if (!assignee) return null
+  const matchAssigneeToEmployee = (assignee?: { name: string; email: string } | null) => {
+    if (!assignee?.name && !assignee?.email) return null
     return employees.find(
-      emp => emp.email.toLowerCase() === assignee.email.toLowerCase() ||
-             emp.name.toLowerCase() === assignee.name.toLowerCase()
+      emp => (assignee.email && emp.email.toLowerCase() === assignee.email.toLowerCase()) ||
+             (assignee.name && emp.name.toLowerCase() === assignee.name.toLowerCase())
     )
   }
 
@@ -373,7 +428,7 @@ function MeetingDetailModal({
           {[
             { id: 'summary' as const, label: 'Summary & Next Steps', icon: FaClipboardList },
             { id: 'actions' as const, label: `Tasks (${meeting.action_items?.length || 0})`, icon: FaTasks },
-            { id: 'attendees' as const, label: `Attendees (${meeting.calendar_invitees?.length || 0})`, icon: FaUserTag },
+            { id: 'attendees' as const, label: `Attendees (${getAllAttendees(meeting).length})`, icon: FaUserTag },
           ].map(tab => (
             <button
               key={tab.id}
@@ -421,7 +476,8 @@ function MeetingDetailModal({
                 </h4>
                 <div className="space-y-2">
                   {pendingActions.map((item, i) => {
-                    const matchedEmployee = matchAssigneeToEmployee(item.assignee)
+                    const assignee = item?.assignee
+                    const matchedEmployee = matchAssigneeToEmployee(assignee)
                     return (
                       <div
                         key={i}
@@ -430,22 +486,22 @@ function MeetingDetailModal({
                         <div className="flex items-start gap-3">
                           <FaCircle className="text-amber-400 text-[8px] mt-1.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-neutral-200">{item.description}</p>
+                            <p className="text-sm text-neutral-200">{item?.description || 'No description'}</p>
                             <div className="flex flex-wrap items-center gap-2 mt-2">
-                              {item.assignee && (
+                              {assignee?.name && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                  @{item.assignee.name}
+                                  @{assignee.name}
                                 </span>
                               )}
-                              {item.recording_timestamp && (
+                              {item?.recording_playback_url && (
                                 <a
-                                  href={item.recording_playback_url || meeting.url}
+                                  href={item.recording_playback_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-xs text-neutral-500 hover:text-blue-400 transition-colors flex items-center gap-1"
                                 >
                                   <FaPlay className="text-[8px]" />
-                                  {item.recording_timestamp}
+                                  Jump to moment
                                 </a>
                               )}
                             </div>
@@ -455,7 +511,7 @@ function MeetingDetailModal({
                             <button
                               onClick={() => onSendMentionNotification(meeting, item)}
                               className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all flex-shrink-0"
-                              title={`Notify ${item.assignee?.name}`}
+                              title={`Notify ${assignee?.name || 'assignee'}`}
                             >
                               <FaBell className="text-xs" />
                             </button>
@@ -484,8 +540,8 @@ function MeetingDetailModal({
                       <div className="flex items-start gap-3">
                         <FaCheckCircle className="text-emerald-400 text-xs mt-1 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="text-sm text-neutral-400 line-through">{item.description}</p>
-                          {item.assignee && (
+                          <p className="text-sm text-neutral-400 line-through">{item?.description || 'No description'}</p>
+                          {item?.assignee?.name && (
                             <span className="text-xs text-neutral-600 mt-1 inline-block">
                               @{item.assignee.name}
                             </span>
@@ -510,31 +566,34 @@ function MeetingDetailModal({
         {/* Attendees Section */}
         {activeSection === 'attendees' && (
           <div className="space-y-2">
-            {meeting.calendar_invitees && meeting.calendar_invitees.length > 0 ? (
-              meeting.calendar_invitees.map((inv, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-xl border border-neutral-700"
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                    inv.is_external ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {(inv.name || inv.email)[0]?.toUpperCase()}
+            {(() => {
+              const allAttendees = getAllAttendees(meeting)
+              return allAttendees.length > 0 ? (
+                allAttendees.map((att, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-xl border border-neutral-700"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      att.isExternal ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {att.name[0]?.toUpperCase() || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-neutral-200 truncate">{att.name}</p>
+                      {att.email && <p className="text-xs text-neutral-500 truncate">{att.email}</p>}
+                    </div>
+                    {att.isExternal && (
+                      <Badge variant="warning" className="text-xs">External</Badge>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-200 truncate">{inv.name || inv.email.split('@')[0]}</p>
-                    <p className="text-xs text-neutral-500 truncate">{inv.email}</p>
-                  </div>
-                  {inv.is_external && (
-                    <Badge variant="warning" className="text-xs">External</Badge>
-                  )}
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-neutral-500 text-sm">No attendee information available</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-neutral-500 text-sm">No attendee information available</p>
-              </div>
-            )}
+              )
+            })()}
           </div>
         )}
       </div>
@@ -662,16 +721,19 @@ export function Meetings() {
 
   // Send @mention notification to an employee for a meeting task
   const handleSendMentionNotification = async (meeting: FathomMeeting, actionItem: FathomActionItem) => {
-    if (!employee || !actionItem.assignee) return
+    if (!employee || !actionItem?.assignee) return
+
+    const assigneeName = actionItem.assignee.name || ''
+    const assigneeEmail = actionItem.assignee.email || ''
 
     // Find the matched employee in portal
     const matchedEmp = employees.find(
-      emp => emp.email.toLowerCase() === actionItem.assignee!.email.toLowerCase() ||
-             emp.name.toLowerCase() === actionItem.assignee!.name.toLowerCase()
+      emp => (assigneeEmail && emp.email.toLowerCase() === assigneeEmail.toLowerCase()) ||
+             (assigneeName && emp.name.toLowerCase() === assigneeName.toLowerCase())
     )
 
     if (!matchedEmp) {
-      toast.error(`${actionItem.assignee.name} is not registered in the employee portal`)
+      toast.error(`${assigneeName || 'This person'} is not registered in the employee portal`)
       return
     }
 
@@ -680,14 +742,14 @@ export function Meetings() {
         type: 'meeting',
         action: 'mentioned',
         title: `Meeting Task: ${meeting.meeting_title || meeting.title}`,
-        message: `${employee.name} assigned you a task from meeting "${meeting.meeting_title || meeting.title}": ${actionItem.description}`,
+        message: `${employee.name} assigned you a task from meeting "${meeting.meeting_title || meeting.title}": ${actionItem.description || 'Task assigned'}`,
         relatedEntityId: String(meeting.recording_id),
         targetUrl: '#meetings',
         createdBy: employee.employeeId,
         createdByName: employee.name,
         createdByRole: employee.role
       })
-      toast.success(`Notification sent to ${actionItem.assignee.name}`)
+      toast.success(`Notification sent to ${assigneeName}`)
     } catch (err) {
       console.error('Error sending notification:', err)
       toast.error('Failed to send notification')
@@ -753,7 +815,7 @@ export function Meetings() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -802,7 +864,7 @@ export function Meetings() {
           />
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {filteredMeetings.map((meeting) => (
               <MeetingCard
