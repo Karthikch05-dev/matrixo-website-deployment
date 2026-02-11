@@ -55,6 +55,43 @@ const statusConfig = {
 }
 
 // ============================================
+// LINKIFY TEXT HELPER - Makes URLs clickable
+// ============================================
+
+function LinkifiedText({ text }: { text: string }) {
+  // URL regex pattern that matches http, https, and www URLs
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi
+  
+  const parts = text.split(urlRegex)
+  const matches: string[] = text.match(urlRegex) || []
+  
+  const result: React.ReactNode[] = []
+  
+  parts.forEach((part, index) => {
+    if (part && matches.includes(part)) {
+      // This is a URL - make it clickable
+      const href = part.startsWith('www.') ? `https://${part}` : part
+      result.push(
+        <a
+          key={`link-${index}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-400 hover:text-primary-300 underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    } else if (part) {
+      result.push(<span key={`text-${index}`}>{part}</span>)
+    }
+  })
+  
+  return <>{result}</>
+}
+
+// ============================================
 // LOCATION STATUS COMPONENT
 // ============================================
 
@@ -102,7 +139,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     employee,
     markAttendanceWithLocation, 
     getTodayAttendance, 
-    updateAttendanceNotes, 
+    updateAttendanceNotes,
     markLeaveRange,
     isHoliday,
     holidays
@@ -121,7 +158,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   
   // On Duty location
   const [onDutyLocation, setOnDutyLocation] = useState('')
-  
+
   // Edit notes mode
   const [editingNotes, setEditingNotes] = useState(false)
   const [updatedNotes, setUpdatedNotes] = useState('')
@@ -225,6 +262,12 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       return
     }
 
+    // Daily report is required
+    if (!notes.trim()) {
+      toast.error('Daily report is required. Please describe your tasks for today.')
+      return
+    }
+
     // Check if location is enabled - MANDATORY for Present and On Duty
     if ((selectedStatus === 'P' || selectedStatus === 'O') && locationStatus !== 'granted') {
       // Always try to get location — this triggers the native iOS prompt
@@ -320,16 +363,33 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     }
   }
 
+  // Check if editing daily report is allowed (before 6:00 PM / 18:00)
+  const isEditingAllowed = () => {
+    const now = new Date()
+    const hours = now.getHours()
+    return hours < 18 // Before 6:00 PM
+  }
+
   const handleUpdateNotes = async () => {
+    if (!isEditingAllowed()) {
+      toast.error('Daily report can only be updated before 6:00 PM')
+      return
+    }
+    
+    if (!updatedNotes.trim()) {
+      toast.error('Daily report cannot be empty')
+      return
+    }
+    
     setSavingNotes(true)
     try {
       await updateAttendanceNotes(updatedNotes)
       await fetchTodayAttendance()
       setEditingNotes(false)
-      toast.success('Notes updated successfully!')
+      toast.success('Daily report updated successfully!')
     } catch (error) {
       console.error('Error updating notes:', error)
-      toast.error('Failed to update notes')
+      toast.error('Failed to update daily report')
     } finally {
       setSavingNotes(false)
     }
@@ -680,31 +740,157 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             </div>
           </div>
 
-          {/* Notes Section - Editable */}
+          {/* Daily Report Section - Editable until 6:00 PM */}
           <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
                 <FaHistory className="text-primary-400" />
-                Today's Work Notes
+                Daily Report
               </label>
-              {!editingNotes && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingNotes(true)}
-                >
-                  {todayAttendance.notes ? 'Edit Notes' : '+ Add Notes'}
-                </Button>
+              {isEditingAllowed() ? (
+                !editingNotes && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingNotes(true)}
+                  >
+                    {todayAttendance.notes ? 'Edit Report' : '+ Add Report'}
+                  </Button>
+                )
+              ) : (
+                <Badge variant="primary" className="text-xs">
+                  Locked (after 6 PM)
+                </Badge>
               )}
             </div>
             
-            {editingNotes ? (
+            {editingNotes && isEditingAllowed() ? (
               <div className="space-y-3">
-                <Textarea
+                {/* Rich Text Toolbar for Edit Mode */}
+                <div className="flex items-center gap-1 p-2 bg-neutral-900 rounded-t-lg border border-neutral-700 border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
+                      if (textarea) {
+                        const start = textarea.selectionStart
+                        const end = textarea.selectionEnd
+                        const selectedText = updatedNotes.substring(start, end)
+                        const newText = updatedNotes.substring(0, start) + `**${selectedText}**` + updatedNotes.substring(end)
+                        setUpdatedNotes(newText)
+                        setTimeout(() => {
+                          textarea.focus()
+                          textarea.setSelectionRange(start + 2, end + 2)
+                        }, 0)
+                      }
+                    }}
+                    className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors font-bold"
+                    title="Bold"
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
+                      if (textarea) {
+                        const start = textarea.selectionStart
+                        const end = textarea.selectionEnd
+                        const selectedText = updatedNotes.substring(start, end)
+                        const newText = updatedNotes.substring(0, start) + `_${selectedText}_` + updatedNotes.substring(end)
+                        setUpdatedNotes(newText)
+                        setTimeout(() => {
+                          textarea.focus()
+                          textarea.setSelectionRange(start + 1, end + 1)
+                        }, 0)
+                      }
+                    }}
+                    className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors italic"
+                    title="Italic"
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
+                      if (textarea) {
+                        const start = textarea.selectionStart
+                        const end = textarea.selectionEnd
+                        const selectedText = updatedNotes.substring(start, end)
+                        const newText = updatedNotes.substring(0, start) + `__${selectedText}__` + updatedNotes.substring(end)
+                        setUpdatedNotes(newText)
+                        setTimeout(() => {
+                          textarea.focus()
+                          textarea.setSelectionRange(start + 2, end + 2)
+                        }, 0)
+                      }
+                    }}
+                    className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors underline"
+                    title="Underline"
+                  >
+                    U
+                  </button>
+                  <div className="w-px h-6 bg-neutral-600 mx-1" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
+                      if (textarea) {
+                        const start = textarea.selectionStart
+                        const newText = updatedNotes.substring(0, start) + '\n• ' + updatedNotes.substring(start)
+                        setUpdatedNotes(newText)
+                        setTimeout(() => {
+                          textarea.focus()
+                          textarea.setSelectionRange(start + 3, start + 3)
+                        }, 0)
+                      }
+                    }}
+                    className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
+                    title="Bullet Point"
+                  >
+                    <span className="text-lg leading-none">•</span>
+                    <span className="text-xs">List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
+                      if (textarea) {
+                        const start = textarea.selectionStart
+                        const beforeText = updatedNotes.substring(0, start)
+                        const lines = beforeText.split('\n')
+                        let lastNumber = 0
+                        for (const line of lines) {
+                          const match = line.match(/^(\d+)\.\s/)
+                          if (match) {
+                            lastNumber = parseInt(match[1])
+                          }
+                        }
+                        const nextNumber = lastNumber + 1
+                        const newText = updatedNotes.substring(0, start) + `\n${nextNumber}. ` + updatedNotes.substring(start)
+                        setUpdatedNotes(newText)
+                        setTimeout(() => {
+                          textarea.focus()
+                          const cursorPos = start + 3 + nextNumber.toString().length
+                          textarea.setSelectionRange(cursorPos, cursorPos)
+                        }, 0)
+                      }
+                    }}
+                    className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
+                    title="Numbered List"
+                  >
+                    <span className="text-sm leading-none">1.</span>
+                    <span className="text-xs">List</span>
+                  </button>
+                </div>
+                <textarea
+                  id="edit-report-textarea"
                   value={updatedNotes}
                   onChange={(e) => setUpdatedNotes(e.target.value)}
                   placeholder="Describe what you worked on today, tasks completed, meetings attended, etc."
                   rows={4}
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 border-t-0 rounded-b-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none font-mono text-sm"
                 />
                 <div className="flex gap-2 justify-end">
                   <Button
@@ -723,14 +909,25 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                     onClick={handleUpdateNotes}
                     icon={<FaCheckCircle />}
                   >
-                    Save Notes
+                    Save Report
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-neutral-400 text-sm">
-                {todayAttendance.notes || 'No notes added yet. Click "Add Notes" to describe your work today.'}
-              </p>
+              <div>
+                <div className="text-neutral-300 text-sm whitespace-pre-wrap">
+                  {todayAttendance.notes ? (
+                    <LinkifiedText text={todayAttendance.notes} />
+                  ) : (
+                    <span className="text-neutral-500 italic">No daily report submitted.</span>
+                  )}
+                </div>
+                {isEditingAllowed() && (
+                  <p className="text-xs text-amber-400 mt-2">
+                    You can update your daily report until 6:00 PM
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -841,14 +1038,148 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             )}
           </AnimatePresence>
 
-          {/* Notes */}
-          <Textarea
-            label="Notes (Optional)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add any notes for today's attendance..."
-            rows={2}
-          />
+          {/* Daily Report - Required */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-300 block">
+              Daily Report <span className="text-red-400">*</span>
+            </label>
+            <p className="text-xs text-neutral-500">
+              Describe your tasks, meetings, and accomplishments for today.
+            </p>
+            
+            {/* Rich Text Toolbar */}
+            <div className="flex items-center gap-1 p-2 bg-neutral-800/50 rounded-t-lg border border-neutral-700 border-b-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    const start = textarea.selectionStart
+                    const end = textarea.selectionEnd
+                    const selectedText = notes.substring(start, end)
+                    const newText = notes.substring(0, start) + `**${selectedText}**` + notes.substring(end)
+                    setNotes(newText)
+                    setTimeout(() => {
+                      textarea.focus()
+                      textarea.setSelectionRange(start + 2, end + 2)
+                    }, 0)
+                  }
+                }}
+                className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors font-bold"
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    const start = textarea.selectionStart
+                    const end = textarea.selectionEnd
+                    const selectedText = notes.substring(start, end)
+                    const newText = notes.substring(0, start) + `_${selectedText}_` + notes.substring(end)
+                    setNotes(newText)
+                    setTimeout(() => {
+                      textarea.focus()
+                      textarea.setSelectionRange(start + 1, end + 1)
+                    }, 0)
+                  }
+                }}
+                className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors italic"
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    const start = textarea.selectionStart
+                    const end = textarea.selectionEnd
+                    const selectedText = notes.substring(start, end)
+                    const newText = notes.substring(0, start) + `__${selectedText}__` + notes.substring(end)
+                    setNotes(newText)
+                    setTimeout(() => {
+                      textarea.focus()
+                      textarea.setSelectionRange(start + 2, end + 2)
+                    }, 0)
+                  }
+                }}
+                className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors underline"
+                title="Underline"
+              >
+                U
+              </button>
+              <div className="w-px h-6 bg-neutral-600 mx-1" />
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    const start = textarea.selectionStart
+                    const newText = notes.substring(0, start) + '\n• ' + notes.substring(start)
+                    setNotes(newText)
+                    setTimeout(() => {
+                      textarea.focus()
+                      textarea.setSelectionRange(start + 3, start + 3)
+                    }, 0)
+                  }
+                }}
+                className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
+                title="Bullet Point"
+              >
+                <span className="text-lg leading-none">•</span>
+                <span className="text-xs">List</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    const start = textarea.selectionStart
+                    const beforeText = notes.substring(0, start)
+                    // Count existing numbered items to suggest next number
+                    const lines = beforeText.split('\n')
+                    let lastNumber = 0
+                    for (const line of lines) {
+                      const match = line.match(/^(\d+)\.\s/)
+                      if (match) {
+                        lastNumber = parseInt(match[1])
+                      }
+                    }
+                    const nextNumber = lastNumber + 1
+                    const newText = notes.substring(0, start) + `\n${nextNumber}. ` + notes.substring(start)
+                    setNotes(newText)
+                    setTimeout(() => {
+                      textarea.focus()
+                      const cursorPos = start + 3 + nextNumber.toString().length
+                      textarea.setSelectionRange(cursorPos, cursorPos)
+                    }, 0)
+                  }
+                }}
+                className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
+                title="Numbered List"
+              >
+                <span className="text-sm leading-none">1.</span>
+                <span className="text-xs">List</span>
+              </button>
+            </div>
+            
+            <textarea
+              id="daily-report-textarea"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Describe your tasks, meetings attended, accomplishments, etc.&#10;&#10;Example:&#10;• Completed UI design for dashboard&#10;• Attended sprint planning meeting&#10;• Fixed bug in user authentication"
+              rows={5}
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 border-t-0 rounded-b-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none font-mono text-sm"
+              required
+            />
+            {!notes.trim() && selectedStatus && (
+              <p className="text-xs text-red-400 mt-1">Daily report is required</p>
+            )}
+          </div>
 
           {/* Submit Button */}
           <Button
