@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGoogle, FaGithub, FaArrowRight, FaShieldAlt, FaBolt, FaLock } from 'react-icons/fa'
+import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -21,7 +21,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   
   const router = useRouter()
-  const { signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth()
+  const { signIn, signUp, signInWithGoogle } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,32 +87,7 @@ export default function AuthPage() {
     setLoading(false)
   }
 
-  const handleGithubSignIn = async () => {
-    setLoading(true)
-    try {
-      await signInWithGithub()
-      toast.success('Signed in successfully!')
-      router.push(returnUrl)
-    } catch (error: any) {
-      console.error('GitHub sign-in error:', error)
-      setLoading(false)
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast.info('Sign-in cancelled')
-        return
-      }
-      
-      if (error.code === 'auth/popup-blocked') {
-        toast.error('Popup blocked! Please allow popups.')
-      } else if (error.code === 'auth/unauthorized-domain') {
-        toast.error('Domain not authorized in Firebase Console.')
-      } else {
-        toast.error('GitHub sign-in failed.')
-      }
-      return
-    }
-    setLoading(false)
-  }
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -252,21 +227,6 @@ export default function AuthPage() {
                     <>
                       <FaGoogle className="text-xl" />
                       <span>Continue with Google</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleGithubSignIn}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-5 bg-gray-800 dark:bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 dark:hover:bg-gray-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg border border-gray-700 dark:border-gray-700"
-                >
-                  {loading ? (
-                    <div className="w-5 h-5 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <FaGithub className="text-xl" />
-                      <span>Continue with GitHub</span>
                     </>
                   )}
                 </button>

@@ -9,7 +9,6 @@ import {
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
-  GithubAuthProvider,
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth'
@@ -22,7 +21,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName?: string) => Promise<void>
   logout: () => Promise<void>
   signInWithGoogle: () => Promise<void>
-  signInWithGithub: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
 }
 
@@ -70,11 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithPopup(auth, provider)
   }
 
-  const signInWithGithub = async () => {
-    const provider = new GithubAuthProvider()
-    await signInWithPopup(auth, provider)
-  }
-
   const resetPassword = async (email: string) => {
     await sendPasswordResetEmail(auth, email)
   }
@@ -86,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     logout,
     signInWithGoogle,
-    signInWithGithub,
     resetPassword
   }
 
