@@ -4,6 +4,8 @@ import { useState } from 'react'
 import SkillDNAAssessment from '@/components/skilldna/SkillDNAAssessment'
 import SkillGenome from '@/components/skilldna/SkillGenome'
 
+// Metadata is defined in layout.tsx
+
 export default function SkillDNAPage() {
   const [assessmentComplete, setAssessmentComplete] = useState(false)
   const [assessmentData, setAssessmentData] = useState<Record<number, string>>({})

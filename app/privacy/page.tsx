@@ -2,6 +2,14 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - matriXO',
+  description: 'Learn how matriXO collects, uses, and protects your personal information. Read our complete privacy policy.',
+  openGraph: {
+    title: 'Privacy Policy - matriXO',
+    description: 'How matriXO handles your personal data and privacy.',
+    url: 'https://matrixo.in/privacy',
+    siteName: 'matriXO',
+    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+  },
 }
 
 export default function PrivacyPage() {
