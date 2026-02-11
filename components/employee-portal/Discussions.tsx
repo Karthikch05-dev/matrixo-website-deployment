@@ -211,10 +211,15 @@ function MentionInput({
     }
     
     const mentionIds = userMentions.map(name => {
+      const nameLower = name.toLowerCase().replace(/\s/g, '')
       const emp = employees.find(e => 
-        e.name.toLowerCase() === name.toLowerCase() ||
-        e.name.toLowerCase().replace(/\s/g, '').includes(name.toLowerCase().replace(/\s/g, '')) ||
-        e.employeeId.toLowerCase() === name.toLowerCase()
+        e.name.toLowerCase().replace(/\s/g, '') === nameLower
+      ) || employees.find(e =>
+        e.employeeId.toLowerCase() === nameLower
+      ) || employees.find(e =>
+        e.name.split(' ')[0].toLowerCase() === nameLower
+      ) || employees.find(e =>
+        e.name.toLowerCase().replace(/\s/g, '').startsWith(nameLower) && nameLower.length >= 3
       )
       return emp?.employeeId
     }).filter(Boolean) as string[]
@@ -675,11 +680,19 @@ function DiscussionPost({
       return parts.map((part, i) => {
         if (part.startsWith('@')) {
           const mentionName = part.slice(1).toLowerCase()
-          // Find employee matching the mention
+          // Find employee matching the mention - use strict matching order
           const mentionedEmployee = employees.find(e => 
-            e.name.toLowerCase().replace(/\s/g, '').includes(mentionName) ||
-            e.employeeId.toLowerCase() === mentionName ||
+            // Exact match: full name without spaces
+            e.name.toLowerCase().replace(/\s/g, '') === mentionName
+          ) || employees.find(e =>
+            // Exact match: employee ID
+            e.employeeId.toLowerCase() === mentionName
+          ) || employees.find(e =>
+            // Exact match: first name only
             e.name.split(' ')[0].toLowerCase() === mentionName
+          ) || employees.find(e =>
+            // Partial match: full name (without spaces) starts with mentionName
+            e.name.toLowerCase().replace(/\s/g, '').startsWith(mentionName) && mentionName.length >= 3
           )
           
           if (mentionedEmployee) {
