@@ -19,7 +19,8 @@ import {
   FaApple,
   FaCog,
   FaBan,
-  FaEnvelope
+  FaEnvelope,
+  FaHome
 } from 'react-icons/fa'
 
 // ============================================
@@ -54,7 +55,8 @@ const statusConfig = {
   L: { label: 'Leave', color: 'bg-amber-500', icon: FaUmbrellaBeach, textColor: 'text-amber-400', bgLight: 'bg-amber-500/20' },
   O: { label: 'On Duty', color: 'bg-blue-500', icon: FaBriefcase, textColor: 'text-blue-400', bgLight: 'bg-blue-500/20' },
   H: { label: 'Holiday', color: 'bg-purple-500', icon: FaPlane, textColor: 'text-purple-400', bgLight: 'bg-purple-500/20' },
-  U: { label: 'Unauthorised Leave', color: 'bg-rose-600', icon: FaBan, textColor: 'text-rose-400', bgLight: 'bg-rose-600/20' }
+  U: { label: 'Unauthorised Leave', color: 'bg-rose-600', icon: FaBan, textColor: 'text-rose-400', bgLight: 'bg-rose-600/20' },
+  W: { label: 'Work From Home', color: 'bg-cyan-500', icon: FaHome, textColor: 'text-cyan-400', bgLight: 'bg-cyan-500/20' }
 }
 
 // ============================================
@@ -120,9 +122,9 @@ function LocationStatus({
 
   return (
     <div className={`flex items-center gap-2 text-sm ${locationVerified ? 'text-emerald-400' : 'text-amber-400'}`}>
-      <FaMapMarkerAlt />
+      {locationVerified ? <FaMapMarkerAlt /> : <FaMapMarkerAlt />}
       <span>
-        {locationVerified ? 'Verified (at office)' : 'Unverified (outside office)'}
+        {locationVerified ? 'Verified (at office)' : 'Not in office range'}
       </span>
       {accuracy && (
         <span className="text-neutral-500 text-xs">
@@ -349,7 +351,9 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
         const result = await markAttendanceWithLocation(selectedStatus, notes, extraData)
         
         if (result.success) {
-          if (result.locationVerified) {
+          if (result.workFromHome) {
+            toast.success('Attendance marked as Work From Home! 🏠 Location verified')
+          } else if (result.locationVerified) {
             toast.success(`Attendance marked as ${statusConfig[selectedStatus].label}! ✅ Location verified`)
           } else if (result.error === 'Location permission denied') {
             toast.warning(`Attendance marked but location not verified. Please enable location for better tracking.`)
@@ -1344,6 +1348,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
   const leaveDays = records.filter(r => r.status === 'L').length
   const onDutyDays = records.filter(r => r.status === 'O').length
   const unauthorisedLeaveDays = records.filter(r => r.status === 'U').length
+  const wfhDays = records.filter(r => r.status === 'W').length
   const percentage = calculateAttendancePercentage(records)
 
   return (
@@ -1373,7 +1378,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
             <StatsCard 
               title="Attendance Rate" 
               value={`${percentage}%`} 
@@ -1386,6 +1391,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
             <StatsCard title="Leave" value={leaveDays} icon={FaUmbrellaBeach} color="bg-amber-500" />
             <StatsCard title="On Duty" value={onDutyDays} icon={FaBriefcase} color="bg-blue-500" />
             <StatsCard title="Unauth. Leave" value={unauthorisedLeaveDays} icon={FaBan} color="bg-rose-600" />
+            <StatsCard title="WFH" value={wfhDays} icon={FaHome} color="bg-cyan-500" />
           </div>
 
           {/* Progress Bar */}
@@ -1515,6 +1521,7 @@ export function AttendanceHistory({ refreshKey }: { refreshKey?: number }) {
                           record.status === 'A' ? 'error' :
                           record.status === 'L' ? 'warning' :
                           record.status === 'U' ? 'error' :
+                          record.status === 'W' ? 'info' :
                           record.status === 'O' ? 'info' : 'primary'
                         }
                       >
