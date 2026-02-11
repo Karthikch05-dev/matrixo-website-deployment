@@ -29,7 +29,8 @@ import {
   FaFileExcel,
   FaFileCsv,
   FaEnvelope,
-  FaCheck
+  FaCheck,
+  FaHome
 } from 'react-icons/fa'
 import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
@@ -47,6 +48,7 @@ interface EmployeeWithStats extends EmployeeProfile {
   lateDays: number
   onDutyDays: number
   unauthLeaveDays: number
+  wfhDays: number
   totalDays: number
   recentAttendance: AttendanceRecord[]
 }
@@ -456,14 +458,16 @@ function EditAttendanceModal({
               record.status === 'P' ? 'success' :
               record.status === 'A' ? 'error' :
               record.status === 'L' ? 'warning' :
-              record.status === 'U' ? 'error' : 'default'
+              record.status === 'U' ? 'error' :
+              record.status === 'W' ? 'info' : 'default'
             }>
               {record.status === 'P' ? 'Present' :
                record.status === 'A' ? 'Absent' :
                record.status === 'L' ? 'Leave' :
                record.status === 'O' ? 'On Duty' :
                record.status === 'H' ? 'Holiday' :
-               record.status === 'U' ? 'Unauth. Leave' : record.status}
+               record.status === 'U' ? 'Unauth. Leave' :
+               record.status === 'W' ? 'Work From Home' : record.status}
             </Badge>
           </div>
           <div className="text-2xl text-neutral-500">→</div>
@@ -478,7 +482,8 @@ function EditAttendanceModal({
                 { value: 'L', label: '🏖️ Leave' },
                 { value: 'O', label: '💼 On Duty' },
                 { value: 'H', label: '🎉 Holiday' },
-                { value: 'U', label: '⚠️ Unauthorised Leave' }
+                { value: 'U', label: '⚠️ Unauthorised Leave' },
+                { value: 'W', label: '🏠 Work From Home' }
               ]}
             />
           </div>
@@ -607,14 +612,16 @@ function AttendanceTable({
                     record.status === 'P' ? 'success' :
                     record.status === 'A' ? 'error' :
                     record.status === 'L' ? 'warning' :
-                    record.status === 'U' ? 'error' : 'default'
+                    record.status === 'U' ? 'error' :
+                    record.status === 'W' ? 'info' : 'default'
                   }>
                     {record.status === 'P' ? 'Present' :
                      record.status === 'A' ? 'Absent' :
                      record.status === 'L' ? 'Leave' :
                      record.status === 'O' ? 'On Duty' :
                      record.status === 'H' ? 'Holiday' :
-                     record.status === 'U' ? 'Unauth. Leave' : record.status}
+                     record.status === 'U' ? 'Unauth. Leave' :
+                     record.status === 'W' ? '🏠 Work From Home' : record.status}
                   </Badge>
                 </td>
                 <td className="p-3">
@@ -916,7 +923,7 @@ function ExportReportModal({
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
-        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave' }
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave', 'W': 'Work From Home' }
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         
         rows.push([
@@ -971,8 +978,8 @@ function ExportReportModal({
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
-        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave' }
-        const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : record.status === 'U' ? '#f97316' : '#3b82f6'
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave', 'W': 'Work From Home' }
+        const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : record.status === 'U' ? '#f97316' : record.status === 'W' ? '#06b6d4' : '#3b82f6'
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         const verificationColor = record.locationVerified === true ? '#10b981' : record.locationVerified === false ? '#f59e0b' : '#6b7280'
         
@@ -1102,7 +1109,8 @@ function ExportReportModal({
           'A': '❌ Absent', 
           'L': '🏖️ Leave', 
           'O': '💼 On Duty',
-          'U': '⚠️ Unauth. Leave'
+          'U': '⚠️ Unauth. Leave',
+          'W': '🏠 Work From Home'
         }
         const verification = record.locationVerified === true 
           ? '✅ Verified' 
@@ -1615,7 +1623,9 @@ export function AdminPanel() {
     getAllEmployees, 
     getAllEmployeesAttendance,
     getEmployeeAttendanceHistory,
-    runAutoAbsentJob
+    runAutoAbsentJob,
+    workMode,
+    setGlobalWorkMode
   } = useEmployeeAuth()
   
   const [activeTab, setActiveTab] = useState('employees')
@@ -1707,10 +1717,11 @@ export function AdminPanel() {
           const lateDays = history.filter(r => r.status === 'L').length
           const onDutyDays = history.filter(r => r.status === 'O').length
           const unauthLeaveDays = history.filter(r => r.status === 'U').length
+          const wfhDays = history.filter(r => r.status === 'W').length
           const totalDays = history.length
-          // Match profile modal formula: (present + onDuty) / total
+          // Match profile modal formula: (present + onDuty + wfh) / total
           const attendancePercentage = totalDays > 0 
-            ? ((presentDays + onDutyDays) / totalDays) * 100 
+            ? ((presentDays + onDutyDays + wfhDays) / totalDays) * 100 
             : 0
 
           return {
@@ -1721,6 +1732,7 @@ export function AdminPanel() {
             lateDays,
             onDutyDays,
             unauthLeaveDays,
+            wfhDays,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
@@ -1837,6 +1849,28 @@ export function AdminPanel() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {/* WFH/WFO Toggle */}
+          <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg">
+            <FaBuilding className={`text-sm ${workMode === 'WFO' ? 'text-primary-400' : 'text-neutral-500'}`} />
+            <span className={`text-sm font-medium ${workMode === 'WFO' ? 'text-white' : 'text-neutral-500'}`}>WFO</span>
+            <button
+              onClick={async () => {
+                const newMode = workMode === 'WFO' ? 'WFH' : 'WFO'
+                await setGlobalWorkMode(newMode)
+                toast.success(`Work mode switched to ${newMode === 'WFH' ? 'Work From Home' : 'Work From Office'}`)
+              }}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
+                workMode === 'WFH' ? 'bg-cyan-500' : 'bg-neutral-600'
+              }`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
+                workMode === 'WFH' ? 'translate-x-6' : 'translate-x-0.5'
+              }`} />
+            </button>
+            <FaHome className={`text-sm ${workMode === 'WFH' ? 'text-cyan-400' : 'text-neutral-500'}`} />
+            <span className={`text-sm font-medium ${workMode === 'WFH' ? 'text-white' : 'text-neutral-500'}`}>WFH</span>
+          </div>
+
           <Button
             variant="primary"
             onClick={() => setShowExportModal(true)}
@@ -1914,7 +1948,8 @@ export function AdminPanel() {
                 { value: 'L', label: '🏖️ Leave' },
                 { value: 'O', label: '💼 On Duty' },
                 { value: 'H', label: '🎉 Holiday' },
-                { value: 'U', label: '⚠️ Unauth. Leave' }
+                { value: 'U', label: '⚠️ Unauth. Leave' },
+                { value: 'W', label: '🏠 Work From Home' }
               ]}
             />
           )}
@@ -1965,7 +2000,7 @@ export function AdminPanel() {
             <FaChartBar className="text-neutral-400" />
             <span className="font-medium text-white text-sm sm:text-base">Summary</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-white">{filteredAttendance.length}</div>
               <p className="text-xs sm:text-sm text-neutral-400">Total Records</p>
@@ -1993,6 +2028,12 @@ export function AdminPanel() {
                 {filteredAttendance.filter(r => r.status === 'U').length}
               </div>
               <p className="text-xs sm:text-sm text-neutral-400">Unauth. Leave</p>
+            </div>
+            <div className="text-center">
+              <div className="text-xl sm:text-2xl font-bold text-cyan-400">
+                {filteredAttendance.filter(r => r.status === 'W').length}
+              </div>
+              <p className="text-xs sm:text-sm text-neutral-400">WFH</p>
             </div>
           </div>
         </Card>
