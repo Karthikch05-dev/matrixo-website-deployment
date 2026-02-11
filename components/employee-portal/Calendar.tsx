@@ -362,7 +362,10 @@ export function Calendar() {
         isToday: dateString === todayString,
         isWeekend: date.getDay() === 0 || date.getDay() === 6,
         holiday: holidays.find(h => h.date === dateString),
-        events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
+        events: calendarEvents.filter(e => {
+          if (date.getDay() === 0 && e.type === 'meeting') return false
+          return e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString)
+        })
       })
     }
     
@@ -398,7 +401,10 @@ export function Calendar() {
         isToday: dateString === todayString,
         isWeekend: isWeekend && !workingDayOverride, // Not a weekend if override exists
         holiday: holidayForDay,
-        events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
+        events: calendarEvents.filter(e => {
+          if (dayOfWeek === 0 && e.type === 'meeting') return false
+          return e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString)
+        })
       })
     }
     
@@ -415,7 +421,10 @@ export function Calendar() {
         isToday: dateString === todayString,
         isWeekend: (date.getDay() === 0 || date.getDay() === 6) && !workingDayOverride,
         holiday: holidays.find(h => h.date === dateString && h.name !== '__WORKING_DAY__'),
-        events: calendarEvents.filter(e => e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString))
+        events: calendarEvents.filter(e => {
+          if (date.getDay() === 0 && e.type === 'meeting') return false
+          return e.date === dateString || (e.endDate && e.date <= dateString && e.endDate >= dateString)
+        })
       })
     }
     

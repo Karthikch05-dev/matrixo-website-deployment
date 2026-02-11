@@ -882,7 +882,7 @@ function TaskDetailModal({
         <div className="grid grid-cols-2 gap-4 p-4 bg-neutral-800/50 rounded-lg">
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created by</p>
-            <p className="text-sm text-white">{task.createdByName}</p>
+            <p className="text-sm text-white">{task.createdFrom === 'meeting' ? '🤖 Fathom' : task.createdByName}</p>
           </div>
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created</p>
@@ -1208,7 +1208,7 @@ function TaskCard({
             <Badge size="sm" variant="warning">Mgmt</Badge>
           )}
           {task.createdFrom === 'meeting' && (
-            <Badge size="sm" variant="info">Meeting</Badge>
+            <Badge size="sm" variant="info">🤖 Fathom</Badge>
           )}
         </div>
         
@@ -1274,6 +1274,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterAssignee, setFilterAssignee] = useState<string>('')
   const [filterRole, setFilterRole] = useState<string>('')
+  const [filterSource, setFilterSource] = useState<string>('')
   const [filterInternSpecialization, setFilterInternSpecialization] = useState<string>('')
   const [showMyTasks, setShowMyTasks] = useState(showOnlyMyTasks)
 
@@ -1355,6 +1356,15 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
       })
     }
 
+    // Source filter (Fathom / Manual)
+    if (filterSource) {
+      if (filterSource === 'fathom') {
+        result = result.filter(task => task?.createdFrom === 'meeting')
+      } else if (filterSource === 'manual') {
+        result = result.filter(task => !task?.createdFrom || task?.createdFrom === 'portal')
+      }
+    }
+
     // Intern Specialization filter (filters by task specialization field)
     if (filterInternSpecialization) {
       result = result.filter(task => {
@@ -1380,7 +1390,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     }
 
     return result
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, showMyTasks, employee, employees])
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -1388,11 +1398,12 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     setFilterStatus('')
     setFilterAssignee('')
     setFilterRole('')
+    setFilterSource('')
     setFilterInternSpecialization('')
     setShowMyTasks(false)
   }
 
-  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterInternSpecialization || showMyTasks
+  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterSource || filterInternSpecialization || showMyTasks
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -1467,6 +1478,17 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
                   setFilterInternSpecialization('')
                 }
               }}
+            />
+
+            <Select
+              placeholder="Task Source"
+              options={[
+                { value: '', label: 'All Tasks' },
+                { value: 'fathom', label: '🤖 Fathom' },
+                { value: 'manual', label: '✍️ Manual' }
+              ]}
+              value={filterSource}
+              onChange={setFilterSource}
             />
 
             <Button
