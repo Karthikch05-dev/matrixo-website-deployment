@@ -785,7 +785,7 @@ function MeetingDetailModal({
 // ============================================
 
 export function Meetings() {
-  const { employee, getAllEmployees } = useEmployeeAuth()
+  const { employee, getAllEmployees, addTask } = useEmployeeAuth()
   const isAdmin = employee?.role === 'admin'
 
   const [meetings, setMeetings] = useState<FathomMeeting[]>([])
@@ -1054,6 +1054,46 @@ export function Meetings() {
           completedByName: employee.name,
           completedAt: Timestamp.now()
         })
+
+        // Also create a task in the main tasks collection
+        const meeting = meetings.find(m => m.recording_id === meetingId)
+        const actionItem = meeting?.action_items?.[taskIndex]
+        if (meeting && actionItem) {
+          const assigneeIds: string[] = []
+          const assigneeNames: string[] = []
+          if (actionItem.assignee) {
+            const matchedEmp = employees.find(
+              emp => (actionItem.assignee!.email && emp.email.toLowerCase() === actionItem.assignee!.email.toLowerCase()) ||
+                     (actionItem.assignee!.name && emp.name.toLowerCase() === actionItem.assignee!.name.toLowerCase())
+            )
+            if (matchedEmp) {
+              assigneeIds.push(matchedEmp.employeeId)
+              assigneeNames.push(matchedEmp.name)
+            }
+          }
+          if (assigneeIds.length === 0) {
+            assigneeIds.push(employee.employeeId)
+            assigneeNames.push(employee.name)
+          }
+
+          try {
+            await addTask({
+              title: actionItem.description || `Task from: ${meeting.meeting_title || meeting.title}`,
+              description: `From meeting: ${meeting.meeting_title || meeting.title}\n\n${actionItem.description || ''}`,
+              status: 'completed',
+              priority: 'medium',
+              assignedTo: assigneeIds,
+              assignedToNames: assigneeNames,
+              department: employee.department || '',
+              meetingId: meetingId,
+              createdFrom: 'meeting'
+            })
+          } catch (taskErr) {
+            console.error('Error creating task from meeting:', taskErr)
+            // Don't block the meeting task update if task creation fails
+          }
+        }
+
         toast.success('Task marked as complete')
       } else {
         await deleteDoc(doc(db, 'meetingTaskStatus', taskDocId))

@@ -17,7 +17,9 @@ import {
   FaShieldAlt,
   FaHistory,
   FaApple,
-  FaCog
+  FaCog,
+  FaBan,
+  FaEnvelope
 } from 'react-icons/fa'
 
 // ============================================
@@ -39,7 +41,7 @@ const isInStandaloneMode = () => {
 
 const isIOSPWA = () => isIOSDevice() && isInStandaloneMode()
 import { useEmployeeAuth, AttendanceRecord } from '@/lib/employeePortalContext'
-import { Card, Button, Textarea, Input, Badge, Alert, Spinner } from './ui'
+import { Card, Button, Textarea, Input, Badge, Alert, Spinner, Modal } from './ui'
 import { toast } from 'sonner'
 
 // ============================================
@@ -51,7 +53,8 @@ const statusConfig = {
   A: { label: 'Absent', color: 'bg-red-500', icon: FaTimesCircle, textColor: 'text-red-400', bgLight: 'bg-red-500/20' },
   L: { label: 'Leave', color: 'bg-amber-500', icon: FaUmbrellaBeach, textColor: 'text-amber-400', bgLight: 'bg-amber-500/20' },
   O: { label: 'On Duty', color: 'bg-blue-500', icon: FaBriefcase, textColor: 'text-blue-400', bgLight: 'bg-blue-500/20' },
-  H: { label: 'Holiday', color: 'bg-purple-500', icon: FaPlane, textColor: 'text-purple-400', bgLight: 'bg-purple-500/20' }
+  H: { label: 'Holiday', color: 'bg-purple-500', icon: FaPlane, textColor: 'text-purple-400', bgLight: 'bg-purple-500/20' },
+  U: { label: 'Unauthorised Leave', color: 'bg-rose-600', icon: FaBan, textColor: 'text-rose-400', bgLight: 'bg-rose-600/20' }
 }
 
 // ============================================
@@ -142,7 +145,8 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     updateAttendanceNotes,
     markLeaveRange,
     isHoliday,
-    holidays
+    holidays,
+    submitLeaveRequest
   } = useEmployeeAuth()
   
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null)
@@ -169,6 +173,16 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   const [fetchingLocation, setFetchingLocation] = useState(false)
   const [showIOSInstructions, setShowIOSInstructions] = useState(false)
   const [isIOSPWAMode, setIsIOSPWAMode] = useState(false)
+
+  // Leave request modal state
+  const [showLeaveRequestModal, setShowLeaveRequestModal] = useState(false)
+  const [leaveRequestForm, setLeaveRequestForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    subject: '',
+    letter: '',
+    reason: ''
+  })
+  const [submittingLeaveRequest, setSubmittingLeaveRequest] = useState(false)
 
   const todayString = new Date().toISOString().split('T')[0]
   const isTodayHoliday = isHoliday(todayString)
@@ -398,7 +412,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   // Available status options (no Absent - it's auto-marked)
   const availableStatuses = [
     { status: 'P' as const, ...statusConfig.P },
-    { status: 'L' as const, ...statusConfig.L },
+    { status: 'L' as const, label: 'Request Leave', color: statusConfig.L.color, icon: statusConfig.L.icon, textColor: statusConfig.L.textColor, bgLight: statusConfig.L.bgLight },
     { status: 'O' as const, ...statusConfig.O }
   ]
 
@@ -958,7 +972,15 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
               {availableStatuses.map(({ status, label, icon: Icon, color, textColor, bgLight }) => (
                 <motion.button
                   key={status}
-                  onClick={() => setSelectedStatus(status)}
+                  onClick={() => {
+                    if (status === 'L') {
+                      // Open leave request modal instead of selecting directly
+                      setLeaveRequestForm(prev => ({ ...prev, date: todayString }))
+                      setShowLeaveRequestModal(true)
+                    } else {
+                      setSelectedStatus(status)
+                    }
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={`
@@ -980,40 +1002,86 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             </div>
           </div>
 
-          {/* Leave Date Range */}
-          <AnimatePresence>
-            {selectedStatus === 'L' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-              >
-                <Card className="border-l-4 border-l-amber-500">
-                  <p className="text-sm text-amber-400 font-medium flex items-center gap-2 mb-4">
-                    <FaUmbrellaBeach />
-                    Leave Period
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="From Date"
-                      type="date"
-                      value={leaveStartDate}
-                      onChange={(e) => setLeaveStartDate(e.target.value)}
-                      min={todayString}
-                    />
-                    <Input
-                      label="To Date"
-                      type="date"
-                      value={leaveEndDate}
-                      onChange={(e) => setLeaveEndDate(e.target.value)}
-                      min={leaveStartDate || todayString}
-                    />
-                  </div>
-                  <p className="text-xs text-neutral-500 mt-2">Leave will be marked for all days in this range.</p>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Leave Request Modal */}
+          <Modal
+            isOpen={showLeaveRequestModal}
+            onClose={() => setShowLeaveRequestModal(false)}
+            title="Request Leave"
+            size="md"
+          >
+            <div className="space-y-4">
+              <Input
+                label="Leave Date"
+                type="date"
+                value={leaveRequestForm.date}
+                onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, date: e.target.value }))}
+                min={todayString}
+              />
+              
+              <Input
+                label="Subject"
+                placeholder="e.g., Personal Leave, Medical Leave..."
+                value={leaveRequestForm.subject}
+                onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, subject: e.target.value }))}
+                required
+              />
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Formal Leave Letter
+                </label>
+                <textarea
+                  value={leaveRequestForm.letter}
+                  onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, letter: e.target.value }))}
+                  placeholder="Write your formal leave letter here..."
+                  rows={5}
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Reason
+                </label>
+                <textarea
+                  value={leaveRequestForm.reason}
+                  onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Brief reason for leave..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-sm"
+                  required
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+                <Button variant="ghost" onClick={() => setShowLeaveRequestModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  loading={submittingLeaveRequest}
+                  disabled={!leaveRequestForm.subject.trim() || !leaveRequestForm.letter.trim() || !leaveRequestForm.reason.trim()}
+                  icon={<FaEnvelope />}
+                  onClick={async () => {
+                    setSubmittingLeaveRequest(true)
+                    try {
+                      await submitLeaveRequest(leaveRequestForm)
+                      toast.success('Leave request submitted successfully! Admins have been notified.')
+                      setShowLeaveRequestModal(false)
+                      setLeaveRequestForm({ date: todayString, subject: '', letter: '', reason: '' })
+                    } catch (error) {
+                      console.error('Error submitting leave request:', error)
+                      toast.error('Failed to submit leave request')
+                    } finally {
+                      setSubmittingLeaveRequest(false)
+                    }
+                  }}
+                >
+                  Submit Request
+                </Button>
+              </div>
+            </div>
+          </Modal>
 
           {/* On Duty Location */}
           <AnimatePresence>
@@ -1193,7 +1261,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             {marking 
               ? (fetchingLocation ? 'Getting Location...' : 'Marking Attendance...') 
               : selectedStatus 
-                ? `Mark ${selectedStatus === 'L' ? 'Leave' : 'Attendance'} for Today`
+                ? `Mark Attendance for Today`
                 : 'Select a status above to mark attendance'
             }
           </Button>
@@ -1275,6 +1343,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
   const absentDays = records.filter(r => r.status === 'A').length
   const leaveDays = records.filter(r => r.status === 'L').length
   const onDutyDays = records.filter(r => r.status === 'O').length
+  const unauthorisedLeaveDays = records.filter(r => r.status === 'U').length
   const percentage = calculateAttendancePercentage(records)
 
   return (
@@ -1304,7 +1373,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
             <StatsCard 
               title="Attendance Rate" 
               value={`${percentage}%`} 
@@ -1316,6 +1385,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
             <StatsCard title="Absent" value={absentDays} icon={FaTimesCircle} color="bg-red-500" />
             <StatsCard title="Leave" value={leaveDays} icon={FaUmbrellaBeach} color="bg-amber-500" />
             <StatsCard title="On Duty" value={onDutyDays} icon={FaBriefcase} color="bg-blue-500" />
+            <StatsCard title="Unauth. Leave" value={unauthorisedLeaveDays} icon={FaBan} color="bg-rose-600" />
           </div>
 
           {/* Progress Bar */}
@@ -1444,6 +1514,7 @@ export function AttendanceHistory({ refreshKey }: { refreshKey?: number }) {
                           record.status === 'P' ? 'success' :
                           record.status === 'A' ? 'error' :
                           record.status === 'L' ? 'warning' :
+                          record.status === 'U' ? 'error' :
                           record.status === 'O' ? 'info' : 'primary'
                         }
                       >

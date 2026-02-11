@@ -499,7 +499,7 @@ function TaskModal({
       deptSet.add('Intern')
     }
     // Always include core departments
-    const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+    const coreDepartments = ['Operations', 'Marketing', 'Management']
     coreDepartments.forEach(dept => deptSet.add(dept))
     return Array.from(deptSet).filter(d => d !== 'Admin').sort()
   }, [employees])
@@ -710,7 +710,7 @@ function TaskDetailModal({
   const canDelete = isAdmin || isOwner
   // Include core departments
   const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
-  const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+  const coreDepartments = ['Operations', 'Marketing', 'Management']
   coreDepartments.forEach(dept => deptSet.add(dept))
   const departments = Array.from(deptSet).filter(d => d !== 'Admin').sort()
 

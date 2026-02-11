@@ -27,9 +27,11 @@ import {
   FaDownload,
   FaFilePdf,
   FaFileExcel,
-  FaFileCsv
+  FaFileCsv,
+  FaEnvelope,
+  FaCheck
 } from 'react-icons/fa'
-import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
@@ -44,6 +46,7 @@ interface EmployeeWithStats extends EmployeeProfile {
   absentDays: number
   lateDays: number
   onDutyDays: number
+  unauthLeaveDays: number
   totalDays: number
   recentAttendance: AttendanceRecord[]
 }
@@ -69,6 +72,7 @@ function EmployeeProfileModal({
     absentDays: 0,
     lateDays: 0,
     onDutyDays: 0,
+    unauthLeaveDays: 0,
     totalDays: 0,
     attendancePercentage: 0
   })
@@ -85,6 +89,7 @@ function EmployeeProfileModal({
           const absent = history.filter(r => r.status === 'A').length
           const leave = history.filter(r => r.status === 'L').length
           const onDuty = history.filter(r => r.status === 'O').length
+          const unauthLeave = history.filter(r => r.status === 'U').length
           const total = history.length
           const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
           
@@ -93,6 +98,7 @@ function EmployeeProfileModal({
             absentDays: absent,
             lateDays: leave,
             onDutyDays: onDuty,
+            unauthLeaveDays: unauthLeave,
             totalDays: total,
             attendancePercentage: percentage
           })
@@ -190,7 +196,7 @@ function EmployeeProfileModal({
         ) : activeTab === 'overview' ? (
           <div className="space-y-6">
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               <div className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-xl text-center">
                 <div className="text-2xl font-bold text-green-400">{stats.presentDays}</div>
                 <p className="text-sm text-neutral-400">Present</p>
@@ -206,6 +212,10 @@ function EmployeeProfileModal({
               <div className="p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-xl text-center">
                 <div className="text-2xl font-bold text-blue-400">{stats.onDutyDays}</div>
                 <p className="text-sm text-neutral-400">On Duty</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-orange-400">{stats.unauthLeaveDays}</div>
+                <p className="text-sm text-neutral-400">Unauth. Leave</p>
               </div>
               <div className="p-4 bg-gradient-to-br from-neutral-500/20 to-neutral-600/10 border border-neutral-500/30 rounded-xl text-center">
                 <div className="text-2xl font-bold text-neutral-300">{stats.totalDays}</div>
@@ -226,13 +236,15 @@ function EmployeeProfileModal({
                         <Badge variant={
                           record.status === 'P' ? 'success' :
                           record.status === 'A' ? 'error' :
-                          record.status === 'L' ? 'warning' : 'default'
+                          record.status === 'L' ? 'warning' :
+                          record.status === 'U' ? 'error' : 'default'
                         }>
                           {record.status === 'P' ? 'Present' :
                            record.status === 'A' ? 'Absent' :
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
-                           record.status === 'H' ? 'Holiday' : record.status}
+                           record.status === 'H' ? 'Holiday' :
+                           record.status === 'U' ? 'Unauth. Leave' : record.status}
                         </Badge>
                         <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
                       </div>
@@ -275,7 +287,8 @@ function EmployeeProfileModal({
                         <Badge variant={
                           record.status === 'P' ? 'success' :
                           record.status === 'A' ? 'error' :
-                          record.status === 'L' ? 'warning' : 'default'
+                          record.status === 'L' ? 'warning' :
+                          record.status === 'U' ? 'error' : 'default'
                         }>
                           {record.status === 'P' && record.locationVerified && (
                             <FaCheckCircle className="inline mr-1 text-xs" />
@@ -284,7 +297,8 @@ function EmployeeProfileModal({
                            record.status === 'A' ? 'Absent' :
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
-                           record.status === 'H' ? 'Holiday' : record.status}
+                           record.status === 'H' ? 'Holiday' :
+                           record.status === 'U' ? 'Unauth. Leave' : record.status}
                         </Badge>
                       </td>
                       <td className="p-3 text-neutral-400">{formatHistoryTime(record)}</td>
@@ -388,7 +402,7 @@ function EditAttendanceModal({
     try {
       await updateEmployeeAttendance(
         record.id!,
-        { status: status as 'P' | 'A' | 'L' | 'O' | 'H' },
+        { status: status as 'P' | 'A' | 'L' | 'O' | 'H' | 'U' },
         'Attendance updated by admin' // Default reason
       )
       toast.success('Attendance updated')
@@ -441,13 +455,15 @@ function EditAttendanceModal({
             <Badge variant={
               record.status === 'P' ? 'success' :
               record.status === 'A' ? 'error' :
-              record.status === 'L' ? 'warning' : 'default'
+              record.status === 'L' ? 'warning' :
+              record.status === 'U' ? 'error' : 'default'
             }>
               {record.status === 'P' ? 'Present' :
                record.status === 'A' ? 'Absent' :
                record.status === 'L' ? 'Leave' :
                record.status === 'O' ? 'On Duty' :
-               record.status === 'H' ? 'Holiday' : record.status}
+               record.status === 'H' ? 'Holiday' :
+               record.status === 'U' ? 'Unauth. Leave' : record.status}
             </Badge>
           </div>
           <div className="text-2xl text-neutral-500">→</div>
@@ -461,7 +477,8 @@ function EditAttendanceModal({
                 { value: 'A', label: '❌ Absent' },
                 { value: 'L', label: '🏖️ Leave' },
                 { value: 'O', label: '💼 On Duty' },
-                { value: 'H', label: '🎉 Holiday' }
+                { value: 'H', label: '🎉 Holiday' },
+                { value: 'U', label: '⚠️ Unauthorised Leave' }
               ]}
             />
           </div>
@@ -589,13 +606,15 @@ function AttendanceTable({
                   <Badge variant={
                     record.status === 'P' ? 'success' :
                     record.status === 'A' ? 'error' :
-                    record.status === 'L' ? 'warning' : 'default'
+                    record.status === 'L' ? 'warning' :
+                    record.status === 'U' ? 'error' : 'default'
                   }>
                     {record.status === 'P' ? 'Present' :
                      record.status === 'A' ? 'Absent' :
                      record.status === 'L' ? 'Leave' :
                      record.status === 'O' ? 'On Duty' :
-                     record.status === 'H' ? 'Holiday' : record.status}
+                     record.status === 'H' ? 'Holiday' :
+                     record.status === 'U' ? 'Unauth. Leave' : record.status}
                   </Badge>
                 </td>
                 <td className="p-3">
@@ -897,7 +916,7 @@ function ExportReportModal({
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
-        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave' }
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         
         rows.push([
@@ -952,8 +971,8 @@ function ExportReportModal({
       emp.attendanceHistory?.forEach((record: AttendanceRecord) => {
         const date = record.date || record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0] || 'N/A'
         const time = record.status === 'A' ? '-' : (record.timestamp?.toDate?.()?.toLocaleTimeString() || 'N/A')
-        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty' }
-        const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : '#3b82f6'
+        const statusMap: Record<string, string> = { 'P': 'Present', 'A': 'Absent', 'L': 'Leave', 'O': 'On Duty', 'U': 'Unauth. Leave' }
+        const statusColor = record.status === 'P' ? '#10b981' : record.status === 'A' ? '#ef4444' : record.status === 'L' ? '#f59e0b' : record.status === 'U' ? '#f97316' : '#3b82f6'
         const verification = record.locationVerified === true ? 'Verified' : record.locationVerified === false ? 'Not in range' : '-'
         const verificationColor = record.locationVerified === true ? '#10b981' : record.locationVerified === false ? '#f59e0b' : '#6b7280'
         
@@ -1082,7 +1101,8 @@ function ExportReportModal({
           'P': '✅ Present', 
           'A': '❌ Absent', 
           'L': '🏖️ Leave', 
-          'O': '💼 On Duty' 
+          'O': '💼 On Duty',
+          'U': '⚠️ Unauth. Leave'
         }
         const verification = record.locationVerified === true 
           ? '✅ Verified' 
@@ -1345,6 +1365,247 @@ function ExportReportModal({
 }
 
 // ============================================
+// LEAVE REQUESTS PANEL
+// ============================================
+
+function LeaveRequestsPanel() {
+  const { getAllLeaveRequests, approveLeaveRequest, rejectLeaveRequest, employee } = useEmployeeAuth()
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState<string>('Pending')
+  const [processing, setProcessing] = useState<string | null>(null)
+  const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null)
+
+  const fetchLeaveRequests = useCallback(async () => {
+    setLoading(true)
+    try {
+      const requests = await getAllLeaveRequests()
+      setLeaveRequests(requests)
+    } catch (error) {
+      console.error('Failed to fetch leave requests:', error)
+      toast.error('Failed to load leave requests')
+    } finally {
+      setLoading(false)
+    }
+  }, [getAllLeaveRequests])
+
+  useEffect(() => {
+    fetchLeaveRequests()
+  }, [fetchLeaveRequests])
+
+  const handleApprove = async (request: LeaveRequest) => {
+    if (!request.id) return
+    setProcessing(request.id)
+    try {
+      await approveLeaveRequest(request.id)
+      toast.success(`Leave approved for ${request.employeeName}`)
+      fetchLeaveRequests()
+    } catch (error) {
+      toast.error('Failed to approve leave request')
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  const handleReject = async (request: LeaveRequest) => {
+    if (!request.id) return
+    setProcessing(request.id)
+    try {
+      await rejectLeaveRequest(request.id)
+      toast.success(`Leave rejected for ${request.employeeName} — marked as Unauthorised Leave`)
+      fetchLeaveRequests()
+    } catch (error) {
+      toast.error('Failed to reject leave request')
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  const filteredRequests = useMemo(() => {
+    if (!filterStatus) return leaveRequests
+    return leaveRequests.filter(r => r.status === filterStatus)
+  }, [leaveRequests, filterStatus])
+
+  const pendingCount = leaveRequests.filter(r => r.status === 'Pending').length
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Stats */}
+      <Card padding="md">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-amber-400">{leaveRequests.filter(r => r.status === 'Pending').length}</div>
+            <p className="text-sm text-neutral-400">Pending</p>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-green-400">{leaveRequests.filter(r => r.status === 'Approved').length}</div>
+            <p className="text-sm text-neutral-400">Approved</p>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-red-400">{leaveRequests.filter(r => r.status === 'Rejected').length}</div>
+            <p className="text-sm text-neutral-400">Rejected</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Filter */}
+      <div className="flex items-center gap-3">
+        <Select
+          value={filterStatus}
+          onChange={(value) => setFilterStatus(value)}
+          options={[
+            { value: '', label: 'All Requests' },
+            { value: 'Pending', label: '⏳ Pending' },
+            { value: 'Approved', label: '✅ Approved' },
+            { value: 'Rejected', label: '❌ Rejected' }
+          ]}
+        />
+        <Button variant="secondary" onClick={fetchLeaveRequests} loading={loading}>
+          Refresh
+        </Button>
+      </div>
+
+      {/* Requests List */}
+      {filteredRequests.length === 0 ? (
+        <EmptyState
+          icon={<FaEnvelope className="text-2xl" />}
+          title="No leave requests"
+          description={filterStatus ? `No ${filterStatus.toLowerCase()} leave requests found` : 'No leave requests submitted yet'}
+        />
+      ) : (
+        <div className="space-y-3">
+          {filteredRequests.map((request) => (
+            <motion.div
+              key={request.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Card padding="md" hover>
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                  {/* Employee Info + Request Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div>
+                        <h4 className="font-semibold text-white">{request.employeeName}</h4>
+                        <p className="text-xs text-neutral-500">{request.employeeId}</p>
+                      </div>
+                      <Badge variant={
+                        request.status === 'Pending' ? 'warning' :
+                        request.status === 'Approved' ? 'success' : 'error'
+                      } size="sm">
+                        {request.status}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-1 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FaCalendarAlt className="text-neutral-500" />
+                        <span className="text-neutral-300">
+                          Date: <span className="text-white font-medium">{request.date}</span>
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-neutral-400">Subject: </span>
+                        <span className="text-white">{request.subject}</span>
+                      </div>
+                    </div>
+
+                    {/* Expandable letter/reason */}
+                    <button
+                      onClick={() => setSelectedRequest(selectedRequest?.id === request.id ? null : request)}
+                      className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      {selectedRequest?.id === request.id ? 'Hide Details ▲' : 'View Details ▼'}
+                    </button>
+
+                    <AnimatePresence>
+                      {selectedRequest?.id === request.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-3 p-3 bg-neutral-800/50 rounded-lg space-y-2">
+                            <div>
+                              <p className="text-xs text-neutral-500 mb-1">Leave Letter</p>
+                              <p className="text-sm text-neutral-300 whitespace-pre-wrap">{request.letter}</p>
+                            </div>
+                            {request.reason && (
+                              <div>
+                                <p className="text-xs text-neutral-500 mb-1">Reason</p>
+                                <p className="text-sm text-neutral-300">{request.reason}</p>
+                              </div>
+                            )}
+                            {request.reviewedByName && (
+                              <div className="pt-2 border-t border-neutral-700">
+                                <p className="text-xs text-neutral-500">
+                                  {request.status === 'Approved' ? 'Approved' : 'Rejected'} by{' '}
+                                  <span className="text-white">{request.reviewedByName}</span>
+                                  {request.reviewedAt && (
+                                    <> on {new Date(request.reviewedAt.toDate()).toLocaleString()}</>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Action Buttons - Only for pending */}
+                  {request.status === 'Pending' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        icon={<FaCheck />}
+                        onClick={() => handleApprove(request)}
+                        loading={processing === request.id}
+                        disabled={processing !== null}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={<FaTimes />}
+                        onClick={() => handleReject(request)}
+                        loading={processing === request.id}
+                        disabled={processing !== null}
+                        className="hover:!bg-red-500/20 hover:!text-red-400 hover:!border-red-500/30"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submitted timestamp */}
+                <div className="mt-2 pt-2 border-t border-neutral-800">
+                  <p className="text-xs text-neutral-500">
+                    Submitted {request.createdAt ? new Date(request.createdAt.toDate()).toLocaleString() : 'Recently'}
+                  </p>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================
 // MAIN ADMIN PANEL COMPONENT
 // ============================================
 
@@ -1445,6 +1706,7 @@ export function AdminPanel() {
           const absentDays = history.filter(r => r.status === 'A').length
           const lateDays = history.filter(r => r.status === 'L').length
           const onDutyDays = history.filter(r => r.status === 'O').length
+          const unauthLeaveDays = history.filter(r => r.status === 'U').length
           const totalDays = history.length
           // Match profile modal formula: (present + onDuty) / total
           const attendancePercentage = totalDays > 0 
@@ -1458,6 +1720,7 @@ export function AdminPanel() {
             absentDays,
             lateDays,
             onDutyDays,
+            unauthLeaveDays,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
@@ -1481,7 +1744,7 @@ export function AdminPanel() {
   // Get unique departments (including core departments)
   const departments = useMemo(() => {
     const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
-    const coreDepartments = ['Engineering', 'Design', 'Operations', 'HR', 'Marketing']
+    const coreDepartments = ['Operations', 'Marketing', 'Management']
     coreDepartments.forEach(dept => deptSet.add(dept))
     return Array.from(deptSet).filter(d => d !== 'Admin').sort()
   }, [employees])
@@ -1598,13 +1861,15 @@ export function AdminPanel() {
       <Tabs
         tabs={[
           { id: 'employees', label: 'All Employees' },
-          { id: 'attendance', label: 'Recent Activity' }
+          { id: 'attendance', label: 'Recent Activity' },
+          { id: 'leaveRequests', label: 'Leave Requests' }
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
       />
 
-      {/* Filters */}
+      {/* Filters - hidden for leave requests tab */}
+      {activeTab !== 'leaveRequests' && (
       <div className="relative" style={{ zIndex: 10 }}>
         <Card padding="md">
         <div className="flex items-center gap-2 mb-4">
@@ -1648,7 +1913,8 @@ export function AdminPanel() {
                 { value: 'A', label: '❌ Absent' },
                 { value: 'L', label: '🏖️ Leave' },
                 { value: 'O', label: '💼 On Duty' },
-                { value: 'H', label: '🎉 Holiday' }
+                { value: 'H', label: '🎉 Holiday' },
+                { value: 'U', label: '⚠️ Unauth. Leave' }
               ]}
             />
           )}
@@ -1690,6 +1956,7 @@ export function AdminPanel() {
         )}
       </Card>
       </div>
+      )}
 
       {/* Stats Summary */}
       {activeTab === 'attendance' && !loading && (
@@ -1698,7 +1965,7 @@ export function AdminPanel() {
             <FaChartBar className="text-neutral-400" />
             <span className="font-medium text-white text-sm sm:text-base">Summary</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-white">{filteredAttendance.length}</div>
               <p className="text-xs sm:text-sm text-neutral-400">Total Records</p>
@@ -1721,12 +1988,20 @@ export function AdminPanel() {
               </div>
               <p className="text-xs sm:text-sm text-neutral-400">Leave</p>
             </div>
+            <div className="text-center">
+              <div className="text-xl sm:text-2xl font-bold text-orange-400">
+                {filteredAttendance.filter(r => r.status === 'U').length}
+              </div>
+              <p className="text-xs sm:text-sm text-neutral-400">Unauth. Leave</p>
+            </div>
           </div>
         </Card>
       )}
 
       {/* Content */}
-      {loading ? (
+      {activeTab === 'leaveRequests' ? (
+        <LeaveRequestsPanel />
+      ) : loading ? (
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
         </div>
