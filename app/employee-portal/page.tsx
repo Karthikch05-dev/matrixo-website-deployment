@@ -45,6 +45,7 @@ import Meetings from '@/components/employee-portal/Meetings'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
+import JobPostings from '@/components/employee-portal/JobPostings'
 import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
 
 // Default avatar placeholder
@@ -215,7 +216,8 @@ const navigationItems = [
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
   { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
-  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
+  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode, mobileOnly: true },
+  { id: 'job-postings', label: 'Careers', icon: FaBriefcase, adminOnly: true },
 ]
 
 // ============================================
@@ -321,7 +323,7 @@ function TopNavbar({
           {/* Desktop Navigation - Centered */}
           <div className="hidden xl:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-1">
-              {navigationItems.map((item) => (
+              {navigationItems.filter(item => !item.mobileOnly && (!item.adminOnly || isAdmin)).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
@@ -449,7 +451,7 @@ function TopNavbar({
               className="xl:hidden border-t border-white/5 py-4"
             >
               <div className="grid grid-cols-2 gap-2">
-                {navigationItems.map((item) => (
+                {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
@@ -983,6 +985,7 @@ function Dashboard() {
             {activeTab === 'discussions' && <Discussions />}
             {activeTab === 'meetings' && <Meetings />}
             {activeTab === 'event-checkin' && <EventQRScanner />}
+            {activeTab === 'job-postings' && isAdmin && <JobPostings />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>
         </AnimatePresence>

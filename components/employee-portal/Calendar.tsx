@@ -317,7 +317,7 @@ function AddEventModal({
 // ============================================
 
 export function Calendar() {
-  const { employee, holidays, calendarEvents, isHoliday, deleteCalendarEvent } = useEmployeeAuth()
+  const { employee, holidays, calendarEvents, isHoliday, deleteCalendarEvent, deleteHoliday } = useEmployeeAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showAddHoliday, setShowAddHoliday] = useState(false)
   const [showAddEvent, setShowAddEvent] = useState(false)
@@ -489,6 +489,26 @@ export function Calendar() {
       toast.success('Event deleted successfully')
     } catch (error) {
       toast.error('Failed to delete event')
+    }
+  }
+
+  const handleDeleteHoliday = async (holidayId: string, holidayName: string) => {
+    if (!confirm(`Are you sure you want to delete the holiday "${holidayName}"?`)) return
+    
+    try {
+      await deleteHoliday(holidayId)
+      
+      // Clear the holiday from panel if it was showing
+      if (panelSelectedDay?.holiday?.id === holidayId) {
+        setPanelSelectedDay({
+          ...panelSelectedDay,
+          holiday: undefined
+        })
+      }
+      
+      toast.success('Holiday deleted successfully')
+    } catch (error) {
+      toast.error('Failed to delete holiday')
     }
   }
 
@@ -684,6 +704,27 @@ export function Calendar() {
                             <p className="text-neutral-400 text-sm mt-2">{panelDisplayDay.holiday.description}</p>
                           )}
                         </div>
+                        {isAdmin && panelDisplayDay.holiday.id && !panelDisplayDay.holiday.isAutoHoliday && (
+                          <div className="flex flex-col gap-1 ml-2 flex-shrink-0">
+                            <button
+                              onClick={() => {
+                                setEditingHoliday(panelDisplayDay.holiday!)
+                                setShowAddHoliday(true)
+                              }}
+                              className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                              title="Edit holiday"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteHoliday(panelDisplayDay.holiday!.id!, panelDisplayDay.holiday!.name)}
+                              className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                              title="Delete holiday"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

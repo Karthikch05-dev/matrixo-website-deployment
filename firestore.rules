@@ -123,8 +123,8 @@ service cloud.firestore {
     }
 
     match /roles/{roleId} {
-      // Anyone can read open roles (for public careers page)
-      allow read: if resource.data.status == 'open' || isEmployee();
+      // Anyone can read roles (public careers page reads open roles, employees can read all)
+      allow read: if true;
       // Only employees can create, update, and delete roles
       allow write: if isEmployee();
     }
@@ -177,6 +177,14 @@ service cloud.firestore {
     // MEETING NOTIFIED COLLECTION (auto-notification tracking)
     // ================================================
     match /meetingNotified/{meetingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // MEETING CUSTOM TASKS COLLECTION (admin-added tasks)
+    // ================================================
+    match /meetingCustomTasks/{taskId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
