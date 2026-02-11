@@ -188,5 +188,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // LEAVE REQUESTS COLLECTION
+    // ================================================
+    match /leaveRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }
