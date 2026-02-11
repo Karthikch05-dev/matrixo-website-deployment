@@ -35,7 +35,7 @@ import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalConte
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
 import { db } from '@/lib/firebaseConfig'
-import { collection, doc, setDoc, getDocs, query, where, Timestamp } from 'firebase/firestore'
+import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc, updateDoc } from 'firebase/firestore'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -1012,6 +1012,49 @@ function Dashboard() {
         const existingSnapshot = await getDocs(q)
         const existingIds = new Set<string>()
         existingSnapshot.docs.forEach(d => existingIds.add(d.id))
+
+        // 6.5 DEDUP: Merge existing duplicate meeting tasks (same meetingId + same title)
+        const dupeGroups = new Map<string, { id: string, data: any }[]>()
+        existingSnapshot.docs.forEach(d => {
+          const data = d.data()
+          const key = `${data.meetingId || ''}_${(data.title || '').trim().toLowerCase()}`
+          const arr = dupeGroups.get(key) || []
+          arr.push({ id: d.id, data })
+          dupeGroups.set(key, arr)
+        })
+        const dupeEntries = Array.from(dupeGroups.values())
+        for (const group of dupeEntries) {
+          if (group.length <= 1) continue
+          // Merge all assignees into the first task, delete the rest
+          const primary = group[0]
+          const mergedIds = new Set<string>(primary.data.assignedTo || [])
+          const mergedNames = new Map<string, string>()
+          ;(primary.data.assignedTo || []).forEach((id: string, idx: number) => {
+            mergedNames.set(id, (primary.data.assignedToNames || [])[idx] || id)
+          })
+          for (let j = 1; j < group.length; j++) {
+            const dup = group[j]
+            ;(dup.data.assignedTo || []).forEach((id: string, idx: number) => {
+              if (!mergedIds.has(id)) {
+                mergedIds.add(id)
+                mergedNames.set(id, (dup.data.assignedToNames || [])[idx] || id)
+              }
+            })
+            // Delete duplicate
+            await deleteDoc(doc(db, 'tasks', dup.id))
+            existingIds.delete(dup.id)
+          }
+          // Update primary with merged assignees
+          const finalIds = Array.from(mergedIds)
+          const finalNames = finalIds.map(id => mergedNames.get(id) || id)
+          if (finalIds.length !== (primary.data.assignedTo || []).length) {
+            await updateDoc(doc(db, 'tasks', primary.id), {
+              assignedTo: finalIds,
+              assignedToNames: finalNames,
+              updatedAt: Timestamp.now()
+            })
+          }
+        }
 
         // 7. Sync missing tasks (group by description to combine assignees)
         let newTaskCount = 0
