@@ -1013,7 +1013,7 @@ function Dashboard() {
         const existingIds = new Set<string>()
         existingSnapshot.docs.forEach(d => existingIds.add(d.id))
 
-        // 7. Sync missing tasks
+        // 7. Sync missing tasks (group by description to combine assignees)
         let newTaskCount = 0
         for (const meeting of meetings) {
           if (removedIds.has(meeting.recording_id)) continue
@@ -1022,26 +1022,50 @@ function Dashboard() {
           const meetingCustom = customTasksMap.get(meeting.recording_id) || []
           const allItems = [...fathomItems, ...meetingCustom]
 
+          // Group items by description to combine multiple assignees into one task
+          const groupedItems = new Map<string, { items: any[], indices: number[] }>()
           for (let i = 0; i < allItems.length; i++) {
             const item = allItems[i]
             if (!item?.description) continue
+            const key = item.description.trim().toLowerCase()
+            const existing = groupedItems.get(key) || { items: [], indices: [] }
+            existing.items.push(item)
+            existing.indices.push(i)
+            groupedItems.set(key, existing)
+          }
 
-            const taskDocId = `meeting_${meeting.recording_id}_${i}`
-            if (existingIds.has(taskDocId)) continue
+          const groupEntries = Array.from(groupedItems.values())
+          for (const group of groupEntries) {
+            const primaryItem = group.items[0]
+            // Use a deterministic ID based on description content, not array index
+            // Simple hash: sum of char codes to create a stable numeric ID
+            const descHash = primaryItem.description.trim().toLowerCase().split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0)
+            const taskDocId = `meeting_${meeting.recording_id}_d${descHash}`
 
-            // Determine assignee
+            // Also check old index-based IDs to avoid re-creating already-synced tasks
+            const oldIdExists = group.indices.some(idx => existingIds.has(`meeting_${meeting.recording_id}_${idx}`))
+            if (existingIds.has(taskDocId) || oldIdExists) continue
+
+            // Collect all unique assignees from all items in this group
             const assigneeIds: string[] = []
             const assigneeNames: string[] = []
-            if (item.assignee) {
-              const matched = allEmployees.find(
-                (emp: any) => (item.assignee.email && emp.email?.toLowerCase() === item.assignee.email.toLowerCase()) ||
-                       (item.assignee.name && emp.name?.toLowerCase() === item.assignee.name.toLowerCase())
-              )
-              if (matched) {
-                assigneeIds.push(matched.employeeId)
-                assigneeNames.push(matched.name)
+            const addedIds = new Set<string>()
+
+            for (const item of group.items) {
+              if (item.assignee) {
+                const matched = allEmployees.find(
+                  (emp: any) => (item.assignee.email && emp.email?.toLowerCase() === item.assignee.email.toLowerCase()) ||
+                         (item.assignee.name && emp.name?.toLowerCase() === item.assignee.name.toLowerCase())
+                )
+                if (matched && !addedIds.has(matched.employeeId)) {
+                  assigneeIds.push(matched.employeeId)
+                  assigneeNames.push(matched.name)
+                  addedIds.add(matched.employeeId)
+                }
               }
             }
+
+            // Fallback: recorder or current user
             if (assigneeIds.length === 0 && meeting.recorded_by) {
               const recorder = allEmployees.find(
                 (emp: any) => emp.email?.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
@@ -1057,12 +1081,13 @@ function Dashboard() {
               assigneeNames.push(employee.name)
             }
 
-            const isCompleted = item.completed || completedIds.has(`${meeting.recording_id}_${i}`)
+            const isCompleted = group.items.every((item: any) => item.completed) ||
+              group.indices.every(idx => completedIds.has(`${meeting.recording_id}_${idx}`))
             const meetingTitle = meeting.meeting_title || meeting.title || 'Meeting'
 
             await setDoc(doc(db, 'tasks', taskDocId), {
-              title: item.description,
-              description: `From meeting: ${meetingTitle}\n\n${item.description}`,
+              title: primaryItem.description,
+              description: `From meeting: ${meetingTitle}\n\n${primaryItem.description}`,
               status: isCompleted ? 'completed' : 'todo',
               priority: 'medium',
               assignedTo: assigneeIds,

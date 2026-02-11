@@ -1372,11 +1372,16 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     // 🔔 GLOBAL NOTIFICATION: Status change
     if (updates.status && updates.status !== oldTask.status) {
+      const actualStatus = updatePayload.status || updates.status
+      const notifMessage = actualStatus === 'review' && updatePayload.approvalStatus === 'pending'
+        ? `${employee.name} marked "${oldTask.title}" as completed — awaiting admin approval`
+        : `${employee.name} changed "${oldTask.title}" to ${actualStatus}`
+      
       await createGlobalNotification({
         type: 'task',
         action: 'status_changed',
-        title: 'Task Status Updated',
-        message: `${employee.name} changed "${oldTask.title}" to ${updates.status}`,
+        title: actualStatus === 'review' ? 'Task Pending Approval' : 'Task Status Updated',
+        message: notifMessage,
         relatedEntityId: id,
         targetUrl: '#tasks',
         createdBy: employee.employeeId,

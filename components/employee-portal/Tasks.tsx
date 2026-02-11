@@ -717,7 +717,11 @@ function TaskDetailModal({
   const handleStatusChange = async (newStatus: Task['status']) => {
     try {
       await updateTask(task.id!, { status: newStatus })
-      toast.success('Status updated')
+      if (newStatus === 'completed' && !isAdmin) {
+        toast.success('Task sent for admin approval')
+      } else {
+        toast.success('Status updated')
+      }
     } catch (error) {
       toast.error('Failed to update status')
     }
@@ -755,6 +759,7 @@ function TaskDetailModal({
     setDeleting(true)
     try {
       await deleteTask(task.id!)
+      toast.success('Task deleted successfully')
       onClose()
     } catch (error) {
       toast.error('Failed to delete task')
