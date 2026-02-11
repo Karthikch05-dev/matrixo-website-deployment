@@ -39,7 +39,11 @@ import {
   setDoc,
   deleteDoc,
   getDocs,
+  getDoc,
+  updateDoc,
   onSnapshot,
+  query,
+  where,
   Timestamp
 } from 'firebase/firestore'
 
@@ -1004,7 +1008,7 @@ function MeetingDetailModal({
 // ============================================
 
 export function Meetings() {
-  const { employee, getAllEmployees, addTask } = useEmployeeAuth()
+  const { employee, getAllEmployees } = useEmployeeAuth()
   const isAdmin = employee?.role === 'admin'
 
   const [meetings, setMeetings] = useState<FathomMeeting[]>([])
@@ -1285,8 +1289,125 @@ export function Meetings() {
 
   useEffect(() => { fetchMeetings() }, [fetchMeetings])
 
+  // ============================================
+  // AUTO-SYNC MEETING TASKS TO MAIN TASKS PAGE
+  // ============================================
+  const hasSyncedRef = useRef(false)
+
+  useEffect(() => {
+    if (!employee || meetings.length === 0 || employees.length === 0 || hasSyncedRef.current) return
+
+    const syncMeetingTasks = async () => {
+      try {
+        // Query all existing meeting-sourced tasks in one go
+        const q = query(collection(db, 'tasks'), where('createdFrom', '==', 'meeting'))
+        const existingSnapshot = await getDocs(q)
+        const existingIds = new Set<string>()
+        existingSnapshot.docs.forEach(d => existingIds.add(d.id))
+
+        let newTaskCount = 0
+
+        for (const meeting of meetings) {
+          // Skip removed meetings (hidden still visible to admins)
+          if (removedMeetingIds.has(meeting.recording_id)) continue
+
+          // Get all action items (Fathom + custom)
+          const fathomItems = (meeting.action_items || []).filter(a => a)
+          const meetingCustom = customTasks.get(meeting.recording_id) || []
+          const allItems = [...fathomItems, ...meetingCustom]
+
+          for (let i = 0; i < allItems.length; i++) {
+            const item = allItems[i]
+            if (!item?.description) continue
+
+            const taskDocId = `meeting_${meeting.recording_id}_${i}`
+            if (existingIds.has(taskDocId)) continue
+
+            // Determine assignee
+            const assigneeIds: string[] = []
+            const assigneeNames: string[] = []
+            if (item.assignee) {
+              const matched = employees.find(
+                emp => (item.assignee!.email && emp.email.toLowerCase() === item.assignee!.email.toLowerCase()) ||
+                       (item.assignee!.name && emp.name.toLowerCase() === item.assignee!.name.toLowerCase())
+              )
+              if (matched) {
+                assigneeIds.push(matched.employeeId)
+                assigneeNames.push(matched.name)
+              }
+            }
+            if (assigneeIds.length === 0) {
+              // Fall back to the recorder or current user
+              if (meeting.recorded_by) {
+                const recorder = employees.find(
+                  emp => emp.email.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
+                         emp.name.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
+                )
+                if (recorder) {
+                  assigneeIds.push(recorder.employeeId)
+                  assigneeNames.push(recorder.name)
+                }
+              }
+              if (assigneeIds.length === 0) {
+                assigneeIds.push(employee.employeeId)
+                assigneeNames.push(employee.name)
+              }
+            }
+
+            const isCompleted = item.completed || completedTaskIds.has(`${meeting.recording_id}_${i}`)
+            const meetingTitle = meeting.meeting_title || meeting.title || 'Meeting'
+
+            await setDoc(doc(db, 'tasks', taskDocId), {
+              title: item.description,
+              description: `From meeting: ${meetingTitle}\n\n${item.description}`,
+              status: isCompleted ? 'completed' : 'todo',
+              priority: 'medium',
+              assignedTo: assigneeIds,
+              assignedToNames: assigneeNames,
+              createdBy: employee.employeeId,
+              createdByName: employee.name,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
+              department: '',
+              meetingId: meeting.recording_id,
+              createdFrom: 'meeting',
+              comments: [],
+              tags: ['Meeting']
+            })
+
+            newTaskCount++
+          }
+        }
+
+        if (newTaskCount > 0) {
+          // Send a single notification about synced tasks
+          await createGlobalNotification({
+            type: 'task',
+            action: 'created',
+            title: 'Meeting Tasks Synced',
+            message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings have been added to Tasks.`,
+            relatedEntityId: 'meeting-sync',
+            targetUrl: '#tasks',
+            createdBy: employee.employeeId,
+            createdByName: employee.name,
+            createdByRole: employee.role
+          })
+          toast.success(`${newTaskCount} meeting task(s) synced to Tasks`)
+        }
+
+        hasSyncedRef.current = true
+      } catch (err) {
+        console.error('Error syncing meeting tasks:', err)
+      }
+    }
+
+    syncMeetingTasks()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetings, employees, employee, completedTaskIds, removedMeetingIds, customTasks])
+
   const handleRefresh = () => {
     setRefreshing(true)
+    hasSyncedRef.current = false // Allow re-sync on manual refresh
     fetchMeetings()
   }
 
@@ -1344,48 +1465,44 @@ export function Meetings() {
           completedAt: Timestamp.now()
         })
 
-        // Also create a task in the main tasks collection
-        const meeting = meetings.find(m => m.recording_id === meetingId)
-        const actionItem = meeting?.action_items?.[taskIndex]
-        if (meeting && actionItem) {
-          const assigneeIds: string[] = []
-          const assigneeNames: string[] = []
-          if (actionItem.assignee) {
-            const matchedEmp = employees.find(
-              emp => (actionItem.assignee!.email && emp.email.toLowerCase() === actionItem.assignee!.email.toLowerCase()) ||
-                     (actionItem.assignee!.name && emp.name.toLowerCase() === actionItem.assignee!.name.toLowerCase())
-            )
-            if (matchedEmp) {
-              assigneeIds.push(matchedEmp.employeeId)
-              assigneeNames.push(matchedEmp.name)
-            }
-          }
-          if (assigneeIds.length === 0) {
-            assigneeIds.push(employee.employeeId)
-            assigneeNames.push(employee.name)
-          }
-
-          try {
-            await addTask({
-              title: actionItem.description || `Task from: ${meeting.meeting_title || meeting.title}`,
-              description: `From meeting: ${meeting.meeting_title || meeting.title}\n\n${actionItem.description || ''}`,
+        // Update the corresponding main task status to completed
+        const mainTaskDocId = `meeting_${meetingId}_${taskIndex}`
+        const mainTaskRef = doc(db, 'tasks', mainTaskDocId)
+        try {
+          const mainTaskDoc = await getDoc(mainTaskRef)
+          if (mainTaskDoc.exists()) {
+            await updateDoc(mainTaskRef, {
               status: 'completed',
-              priority: 'medium',
-              assignedTo: assigneeIds,
-              assignedToNames: assigneeNames,
-              department: employee.department || '',
-              meetingId: meetingId,
-              createdFrom: 'meeting'
+              updatedAt: Timestamp.now(),
+              editedBy: employee.employeeId,
+              editedByName: employee.name
             })
-          } catch (taskErr) {
-            console.error('Error creating task from meeting:', taskErr)
-            // Don't block the meeting task update if task creation fails
           }
+        } catch (e) {
+          console.error('Error updating main task:', e)
         }
 
         toast.success('Task marked as complete')
       } else {
         await deleteDoc(doc(db, 'meetingTaskStatus', taskDocId))
+
+        // Update the corresponding main task status back to todo
+        const mainTaskDocId = `meeting_${meetingId}_${taskIndex}`
+        const mainTaskRef = doc(db, 'tasks', mainTaskDocId)
+        try {
+          const mainTaskDoc = await getDoc(mainTaskRef)
+          if (mainTaskDoc.exists()) {
+            await updateDoc(mainTaskRef, {
+              status: 'todo',
+              updatedAt: Timestamp.now(),
+              editedBy: employee.employeeId,
+              editedByName: employee.name
+            })
+          }
+        } catch (e) {
+          console.error('Error updating main task:', e)
+        }
+
         toast.info('Task marked as pending')
       }
     } catch (err) {

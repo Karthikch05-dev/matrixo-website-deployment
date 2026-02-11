@@ -838,6 +838,9 @@ function TaskDetailModal({
                 {task.department === 'Management' && (
                   <Badge variant="primary">Management</Badge>
                 )}
+                {task.createdFrom === 'meeting' && (
+                  <Badge variant="info">From Meeting</Badge>
+                )}
               </div>
               <h2 className="text-xl font-bold text-white">{task.title}</h2>
             </div>
@@ -1203,6 +1206,9 @@ function TaskCard({
           </Badge>
           {task.department === 'Management' && (
             <Badge size="sm" variant="warning">Mgmt</Badge>
+          )}
+          {task.createdFrom === 'meeting' && (
+            <Badge size="sm" variant="info">Meeting</Badge>
           )}
         </div>
         
