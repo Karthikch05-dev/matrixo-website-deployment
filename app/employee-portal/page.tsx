@@ -33,6 +33,9 @@ import {
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
+import { createGlobalNotification } from '@/lib/notificationUtils'
+import { db } from '@/lib/firebaseConfig'
+import { collection, doc, setDoc, getDocs, query, where, Timestamp } from 'firebase/firestore'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -959,6 +962,150 @@ function Dashboard() {
       }
     }
     setupPushNotifications()
+  }, [employee?.employeeId])
+
+  // 🔄 BACKGROUND SYNC: Meeting tasks → Main Tasks collection
+  // Runs once on portal load so meeting tasks appear on Tasks page regardless of which tab is active
+  const meetingSyncRef = useRef(false)
+  useEffect(() => {
+    if (!employee?.employeeId || meetingSyncRef.current) return
+    
+    const syncMeetingTasksBackground = async () => {
+      try {
+        // 1. Fetch meetings from Fathom API
+        const response = await fetch('/api/fathom?action=list')
+        if (!response.ok) return
+        const data = await response.json()
+        const meetings = data.items || []
+        if (meetings.length === 0) return
+
+        // 2. Get all employees for assignee matching
+        const empSnapshot = await getDocs(collection(db, 'Employees'))
+        const allEmployees = empSnapshot.docs.map(d => ({ employeeId: d.id, ...d.data() })) as any[]
+
+        // 3. Get custom tasks from Firestore
+        const customTasksSnapshot = await getDocs(collection(db, 'meetingCustomTasks'))
+        const customTasksMap = new Map<number, any[]>()
+        customTasksSnapshot.docs.forEach(d => {
+          const data = d.data()
+          if (data.recordingId) {
+            const existing = customTasksMap.get(data.recordingId) || []
+            existing.push({ description: data.description, assignee: data.assignee, completed: false })
+            customTasksMap.set(data.recordingId, existing)
+          }
+        })
+
+        // 4. Get completed task IDs from meetingTaskStatus
+        const taskStatusSnapshot = await getDocs(collection(db, 'meetingTaskStatus'))
+        const completedIds = new Set<string>()
+        taskStatusSnapshot.docs.forEach(d => {
+          if (d.data().completed) completedIds.add(d.id)
+        })
+
+        // 5. Get removed meeting IDs
+        const removedSnapshot = await getDocs(collection(db, 'removedMeetings'))
+        const removedIds = new Set<number>()
+        removedSnapshot.docs.forEach(d => removedIds.add(Number(d.data().recordingId || d.id)))
+
+        // 6. Query existing meeting-sourced tasks
+        const q = query(collection(db, 'tasks'), where('createdFrom', '==', 'meeting'))
+        const existingSnapshot = await getDocs(q)
+        const existingIds = new Set<string>()
+        existingSnapshot.docs.forEach(d => existingIds.add(d.id))
+
+        // 7. Sync missing tasks
+        let newTaskCount = 0
+        for (const meeting of meetings) {
+          if (removedIds.has(meeting.recording_id)) continue
+
+          const fathomItems = (meeting.action_items || []).filter((a: any) => a)
+          const meetingCustom = customTasksMap.get(meeting.recording_id) || []
+          const allItems = [...fathomItems, ...meetingCustom]
+
+          for (let i = 0; i < allItems.length; i++) {
+            const item = allItems[i]
+            if (!item?.description) continue
+
+            const taskDocId = `meeting_${meeting.recording_id}_${i}`
+            if (existingIds.has(taskDocId)) continue
+
+            // Determine assignee
+            const assigneeIds: string[] = []
+            const assigneeNames: string[] = []
+            if (item.assignee) {
+              const matched = allEmployees.find(
+                (emp: any) => (item.assignee.email && emp.email?.toLowerCase() === item.assignee.email.toLowerCase()) ||
+                       (item.assignee.name && emp.name?.toLowerCase() === item.assignee.name.toLowerCase())
+              )
+              if (matched) {
+                assigneeIds.push(matched.employeeId)
+                assigneeNames.push(matched.name)
+              }
+            }
+            if (assigneeIds.length === 0 && meeting.recorded_by) {
+              const recorder = allEmployees.find(
+                (emp: any) => emp.email?.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
+                       emp.name?.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
+              )
+              if (recorder) {
+                assigneeIds.push(recorder.employeeId)
+                assigneeNames.push(recorder.name)
+              }
+            }
+            if (assigneeIds.length === 0) {
+              assigneeIds.push(employee.employeeId)
+              assigneeNames.push(employee.name)
+            }
+
+            const isCompleted = item.completed || completedIds.has(`${meeting.recording_id}_${i}`)
+            const meetingTitle = meeting.meeting_title || meeting.title || 'Meeting'
+
+            await setDoc(doc(db, 'tasks', taskDocId), {
+              title: item.description,
+              description: `From meeting: ${meetingTitle}\n\n${item.description}`,
+              status: isCompleted ? 'completed' : 'todo',
+              priority: 'medium',
+              assignedTo: assigneeIds,
+              assignedToNames: assigneeNames,
+              createdBy: employee.employeeId,
+              createdByName: employee.name,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
+              department: '',
+              meetingId: meeting.recording_id,
+              createdFrom: 'meeting',
+              comments: [],
+              tags: ['Meeting']
+            })
+            newTaskCount++
+          }
+        }
+
+        if (newTaskCount > 0) {
+          await createGlobalNotification({
+            type: 'task',
+            action: 'created',
+            title: 'Meeting Tasks Synced',
+            message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings added to Tasks.`,
+            relatedEntityId: 'meeting-sync',
+            targetUrl: '#tasks',
+            createdBy: employee.employeeId,
+            createdByName: employee.name,
+            createdByRole: employee.role
+          })
+          toast.success(`${newTaskCount} meeting task(s) synced to Tasks`)
+        }
+
+        meetingSyncRef.current = true
+      } catch (err) {
+        console.error('Background meeting sync error:', err)
+      }
+    }
+
+    // Small delay to not block initial render
+    const timer = setTimeout(syncMeetingTasksBackground, 2000)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employee?.employeeId])
 
   return (

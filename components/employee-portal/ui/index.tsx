@@ -301,7 +301,7 @@ export const Select = ({
     
     const rect = triggerRef.current.getBoundingClientRect()
     const viewportHeight = window.innerHeight
-    const dropdownHeight = Math.min(240, options.length * 48)
+    const dropdownHeight = Math.min(320, options.length * 48)
     
     const spaceBelow = viewportHeight - rect.bottom - 8
     const spaceAbove = rect.top - 8
@@ -407,7 +407,7 @@ export const Select = ({
                 zIndex: 99999
               }}
             >
-              <div className="max-h-60 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto">
                 {options.map((option) => (
                   <button
                     key={option.value}
