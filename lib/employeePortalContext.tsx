@@ -50,7 +50,7 @@ export interface AttendanceRecord {
   employeeId: string
   date: string
   timestamp: Timestamp
-  status: 'P' | 'A' | 'L' | 'O' | 'H' | 'U' // Present, Absent, Leave, On Duty, Holiday, Unauthorised Leave
+  status: 'P' | 'A' | 'L' | 'O' | 'H' | 'U' | 'W' // Present, Absent, Leave, On Duty, Holiday, Unauthorised Leave, Work From Home
   checkInTime?: string
   checkOutTime?: string
   notes?: string
@@ -71,6 +71,7 @@ export interface AttendanceRecord {
   modifiedAt?: Timestamp
   modificationReason?: string
   originalStatus?: string
+  workMode?: 'WFO' | 'WFH' // Work mode at time of marking
 }
 
 export interface Holiday {
@@ -288,6 +289,10 @@ interface EmployeeAuthContextType {
   signIn: (employeeId: string, password: string) => Promise<void>
   logout: () => Promise<void>
   
+  // Work Mode
+  workMode: 'WFO' | 'WFH'
+  setGlobalWorkMode: (mode: 'WFO' | 'WFH') => Promise<void>
+  
   // Attendance
   markAttendance: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<void>
   updateAttendanceNotes: (notes: string) => Promise<void>
@@ -295,7 +300,7 @@ interface EmployeeAuthContextType {
   getAttendanceRecords: (startDate?: Date, endDate?: Date) => Promise<AttendanceRecord[]>
   getTodayAttendance: () => Promise<AttendanceRecord | null>
   calculateAttendancePercentage: (records: AttendanceRecord[]) => number
-  markAttendanceWithLocation: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<{ success: boolean; locationVerified: boolean; error?: string }>
+  markAttendanceWithLocation: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<{ success: boolean; locationVerified: boolean; workFromHome?: boolean; error?: string }>
   
   // Admin Attendance
   updateEmployeeAttendance: (attendanceId: string, updates: Partial<AttendanceRecord>, reason: string) => Promise<void>
@@ -380,6 +385,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [personalTodos, setPersonalTodos] = useState<PersonalTodo[]>([])
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
+  const [workMode, setWorkMode] = useState<'WFO' | 'WFH'>('WFO')
 
   // ============================================
   // AUTH EFFECTS - Step 1: Initialize Firebase Auth
@@ -635,6 +641,28 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe()
   }, [authReady, user, employee])
 
+  // Subscribe to global work mode setting
+  useEffect(() => {
+    if (!authReady || !user) return
+    
+    const unsubscribe = onSnapshot(
+      doc(db, 'systemConfig', 'workMode'),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          setWorkMode(data.mode === 'WFH' ? 'WFH' : 'WFO')
+        } else {
+          setWorkMode('WFO') // Default
+        }
+      },
+      (error) => {
+        console.error('Error fetching work mode:', error)
+        setWorkMode('WFO') // Default on error
+      }
+    )
+    return () => unsubscribe()
+  }, [authReady, user])
+
   // ============================================
   // AUTH FUNCTIONS
   // ============================================
@@ -721,6 +749,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ============================================
+  // WORK MODE FUNCTIONS
+  // ============================================
+
+  const setGlobalWorkMode = async (mode: 'WFO' | 'WFH') => {
+    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    await setDoc(doc(db, 'systemConfig', 'workMode'), {
+      mode,
+      updatedBy: employee.employeeId,
+      updatedByName: employee.name,
+      updatedAt: Timestamp.now()
+    })
+  }
+
+  // ============================================
   // ATTENDANCE FUNCTIONS
   // ============================================
 
@@ -778,7 +820,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     status: AttendanceRecord['status'], 
     notes?: string, 
     extraData?: Partial<AttendanceRecord>
-  ): Promise<{ success: boolean; locationVerified: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; locationVerified: boolean; workFromHome?: boolean; error?: string }> => {
     if (!user || !employee) {
       return { success: false, locationVerified: false, error: 'Not authenticated' }
     }
@@ -789,26 +831,57 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       const { latitude, longitude, accuracy } = position.coords
       
       // Check if within office radius
-      const locationVerified = isLocationVerified(latitude, longitude)
+      const isInOffice = isLocationVerified(latitude, longitude)
+      
+      // Apply WFO/WFH verification matrix
+      let finalStatus = status
+      let locationVerified = isInOffice
+      let isWorkFromHome = false
+
+      if (status === 'P') {
+        if (workMode === 'WFO') {
+          // WFO: In office = Verified, Outside = Unverified
+          locationVerified = isInOffice
+        } else if (workMode === 'WFH') {
+          if (isInOffice) {
+            // WFH + In office = Verified
+            locationVerified = true
+          } else {
+            // WFH + Outside office = Work From Home (Verified)
+            finalStatus = 'W'
+            locationVerified = true
+            isWorkFromHome = true
+          }
+        }
+      }
       
       // Mark attendance with location data
-      await markAttendance(status, notes, {
+      await markAttendance(finalStatus, notes, {
         ...extraData,
         latitude,
         longitude,
         locationAccuracy: accuracy,
-        locationVerified
-      })
+        locationVerified,
+        workMode // Store the work mode at time of marking
+      } as Partial<AttendanceRecord>)
 
-      return { success: true, locationVerified }
+      return { success: true, locationVerified, workFromHome: isWorkFromHome }
     } catch (error: unknown) {
       // If location permission denied, still allow marking but flag as unverified
       if (error instanceof GeolocationPositionError && error.code === error.PERMISSION_DENIED) {
-        await markAttendance(status, notes, {
+        // In WFH mode with denied location, still mark as WFH
+        const finalStatus = workMode === 'WFH' && status === 'P' ? 'W' : status
+        await markAttendance(finalStatus, notes, {
           ...extraData,
-          locationVerified: false
-        })
-        return { success: true, locationVerified: false, error: 'Location permission denied' }
+          locationVerified: false,
+          workMode
+        } as Partial<AttendanceRecord>)
+        return { 
+          success: true, 
+          locationVerified: false, 
+          workFromHome: finalStatus === 'W',
+          error: 'Location permission denied' 
+        }
       }
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -934,7 +1007,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const calculateAttendancePercentage = (records: AttendanceRecord[]): number => {
     if (records.length === 0) return 0
-    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O').length
+    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').length
     return Math.round((presentDays / records.length) * 100)
   }
 
@@ -2148,6 +2221,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       db,
       signIn,
       logout,
+      workMode,
+      setGlobalWorkMode,
       markAttendance,
       updateAttendanceNotes,
       markLeaveRange,

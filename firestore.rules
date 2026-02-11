@@ -8,6 +8,14 @@ service cloud.firestore {
     }
 
     // ================================================
+    // SYSTEM CONFIG COLLECTION (Work Mode, etc.)
+    // ================================================
+    match /systemConfig/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
     // PERSONAL TODOS COLLECTION (NEW)
     // ================================================
     match /personalTodos/{todoId} {
