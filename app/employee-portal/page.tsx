@@ -10,7 +10,6 @@ import {
   FaCalendarCheck, 
   FaChartLine, 
   FaHistory,
-  FaClock,
   FaCheckCircle,
   FaTimesCircle,
   FaPlane,
@@ -29,9 +28,11 @@ import {
   FaPlus,
   FaTrash,
   FaListAlt,
-  FaQrcode
+  FaQrcode,
+  FaVideo
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -40,6 +41,7 @@ import Calendar from '@/components/employee-portal/Calendar'
 import Attendance from '@/components/employee-portal/Attendance'
 import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
+import Meetings from '@/components/employee-portal/Meetings'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
@@ -211,6 +213,7 @@ const navigationItems = [
   { id: 'history', label: 'History', icon: FaHistory },
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
+  { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
   { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
 ]
@@ -230,7 +233,6 @@ function TopNavbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0, isMobile: false })
-  const [currentTime, setCurrentTime] = useState(new Date())
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
@@ -290,11 +292,6 @@ function TopNavbar({
     }
     setUserMenuOpen(prev => !prev)
   }
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   const handleLogout = async () => {
     try {
@@ -366,20 +363,6 @@ function TopNavbar({
           <div className="flex items-center gap-2 shrink-0">
             {/* Notification Bell */}
             <NotificationBell onNavigate={setActiveTab} />
-            
-            {/* Time Display - Only visible on Attendance tab */}
-            {activeTab === 'attendance' && (
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
-                <FaClock className="text-primary-400 text-sm" />
-                <span className="font-mono tabular-nums text-white text-sm">
-                  {currentTime.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit'
-                  })}
-                </span>
-              </div>
-            )}
 
             {/* User Menu */}
             <div className="relative">
@@ -951,21 +934,30 @@ function Dashboard() {
     }
   }, [activeTab])
 
-  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION ON FIRST LOAD
+  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION + REGISTER PUSH ON FIRST LOAD
   useEffect(() => {
-    const requestPermissionOnLoad = async () => {
-      if (typeof window !== 'undefined' && 'Notification' in window) {
+    const setupPushNotifications = async () => {
+      if (typeof window === 'undefined' || !('Notification' in window)) return
+      if (!employee?.employeeId) return
+
+      try {
+        // Request notification permission if not yet decided
         if (Notification.permission === 'default') {
-          try {
-            await Notification.requestPermission()
-          } catch (error) {
-            console.error('Failed to request notification permission:', error)
-          }
+          await Notification.requestPermission()
         }
+
+        // If permission granted, register SW and subscribe to push
+        if (Notification.permission === 'granted') {
+          await registerServiceWorker()
+          await subscribeToPush(employee.employeeId)
+          console.log('🔔 Push notifications set up successfully')
+        }
+      } catch (error) {
+        console.error('Failed to set up push notifications:', error)
       }
     }
-    requestPermissionOnLoad()
-  }, [])
+    setupPushNotifications()
+  }, [employee?.employeeId])
 
   return (
     <div className="min-h-screen bg-neutral-950 overflow-x-hidden max-w-[100vw]">
@@ -989,6 +981,7 @@ function Dashboard() {
             {activeTab === 'calendar' && <Calendar />}
             {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
             {activeTab === 'discussions' && <Discussions />}
+            {activeTab === 'meetings' && <Meetings />}
             {activeTab === 'event-checkin' && <EventQRScanner />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>

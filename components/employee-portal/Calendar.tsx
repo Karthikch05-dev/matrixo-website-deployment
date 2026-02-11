@@ -166,6 +166,8 @@ function AddEventModal({
     description: '',
     date: '',
     endDate: '',
+    startTime: '',
+    endTime: '',
     type: 'event',
     color: '#6366f1',
     departmentVisibility: 'all'
@@ -179,6 +181,8 @@ function AddEventModal({
         description: editingEvent?.description || '',
         date: editingEvent?.date || selectedDate || '',
         endDate: editingEvent?.endDate || '',
+        startTime: editingEvent?.startTime || '',
+        endTime: editingEvent?.endTime || '',
         type: editingEvent?.type || 'event',
         color: editingEvent?.color || '#6366f1',
         departmentVisibility: editingEvent?.departmentVisibility || 'all'
@@ -202,6 +206,8 @@ function AddEventModal({
         departmentVisibility: form.departmentVisibility as CalendarEvent['departmentVisibility'],
         ...(form.description.trim() && { description: form.description.trim() }),
         ...(form.endDate && { endDate: form.endDate }),
+        ...(form.startTime && { startTime: form.startTime }),
+        ...(form.endTime && { endTime: form.endTime }),
         ...(form.color && { color: form.color })
       }
 
@@ -258,6 +264,20 @@ function AddEventModal({
             type="date"
             value={form.endDate}
             onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Start Time (Optional)"
+            type="time"
+            value={form.startTime}
+            onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+          />
+          <Input
+            label="End Time (Optional)"
+            type="time"
+            value={form.endTime}
+            onChange={(e) => setForm({ ...form, endTime: e.target.value })}
           />
         </div>
         <Select
@@ -683,11 +703,22 @@ export function Calendar() {
                               <div className="flex-1">
                                 <h5 className="font-medium text-white">{event.title}</h5>
                                 <div className="flex flex-wrap items-center gap-2 mt-1">
-                                  <Badge size="sm" variant="info">{event.type}</Badge>
+                                  <Badge size="sm" variant="info">{event.type.charAt(0).toUpperCase() + event.type.slice(1)}</Badge>
                                   <Badge size="sm" variant="default">
                                     {departmentVisibilityLabels[event.departmentVisibility || 'all']}
                                   </Badge>
                                 </div>
+                                {(event.startTime || event.endTime) && (
+                                  <p className="text-neutral-400 text-xs mt-1.5 flex items-center gap-1">
+                                    <FaClock className="text-neutral-500 text-[10px]" />
+                                    {event.startTime && event.endTime
+                                      ? `${event.startTime} - ${event.endTime}`
+                                      : event.startTime
+                                        ? `Starts at ${event.startTime}`
+                                        : `Ends at ${event.endTime}`
+                                    }
+                                  </p>
+                                )}
                                 {event.description && (
                                   <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
                                 )}
@@ -702,13 +733,25 @@ export function Calendar() {
                                 </p>
                               </div>
                               {isAdmin && (
-                                <button
-                                  onClick={() => handleDeleteEvent(event.id!, event.title)}
-                                  className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors ml-2 flex-shrink-0"
-                                  title="Delete event"
-                                >
-                                  <FaTrash />
-                                </button>
+                                <div className="flex flex-col gap-1 ml-2 flex-shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      setEditingEvent(event)
+                                      setShowAddEvent(true)
+                                    }}
+                                    className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                    title="Edit event"
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteEvent(event.id!, event.title)}
+                                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                    title="Delete event"
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -800,7 +843,7 @@ export function Calendar() {
                         >
                           {item.type === 'holiday' 
                             ? (item.item as Holiday).type 
-                            : (item.item as CalendarEvent).type
+                            : ((item.item as CalendarEvent).type.charAt(0).toUpperCase() + (item.item as CalendarEvent).type.slice(1))
                           }
                         </Badge>
                         {item.type === 'event' && (
