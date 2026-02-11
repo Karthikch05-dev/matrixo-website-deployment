@@ -10,9 +10,10 @@ import {
 import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
+import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 // ============================================
 // TYPES
@@ -291,6 +292,8 @@ function QuestionField({
 
 export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const { user } = useAuth()
   const formRef = useRef<HTMLDivElement>(null)
   const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
@@ -309,6 +312,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     college: '',
     yearOrExperience: '',
   })
+
+  // Pre-fill name/email from auth profile
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.displayName || '',
+        email: prev.email || user.email || '',
+      }))
+    }
+  }, [user])
 
   const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -335,7 +349,21 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     fetchRole()
   }, [roleId, router])
 
+  // Auto-open form when user returns from login
+  useEffect(() => {
+    if (user && role && !showForm) {
+      setShowForm(true)
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role])
+
   const handleApplyClick = () => {
+    if (!user) {
+      toast.info('Please sign in to apply for this role')
+      router.push(`/auth?returnUrl=${encodeURIComponent(pathname)}`)
+      return
+    }
     setShowForm(true)
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
@@ -360,7 +388,15 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       uploadTask.on('state_changed',
         (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
         (error) => { console.error('Upload error:', error); reject(error) },
-        async () => { const url = await getDownloadURL(uploadTask.snapshot.ref); resolve(url) }
+        async () => {
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref)
+            resolve(url)
+          } catch (err) {
+            console.error('getDownloadURL error:', err)
+            reject(err)
+          }
+        }
       )
     })
   }
@@ -431,6 +467,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
         ...formData,
         roleId,
         roleTitle: role?.title,
+        userId: user?.uid || '',
         resumeURL,
         resumeFileName: resumeFileName || '',
         customAnswers: formattedAnswers,
@@ -538,9 +575,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                       onClick={handleApplyClick}
                       className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
                     >
-                      Apply Now <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                      {user ? 'Apply Now' : 'Sign in & Apply'} <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <p className="text-xs text-gray-500 dark:text-neutral-500 mt-3">Click to fill out the application form</p>
+                    <p className="text-xs text-gray-500 dark:text-neutral-500 mt-3">
+                      {user ? 'Click to fill out the application form' : 'You need to sign in before applying'}
+                    </p>
                   </motion.div>
                 )}
               </div>
