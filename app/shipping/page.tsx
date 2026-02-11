@@ -2,6 +2,14 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Shipping & Delivery Policy - matriXO',
+  description: 'matriXO digital delivery policy for event tickets, confirmations, and registration details. Instant digital delivery.',
+  openGraph: {
+    title: 'Shipping & Delivery Policy - matriXO',
+    description: 'Digital delivery policy for matriXO event registrations.',
+    url: 'https://matrixo.in/shipping',
+    siteName: 'matriXO',
+    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+  },
 }
 
 export default function ShippingPage() {

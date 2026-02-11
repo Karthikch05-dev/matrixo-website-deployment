@@ -2,6 +2,14 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - matriXO',
+  description: 'Read the Terms and Conditions for using matriXO services, events, and platform. Last updated October 2025.',
+  openGraph: {
+    title: 'Terms of Service - matriXO',
+    description: 'Terms and Conditions for matriXO services and events.',
+    url: 'https://matrixo.in/terms',
+    siteName: 'matriXO',
+    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+  },
 }
 
 export default function TermsPage() {

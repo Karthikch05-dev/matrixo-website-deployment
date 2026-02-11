@@ -2,6 +2,14 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Refund Policy - matriXO',
+  description: 'matriXO cancellation and refund policy for event tickets and registrations. 7-day refund window with transparent processing.',
+  openGraph: {
+    title: 'Refund & Cancellation Policy - matriXO',
+    description: 'Cancellation and refund policy for matriXO event registrations.',
+    url: 'https://matrixo.in/refund',
+    siteName: 'matriXO',
+    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+  },
 }
 
 export default function RefundPage() {
