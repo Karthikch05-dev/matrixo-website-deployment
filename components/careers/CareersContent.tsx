@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
-import { collection, query, where, getDocs, orderBy, addDoc, Timestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -42,8 +42,7 @@ export default function CareersContent() {
         const rolesRef = collection(db, 'roles')
         const q = query(
           rolesRef,
-          where('status', '==', 'open'),
-          orderBy('createdAt', 'desc')
+          where('status', '==', 'open')
         )
         const querySnapshot = await getDocs(q)
         
@@ -51,6 +50,9 @@ export default function CareersContent() {
         querySnapshot.forEach((doc) => {
           fetchedRoles.push({ id: doc.id, ...doc.data() } as Role)
         })
+        
+        // Sort client-side (newest first)
+        fetchedRoles.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
         
         setRoles(fetchedRoles)
       } catch (error) {
