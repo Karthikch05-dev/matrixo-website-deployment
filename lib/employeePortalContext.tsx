@@ -50,7 +50,7 @@ export interface AttendanceRecord {
   employeeId: string
   date: string
   timestamp: Timestamp
-  status: 'P' | 'A' | 'L' | 'O' | 'H' // Present, Absent, Leave, On Duty, Holiday
+  status: 'P' | 'A' | 'L' | 'O' | 'H' | 'U' // Present, Absent, Leave, On Duty, Holiday, Unauthorised Leave
   checkInTime?: string
   checkOutTime?: string
   notes?: string
@@ -122,7 +122,24 @@ export interface Task {
   tags?: string[]
   department?: string
   specialization?: string // Intern specialization
+  meetingId?: number | null // Link to meeting if created from meeting
+  createdFrom?: 'portal' | 'meeting' // Source of task creation
   comments: TaskComment[]
+}
+
+export interface LeaveRequest {
+  id?: string
+  employeeId: string
+  employeeName: string
+  date: string
+  subject: string
+  letter: string
+  reason: string
+  status: 'Pending' | 'Approved' | 'Rejected'
+  createdAt: Timestamp
+  reviewedBy: string | null
+  reviewedByName?: string | null
+  reviewedAt?: Timestamp | null
 }
 
 export interface TaskComment {
@@ -335,6 +352,13 @@ interface EmployeeAuthContextType {
   updatePersonalTodo: (id: string, updates: Partial<PersonalTodo>) => Promise<void>
   deletePersonalTodo: (id: string) => Promise<void>
   
+  // Leave Requests
+  leaveRequests: LeaveRequest[]
+  submitLeaveRequest: (request: { date: string; subject: string; letter: string; reason: string }) => Promise<void>
+  approveLeaveRequest: (requestId: string) => Promise<void>
+  rejectLeaveRequest: (requestId: string) => Promise<void>
+  getAllLeaveRequests: () => Promise<LeaveRequest[]>
+  
   // Auto-absent
   runAutoAbsentJob: () => Promise<void>
 }
@@ -355,6 +379,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [personalTodos, setPersonalTodos] = useState<PersonalTodo[]>([])
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
 
   // ============================================
   // AUTH EFFECTS - Step 1: Initialize Firebase Auth
@@ -575,6 +600,37 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         console.error('Error fetching personal todos:', error)
         // Error will be visible in console - user sees empty list
       }
+    )
+    return () => unsubscribe()
+  }, [authReady, user, employee])
+
+  // Subscribe to leave requests
+  useEffect(() => {
+    if (!authReady || !user || !employee) {
+      setLeaveRequests([])
+      return
+    }
+    
+    const leaveRequestsRef = collection(db, 'leaveRequests')
+    // Admins see all leave requests, employees see only their own
+    const q = employee.role === 'admin'
+      ? query(leaveRequestsRef, orderBy('createdAt', 'desc'))
+      : query(leaveRequestsRef, where('employeeId', '==', employee.employeeId))
+    
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const requestsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as LeaveRequest[]
+        requestsData.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0
+          const bTime = b.createdAt?.toMillis?.() || 0
+          return bTime - aTime
+        })
+        setLeaveRequests(requestsData)
+      },
+      (error) => console.error('Error fetching leave requests:', error)
     )
     return () => unsubscribe()
   }, [authReady, user, employee])
@@ -1816,6 +1872,167 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ============================================
+  // LEAVE REQUEST FUNCTIONS
+  // ============================================
+
+  const submitLeaveRequest = async (request: { date: string; subject: string; letter: string; reason: string }) => {
+    if (!employee) throw new Error('Not authenticated')
+    
+    const leaveRequestData = {
+      employeeId: employee.employeeId,
+      employeeName: employee.name,
+      date: request.date,
+      subject: request.subject,
+      letter: request.letter,
+      reason: request.reason,
+      status: 'Pending' as const,
+      createdAt: Timestamp.now(),
+      reviewedBy: null,
+      reviewedByName: null,
+      reviewedAt: null
+    }
+    
+    const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
+    
+    // Auto-create discussion post tagging Lahari and Yasasvi
+    const allEmps = await getAllEmployees()
+    const lahari = allEmps.find(e => e.name.toLowerCase().includes('lahari'))
+    const yasasvi = allEmps.find(e => e.name.toLowerCase().includes('yasasvi'))
+    
+    const mentions: string[] = []
+    let mentionText = ''
+    if (lahari) {
+      mentions.push(lahari.employeeId)
+      mentionText += `@${lahari.name} `
+    }
+    if (yasasvi) {
+      mentions.push(yasasvi.employeeId)
+      mentionText += `@${yasasvi.name} `
+    }
+    
+    const discussionContent = `${mentionText}\nI have submitted a leave request for ${request.date}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
+    
+    await addDiscussion(discussionContent, mentions, [])
+    
+    // Send notifications to Lahari and Yasasvi
+    if (mentions.length > 0) {
+      await createGlobalNotification({
+        type: 'calendar',
+        action: 'created',
+        title: 'Leave Request Submitted',
+        message: `${employee.name} has submitted a leave request for ${request.date}. Subject: ${request.subject}`,
+        relatedEntityId: docRef.id,
+        targetUrl: '#attendance',
+        createdBy: employee.employeeId,
+        createdByName: employee.name,
+        createdByRole: employee.role
+      })
+    }
+    
+    await logActivity({
+      type: 'attendance',
+      action: 'leave-request',
+      description: `Submitted leave request for ${request.date}: ${request.subject}`,
+    })
+  }
+
+  const approveLeaveRequest = async (requestId: string) => {
+    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    
+    const requestRef = doc(db, 'leaveRequests', requestId)
+    const requestDoc = await getDoc(requestRef)
+    
+    if (!requestDoc.exists()) throw new Error('Leave request not found')
+    
+    const requestData = requestDoc.data() as LeaveRequest
+    
+    await updateDoc(requestRef, {
+      status: 'Approved',
+      reviewedBy: employee.employeeId,
+      reviewedByName: employee.name,
+      reviewedAt: Timestamp.now()
+    })
+    
+    // Mark attendance as Leave (L) for the requested date
+    const attendanceId = `${requestData.employeeId}_${requestData.date}`
+    const deviceInfo = 'System - Leave Approved'
+    
+    await setDoc(doc(db, 'attendance', attendanceId), {
+      employeeId: requestData.employeeId,
+      date: requestData.date,
+      timestamp: Timestamp.now(),
+      status: 'L',
+      notes: `Leave approved - ${requestData.subject}`,
+      deviceInfo
+    })
+    
+    // Notify the employee
+    await createGlobalNotification({
+      type: 'calendar',
+      action: 'updated',
+      title: 'Leave Request Approved',
+      message: `Your leave request for ${requestData.date} has been approved by ${employee.name}.`,
+      relatedEntityId: requestId,
+      targetUrl: '#attendance',
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
+    })
+  }
+
+  const rejectLeaveRequest = async (requestId: string) => {
+    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    
+    const requestRef = doc(db, 'leaveRequests', requestId)
+    const requestDoc = await getDoc(requestRef)
+    
+    if (!requestDoc.exists()) throw new Error('Leave request not found')
+    
+    const requestData = requestDoc.data() as LeaveRequest
+    
+    await updateDoc(requestRef, {
+      status: 'Rejected',
+      reviewedBy: employee.employeeId,
+      reviewedByName: employee.name,
+      reviewedAt: Timestamp.now()
+    })
+    
+    // Mark attendance as Unauthorised Leave (U) for the requested date
+    const attendanceId = `${requestData.employeeId}_${requestData.date}`
+    const deviceInfo = 'System - Leave Rejected'
+    
+    await setDoc(doc(db, 'attendance', attendanceId), {
+      employeeId: requestData.employeeId,
+      date: requestData.date,
+      timestamp: Timestamp.now(),
+      status: 'U',
+      notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
+      deviceInfo
+    })
+    
+    // Notify the employee
+    await createGlobalNotification({
+      type: 'calendar',
+      action: 'updated',
+      title: 'Leave Request Rejected',
+      message: `Your leave request for ${requestData.date} has been rejected by ${employee.name}. It has been marked as Unauthorised Leave.`,
+      relatedEntityId: requestId,
+      targetUrl: '#attendance',
+      createdBy: employee.employeeId,
+      createdByName: employee.name,
+      createdByRole: employee.role
+    })
+  }
+
+  const getAllLeaveRequests = async (): Promise<LeaveRequest[]> => {
+    const snapshot = await getDocs(collection(db, 'leaveRequests'))
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as LeaveRequest[]
+  }
+
+  // ============================================
   // AUTO-ABSENT JOB
   // ============================================
 
@@ -1977,6 +2194,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       addPersonalTodo,
       updatePersonalTodo,
       deletePersonalTodo,
+      leaveRequests,
+      submitLeaveRequest,
+      approveLeaveRequest,
+      rejectLeaveRequest,
+      getAllLeaveRequests,
       runAutoAbsentJob
     }}>
       {children}
