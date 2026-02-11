@@ -23,7 +23,9 @@ import {
   FaSyncAlt,
   FaLock,
   FaTrashAlt,
-  FaCheck
+  FaCheck,
+  FaEdit,
+  FaPlus
 } from 'react-icons/fa'
 import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import type { EmployeeProfile } from '@/lib/employeePortalContext'
@@ -128,6 +130,7 @@ function formatDuration(start?: string, end?: string): string {
 }
 
 function getProfileImageUrl(url?: string, name?: string): string {
+  if (name && isMatriXOAccount(name)) return MATRIXO_LOGO_URL
   if (url) return url
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
@@ -195,6 +198,69 @@ function renderMarkdownClean(md: string): string {
   return result.join('\n')
 }
 
+// Special display name for matriXO admin account
+const MATRIXO_LOGO_URL = '/logos/logo-dark.png'
+const MATRIXO_NAMES = ['matrixo official', 'matrixo', 'matrixo admin']
+
+function isMatriXOAccount(name: string): boolean {
+  return MATRIXO_NAMES.includes(name.toLowerCase().trim())
+}
+
+// Normalize a name for matching: strip company suffixes, lowercase, trim
+function normalizeForMatch(name: string): string {
+  return name
+    .replace(/\s*(matrixo|matriXO|official|admin)\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim()
+}
+
+// Better fuzzy name matching
+function fuzzyMatchEmployee(personName: string, personEmail: string | undefined, employees: EmployeeInfo[]): EmployeeInfo | undefined {
+  if (!personName && !personEmail) return undefined
+  
+  // 1. Exact email match (highest priority)
+  if (personEmail) {
+    const byEmail = employees.find(emp => emp.email.toLowerCase() === personEmail.toLowerCase())
+    if (byEmail) return byEmail
+  }
+
+  // 2. Exact name match
+  const exactMatch = employees.find(emp => emp.name.toLowerCase() === personName.toLowerCase())
+  if (exactMatch) return exactMatch
+
+  // 3. Normalized name match (strips "Matrixo", "Official" suffixes)
+  const normalized = normalizeForMatch(personName)
+  if (normalized) {
+    const normalizedMatch = employees.find(emp => {
+      const empNorm = normalizeForMatch(emp.name)
+      return empNorm === normalized ||
+             empNorm.includes(normalized) ||
+             normalized.includes(empNorm)
+    })
+    if (normalizedMatch) return normalizedMatch
+  }
+
+  // 4. First name match (for cases like "Kishan" matching "Kishan Kumar")
+  const firstName = personName.split(' ')[0].toLowerCase()
+  if (firstName.length >= 3) {
+    const firstNameMatches = employees.filter(emp => {
+      const empFirst = emp.name.split(' ')[0].toLowerCase()
+      return empFirst === firstName
+    })
+    if (firstNameMatches.length === 1) return firstNameMatches[0]
+  }
+
+  // 5. Partial name containment
+  const partialMatch = employees.find(emp =>
+    emp.name.toLowerCase().includes(personName.toLowerCase()) ||
+    personName.toLowerCase().includes(emp.name.toLowerCase())
+  )
+  if (partialMatch) return partialMatch
+
+  return undefined
+}
+
 function getAllAttendees(meeting: FathomMeeting): { name: string; email?: string; isExternal?: boolean }[] {
   const attendees = new Map<string, { name: string; email?: string; isExternal?: boolean }>()
 
@@ -244,11 +310,7 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
   const ref = useRef<HTMLSpanElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const matched = employees.find(
-    emp => emp.name.toLowerCase() === name.toLowerCase() ||
-           emp.name.toLowerCase().includes(name.toLowerCase()) ||
-           name.toLowerCase().includes(emp.name.toLowerCase())
-  )
+  const matched = fuzzyMatchEmployee(name, undefined, employees)
 
   const handleEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -493,7 +555,11 @@ function MeetingDetailModal({
   employeeData,
   onSendMentionNotification,
   completedTaskIds,
-  onToggleTaskComplete
+  onToggleTaskComplete,
+  customTasks,
+  onAddCustomTask,
+  onEditCustomTask,
+  onDeleteCustomTask
 }: {
   meeting: FathomMeeting | null
   isOpen: boolean
@@ -503,12 +569,27 @@ function MeetingDetailModal({
   onSendMentionNotification: (meeting: FathomMeeting, actionItem: FathomActionItem) => void
   completedTaskIds: Set<string>
   onToggleTaskComplete: (meetingId: number, taskIndex: number, complete: boolean) => void
+  customTasks: Map<number, FathomActionItem[]>
+  onAddCustomTask: (meetingId: number, task: FathomActionItem) => void
+  onEditCustomTask: (meetingId: number, taskIndex: number, task: FathomActionItem) => void
+  onDeleteCustomTask: (meetingId: number, taskIndex: number) => void
 }) {
   const [activeSection, setActiveSection] = useState<'summary' | 'actions' | 'attendees'>('summary')
+  const isAdmin = employeeData?.role === 'admin'
+  
+  // Admin edit state
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [newTaskDesc, setNewTaskDesc] = useState('')
+  const [newTaskAssignee, setNewTaskAssignee] = useState('')
+  const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null)
+  const [editTaskDesc, setEditTaskDesc] = useState('')
+  const [editTaskAssignee, setEditTaskAssignee] = useState('')
 
   if (!meeting) return null
 
-  const allItems = (meeting.action_items || []).filter(a => a)
+  const fathomItems = (meeting.action_items || []).filter(a => a)
+  const extraTasks = customTasks.get(meeting.recording_id) || []
+  const allItems = [...fathomItems, ...extraTasks]
   const pendingActions = allItems.filter((a, i) => !a.completed && !completedTaskIds.has(`${meeting.recording_id}_${i}`))
   const completedActions = allItems.filter((a, i) => a.completed || completedTaskIds.has(`${meeting.recording_id}_${i}`))
   const duration = formatDuration(meeting.recording_start_time, meeting.recording_end_time)
@@ -516,10 +597,7 @@ function MeetingDetailModal({
 
   const matchAssigneeToEmployee = (assignee?: { name: string; email: string } | null) => {
     if (!assignee?.name && !assignee?.email) return null
-    return employees.find(
-      emp => (assignee.email && emp.email.toLowerCase() === assignee.email.toLowerCase()) ||
-             (assignee.name && emp.name.toLowerCase() === assignee.name.toLowerCase())
-    )
+    return fuzzyMatchEmployee(assignee?.name || '', assignee?.email, employees)
   }
 
   return (
@@ -609,6 +687,70 @@ function MeetingDetailModal({
         {/* TASKS */}
         {activeSection === 'actions' && (
           <div className="space-y-5">
+            {/* Admin: Add Task Button */}
+            {isAdmin && (
+              <div>
+                {showAddTask ? (
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Task description..."
+                      value={newTaskDesc}
+                      onChange={(e) => setNewTaskDesc(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:border-blue-500/40 outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={newTaskAssignee}
+                        onChange={(e) => setNewTaskAssignee(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                      >
+                        <option value="">Assign to...</option>
+                        {employees.map(emp => (
+                          <option key={emp.employeeId} value={emp.name}>{emp.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!newTaskDesc.trim()) return
+                          const emp = employees.find(e => e.name === newTaskAssignee)
+                          onAddCustomTask(meeting.recording_id, {
+                            description: newTaskDesc.trim(),
+                            user_generated: true,
+                            completed: false,
+                            assignee: newTaskAssignee ? {
+                              name: newTaskAssignee,
+                              email: emp?.email || ''
+                            } : undefined
+                          })
+                          setNewTaskDesc('')
+                          setNewTaskAssignee('')
+                          setShowAddTask(false)
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setShowAddTask(false); setNewTaskDesc(''); setNewTaskAssignee('') }}
+                        className="px-3 py-2 bg-neutral-800 text-neutral-400 text-sm rounded-lg hover:bg-neutral-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAddTask(true)}
+                    className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/20 transition-all w-full justify-center"
+                  >
+                    <FaPlus className="text-[9px]" />
+                    Add New Task
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Pending */}
             {pendingActions.length > 0 && (
               <div>
@@ -623,6 +765,58 @@ function MeetingDetailModal({
                     const originalIndex = allItems.indexOf(item)
                     const assignee = item?.assignee
                     const matchedEmployee = matchAssigneeToEmployee(assignee)
+                    const isCustomTask = originalIndex >= fathomItems.length
+                    const customIndex = originalIndex - fathomItems.length
+                    const isEditing = editingTaskIndex === originalIndex
+
+                    if (isEditing && isAdmin) {
+                      return (
+                        <div key={originalIndex} className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+                          <input
+                            type="text"
+                            value={editTaskDesc}
+                            onChange={(e) => setEditTaskDesc(e.target.value)}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                          />
+                          <div className="flex gap-2">
+                            <select
+                              value={editTaskAssignee}
+                              onChange={(e) => setEditTaskAssignee(e.target.value)}
+                              className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                            >
+                              <option value="">Assign to...</option>
+                              {employees.map(emp => (
+                                <option key={emp.employeeId} value={emp.name}>{emp.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => {
+                                if (!editTaskDesc.trim()) return
+                                const emp = employees.find(e => e.name === editTaskAssignee)
+                                if (isCustomTask) {
+                                  onEditCustomTask(meeting.recording_id, customIndex, {
+                                    ...item,
+                                    description: editTaskDesc.trim(),
+                                    assignee: editTaskAssignee ? { name: editTaskAssignee, email: emp?.email || '' } : undefined
+                                  })
+                                }
+                                setEditingTaskIndex(null)
+                              }}
+                              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingTaskIndex(null)}
+                              className="px-3 py-2 bg-neutral-800 text-neutral-400 text-sm rounded-lg hover:bg-neutral-700 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+
                     return (
                       <div
                         key={originalIndex}
@@ -654,19 +848,47 @@ function MeetingDetailModal({
                                 Jump to moment
                               </a>
                             )}
+                            {isCustomTask && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">Manual</span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Notify button */}
-                        {matchedEmployee && employeeData && (
-                          <button
-                            onClick={() => onSendMentionNotification(meeting, item)}
-                            className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all flex-shrink-0"
-                            title={`Notify ${assignee?.name || 'assignee'}`}
-                          >
-                            <FaBell className="text-[10px]" />
-                          </button>
-                        )}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {/* Admin edit/delete for custom tasks */}
+                          {isAdmin && isCustomTask && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingTaskIndex(originalIndex)
+                                  setEditTaskDesc(item?.description || '')
+                                  setEditTaskAssignee(item?.assignee?.name || '')
+                                }}
+                                className="p-1.5 rounded-lg text-neutral-500 hover:bg-blue-500/10 hover:text-blue-400 transition-all"
+                                title="Edit task"
+                              >
+                                <FaEdit className="text-[10px]" />
+                              </button>
+                              <button
+                                onClick={() => onDeleteCustomTask(meeting.recording_id, customIndex)}
+                                className="p-1.5 rounded-lg text-neutral-500 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                                title="Delete task"
+                              >
+                                <FaTrashAlt className="text-[10px]" />
+                              </button>
+                            </>
+                          )}
+                          {/* Notify button */}
+                          {matchedEmployee && employeeData && (
+                            <button
+                              onClick={() => onSendMentionNotification(meeting, item)}
+                              className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all flex-shrink-0"
+                              title={`Notify ${assignee?.name || 'assignee'}`}
+                            >
+                              <FaBell className="text-[10px]" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -727,10 +949,7 @@ function MeetingDetailModal({
           <div className="space-y-2">
             {allAttendees.length > 0 ? (
               allAttendees.map((att, i) => {
-                const matched = employees.find(
-                  emp => emp.name.toLowerCase() === att.name.toLowerCase() ||
-                         (att.email && emp.email.toLowerCase() === att.email.toLowerCase())
-                )
+                const matched = fuzzyMatchEmployee(att.name, att.email, employees)
                 return (
                   <div
                     key={i}
@@ -803,7 +1022,7 @@ export function Meetings() {
   const [showDetailModal, setShowDetailModal] = useState(false)
 
   const [employees, setEmployees] = useState<EmployeeInfo[]>([])
-
+  const [customTasks, setCustomTasks] = useState<Map<number, FathomActionItem[]>>(new Map())
   // Load employees with full profile data
   useEffect(() => {
     const loadEmployees = async () => {
@@ -872,6 +1091,81 @@ export function Meetings() {
     })
     return () => unsubscribe()
   }, [])
+
+  // Load custom tasks (admin-added tasks per meeting)
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'meetingCustomTasks'), (snapshot) => {
+      const tasksMap = new Map<number, FathomActionItem[]>()
+      snapshot.docs.forEach(d => {
+        const data = d.data()
+        const meetingId = Number(data.meetingId)
+        if (!tasksMap.has(meetingId)) tasksMap.set(meetingId, [])
+        tasksMap.get(meetingId)!.push({
+          description: data.description || '',
+          user_generated: true,
+          completed: data.completed || false,
+          assignee: data.assignee || undefined
+        })
+      })
+      setCustomTasks(tasksMap)
+    }, (err) => {
+      console.error('meetingCustomTasks listener error:', err)
+    })
+    return () => unsubscribe()
+  }, [])
+
+  // Custom task CRUD
+  const handleAddCustomTask = async (meetingId: number, task: FathomActionItem) => {
+    try {
+      const docId = `${meetingId}_${Date.now()}`
+      await setDoc(doc(db, 'meetingCustomTasks', docId), {
+        meetingId,
+        description: task.description,
+        completed: false,
+        assignee: task.assignee || null,
+        createdBy: employee?.employeeId || '',
+        createdAt: Timestamp.now()
+      })
+      toast.success('Task added')
+    } catch (err) {
+      console.error('Error adding custom task:', err)
+      toast.error('Failed to add task')
+    }
+  }
+
+  const handleEditCustomTask = async (meetingId: number, taskIndex: number, task: FathomActionItem) => {
+    try {
+      // Find the Firestore doc for this custom task
+      const snapshot = await getDocs(collection(db, 'meetingCustomTasks'))
+      const meetingDocs = snapshot.docs.filter(d => Number(d.data().meetingId) === meetingId)
+      if (meetingDocs[taskIndex]) {
+        await setDoc(doc(db, 'meetingCustomTasks', meetingDocs[taskIndex].id), {
+          ...meetingDocs[taskIndex].data(),
+          description: task.description,
+          assignee: task.assignee || null,
+          updatedAt: Timestamp.now()
+        })
+        toast.success('Task updated')
+      }
+    } catch (err) {
+      console.error('Error editing custom task:', err)
+      toast.error('Failed to update task')
+    }
+  }
+
+  const handleDeleteCustomTask = async (meetingId: number, taskIndex: number) => {
+    try {
+      const snapshot = await getDocs(collection(db, 'meetingCustomTasks'))
+      const meetingDocs = snapshot.docs.filter(d => Number(d.data().meetingId) === meetingId)
+      if (meetingDocs[taskIndex]) {
+        await deleteDoc(doc(db, 'meetingCustomTasks', meetingDocs[taskIndex].id))
+        toast.success('Task deleted')
+      }
+    } catch (err) {
+      console.error('Error deleting custom task:', err)
+      toast.error('Failed to delete task')
+    }
+  }
 
   // Fetch meetings
   const notifiedMeetingsRef = useRef<Set<number>>(new Set())
@@ -950,12 +1244,7 @@ export function Meetings() {
         // Match to employees
         const matchedEmployeeIds = allPeople
           .map(person => {
-            const matched = employees.find(
-              emp => (person.email && emp.email.toLowerCase() === person.email.toLowerCase()) ||
-                     emp.name.toLowerCase() === person.name.toLowerCase() ||
-                     emp.name.toLowerCase().includes(person.name.toLowerCase()) ||
-                     person.name.toLowerCase().includes(emp.name.toLowerCase())
-            )
+            const matched = fuzzyMatchEmployee(person.name, person.email, employees)
             return matched?.employeeId
           })
           .filter((id): id is string => !!id && id !== employee.employeeId)
@@ -1072,10 +1361,7 @@ export function Meetings() {
     const assigneeName = actionItem.assignee.name || ''
     const assigneeEmail = actionItem.assignee.email || ''
 
-    const matchedEmp = employees.find(
-      emp => (assigneeEmail && emp.email.toLowerCase() === assigneeEmail.toLowerCase()) ||
-             (assigneeName && emp.name.toLowerCase() === assigneeName.toLowerCase())
-    )
+    const matchedEmp = fuzzyMatchEmployee(assigneeName, assigneeEmail, employees)
 
     if (!matchedEmp) {
       toast.error(`${assigneeName || 'This person'} is not in the employee portal`)
@@ -1246,6 +1532,10 @@ export function Meetings() {
         onSendMentionNotification={handleSendMentionNotification}
         completedTaskIds={completedTaskIds}
         onToggleTaskComplete={handleToggleTaskComplete}
+        customTasks={customTasks}
+        onAddCustomTask={handleAddCustomTask}
+        onEditCustomTask={handleEditCustomTask}
+        onDeleteCustomTask={handleDeleteCustomTask}
       />
     </div>
   )

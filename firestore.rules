@@ -180,5 +180,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // MEETING CUSTOM TASKS COLLECTION (admin-added tasks)
+    // ================================================
+    match /meetingCustomTasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }
