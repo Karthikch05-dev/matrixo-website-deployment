@@ -17,6 +17,8 @@ export interface CreateNotificationParams {
   createdBy: string
   createdByName: string
   createdByRole?: string
+  recipientRoles?: string[] // Optional: Filter recipients by role (e.g., ['admin'] for management only)
+  specificRecipients?: string[] // Optional: Send only to specific employee IDs
 }
 
 // ============================================
@@ -124,13 +126,29 @@ export async function createGlobalNotification(params: CreateNotificationParams)
     employeesSnapshot.docs.forEach((empDoc) => {
       const empData = empDoc.data()
       const recipientId = empData.employeeId
+      const recipientRole = empData.role
       
-      console.log('🔔 Checking employee:', empData.name, 'ID:', recipientId, 'vs Creator:', params.createdBy)
+      console.log('🔔 Checking employee:', empData.name, 'ID:', recipientId, 'Role:', recipientRole, 'vs Creator:', params.createdBy)
       
       // Skip the creator - they shouldn't get their own notification
       if (recipientId === params.createdBy) {
         console.log('⏭️ Skipping notification for creator:', recipientId)
         return
+      }
+
+      // If specific recipients are provided, only send to those
+      if (params.specificRecipients && params.specificRecipients.length > 0) {
+        if (!params.specificRecipients.includes(recipientId)) {
+          console.log('⏭️ Skipping notification - not in specific recipients list:', empData.name)
+          return
+        }
+      }
+      // Otherwise, filter by role if recipientRoles is specified
+      else if (params.recipientRoles && params.recipientRoles.length > 0) {
+        if (!params.recipientRoles.includes(recipientRole)) {
+          console.log('⏭️ Skipping notification - role filter:', empData.name, '(', recipientRole, ') not in', params.recipientRoles)
+          return
+        }
       }
 
       console.log('✅ Creating notification for:', empData.name, recipientId)

@@ -1992,7 +1992,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     await addDiscussion(discussionContent, mentions, [])
     
-    // Send notifications to Lahari and Yasasvi
+    // Send notifications to management team only
     if (mentions.length > 0) {
       await createGlobalNotification({
         type: 'calendar',
@@ -2003,7 +2003,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         targetUrl: '#attendance',
         createdBy: employee.employeeId,
         createdByName: employee.name,
-        createdByRole: employee.role
+        createdByRole: employee.role,
+        recipientRoles: ['admin'] // Only notify management team
       })
     }
     
@@ -2044,7 +2045,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       deviceInfo
     })
     
-    // Notify the employee
+    // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
@@ -2054,7 +2055,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       targetUrl: '#attendance',
       createdBy: employee.employeeId,
       createdByName: employee.name,
-      createdByRole: employee.role
+      createdByRole: employee.role,
+      specificRecipients: [requestData.employeeId] // Only notify the employee who requested leave
     })
   }
 
@@ -2088,7 +2090,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       deviceInfo
     })
     
-    // Notify the employee
+    // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
@@ -2098,7 +2100,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       targetUrl: '#attendance',
       createdBy: employee.employeeId,
       createdByName: employee.name,
-      createdByRole: employee.role
+      createdByRole: employee.role,
+      specificRecipients: [requestData.employeeId] // Only notify the employee who requested leave
     })
   }
 
