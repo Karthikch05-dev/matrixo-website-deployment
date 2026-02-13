@@ -11,6 +11,7 @@ import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
+import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -194,21 +195,7 @@ function QuestionField({
       }
 
       case 'dropdown':
-        return (
-          <div className="relative">
-            <select
-              value={value || ''}
-              onChange={(e) => onChange(e.target.value)}
-              className={`${inputClasses} appearance-none cursor-pointer`}
-            >
-              <option value="">Select an option</option>
-              {question.options.map((opt, i) => (
-                <option key={i} value={opt}>{opt}</option>
-              ))}
-            </select>
-            <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm" />
-          </div>
-        )
+        return <CustomDropdown value={value} options={question.options} onChange={onChange} />
 
       case 'linear-scale': {
         const config = question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }
@@ -260,7 +247,14 @@ function QuestionField({
       }
 
       case 'date':
-        return <input type="date" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={`${inputClasses} date-input-styled`}
+          />
+        )
 
       case 'time':
         return <input type="time" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />
@@ -290,10 +284,71 @@ function QuestionField({
 // MAIN COMPONENT
 // ============================================
 
+// ============================================
+// CUSTOM DROPDOWN COMPONENT
+// ============================================
+
+function CustomDropdown({ value, options, onChange }: { value: any; options: string[]; onChange: (val: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-left flex items-center justify-between"
+      >
+        <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
+          {value || 'Select an option'}
+        </span>
+        <FaChevronDown className={`text-gray-400 text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-2 w-full rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-xl max-h-60 overflow-y-auto"
+          >
+            {options.map((opt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => { onChange(opt); setIsOpen(false) }}
+                className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-cyan-50 dark:hover:bg-cyan-900/20 ${
+                  value === opt
+                    ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 font-medium'
+                    : 'text-gray-700 dark:text-neutral-300'
+                } ${i === 0 ? 'rounded-t-xl' : ''} ${i === options.length - 1 ? 'rounded-b-xl' : ''}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
+  const { profile } = useProfile()
   const formRef = useRef<HTMLDivElement>(null)
   const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
@@ -313,16 +368,19 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     yearOrExperience: '',
   })
 
-  // Pre-fill name/email from auth profile
+  // Pre-fill from profile data, then fall back to auth data
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        fullName: prev.fullName || user.displayName || '',
+        fullName: prev.fullName || profile?.fullName || user.displayName || '',
         email: prev.email || user.email || '',
+        phone: prev.phone || profile?.phone || '',
+        college: prev.college || profile?.college || '',
+        yearOrExperience: prev.yearOrExperience || profile?.year || '',
       }))
     }
-  }, [user])
+  }, [user, profile])
 
   const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -383,8 +441,9 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     if (!resumeFile) return ''
     const fileName = `${roleId}_${Date.now()}_${resumeFile.name}`
     const storageRef = ref(storage, `resumes/${fileName}`)
+    const metadata = { contentType: 'application/pdf' }
     return new Promise((resolve, reject) => {
-      const uploadTask = uploadBytesResumable(storageRef, resumeFile)
+      const uploadTask = uploadBytesResumable(storageRef, resumeFile, metadata)
       uploadTask.on('state_changed',
         (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
         (error) => { console.error('Upload error:', error); reject(error) },
@@ -515,7 +574,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-950">
       <div className="container-custom px-4 sm:px-6 py-8 sm:py-12">
         <Link href="/careers">
-          <motion.button whileHover={{ x: -5 }} className="flex items-center text-cyan-600 dark:text-cyan-400 hover:underline mb-6">
+          <motion.button whileHover={{ x: -5 }} className="flex items-center text-cyan-600 dark:text-cyan-400 hover:underline mb-6 select-none">
             <FaArrowLeft className="mr-2" /> Back to Careers
           </motion.button>
         </Link>

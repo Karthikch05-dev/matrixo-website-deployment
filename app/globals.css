@@ -260,6 +260,39 @@ html {
 }
 
 /* ============================================
+   Date Input Styling for Dark Mode
+   ============================================ */
+.date-input-styled {
+  color-scheme: dark;
+}
+
+.date-input-styled::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.date-input-styled::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.7);
+  background-color: rgba(6, 182, 212, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  .date-input-styled {
+    color-scheme: light;
+  }
+  .date-input-styled::-webkit-calendar-picker-indicator {
+    filter: none;
+  }
+  .date-input-styled::-webkit-calendar-picker-indicator:hover {
+    filter: none;
+    background-color: rgba(6, 182, 212, 0.1);
+  }
+}
+
+/* ============================================
    TipTap Rich Text Editor Styles
    ============================================ */
 

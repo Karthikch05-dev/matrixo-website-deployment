@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock } from 'react-icons/fa'
+import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -21,7 +21,14 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   
   const router = useRouter()
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { user, signIn, signUp, signInWithGoogle, logout } = useAuth()
+
+  // If user is already logged in and came from a returnUrl, redirect them
+  useEffect(() => {
+    if (user && returnUrl !== '/') {
+      router.push(returnUrl)
+    }
+  }, [user, returnUrl, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,6 +197,42 @@ export default function AuthPage() {
                 />
               </div>
 
+              {/* Already Logged In State */}
+              {user ? (
+                <div className="text-center space-y-6">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
+                    <FaCheckCircle className="text-3xl text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                      Welcome back!
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      You&apos;re already signed in as
+                    </p>
+                    <p className="font-semibold text-gray-900 dark:text-white mt-1">
+                      {user.displayName || user.email}
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <Link href="/">
+                      <button className="w-full py-3 px-5 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group">
+                        <span>Go to Home</span>
+                        <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </Link>
+                    <button
+                      onClick={async () => { await logout(); toast.success('Signed out successfully') }}
+                      className="w-full py-3 px-5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                    >
+                      <FaSignOutAlt />
+                      <span>Sign out & use another account</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+              <>
+
               {/* Tab Switcher */}
               <div className="flex gap-2 mb-6 p-1 bg-gray-200 dark:bg-gray-800/50 rounded-xl">
                 <button
@@ -339,6 +382,8 @@ export default function AuthPage() {
                   Privacy Policy
                 </Link>
               </div>
+              </>
+              )}
             </div>
           </motion.div>
 
