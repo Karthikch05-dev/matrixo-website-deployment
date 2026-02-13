@@ -356,8 +356,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploading, setUploading] = useState(false)
+  const [uploadedResumeURL, setUploadedResumeURL] = useState('')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeFileName, setResumeFileName] = useState('')
+  const [uploadError, setUploadError] = useState('')
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -433,31 +436,61 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       if (file.size > 5 * 1024 * 1024) { toast.error('File size must be less than 5MB'); return }
       setResumeFile(file)
       setResumeFileName(file.name)
+      setUploadError('')
+      setUploadedResumeURL('')
       if (errors.resume) setErrors(prev => ({ ...prev, resume: '' }))
+      // Start uploading immediately
+      uploadResumeImmediately(file)
     }
   }
 
-  const uploadResume = async (): Promise<string> => {
-    if (!resumeFile) return ''
-    const fileName = `${roleId}_${Date.now()}_${resumeFile.name}`
+  const uploadResumeImmediately = (file: File) => {
+    setUploading(true)
+    setUploadProgress(0)
+    setUploadError('')
+
+    const fileName = `${roleId}_${Date.now()}_${file.name}`
     const storageRef = ref(storage, `resumes/${fileName}`)
     const metadata = { contentType: 'application/pdf' }
-    return new Promise((resolve, reject) => {
-      const uploadTask = uploadBytesResumable(storageRef, resumeFile, metadata)
-      uploadTask.on('state_changed',
-        (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
-        (error) => { console.error('Upload error:', error); reject(error) },
-        async () => {
-          try {
-            const url = await getDownloadURL(uploadTask.snapshot.ref)
-            resolve(url)
-          } catch (err) {
-            console.error('getDownloadURL error:', err)
-            reject(err)
-          }
+    const uploadTask = uploadBytesResumable(storageRef, file, metadata)
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        setUploadProgress(progress)
+      },
+      (error) => {
+        console.error('Upload error:', error)
+        setUploading(false)
+        setUploadProgress(0)
+        setUploadError('Upload failed. Please try again.')
+        toast.error('Resume upload failed. Please try again.')
+      },
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref)
+          setUploadedResumeURL(url)
+          setUploading(false)
+          setUploadProgress(100)
+          toast.success('Resume uploaded successfully!')
+        } catch (err) {
+          console.error('getDownloadURL error:', err)
+          setUploading(false)
+          setUploadProgress(0)
+          setUploadError('Failed to process upload. Please try again.')
+          toast.error('Failed to process resume. Please try again.')
         }
-      )
-    })
+      }
+    )
+  }
+
+  const removeResume = () => {
+    setResumeFile(null)
+    setResumeFileName('')
+    setUploadedResumeURL('')
+    setUploadProgress(0)
+    setUploadError('')
+    setUploading(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -476,6 +509,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     if (!formData.college.trim()) newErrors.college = 'College/Organization is required'
     if (!formData.yearOrExperience.trim()) newErrors.yearOrExperience = 'This field is required'
     if (role?.requireResume && !resumeFile) newErrors.resume = 'Resume is required'
+    if (role?.requireResume && resumeFile && !uploadedResumeURL) newErrors.resume = 'Please wait for resume upload to complete'
 
     questions.forEach((q) => {
       if (q.required) {
@@ -509,12 +543,10 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (uploading) { toast.error('Please wait for resume upload to finish'); return }
     if (!validate()) { toast.error('Please fill in all required fields'); return }
     setSubmitting(true)
     try {
-      let resumeURL = ''
-      if (resumeFile) resumeURL = await uploadResume()
-
       const formattedAnswers: Record<string, any> = {}
       questions.forEach((q) => {
         if (customAnswers[q.id] !== undefined && customAnswers[q.id] !== '') {
@@ -527,7 +559,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
         roleId,
         roleTitle: role?.title,
         userId: user?.uid || '',
-        resumeURL,
+        resumeURL: uploadedResumeURL || '',
         resumeFileName: resumeFileName || '',
         customAnswers: formattedAnswers,
         status: 'pending',
@@ -724,27 +756,51 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                             </div>
                           </button>
                         ) : (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
-                            <FaFilePdf className="text-red-500 text-xl" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{resumeFileName}</p>
-                              <p className="text-xs text-gray-500 dark:text-neutral-400">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
+                              <FaFilePdf className="text-red-500 text-xl flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{resumeFileName}</p>
+                                <p className="text-xs text-gray-500 dark:text-neutral-400">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                              </div>
+                              {uploadedResumeURL && (
+                                <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 flex-shrink-0">
+                                  <FaCheckCircle className="text-sm" /> Uploaded
+                                </span>
+                              )}
+                              <button type="button" onClick={removeResume} disabled={uploading}
+                                className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors flex-shrink-0 disabled:opacity-50">
+                                <FaTimes />
+                              </button>
                             </div>
-                            <button type="button" onClick={() => { setResumeFile(null); setResumeFileName('') }}
-                              className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">
-                              <FaTimes />
-                            </button>
+                            {/* Upload Progress Bar - shown immediately on file select */}
+                            {uploading && (
+                              <div className="space-y-1">
+                                <div className="h-2 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
+                                  <motion.div
+                                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${uploadProgress}%` }}
+                                    transition={{ duration: 0.3 }}
+                                  />
+                                </div>
+                                <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">
+                                  Uploading... {Math.round(uploadProgress)}%
+                                </p>
+                              </div>
+                            )}
+                            {uploadError && (
+                              <div className="flex items-center justify-between">
+                                <p className="text-red-500 text-xs">{uploadError}</p>
+                                <button type="button" onClick={() => uploadResumeImmediately(resumeFile!)}
+                                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium underline">
+                                  Retry Upload
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                         {errors.resume && <p className="text-red-500 text-xs mt-1">{errors.resume}</p>}
-                        {submitting && uploadProgress > 0 && uploadProgress < 100 && (
-                          <div className="mt-2">
-                            <div className="h-1.5 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
-                              <motion.div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} />
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">{Math.round(uploadProgress)}% uploaded</p>
-                          </div>
-                        )}
                       </div>
                     </>
                   )}
@@ -777,12 +833,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
                   {/* Submit */}
                   <div className="pt-4 border-t border-gray-200 dark:border-neutral-800">
-                    <button type="submit" disabled={submitting}
+                    <button type="submit" disabled={submitting || uploading}
                       className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                       {submitting ? (
                         <span className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           Submitting...
+                        </span>
+                      ) : uploading ? (
+                        <span className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Waiting for upload...
                         </span>
                       ) : 'Submit Application'}
                     </button>

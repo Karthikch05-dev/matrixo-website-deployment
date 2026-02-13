@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2">
                 <FaMapMarkerAlt className="mt-1 flex-shrink-0 text-blue-500 dark:text-blue-400" />
-                <span>25, Heaven Down Residency<br />RTC Colony, Nagaram<br />Hyderabad, Telangana - 501302</span>
+                <span>KPRISE Incubation Center<br />KPRES, Ghanpur<br />Hyderabad, Telangana - 500088</span>
               </li>
               <li className="flex items-center space-x-2">
                 <FaEnvelope className="flex-shrink-0 text-blue-500 dark:text-blue-400" />
