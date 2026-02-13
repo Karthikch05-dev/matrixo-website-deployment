@@ -356,8 +356,8 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploading, setUploading] = useState(false)
-  const [uploadedResumeURL, setUploadedResumeURL] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeFileName, setResumeFileName] = useState('')
   const [uploadError, setUploadError] = useState('')
@@ -444,41 +444,56 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     }
   }
 
-  const uploadResumeImmediately = (file: File) => {
-    setUploading(true)
+  const uploadResume = async (): Promise<string> => {
+    if (!resumeFile) return ''
+    setIsUploading(true)
     setUploadProgress(0)
     setUploadError('')
-
-    const fileName = `${roleId}_${Date.now()}_${file.name}`
+    const fileName = `${roleId}_${Date.now()}_${resumeFile.name}`
     const storageRef = ref(storage, `resumes/${fileName}`)
+    // Explicitly set content type metadata so Firebase Storage rules can validate
     const metadata = { contentType: 'application/pdf' }
-    const uploadTask = uploadBytesResumable(storageRef, file, metadata)
+    return new Promise((resolve, reject) => {
+      const uploadTask = uploadBytesResumable(storageRef, resumeFile, metadata)
 
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        setUploadProgress(progress)
-      },
-      (error) => {
-        console.error('Upload error:', error)
-        setUploading(false)
-        setUploadProgress(0)
-        setUploadError('Upload failed. Please try again.')
-        toast.error('Resume upload failed. Please try again.')
-      },
-      async () => {
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref)
-          setUploadedResumeURL(url)
-          setUploading(false)
-          setUploadProgress(100)
-          toast.success('Resume uploaded successfully!')
-        } catch (err) {
-          console.error('getDownloadURL error:', err)
-          setUploading(false)
-          setUploadProgress(0)
-          setUploadError('Failed to process upload. Please try again.')
-          toast.error('Failed to process resume. Please try again.')
+      // Timeout: cancel upload if stuck for 60 seconds
+      const timeout = setTimeout(() => {
+        uploadTask.cancel()
+        setIsUploading(false)
+        reject(new Error('Upload timed out. Please check your internet connection and try again.'))
+      }, 60000)
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+          setUploadProgress(progress)
+        },
+        (error) => {
+          clearTimeout(timeout)
+          setIsUploading(false)
+          console.error('Upload error:', error)
+          // Provide user-friendly error messages
+          if (error.code === 'storage/unauthorized') {
+            reject(new Error('Upload not authorized. Please ensure you are signed in and the file is a valid PDF under 5MB.'))
+          } else if (error.code === 'storage/canceled') {
+            reject(new Error('Upload was cancelled.'))
+          } else if (error.code === 'storage/retry-limit-exceeded') {
+            reject(new Error('Upload failed due to network issues. Please try again.'))
+          } else {
+            reject(new Error(`Upload failed: ${error.message}`))
+          }
+        },
+        async () => {
+          clearTimeout(timeout)
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref)
+            setIsUploading(false)
+            resolve(url)
+          } catch (err) {
+            setIsUploading(false)
+            console.error('getDownloadURL error:', err)
+            reject(new Error('Upload completed but failed to get file URL. Please try again.'))
+          }
         }
       }
     )
@@ -546,7 +561,21 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     if (uploading) { toast.error('Please wait for resume upload to finish'); return }
     if (!validate()) { toast.error('Please fill in all required fields'); return }
     setSubmitting(true)
+    setUploadError('')
     try {
+      let resumeURL = ''
+      if (resumeFile) {
+        try {
+          resumeURL = await uploadResume()
+        } catch (uploadErr: any) {
+          const msg = uploadErr?.message || 'Resume upload failed. Please try again.'
+          setUploadError(msg)
+          toast.error(msg)
+          setSubmitting(false)
+          return
+        }
+      }
+
       const formattedAnswers: Record<string, any> = {}
       questions.forEach((q) => {
         if (customAnswers[q.id] !== undefined && customAnswers[q.id] !== '') {
@@ -569,11 +598,12 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       setSubmitted(true)
       toast.success('Application submitted successfully!')
       setTimeout(() => router.push('/careers'), 4000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting application:', error)
-      toast.error('Failed to submit application. Please try again.')
+      toast.error(error?.message || 'Failed to submit application. Please try again.')
     } finally {
       setSubmitting(false)
+      setIsUploading(false)
     }
   }
 
@@ -801,6 +831,15 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                           </div>
                         )}
                         {errors.resume && <p className="text-red-500 text-xs mt-1">{errors.resume}</p>}
+                        {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
+                        {isUploading && (
+                          <div className="mt-2">
+                            <div className="h-1.5 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
+                              <motion.div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} transition={{ duration: 0.3 }} />
+                            </div>
+                            <p className="text-xs text-cyan-500 mt-1">Uploading... {uploadProgress}%</p>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -838,7 +877,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                       {submitting ? (
                         <span className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Submitting...
+                          {isUploading ? `Uploading resume... ${uploadProgress}%` : 'Submitting application...'}
                         </span>
                       ) : uploading ? (
                         <span className="flex items-center justify-center gap-3">
