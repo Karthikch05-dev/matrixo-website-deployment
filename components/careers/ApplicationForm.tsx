@@ -11,6 +11,7 @@ import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
+import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -194,21 +195,7 @@ function QuestionField({
       }
 
       case 'dropdown':
-        return (
-          <div className="relative">
-            <select
-              value={value || ''}
-              onChange={(e) => onChange(e.target.value)}
-              className={`${inputClasses} appearance-none cursor-pointer`}
-            >
-              <option value="">Select an option</option>
-              {question.options.map((opt, i) => (
-                <option key={i} value={opt}>{opt}</option>
-              ))}
-            </select>
-            <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm" />
-          </div>
-        )
+        return <CustomDropdown value={value} options={question.options} onChange={onChange} />
 
       case 'linear-scale': {
         const config = question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }
@@ -260,7 +247,14 @@ function QuestionField({
       }
 
       case 'date':
-        return <input type="date" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={`${inputClasses} date-input-styled`}
+          />
+        )
 
       case 'time':
         return <input type="time" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />
@@ -290,10 +284,71 @@ function QuestionField({
 // MAIN COMPONENT
 // ============================================
 
+// ============================================
+// CUSTOM DROPDOWN COMPONENT
+// ============================================
+
+function CustomDropdown({ value, options, onChange }: { value: any; options: string[]; onChange: (val: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-left flex items-center justify-between"
+      >
+        <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
+          {value || 'Select an option'}
+        </span>
+        <FaChevronDown className={`text-gray-400 text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-2 w-full rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-xl max-h-60 overflow-y-auto"
+          >
+            {options.map((opt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => { onChange(opt); setIsOpen(false) }}
+                className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-cyan-50 dark:hover:bg-cyan-900/20 ${
+                  value === opt
+                    ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 font-medium'
+                    : 'text-gray-700 dark:text-neutral-300'
+                } ${i === 0 ? 'rounded-t-xl' : ''} ${i === options.length - 1 ? 'rounded-b-xl' : ''}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
+  const { profile } = useProfile()
   const formRef = useRef<HTMLDivElement>(null)
   const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
@@ -305,6 +360,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const [uploadError, setUploadError] = useState('')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeFileName, setResumeFileName] = useState('')
+  const [uploadError, setUploadError] = useState('')
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -315,16 +371,19 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     yearOrExperience: '',
   })
 
-  // Pre-fill name/email from auth profile
+  // Pre-fill from profile data, then fall back to auth data
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        fullName: prev.fullName || user.displayName || '',
+        fullName: prev.fullName || profile?.fullName || user.displayName || '',
         email: prev.email || user.email || '',
+        phone: prev.phone || profile?.phone || '',
+        college: prev.college || profile?.college || '',
+        yearOrExperience: prev.yearOrExperience || profile?.year || '',
       }))
     }
-  }, [user])
+  }, [user, profile])
 
   const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -377,7 +436,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       if (file.size > 5 * 1024 * 1024) { toast.error('File size must be less than 5MB'); return }
       setResumeFile(file)
       setResumeFileName(file.name)
+      setUploadError('')
+      setUploadedResumeURL('')
       if (errors.resume) setErrors(prev => ({ ...prev, resume: '' }))
+      // Start uploading immediately
+      uploadResumeImmediately(file)
     }
   }
 
@@ -432,8 +495,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             reject(new Error('Upload completed but failed to get file URL. Please try again.'))
           }
         }
-      )
-    })
+      }
+    )
+  }
+
+  const removeResume = () => {
+    setResumeFile(null)
+    setResumeFileName('')
+    setUploadedResumeURL('')
+    setUploadProgress(0)
+    setUploadError('')
+    setUploading(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -452,6 +524,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     if (!formData.college.trim()) newErrors.college = 'College/Organization is required'
     if (!formData.yearOrExperience.trim()) newErrors.yearOrExperience = 'This field is required'
     if (role?.requireResume && !resumeFile) newErrors.resume = 'Resume is required'
+    if (role?.requireResume && resumeFile && !uploadedResumeURL) newErrors.resume = 'Please wait for resume upload to complete'
 
     questions.forEach((q) => {
       if (q.required) {
@@ -485,6 +558,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (uploading) { toast.error('Please wait for resume upload to finish'); return }
     if (!validate()) { toast.error('Please fill in all required fields'); return }
     setSubmitting(true)
     setUploadError('')
@@ -514,7 +588,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
         roleId,
         roleTitle: role?.title,
         userId: user?.uid || '',
-        resumeURL,
+        resumeURL: uploadedResumeURL || '',
         resumeFileName: resumeFileName || '',
         customAnswers: formattedAnswers,
         status: 'pending',
@@ -562,7 +636,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-950">
       <div className="container-custom px-4 sm:px-6 py-8 sm:py-12">
         <Link href="/careers">
-          <motion.button whileHover={{ x: -5 }} className="flex items-center text-cyan-600 dark:text-cyan-400 hover:underline mb-6">
+          <motion.button whileHover={{ x: -5 }} className="flex items-center text-cyan-600 dark:text-cyan-400 hover:underline mb-6 select-none">
             <FaArrowLeft className="mr-2" /> Back to Careers
           </motion.button>
         </Link>
@@ -712,16 +786,48 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                             </div>
                           </button>
                         ) : (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
-                            <FaFilePdf className="text-red-500 text-xl" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{resumeFileName}</p>
-                              <p className="text-xs text-gray-500 dark:text-neutral-400">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
+                              <FaFilePdf className="text-red-500 text-xl flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{resumeFileName}</p>
+                                <p className="text-xs text-gray-500 dark:text-neutral-400">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                              </div>
+                              {uploadedResumeURL && (
+                                <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 flex-shrink-0">
+                                  <FaCheckCircle className="text-sm" /> Uploaded
+                                </span>
+                              )}
+                              <button type="button" onClick={removeResume} disabled={uploading}
+                                className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors flex-shrink-0 disabled:opacity-50">
+                                <FaTimes />
+                              </button>
                             </div>
-                            <button type="button" onClick={() => { setResumeFile(null); setResumeFileName('') }}
-                              className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">
-                              <FaTimes />
-                            </button>
+                            {/* Upload Progress Bar - shown immediately on file select */}
+                            {uploading && (
+                              <div className="space-y-1">
+                                <div className="h-2 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
+                                  <motion.div
+                                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${uploadProgress}%` }}
+                                    transition={{ duration: 0.3 }}
+                                  />
+                                </div>
+                                <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">
+                                  Uploading... {Math.round(uploadProgress)}%
+                                </p>
+                              </div>
+                            )}
+                            {uploadError && (
+                              <div className="flex items-center justify-between">
+                                <p className="text-red-500 text-xs">{uploadError}</p>
+                                <button type="button" onClick={() => uploadResumeImmediately(resumeFile!)}
+                                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium underline">
+                                  Retry Upload
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                         {errors.resume && <p className="text-red-500 text-xs mt-1">{errors.resume}</p>}
@@ -766,12 +872,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
                   {/* Submit */}
                   <div className="pt-4 border-t border-gray-200 dark:border-neutral-800">
-                    <button type="submit" disabled={submitting}
+                    <button type="submit" disabled={submitting || uploading}
                       className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                       {submitting ? (
                         <span className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           {isUploading ? `Uploading resume... ${uploadProgress}%` : 'Submitting application...'}
+                        </span>
+                      ) : uploading ? (
+                        <span className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Waiting for upload...
                         </span>
                       ) : 'Submit Application'}
                     </button>
