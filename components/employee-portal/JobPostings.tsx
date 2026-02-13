@@ -697,6 +697,18 @@ function ApplicationsModal({
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // Debug: Log when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log(`🔍 Opening applications modal for role: ${role.title}`)
+      console.log(`   Total applications passed to modal: ${applications.length}`)
+      console.log(`   Applications for this role (${role.id}): ${roleApps.length}`)
+      if (roleApps.length > 0) {
+        console.log(`   Application details:`, roleApps.map(a => ({ name: a.fullName, status: a.status, roleId: a.roleId })))
+      }
+    }
+  }, [isOpen, role.title, role.id, applications.length, roleApps.length])
 
   const filtered = roleApps
     .filter(a => filterStatus === 'all' || a.status === filterStatus)
@@ -978,18 +990,39 @@ export default function JobPostings() {
   }, [])
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'applications'), (snap) => {
-      setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() } as JobApplication)))
-    })
+    if (!isAdmin) {
+      console.log('⚠️ User is not admin, skipping application fetch')
+      return
+    }
+    
+    console.log('📊 Setting up applications listener for admin:', employee?.name)
+    const applicationsRef = collection(db, 'applications')
+    
+    const unsub = onSnapshot(
+      applicationsRef,
+      (snap) => {
+        const fetchedApps = snap.docs.map(d => ({ id: d.id, ...d.data() } as JobApplication))
+        console.log(`✅ Fetched ${fetchedApps.length} total applications (all roles, all users)`)
+        setApplications(fetchedApps)
+      },
+      (error) => {
+        console.error('❌ Error fetching applications:', error)
+        toast.error('Failed to load applications. Check console for details.')
+        setApplications([])
+      }
+    )
     return () => unsub()
-  }, [])
+  }, [isAdmin, employee?.name])
 
   const handleToggleStatus = async (role: JobRole) => {
     try {
       const newStatus = role.status === 'open' ? 'closed' : 'open'
       await updateDoc(doc(db, 'roles', role.id), { status: newStatus })
       toast.success(`Posting ${newStatus === 'open' ? 'opened' : 'closed'}`)
-    } catch { toast.error('Failed to update status') }
+    } catch (error) {
+      console.error('Error toggling status:', error)
+      toast.error('Failed to update status')
+    }
   }
 
   const handleDelete = async (roleId: string) => {
@@ -1043,6 +1076,11 @@ export default function JobPostings() {
               const appCount = applications.filter(a => a.roleId === role.id).length
               const pendingCount = applications.filter(a => a.roleId === role.id && a.status === 'pending').length
               const questions = normalizeQuestions(role.customQuestions)
+              
+              // Debug logging for application counts
+              if (appCount > 0) {
+                console.log(`📊 Role "${role.title}" (ID: ${role.id}): ${appCount} applications, ${pendingCount} pending`)
+              }
 
               return (
                 <motion.div key={role.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} layout>
