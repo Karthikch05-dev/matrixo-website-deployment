@@ -445,6 +445,12 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   }
 
   const uploadResumeImmediately = (file: File) => {
+    if (!user) {
+      toast.error('You must be signed in to upload a resume')
+      setUploadError('Authentication required. Please sign in.')
+      return
+    }
+
     setUploading(true)
     setUploadProgress(0)
     setUploadError('')
@@ -452,21 +458,50 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     const fileName = `${roleId}_${Date.now()}_${file.name}`
     const storageRef = ref(storage, `resumes/${fileName}`)
     const metadata = { contentType: 'application/pdf' }
+
+    // Timeout: if no progress after 15s, show error
+    let hasProgress = false
+    const timeoutId = setTimeout(() => {
+      if (!hasProgress) {
+        console.error('Upload timeout - no progress after 15s. Likely a CORS or rules issue.')
+        setUploading(false)
+        setUploadProgress(0)
+        setUploadError('Upload timed out. This may be a server configuration issue. Please try again or contact support.')
+        toast.error('Upload timed out. Please try again.')
+        try { uploadTask.cancel() } catch (_) {}
+      }
+    }, 15000)
+
     const uploadTask = uploadBytesResumable(storageRef, file, metadata)
 
     uploadTask.on('state_changed',
       (snapshot) => {
+        hasProgress = true
+        clearTimeout(timeoutId)
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
         setUploadProgress(progress)
+        console.log(`Upload progress: ${Math.round(progress)}%`)
       },
-      (error) => {
-        console.error('Upload error:', error)
+      (error: any) => {
+        clearTimeout(timeoutId)
+        console.error('Upload error:', error?.code, error?.message, error)
         setUploading(false)
         setUploadProgress(0)
-        setUploadError('Upload failed. Please try again.')
-        toast.error('Resume upload failed. Please try again.')
+        
+        let errorMsg = 'Upload failed. Please try again.'
+        if (error?.code === 'storage/unauthorized') {
+          errorMsg = 'Permission denied. Please make sure you are signed in.'
+        } else if (error?.code === 'storage/canceled') {
+          errorMsg = 'Upload was cancelled.'
+        } else if (error?.code === 'storage/retry-limit-exceeded') {
+          errorMsg = 'Upload failed after multiple retries. Check your connection.'
+        }
+        
+        setUploadError(errorMsg)
+        toast.error(errorMsg)
       },
       async () => {
+        clearTimeout(timeoutId)
         try {
           const url = await getDownloadURL(uploadTask.snapshot.ref)
           setUploadedResumeURL(url)
