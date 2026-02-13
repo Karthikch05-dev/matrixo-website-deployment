@@ -456,7 +456,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     setUploading(true)
     setUploadProgress(0)
     setUploadError('')
-    const fileName = `${roleId}_${Date.now()}_${resumeFile.name}`
+    const fileName = `${roleId}_${Date.now()}_${file.name}`
     const storageRef = ref(storage, `resumes/${fileName}`)
     // Explicitly set content type metadata so Firebase Storage rules can validate
     const metadata = { contentType: 'application/pdf' }
@@ -516,52 +516,6 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
           setUploadProgress(0)
           setUploadError('Failed to process upload. Please try again.')
           toast.error('Failed to process resume. Please try again.')
-        }
-      )
-    })
-  }
-
-  const uploadResumeImmediately = async (file: File) => {
-    setUploading(true)
-    setUploadError('')
-    setUploadProgress(0)
-    const fileName = `${roleId}_${Date.now()}_${file.name}`
-    const storageRef = ref(storage, `resumes/${fileName}`)
-    const metadata = { contentType: 'application/pdf' }
-    const uploadTask = uploadBytesResumable(storageRef, file, metadata)
-
-    const timeout = setTimeout(() => {
-      uploadTask.cancel()
-      setUploading(false)
-      setUploadError('Upload timed out. Please check your internet connection and try again.')
-    }, 60000)
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
-        setUploadProgress(progress)
-      },
-      (error) => {
-        clearTimeout(timeout)
-        setUploading(false)
-        console.error('Immediate upload error:', error)
-        if (error.code === 'storage/unauthorized') {
-          setUploadError('Upload not authorized. Please ensure you are signed in and the file is a valid PDF under 5MB.')
-        } else if (error.code === 'storage/canceled') {
-          setUploadError('Upload was cancelled.')
-        } else {
-          setUploadError(`Upload failed: ${error.message}`)
-        }
-      },
-      async () => {
-        clearTimeout(timeout)
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref)
-          setUploadedResumeURL(url)
-          setUploading(false)
-        } catch (err) {
-          setUploading(false)
-          setUploadError('Upload completed but failed to get file URL. Please try again.')
         }
       }
     )
@@ -631,18 +585,8 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     setSubmitting(true)
     setUploadError('')
     try {
-      let resumeURL = ''
-      if (resumeFile) {
-        try {
-          resumeURL = await uploadResume()
-        } catch (uploadErr: any) {
-          const msg = uploadErr?.message || 'Resume upload failed. Please try again.'
-          setUploadError(msg)
-          toast.error(msg)
-          setSubmitting(false)
-          return
-        }
-      }
+      // Resume is uploaded immediately on file select, use the stored URL
+      const resumeURL = uploadedResumeURL || ''
 
       const formattedAnswers: Record<string, any> = {}
       questions.forEach((q) => {
