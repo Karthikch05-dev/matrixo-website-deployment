@@ -311,6 +311,20 @@ export default function ApplicationsDashboard() {
                 <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Year/Experience</label>
                 <p className="text-gray-900 dark:text-white">{selectedApp.yearOrExperience}</p>
               </div>
+              {selectedApp.resumeURL && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Resume</label>
+                  <a
+                    href={selectedApp.resumeURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 mt-1 text-cyan-600 dark:text-cyan-400 hover:underline font-medium"
+                  >
+                    <FaEye className="text-sm" />
+                    View / Download Resume (PDF)
+                  </a>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Current Status</label>
                 <div className="mt-1">{getStatusBadge(selectedApp.status)}</div>
