@@ -9,7 +9,8 @@ import {
   FaComments, 
   FaCalendarAlt, 
   FaCheckDouble,
-  FaTrash
+  FaTrash,
+  FaBriefcase
 } from 'react-icons/fa'
 import { 
   collection, 
@@ -31,7 +32,7 @@ import { formatDistanceToNow } from 'date-fns'
 // Notification type
 interface Notification {
   id: string
-  type: 'task' | 'discussion' | 'calendar'
+  type: 'task' | 'discussion' | 'calendar' | 'application'
   action?: string
   title: string
   message: string
@@ -227,6 +228,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         case 'task': onNavigate('tasks'); break
         case 'discussion': onNavigate('discussions'); break
         case 'calendar': onNavigate('calendar'); break
+        case 'application': onNavigate('job-postings'); break
       }
     }
     
@@ -238,6 +240,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       case 'task': return <FaTasks className="text-blue-400" />
       case 'discussion': return <FaComments className="text-green-400" />
       case 'calendar': return <FaCalendarAlt className="text-purple-400" />
+      case 'application': return <FaBriefcase className="text-cyan-400" />
       default: return <FaBell className="text-neutral-400" />
     }
   }

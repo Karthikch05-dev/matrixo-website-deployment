@@ -35,7 +35,7 @@ import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalConte
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
 import { db } from '@/lib/firebaseConfig'
-import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc, updateDoc } from 'firebase/firestore'
+import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -243,6 +243,17 @@ function TopNavbar({
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
   const isAdmin = employee?.role === 'admin'
 
+  // Track pending application count for Careers badge (admin only)
+  const [pendingAppCount, setPendingAppCount] = useState(0)
+  useEffect(() => {
+    if (!isAdmin) return
+    const q = query(collection(db, 'applications'), where('status', '==', 'pending'))
+    const unsub = onSnapshot(q, (snap) => {
+      setPendingAppCount(snap.docs.length)
+    }, () => {})
+    return () => unsub()
+  }, [isAdmin])
+
   // Ensure mounted for portal
   useEffect(() => {
     setMounted(true)
@@ -331,7 +342,7 @@ function TopNavbar({
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`
-                    flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
+                    relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
                     ${activeTab === item.id 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30' 
                       : 'text-neutral-400 hover:text-white hover:bg-white/5'
@@ -340,6 +351,11 @@ function TopNavbar({
                 >
                   <item.icon className="text-sm shrink-0" />
                   <span>{item.label}</span>
+                  {item.id === 'job-postings' && pendingAppCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                    </span>
+                  )}
                 </button>
               ))}
               
@@ -459,7 +475,7 @@ function TopNavbar({
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
                     className={`
-                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
+                      relative flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
                       ${activeTab === item.id 
                         ? 'bg-primary-500/20 text-primary-400 border border-primary-500/20' 
                         : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent'
@@ -468,6 +484,11 @@ function TopNavbar({
                   >
                     <item.icon />
                     {item.label}
+                    {item.id === 'job-postings' && pendingAppCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                      </span>
+                    )}
                   </button>
                 ))}
                 

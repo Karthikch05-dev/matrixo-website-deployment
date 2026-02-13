@@ -8,8 +8,8 @@ import { db } from './firebaseConfig'
 // ============================================
 
 export interface CreateNotificationParams {
-  type: 'task' | 'discussion' | 'calendar' | 'meeting'
-  action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied'
+  type: 'task' | 'discussion' | 'calendar' | 'meeting' | 'application'
+  action: 'created' | 'updated' | 'deleted' | 'assigned' | 'mentioned' | 'status_changed' | 'replied' | 'submitted'
   title: string
   message: string
   relatedEntityId: string
@@ -177,6 +177,88 @@ export async function createGlobalNotification(params: CreateNotificationParams)
     return true
   } catch (error) {
     console.error('❌ Error creating per-user notifications:', error)
+    return false
+  }
+}
+
+// ============================================
+// NOTIFY ALL ADMINS ABOUT NEW JOB APPLICATION
+// ============================================
+
+/**
+ * Creates notifications for ALL admin employees when a new job application is received.
+ * This can be called from public forms (no auth required) because
+ * Firestore rules allow public create for type === 'application'.
+ * Employees collection is also publicly readable.
+ */
+export async function notifyAdminsOfNewApplication(params: {
+  applicantName: string
+  roleTitle: string
+  roleId?: string | null
+  isGeneralApplication?: boolean
+}): Promise<boolean> {
+  try {
+    console.log('📋 Notifying admins of new application:', params)
+
+    // Query all admin employees (Employees collection is publicly readable)
+    const employeesRef = collection(db, 'Employees')
+    const adminQuery = query(employeesRef, where('role', '==', 'admin'))
+    const adminSnapshot = await getDocs(adminQuery)
+
+    if (adminSnapshot.empty) {
+      console.log('⚠️ No admin employees found to notify')
+      return false
+    }
+
+    const notificationsRef = collection(db, 'userNotifications')
+    const addPromises: Promise<any>[] = []
+    const recipientIds: string[] = []
+
+    const title = params.isGeneralApplication
+      ? 'New General Application'
+      : `New Application: ${params.roleTitle}`
+    const message = params.isGeneralApplication
+      ? `${params.applicantName} submitted a general interest application for "${params.roleTitle}"`
+      : `${params.applicantName} applied for the ${params.roleTitle} position`
+
+    adminSnapshot.docs.forEach((empDoc) => {
+      const empData = empDoc.data()
+      const recipientId = empData.employeeId
+
+      console.log('✅ Creating application notification for admin:', empData.name, recipientId)
+      recipientIds.push(recipientId)
+
+      addPromises.push(
+        addDoc(notificationsRef, {
+          type: 'application',
+          action: 'submitted',
+          title,
+          message,
+          relatedEntityId: params.roleId || '',
+          targetUrl: '#job-postings',
+          createdBy: 'public',
+          createdByName: params.applicantName,
+          recipientId,
+          read: false,
+          createdAt: Timestamp.now()
+        })
+      )
+    })
+
+    await Promise.all(addPromises)
+    console.log(`✅ Created ${addPromises.length} application notifications for all admins`)
+
+    // Send Web Push notifications to all admin recipients
+    await sendPushToRecipients(recipientIds, {
+      title,
+      message,
+      targetUrl: '/employee-portal',
+      type: 'application'
+    })
+
+    return true
+  } catch (error) {
+    console.error('❌ Error notifying admins of new application:', error)
     return false
   }
 }

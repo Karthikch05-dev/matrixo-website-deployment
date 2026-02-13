@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
+import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -114,6 +115,14 @@ export default function CareersContent() {
 
       setSubmitted(true)
       toast.success('Application submitted successfully!')
+
+      // Notify all admin team members about the new general application
+      notifyAdminsOfNewApplication({
+        applicantName: formData.fullName,
+        roleTitle: formData.interestedRole,
+        roleId: null,
+        isGeneralApplication: true,
+      }).catch(err => console.error('Failed to send admin notifications:', err))
 
       setTimeout(() => {
         setSubmitted(false)

@@ -12,6 +12,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
+import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -357,10 +358,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const [showForm, setShowForm] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [uploadedResumeURL, setUploadedResumeURL] = useState('')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeFileName, setResumeFileName] = useState('')
-  const [uploadError, setUploadError] = useState('')
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -495,6 +497,52 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             reject(new Error('Upload completed but failed to get file URL. Please try again.'))
           }
         }
+      )
+    })
+  }
+
+  const uploadResumeImmediately = async (file: File) => {
+    setUploading(true)
+    setUploadError('')
+    setUploadProgress(0)
+    const fileName = `${roleId}_${Date.now()}_${file.name}`
+    const storageRef = ref(storage, `resumes/${fileName}`)
+    const metadata = { contentType: 'application/pdf' }
+    const uploadTask = uploadBytesResumable(storageRef, file, metadata)
+
+    const timeout = setTimeout(() => {
+      uploadTask.cancel()
+      setUploading(false)
+      setUploadError('Upload timed out. Please check your internet connection and try again.')
+    }, 60000)
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+        setUploadProgress(progress)
+      },
+      (error) => {
+        clearTimeout(timeout)
+        setUploading(false)
+        console.error('Immediate upload error:', error)
+        if (error.code === 'storage/unauthorized') {
+          setUploadError('Upload not authorized. Please ensure you are signed in and the file is a valid PDF under 5MB.')
+        } else if (error.code === 'storage/canceled') {
+          setUploadError('Upload was cancelled.')
+        } else {
+          setUploadError(`Upload failed: ${error.message}`)
+        }
+      },
+      async () => {
+        clearTimeout(timeout)
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref)
+          setUploadedResumeURL(url)
+          setUploading(false)
+        } catch (err) {
+          setUploading(false)
+          setUploadError('Upload completed but failed to get file URL. Please try again.')
+        }
       }
     )
   }
@@ -597,6 +645,14 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
       setSubmitted(true)
       toast.success('Application submitted successfully!')
+
+      // Notify all admin team members about the new application
+      notifyAdminsOfNewApplication({
+        applicantName: formData.fullName,
+        roleTitle: role?.title || '',
+        roleId,
+      }).catch(err => console.error('Failed to send admin notifications:', err))
+
       setTimeout(() => router.push('/careers'), 4000)
     } catch (error: any) {
       console.error('Error submitting application:', error)
