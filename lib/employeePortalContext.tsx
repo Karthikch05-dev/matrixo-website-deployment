@@ -739,11 +739,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const hasHoliday = holidays.some(h => h.date === dateString && h.name !== '__WORKING_DAY__')
     if (hasHoliday) return false
 
-    // Check if it's a weekend (Saturday or Sunday)
+    // Check if it's a weekend (only Sunday is non-working; Saturday is a working day)
     const dateParts = dateString.split('-')
     const checkDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
     const dayOfWeek = checkDate.getDay()
-    if (dayOfWeek === 0 || dayOfWeek === 6) return false
+    if (dayOfWeek === 0) return false // Only Sunday is off
 
     return true
   }
@@ -772,6 +772,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const today = new Date()
     const dateString = getLocalDateString(today)
     const now = new Date()
+    
+    // 6PM cutoff: Prevent marking attendance after 6 PM (except Leave and admin modifications)
+    const currentHour = now.getHours()
+    if (currentHour >= 18 && status !== 'L' && status !== 'A') {
+      throw new Error('Attendance marking is closed for today. The cutoff time is 6:00 PM.')
+    }
     
     const attendanceId = `${employee.employeeId}_${dateString}`
     const deviceInfo = `${navigator.userAgent.substring(0, 100)}`
@@ -966,24 +972,30 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })) as AttendanceRecord[]
 
     // Deduplicate: keep only one record per date
-    // Priority: If multiple records for same date, prefer non-Absent status (Present, Leave, On Duty)
-    // If all are same status, keep the most recent timestamp
+    // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
+    const statusPriority = (s: string) => {
+      if (s === 'L') return 4
+      if (s === 'P' || s === 'W' || s === 'O') return 3
+      if (s === 'H') return 2
+      if (s === 'U') return 1
+      return 0 // 'A'
+    }
+    
     const recordsByDate = new Map<string, AttendanceRecord>()
     records.forEach(record => {
       const existing = recordsByDate.get(record.date)
       if (!existing) {
         recordsByDate.set(record.date, record)
       } else {
-        // If existing is Absent and new is not, replace with non-Absent
-        if (existing.status === 'A' && record.status !== 'A') {
+        const existingPriority = statusPriority(existing.status)
+        const newPriority = statusPriority(record.status)
+        
+        if (newPriority > existingPriority) {
           recordsByDate.set(record.date, record)
-        }
-        // If new is Absent and existing is not, keep existing
-        else if (record.status === 'A' && existing.status !== 'A') {
-          // Keep existing
-        }
-        // If both same status type, keep the one with later timestamp
-        else {
+        } else if (newPriority < existingPriority) {
+          // Keep existing (higher priority)
+        } else {
+          // Same priority, keep the one with later timestamp
           const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
           const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
           if (recordTime > existingTime) {
@@ -1059,6 +1071,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     
     // Deduplicate: keep only one record per employee per date
+    // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
+    const statusPriority = (s: string) => {
+      if (s === 'L') return 4
+      if (s === 'P' || s === 'W' || s === 'O') return 3
+      if (s === 'H') return 2
+      if (s === 'U') return 1
+      return 0 // 'A'
+    }
+    
     const uniqueRecords = new Map<string, AttendanceRecord>()
     records.forEach(record => {
       const key = `${record.employeeId}_${record.date}`
@@ -1066,13 +1087,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       if (!existing) {
         uniqueRecords.set(key, record)
       } else {
-        // Prefer non-Absent over Absent
-        if (existing.status === 'A' && record.status !== 'A') {
+        const existingPriority = statusPriority(existing.status)
+        const newPriority = statusPriority(record.status)
+        
+        if (newPriority > existingPriority) {
           uniqueRecords.set(key, record)
-        } else if (record.status === 'A' && existing.status !== 'A') {
-          // Keep existing
+        } else if (newPriority < existingPriority) {
+          // Keep existing (higher priority)
         } else {
-          // Keep the one with later timestamp
+          // Same priority, keep the one with later timestamp
           const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
           const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
           if (recordTime > existingTime) {
@@ -1097,23 +1120,30 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     })) as AttendanceRecord[]
     
     // Deduplicate: keep only one record per date
-    // Priority: prefer non-Absent status if person marked attendance
+    // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
+    const statusPriority = (s: string) => {
+      if (s === 'L') return 4
+      if (s === 'P' || s === 'W' || s === 'O') return 3
+      if (s === 'H') return 2
+      if (s === 'U') return 1
+      return 0 // 'A'
+    }
+    
     const recordsByDate = new Map<string, AttendanceRecord>()
     records.forEach(record => {
       const existing = recordsByDate.get(record.date)
       if (!existing) {
         recordsByDate.set(record.date, record)
       } else {
-        // If existing is Absent and new is not, replace
-        if (existing.status === 'A' && record.status !== 'A') {
+        const existingPriority = statusPriority(existing.status)
+        const newPriority = statusPriority(record.status)
+        
+        if (newPriority > existingPriority) {
           recordsByDate.set(record.date, record)
-        }
-        // If new is Absent and existing is not, keep existing
-        else if (record.status === 'A' && existing.status !== 'A') {
-          // Keep existing
-        }
-        // If both same status, keep the one with later timestamp
-        else {
+        } else if (newPriority < existingPriority) {
+          // Keep existing (higher priority)
+        } else {
+          // Same priority, keep the one with later timestamp
           const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
           const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
           if (recordTime > existingTime) {
@@ -2032,11 +2062,24 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       reviewedAt: Timestamp.now()
     })
     
+    // Clean up any existing attendance records for this employee+date
+    // (e.g., auto-absent may have already created an Absent record)
+    const existingAttendanceQuery = query(
+      collection(db, 'attendance'),
+      where('employeeId', '==', requestData.employeeId),
+      where('date', '==', requestData.date)
+    )
+    const existingDocs = await getDocs(existingAttendanceQuery)
+    const cleanupBatch = writeBatch(db)
+    existingDocs.docs.forEach(docSnapshot => {
+      cleanupBatch.delete(docSnapshot.ref)
+    })
+    
     // Mark attendance as Leave (L) for the requested date
     const attendanceId = `${requestData.employeeId}_${requestData.date}`
     const deviceInfo = 'System - Leave Approved'
     
-    await setDoc(doc(db, 'attendance', attendanceId), {
+    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
       employeeId: requestData.employeeId,
       date: requestData.date,
       timestamp: Timestamp.now(),
@@ -2044,6 +2087,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       notes: `Leave approved - ${requestData.subject}`,
       deviceInfo
     })
+    
+    await cleanupBatch.commit()
     
     // Notify the employee who requested the leave
     await createGlobalNotification({
@@ -2077,11 +2122,23 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       reviewedAt: Timestamp.now()
     })
     
+    // Clean up any existing attendance records for this employee+date
+    const existingAttendanceQuery = query(
+      collection(db, 'attendance'),
+      where('employeeId', '==', requestData.employeeId),
+      where('date', '==', requestData.date)
+    )
+    const existingDocs = await getDocs(existingAttendanceQuery)
+    const cleanupBatch = writeBatch(db)
+    existingDocs.docs.forEach(docSnapshot => {
+      cleanupBatch.delete(docSnapshot.ref)
+    })
+    
     // Mark attendance as Unauthorised Leave (U) for the requested date
     const attendanceId = `${requestData.employeeId}_${requestData.date}`
     const deviceInfo = 'System - Leave Rejected'
     
-    await setDoc(doc(db, 'attendance', attendanceId), {
+    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
       employeeId: requestData.employeeId,
       date: requestData.date,
       timestamp: Timestamp.now(),
@@ -2089,6 +2146,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
       deviceInfo
     })
+    
+    await cleanupBatch.commit()
     
     // Notify the employee who requested the leave
     await createGlobalNotification({
@@ -2120,100 +2179,183 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const runAutoAbsentJob = async () => {
     if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
     
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const dateString = getLocalDateString(yesterday)
-    
-    // Skip if yesterday was not a working day (weekend or holiday)
-    if (!isWorkingDay(dateString)) {
-      console.log(`Skipping auto-absent for ${dateString} - not a working day`)
-      return
-    }
-    
     const allEmployees = await getAllEmployees()
-    const batch = writeBatch(db)
-    let markedCount = 0
     
-    // Create timestamp for 11:59 PM of the absent day (yesterday)
-    const absentDayEnd = new Date(yesterday)
-    absentDayEnd.setHours(23, 59, 0, 0)
-    const absentTimestamp = Timestamp.fromDate(absentDayEnd)
+    // Fetch all approved leave requests to avoid marking leave days as absent
+    const leaveRequestsSnapshot = await getDocs(collection(db, 'leaveRequests'))
+    const approvedLeaves = leaveRequestsSnapshot.docs
+      .map(d => d.data() as LeaveRequest)
+      .filter(lr => lr.status === 'Approved')
     
-    for (const emp of allEmployees) {
-      const attendanceId = `${emp.employeeId}_${dateString}`
+    // Build a set of approved leave keys: "employeeId_date"
+    const approvedLeaveKeys = new Set<string>()
+    approvedLeaves.forEach(lr => {
+      approvedLeaveKeys.add(`${lr.employeeId}_${lr.date}`)
+    })
+    
+    let totalMarked = 0
+    
+    // Check last 7 days (not just yesterday) to catch any missed days
+    for (let daysAgo = 1; daysAgo <= 7; daysAgo++) {
+      const checkDate = new Date()
+      checkDate.setDate(checkDate.getDate() - daysAgo)
+      const dateString = getLocalDateString(checkDate)
       
-      // Check for any existing records for this employee on this date
-      const attendanceRef = collection(db, 'attendance')
-      const q = query(
-        attendanceRef,
-        where('employeeId', '==', emp.employeeId),
-        where('date', '==', dateString)
-      )
-      const existingDocs = await getDocs(q)
+      // Skip if not a working day (Sunday or holiday)
+      if (!isWorkingDay(dateString)) {
+        console.log(`Skipping auto-absent for ${dateString} - not a working day`)
+        continue
+      }
       
-      // If there's no attendance record at all, mark as absent
-      if (existingDocs.empty) {
-        const attendanceData: AttendanceRecord = {
-          employeeId: emp.employeeId,
-          date: dateString,
-          timestamp: absentTimestamp, // Set to 11:59 PM of the absent day
-          status: 'A',
-          notes: 'Auto-marked as absent (no attendance recorded)',
-          deviceInfo: 'System - Auto Absent Job'
-        }
+      const batch = writeBatch(db)
+      let markedCount = 0
+      let cleanedCount = 0
+      
+      // Create timestamp for 6:00 PM (18:00) of the absent day — the cutoff time
+      const absentDayCutoff = new Date(checkDate)
+      absentDayCutoff.setHours(18, 0, 0, 0)
+      const absentTimestamp = Timestamp.fromDate(absentDayCutoff)
+      
+      for (const emp of allEmployees) {
+        const attendanceId = `${emp.employeeId}_${dateString}`
+        const leaveKey = `${emp.employeeId}_${dateString}`
         
-        batch.set(doc(db, 'attendance', attendanceId), attendanceData)
-        markedCount++
-      } 
-      // If there are multiple records (duplicates), clean them up
-      else if (existingDocs.size > 1) {
-        // Keep the non-Absent record if it exists, otherwise keep the latest
-        let recordToKeep: any = null
-        const docsToDelete: any[] = []
+        // Check for any existing records for this employee on this date
+        const attendanceRef = collection(db, 'attendance')
+        const q = query(
+          attendanceRef,
+          where('employeeId', '==', emp.employeeId),
+          where('date', '==', dateString)
+        )
+        const existingDocs = await getDocs(q)
         
-        existingDocs.docs.forEach(docSnapshot => {
-          const record = docSnapshot.data()
-          if (!recordToKeep) {
-            recordToKeep = { docId: docSnapshot.id, ...record }
+        // If there's an approved leave for this date, ensure only the Leave record exists
+        if (approvedLeaveKeys.has(leaveKey)) {
+          if (existingDocs.empty) {
+            // Approved leave but no attendance record — create Leave record
+            batch.set(doc(db, 'attendance', attendanceId), {
+              employeeId: emp.employeeId,
+              date: dateString,
+              timestamp: absentTimestamp,
+              status: 'L',
+              notes: 'Leave (approved)',
+              deviceInfo: 'System - Auto Leave from Approved Request'
+            })
           } else {
-            // Prefer non-Absent over Absent
-            if (recordToKeep.status === 'A' && record.status !== 'A') {
-              docsToDelete.push(recordToKeep.docId)
-              recordToKeep = { docId: docSnapshot.id, ...record }
-            } else if (record.status === 'A' && recordToKeep.status !== 'A') {
-              docsToDelete.push(docSnapshot.id)
-            } else {
-              // Both same status, keep latest timestamp
-              const existingTime = recordToKeep.timestamp?.toDate?.()?.getTime?.() || 0
-              const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
-              if (recordTime > existingTime) {
-                docsToDelete.push(recordToKeep.docId)
-                recordToKeep = { docId: docSnapshot.id, ...record }
-              } else {
-                docsToDelete.push(docSnapshot.id)
+            // Clean up: if there are duplicates or an Absent record alongside approved leave,
+            // keep only the Leave record (or create one if only Absent exists)
+            let hasLeaveRecord = false
+            existingDocs.docs.forEach(docSnapshot => {
+              const record = docSnapshot.data()
+              if (record.status === 'L') {
+                hasLeaveRecord = true
               }
+            })
+            
+            // Delete all records for this date and set the correct one
+            existingDocs.docs.forEach(docSnapshot => {
+              if (docSnapshot.id !== attendanceId) {
+                batch.delete(docSnapshot.ref)
+                cleanedCount++
+              }
+            })
+            
+            if (!hasLeaveRecord) {
+              // Override with Leave status since leave was approved
+              batch.set(doc(db, 'attendance', attendanceId), {
+                employeeId: emp.employeeId,
+                date: dateString,
+                timestamp: absentTimestamp,
+                status: 'L',
+                notes: 'Leave (approved - corrected from absent)',
+                deviceInfo: 'System - Auto Leave Correction'
+              })
+              cleanedCount++
             }
           }
-        })
+          continue // Skip to next employee, leave is handled
+        }
         
-        // Delete duplicate records
-        docsToDelete.forEach(docId => {
-          batch.delete(doc(db, 'attendance', docId))
-        })
+        // If there's no attendance record at all, mark as absent
+        if (existingDocs.empty) {
+          const attendanceData: AttendanceRecord = {
+            employeeId: emp.employeeId,
+            date: dateString,
+            timestamp: absentTimestamp,
+            status: 'A',
+            notes: 'Auto-marked as absent (no attendance recorded before 6 PM)',
+            deviceInfo: 'System - Auto Absent Job'
+          }
+          
+          batch.set(doc(db, 'attendance', attendanceId), attendanceData)
+          markedCount++
+        } 
+        // If there are multiple records (duplicates), clean them up
+        else if (existingDocs.size > 1) {
+          // Keep the best record: priority is L > P/W/O > A
+          let recordToKeep: any = null
+          const docsToDelete: any[] = []
+          
+          const statusPriority = (s: string) => {
+            if (s === 'L') return 4
+            if (s === 'P' || s === 'W' || s === 'O') return 3
+            if (s === 'H') return 2
+            if (s === 'U') return 1
+            return 0 // 'A'
+          }
+          
+          existingDocs.docs.forEach(docSnapshot => {
+            const record = docSnapshot.data()
+            if (!recordToKeep) {
+              recordToKeep = { docId: docSnapshot.id, ...record }
+            } else {
+              const keepPriority = statusPriority(recordToKeep.status)
+              const newPriority = statusPriority(record.status)
+              
+              if (newPriority > keepPriority) {
+                docsToDelete.push(recordToKeep.docId)
+                recordToKeep = { docId: docSnapshot.id, ...record }
+              } else if (newPriority < keepPriority) {
+                docsToDelete.push(docSnapshot.id)
+              } else {
+                // Same priority, keep latest timestamp
+                const existingTime = recordToKeep.timestamp?.toDate?.()?.getTime?.() || 0
+                const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+                if (recordTime > existingTime) {
+                  docsToDelete.push(recordToKeep.docId)
+                  recordToKeep = { docId: docSnapshot.id, ...record }
+                } else {
+                  docsToDelete.push(docSnapshot.id)
+                }
+              }
+            }
+          })
+          
+          // Delete duplicate records
+          docsToDelete.forEach(docId => {
+            batch.delete(doc(db, 'attendance', docId))
+            cleanedCount++
+          })
+        }
+      }
+      
+      if (markedCount > 0 || cleanedCount > 0) {
+        await batch.commit()
+        totalMarked += markedCount
+        
+        if (markedCount > 0) {
+          await logActivity({
+            type: 'system',
+            action: 'auto-absent',
+            description: `Auto-marked ${markedCount} employees as absent for ${dateString}${cleanedCount > 0 ? `, cleaned ${cleanedCount} duplicates` : ''}`,
+            metadata: { date: dateString, count: markedCount, cleaned: cleanedCount }
+          })
+        }
       }
     }
     
-    if (markedCount > 0 || batch) {
-      await batch.commit()
-      
-      if (markedCount > 0) {
-        await logActivity({
-          type: 'system',
-          action: 'auto-absent',
-          description: `Auto-marked ${markedCount} employees as absent for ${dateString}`,
-          metadata: { date: dateString, count: markedCount }
-        })
-      }
+    if (totalMarked > 0) {
+      console.log(`Auto-absent job completed: marked ${totalMarked} total absent records across last 7 days`)
     }
   }
 

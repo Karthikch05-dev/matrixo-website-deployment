@@ -360,7 +360,7 @@ export function Calendar() {
         dateString,
         isCurrentMonth: false,
         isToday: dateString === todayString,
-        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        isWeekend: date.getDay() === 0, // Only Sunday is weekend
         holiday: holidays.find(h => h.date === dateString),
         events: calendarEvents.filter(e => {
           if (date.getDay() === 0 && e.type === 'meeting') return false
@@ -374,17 +374,17 @@ export function Calendar() {
       const date = new Date(year, month, day)
       const dateString = getLocalDateString(date)
       const dayOfWeek = date.getDay()
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      const isWeekend = dayOfWeek === 0 // Only Sunday is weekend (Saturday is a working day)
       
       // Check if there's a working day override for this weekend
       const workingDayOverride = holidays.find(h => h.date === dateString && h.name === '__WORKING_DAY__')
       
-      // Auto-generate weekend holidays if not already marked and no working day override
+      // Auto-generate weekend holidays only for Sundays (not Saturdays, since Saturday is a working day)
       let holidayForDay = holidays.find(h => h.date === dateString && h.name !== '__WORKING_DAY__')
       if (isWeekend && !holidayForDay && !workingDayOverride) {
         holidayForDay = {
           date: dateString,
-          name: dayOfWeek === 0 ? 'Sunday' : 'Saturday',
+          name: 'Sunday',
           type: 'company',
           description: 'Weekend',
           createdBy: 'system',
@@ -419,7 +419,7 @@ export function Calendar() {
         dateString,
         isCurrentMonth: false,
         isToday: dateString === todayString,
-        isWeekend: (date.getDay() === 0 || date.getDay() === 6) && !workingDayOverride,
+        isWeekend: date.getDay() === 0 && !workingDayOverride, // Only Sunday is weekend
         holiday: holidays.find(h => h.date === dateString && h.name !== '__WORKING_DAY__'),
         events: calendarEvents.filter(e => {
           if (date.getDay() === 0 && e.type === 'meeting') return false

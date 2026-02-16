@@ -272,9 +272,21 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     fetchTodayAttendance()
   }, [fetchTodayAttendance])
 
+  // Check if it's past the 6PM attendance cutoff
+  const isPastCutoff = () => {
+    const now = new Date()
+    return now.getHours() >= 18 // 6:00 PM or later
+  }
+
   const handleMarkAttendance = async () => {
     if (!selectedStatus) {
       toast.error('Please select your attendance status')
+      return
+    }
+
+    // 6PM cutoff check - only Leave requests can be submitted after 6PM
+    if (isPastCutoff() && selectedStatus !== 'L') {
+      toast.error('Attendance marking is closed for today. The cutoff time is 6:00 PM. Please contact your admin if needed.')
       return
     }
 
@@ -643,6 +655,24 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 6PM Cutoff Banner */}
+      {isPastCutoff() && !todayAttendance && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+              <FaExclamationTriangle className="text-red-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-400">Attendance Cutoff Passed</h3>
+              <p className="text-sm text-neutral-400 mt-1">
+                The attendance marking window has closed for today. The daily cutoff is 6:00 PM. 
+                Your attendance for today will be marked as Absent. Contact your admin if you need corrections.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Location Required Banner */}
       {locationStatus !== 'granted' && !todayAttendance && (

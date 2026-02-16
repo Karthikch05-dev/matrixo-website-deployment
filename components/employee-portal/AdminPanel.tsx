@@ -88,12 +88,13 @@ function EmployeeProfileModal({
           setAttendanceHistory(history)
           // Calculate stats from history
           const present = history.filter(r => r.status === 'P').length
+          const wfh = history.filter(r => r.status === 'W').length
           const absent = history.filter(r => r.status === 'A').length
           const leave = history.filter(r => r.status === 'L').length
           const onDuty = history.filter(r => r.status === 'O').length
           const unauthLeave = history.filter(r => r.status === 'U').length
           const total = history.length
-          const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
+          const percentage = total > 0 ? ((present + wfh + onDuty) / total) * 100 : 0
           
           setStats({
             presentDays: present,
@@ -114,6 +115,19 @@ function EmployeeProfileModal({
   const formatDate = (timestamp: Timestamp) => {
     if (!timestamp?.toDate) return '-'
     return timestamp.toDate().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  // Format date string (YYYY-MM-DD) to readable format
+  const formatDateString = (dateStr: string) => {
+    if (!dateStr) return '-'
+    const parts = dateStr.split('-')
+    if (parts.length !== 3) return dateStr
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+    return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -237,18 +251,20 @@ function EmployeeProfileModal({
                       <div className="flex items-center gap-3">
                         <Badge variant={
                           record.status === 'P' ? 'success' :
+                          record.status === 'W' ? 'info' :
                           record.status === 'A' ? 'error' :
                           record.status === 'L' ? 'warning' :
                           record.status === 'U' ? 'error' : 'default'
                         }>
                           {record.status === 'P' ? 'Present' :
+                           record.status === 'W' ? 'WFH' :
                            record.status === 'A' ? 'Absent' :
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
                            record.status === 'H' ? 'Holiday' :
                            record.status === 'U' ? 'Unauth. Leave' : record.status}
                         </Badge>
-                        <span className="text-neutral-300">{formatDate(record.timestamp)}</span>
+                        <span className="text-neutral-300">{formatDateString(record.date)}</span>
                       </div>
                       <span className="text-sm text-neutral-500">{formatTime(record.timestamp)}</span>
                     </div>
@@ -284,10 +300,11 @@ function EmployeeProfileModal({
                 <tbody>
                   {attendanceHistory.map((record, i) => (
                     <tr key={i} className="border-t border-neutral-700/50">
-                      <td className="p-3 text-white">{formatDate(record.timestamp)}</td>
+                      <td className="p-3 text-white">{formatDateString(record.date)}</td>
                       <td className="p-3">
                         <Badge variant={
                           record.status === 'P' ? 'success' :
+                          record.status === 'W' ? 'info' :
                           record.status === 'A' ? 'error' :
                           record.status === 'L' ? 'warning' :
                           record.status === 'U' ? 'error' : 'default'
@@ -296,6 +313,7 @@ function EmployeeProfileModal({
                             <FaCheckCircle className="inline mr-1 text-xs" />
                           )}
                           {record.status === 'P' ? 'Present' :
+                           record.status === 'W' ? 'W' :
                            record.status === 'A' ? 'Absent' :
                            record.status === 'L' ? 'Leave' :
                            record.status === 'O' ? 'On Duty' :
@@ -1683,23 +1701,37 @@ export function AdminPanel() {
       )
       
       // Deduplicate attendance records - use employeeId + date as unique key
-      // Keep only the most recent record for each employee per day
+      // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
+      const statusPriority = (s: string) => {
+        if (s === 'L') return 4
+        if (s === 'P' || s === 'W' || s === 'O') return 3
+        if (s === 'H') return 2
+        if (s === 'U') return 1
+        return 0 // 'A'
+      }
+      
       const attendanceMap = new Map<string, AttendanceRecord>()
       attendance.forEach((record) => {
         // Create unique key from employeeId + date
         const dateStr = record.date || (record.timestamp?.toDate?.()?.toISOString?.()?.split('T')[0]) || ''
         const key = `${record.employeeId}_${dateStr}`
         
-        // If no existing record for this key, or this record is newer, use it
         const existing = attendanceMap.get(key)
         if (!existing) {
           attendanceMap.set(key, record)
         } else {
-          // Keep the one with more recent timestamp
-          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
-          const currentTime = record.timestamp?.toDate?.()?.getTime?.() || 0
-          if (currentTime > existingTime) {
+          const existingPriority = statusPriority(existing.status)
+          const newPriority = statusPriority(record.status)
+          
+          if (newPriority > existingPriority) {
             attendanceMap.set(key, record)
+          } else if (newPriority === existingPriority) {
+            // Same priority, keep the one with more recent timestamp
+            const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
+            const currentTime = record.timestamp?.toDate?.()?.getTime?.() || 0
+            if (currentTime > existingTime) {
+              attendanceMap.set(key, record)
+            }
           }
         }
       })
