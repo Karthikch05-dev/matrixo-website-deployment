@@ -183,6 +183,19 @@ export default function CareersContent() {
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Discover opportunities that match your skills and passion
             </p>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6 max-w-2xl mx-auto"
+            >
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                  📢 Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
+                  Please allow some time for us to get back to you. We appreciate your patience and interest in joining matriXO!
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {loading ? (
