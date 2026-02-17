@@ -708,7 +708,7 @@ function ApplicationsModal({
         console.log(`   Application details:`, roleApps.map(a => ({ name: a.fullName, status: a.status, roleId: a.roleId })))
       }
     }
-  }, [isOpen, role.title, role.id, applications.length, roleApps.length])
+  }, [isOpen, role.title, role.id, applications.length, roleApps.length, roleApps])
 
   const filtered = roleApps
     .filter(a => filterStatus === 'all' || a.status === filterStatus)

@@ -1102,6 +1102,7 @@ export function Discussions() {
         console.error('Failed to fetch employees:', err)
         setEmployees([])
       })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Remove getAllEmployees from deps to avoid infinite loop
 
   // Include core departments
