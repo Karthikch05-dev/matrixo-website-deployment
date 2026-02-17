@@ -1395,7 +1395,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     }
 
     return result
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees])
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees, filterInternSpecialization])
 
   const clearFilters = () => {
     setSearchQuery('')
