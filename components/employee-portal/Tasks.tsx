@@ -1395,7 +1395,8 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     }
 
     return result
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees, filterInternSpecialization])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees])
 
   const clearFilters = () => {
     setSearchQuery('')
