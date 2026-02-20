@@ -708,6 +708,7 @@ function ApplicationsModal({
         console.log(`   Application details:`, roleApps.map(a => ({ name: a.fullName, status: a.status, roleId: a.roleId })))
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, role.title, role.id, applications.length, roleApps.length])
 
   const filtered = roleApps
