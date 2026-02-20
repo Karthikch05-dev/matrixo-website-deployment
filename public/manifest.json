@@ -1,8 +1,8 @@
 {
-  "name": "matriXO Team Auth",
-  "short_name": "matriXO Team",
-  "description": "matriXO Employee Portal - Attendance & Team Management",
-  "start_url": "/employee-portal",
+  "name": "matriXO",
+  "short_name": "matriXO",
+  "description": "matriXO - Where Technical Excellence Meets Career Growth",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
