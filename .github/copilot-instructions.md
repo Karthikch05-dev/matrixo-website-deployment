@@ -52,8 +52,8 @@ npm run lint     # ESLint checks
 
 ## Key Files Reference
 
-- [middleware.ts](../middleware.ts) - Subdomain routing logic
-- [lib/config.ts](../lib/config.ts) - Beta vs production feature flags
-- [components/events/EventDetail.tsx](../components/events/EventDetail.tsx) - Complex event page with modals, gallery, registration
-- [components/Navbar.tsx](../components/Navbar.tsx) - Navigation with beta menu items
-- [app/layout.tsx](../app/layout.tsx) - Root layout with AuthProvider, fonts, metadata
+- [middleware.ts](middleware.ts) - Subdomain routing logic
+- [lib/config.ts](lib/config.ts) - Beta vs production feature flags
+- [components/events/EventDetail.tsx](components/events/EventDetail.tsx) - Complex event page with modals, gallery, registration
+- [components/Navbar.tsx](components/Navbar.tsx) - Navigation with beta menu items
+- [app/layout.tsx](app/layout.tsx) - Root layout with AuthProvider, fonts, metadata
