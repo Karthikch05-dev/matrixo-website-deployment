@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -36,6 +36,7 @@ import {
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
+import { PortalThemeContext, usePortalTheme } from '@/lib/portalThemeContext'
 import { db } from '@/lib/firebaseConfig'
 import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { toast, Toaster } from 'sonner'
@@ -57,13 +58,11 @@ import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal
 // THEME CONTEXT
 // ============================================
 
-interface ThemeContextType {
-  darkMode: boolean
-  toggleTheme: () => void
-}
+// ============================================
+// THEME - use shared context
+// ============================================
 
-const ThemeContext = createContext<ThemeContextType>({ darkMode: true, toggleTheme: () => {} })
-const useTheme = () => useContext(ThemeContext)
+const useTheme = usePortalTheme
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
@@ -1118,6 +1117,12 @@ function Dashboard() {
     })
   }
 
+  // Sync theme attribute to body for portals (dropdowns rendered via createPortal)
+  useEffect(() => {
+    document.body.setAttribute('data-portal-theme', darkMode ? 'dark' : 'light')
+    return () => { document.body.removeAttribute('data-portal-theme') }
+  }, [darkMode])
+
   // Handler for pending task click from Dashboard
   const handlePendingTaskClick = (taskId: string) => {
     setSelectedTaskId(taskId)
@@ -1376,13 +1381,14 @@ function Dashboard() {
   }, [employee?.employeeId])
 
   return (
-    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
+    <PortalThemeContext.Provider value={{ darkMode, toggleTheme }}>
     <div
+      data-portal-theme={darkMode ? 'dark' : 'light'}
       className="min-h-screen overflow-x-hidden max-w-[100vw] transition-colors duration-500"
       style={{
         background: darkMode
           ? 'radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.12) 0%, transparent 50%), #06060a'
-          : 'radial-gradient(ellipse at 20% 10%, rgba(167,139,250,0.25) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(196,181,253,0.2) 0%, transparent 50%), #f3f0ff',
+          : 'radial-gradient(ellipse at 20% 10%, rgba(167,139,250,0.12) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(196,181,253,0.1) 0%, transparent 50%), #f5f3ff',
       }}
     >
       {/* Top Navigation */}
@@ -1423,7 +1429,7 @@ function Dashboard() {
         </p>
       </footer>
     </div>
-    </ThemeContext.Provider>
+    </PortalThemeContext.Provider>
   )
 }
 
