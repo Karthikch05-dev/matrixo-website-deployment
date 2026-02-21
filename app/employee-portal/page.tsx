@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -29,7 +29,9 @@ import {
   FaTrash,
   FaListAlt,
   FaQrcode,
-  FaVideo
+  FaVideo,
+  FaSun,
+  FaMoon
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
@@ -50,6 +52,18 @@ import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
 import JobPostings from '@/components/employee-portal/JobPostings'
 import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
+
+// ============================================
+// THEME CONTEXT
+// ============================================
+
+interface ThemeContextType {
+  darkMode: boolean
+  toggleTheme: () => void
+}
+
+const ThemeContext = createContext<ThemeContextType>({ darkMode: true, toggleTheme: () => {} })
+const useTheme = () => useContext(ThemeContext)
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
@@ -101,9 +115,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.25) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 50%), #050507' }}>
+      {/* iOS 26 ambient blobs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-30 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.6) 0%, transparent 70%)' }} />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)' }} />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -124,7 +140,7 @@ function LoginForm() {
           <p className="text-neutral-400">Access your attendance dashboard</p>
         </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 shadow-2xl">
+        <div className="rounded-3xl p-8 shadow-2xl" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
@@ -136,7 +152,8 @@ function LoginForm() {
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 placeholder="e.g., M-01 or M-A001"
-                className="w-full py-3 px-4 bg-neutral-800 border border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-500"
+                className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-400"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}
               />
             </div>
 
@@ -151,7 +168,8 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full py-3 px-4 bg-neutral-800 border border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-500 pr-12"
+                  className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-400 pr-12"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}
                 />
                 <button
                   type="button"
@@ -235,6 +253,7 @@ function TopNavbar({
   setActiveTab: (tab: string) => void
 }) {
   const { employee, logout } = useEmployeeAuth()
+  const { darkMode, toggleTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0, isMobile: false })
@@ -319,7 +338,23 @@ function TopNavbar({
   }
 
   return (
-    <nav className="bg-neutral-950/90 backdrop-blur-2xl border-b border-white/5 fixed top-0 left-0 right-0 overflow-x-hidden" style={{ zIndex: 9000 }}>
+    <nav
+      className="fixed top-0 left-0 right-0 overflow-x-hidden"
+      style={{
+        zIndex: 9000,
+        background: darkMode
+          ? 'rgba(10,10,15,0.65)'
+          : 'rgba(255,255,255,0.72)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        borderBottom: darkMode
+          ? '1px solid rgba(255,255,255,0.07)'
+          : '1px solid rgba(0,0,0,0.08)',
+        boxShadow: darkMode
+          ? '0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+          : '0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+      }}
+    >
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
       
@@ -327,10 +362,10 @@ function TopNavbar({
         <div className="flex items-center justify-between h-16 gap-2 md:gap-4 overflow-hidden">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
-            <img src="/logos/logo-dark.png" alt="matriXO" className="h-8 md:h-9 group-hover:scale-105 transition-transform" />
+            <img src={darkMode ? "/logos/logo-dark.png" : "/logos/logo-light.png"} onError={(e) => { (e.target as HTMLImageElement).src = '/logos/logo-dark.png' }} alt="matriXO" className="h-8 md:h-9 group-hover:scale-105 transition-transform" />
             <div className="hidden sm:flex flex-col">
-              <span className="text-white font-bold text-sm leading-tight">Employee</span>
-              <span className="text-primary-400 text-xs font-medium leading-tight">Portal</span>
+              <span className={`font-bold text-sm leading-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>Employee</span>
+              <span className="text-primary-500 text-xs font-medium leading-tight">Portal</span>
             </div>
           </Link>
 
@@ -345,7 +380,9 @@ function TopNavbar({
                     relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
                     ${activeTab === item.id 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30' 
-                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                      : darkMode
+                        ? 'text-neutral-400 hover:text-white hover:bg-white/8'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-black/6'
                     }
                   `}
                 >
@@ -383,7 +420,51 @@ function TopNavbar({
           {/* Right side */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Notification Bell */}
-            <NotificationBell onNavigate={setActiveTab} />
+            <NotificationBell onNavigate={setActiveTab} darkMode={darkMode} />
+
+            {/* Theme Toggle Button */}
+            <motion.button
+              onClick={toggleTheme}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              className="relative p-2.5 rounded-xl transition-all duration-300 overflow-hidden"
+              title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              style={{
+                background: darkMode
+                  ? 'rgba(255,255,255,0.08)'
+                  : 'rgba(0,0,0,0.06)',
+                border: darkMode
+                  ? '1px solid rgba(255,255,255,0.12)'
+                  : '1px solid rgba(0,0,0,0.1)',
+                boxShadow: darkMode
+                  ? '0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  : '0 2px 10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+              }}
+            >
+              <AnimatePresence mode="wait">
+                {darkMode ? (
+                  <motion.div
+                    key="sun"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FaSun className="text-amber-400" size={16} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="moon"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FaMoon className="text-indigo-600" size={16} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
 
             {/* User Menu */}
             <div className="relative">
@@ -391,7 +472,11 @@ function TopNavbar({
                 ref={userMenuButtonRef}
                 onClick={handleUserMenuClick}
                 type="button"
-                className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
+                style={{
+                  background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
+                }}
               >
                 <img
                   src={getProfileImageUrl(employee?.profileImage, employee?.name)}
@@ -399,8 +484,8 @@ function TopNavbar({
                   className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
                   onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
                 />
-                <span className="text-white font-medium hidden md:block text-sm">{employee?.name?.split(' ')[0]}</span>
-                <FaChevronDown className={`text-neutral-400 text-xs hidden md:block transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                <span className={`font-medium hidden md:block text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>{employee?.name?.split(' ')[0]}</span>
+                <FaChevronDown className={`text-xs hidden md:block transition-transform ${darkMode ? 'text-neutral-400' : 'text-gray-500'} ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* User Dropdown - Rendered via Portal */}
@@ -419,9 +504,16 @@ function TopNavbar({
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.15 }}
-                    className={`bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl ${userMenuPosition.isMobile ? 'w-auto' : 'w-64'}`}
+                    className={`rounded-2xl shadow-2xl ${userMenuPosition.isMobile ? 'w-auto' : 'w-64'}`}
+                    style={{
+                      background: darkMode ? 'rgba(15,15,20,0.85)' : 'rgba(255,255,255,0.85)',
+                      backdropFilter: 'blur(40px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                      border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
+                      boxShadow: darkMode ? '0 24px 48px rgba(0,0,0,0.6)' : '0 24px 48px rgba(0,0,0,0.12)',
+                    }}
                   >
-                    <div className="p-4 border-b border-white/5 bg-gradient-to-br from-primary-600/10 to-transparent rounded-t-2xl">
+                    <div className="p-4 border-b rounded-t-2xl" style={{ borderColor: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, transparent 100%)' }}>
                       <div className="flex items-center gap-3">
                         <img
                           src={getProfileImageUrl(employee?.profileImage, employee?.name)}
@@ -429,16 +521,16 @@ function TopNavbar({
                           className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary-500/50"
                         />
                         <div className="min-w-0">
-                          <p className="text-white font-semibold truncate">{employee?.name}</p>
-                          <p className="text-xs text-primary-400">{employee?.department}</p>
-                          <p className="text-xs text-neutral-500 font-mono">{employee?.employeeId}</p>
+                          <p className={`font-semibold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>{employee?.name}</p>
+                          <p className="text-xs text-primary-500">{employee?.department}</p>
+                          <p className={`text-xs font-mono ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>{employee?.employeeId}</p>
                         </div>
                       </div>
                     </div>
                     <div className="p-2">
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
                       >
                         <FaSignOutAlt />
                         <span>Sign Out</span>
@@ -453,7 +545,7 @@ function TopNavbar({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2.5 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+              className={`xl:hidden p-2.5 rounded-xl transition-all ${darkMode ? 'text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900 bg-black/5 hover:bg-black/10'}`}
             >
               {mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
             </button>
@@ -467,7 +559,8 @@ function TopNavbar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="xl:hidden border-t border-white/5 py-4"
+              className="xl:hidden py-4"
+              style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}
             >
               <div className="grid grid-cols-2 gap-2">
                 {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => (
@@ -477,8 +570,10 @@ function TopNavbar({
                     className={`
                       relative flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
                       ${activeTab === item.id 
-                        ? 'bg-primary-500/20 text-primary-400 border border-primary-500/20' 
-                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent'
+                        ? 'bg-primary-500/20 text-primary-500 border border-primary-500/20' 
+                        : darkMode
+                          ? 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-black/5 border border-transparent'
                       }
                     `}
                   >
@@ -499,7 +594,9 @@ function TopNavbar({
                       flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm col-span-2
                       ${activeTab === 'admin' 
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' 
-                        : 'text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent'
+                        : darkMode
+                          ? 'text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent'
+                          : 'text-amber-600/80 hover:text-amber-600 hover:bg-amber-500/10 border border-transparent'
                       }
                     `}
                   >
@@ -522,6 +619,7 @@ function TopNavbar({
 
 function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void }) {
   const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
+  const { darkMode } = useTheme()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [newTodoTitle, setNewTodoTitle] = useState('')
@@ -618,7 +716,16 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-4 sm:p-6">
+      <div
+        className="rounded-2xl p-4 sm:p-6"
+        style={{
+          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' : '0 8px 24px rgba(124,58,237,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+        }}
+      >
         <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={getProfileImageUrl(employee?.profileImage, employee?.name)}
@@ -626,14 +733,14 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-primary-500"
             onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
           />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg sm:text-2xl font-bold text-white truncate">
-              Welcome back, {employee?.name?.split(' ')[0]}!
-            </h2>
-            <p className="text-neutral-400 text-sm sm:text-base truncate">
-              {employee?.department} • {employee?.designation}
-            </p>
-          </div>
+            <div className="min-w-0 flex-1">
+            <h2 className={`text-lg sm:text-2xl font-bold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Welcome back, {employee?.name?.split(' ')[0]}!
+              </h2>
+              <p className={`text-sm sm:text-base truncate ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+                {employee?.department} • {employee?.designation}
+              </p>
+            </div>
         </div>
       </div>
 
@@ -668,24 +775,34 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
 
       {/* My Tasks & Holidays */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
-            <FaTasks className="text-primary-400" />
+        <div
+          className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
+          style={{
+            background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+            border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+            boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
+          }}
+        >
+          <h3 className={`text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <FaTasks className="text-primary-500" />
             My Pending Tasks
           </h3>
           {myTasks.length === 0 ? (
-            <p className="text-neutral-500 text-center py-4 text-sm sm:text-base">No pending tasks</p>
+            <p className={`text-center py-4 text-sm sm:text-base ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No pending tasks</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {myTasks.slice(0, 4).map((task) => (
                 <div 
                   key={task.id} 
-                  className="flex items-center justify-between p-2.5 sm:p-3 bg-neutral-900/50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-neutral-800/50 transition-colors gap-2"
+                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-colors gap-2 ${darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/4 hover:bg-black/8'}`}
+                  style={{ border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)' }}
                   onClick={() => onTaskClick?.(task.id!)}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-white font-medium text-sm sm:text-base truncate">{task.title}</p>
-                    <p className="text-xs text-neutral-500">
+                    <p className={`font-medium text-sm sm:text-base truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>{task.title}</p>
+                    <p className={`text-xs ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
                       Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
                     </p>
                   </div>
@@ -704,9 +821,18 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           )}
         </div>
 
-        <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
-            <FaListAlt className="text-primary-400" />
+        <div
+          className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
+          style={{
+            background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+            border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+            boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
+          }}
+        >
+          <h3 className={`text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <FaListAlt className="text-primary-500" />
             My Todo List
           </h3>
           
@@ -718,7 +844,11 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
               onChange={(e) => setNewTodoTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
               placeholder="Add a new todo..."
-              className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-lg sm:rounded-xl text-white placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 min-w-0"
+              className={`flex-1 px-3 py-2 rounded-lg sm:rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 min-w-0 transition-all ${darkMode ? 'placeholder-neutral-500 text-white' : 'placeholder-gray-400 text-gray-900'}`}
+              style={{
+                background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+                border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
+              }}
             />
             <button
               onClick={handleAddTodo}
@@ -730,17 +860,18 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           </div>
 
           {sortedTodos.length === 0 ? (
-            <p className="text-neutral-500 text-center py-4">No todos yet. Add one above!</p>
+            <p className={`text-center py-4 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No todos yet. Add one above!</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {sortedTodos.slice(0, 6).map((todo) => (
                 <div 
                   key={todo.id} 
-                  className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                  className={`flex items-center justify-between p-3 rounded-xl transition-all ${
                     todo.status === 'completed' 
-                      ? 'bg-neutral-900/30 border-neutral-800' 
-                      : 'bg-neutral-900/50 border-neutral-700'
+                      ? darkMode ? 'bg-white/3' : 'bg-black/3'
+                      : darkMode ? 'bg-white/7' : 'bg-black/5'
                   }`}
+                  style={{ border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)' }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <button
@@ -748,13 +879,15 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                         todo.status === 'completed' 
                           ? 'bg-green-500 border-green-500 text-white' 
-                          : 'border-neutral-500 hover:border-primary-500'
+                          : darkMode ? 'border-neutral-500 hover:border-primary-500' : 'border-gray-400 hover:border-primary-500'
                       }`}
                     >
                       {todo.status === 'completed' && <FaCheckCircle className="text-xs" />}
                     </button>
                     <span className={`text-sm truncate ${
-                      todo.status === 'completed' ? 'text-neutral-500 line-through' : 'text-white'
+                      todo.status === 'completed' 
+                        ? darkMode ? 'text-neutral-500 line-through' : 'text-gray-400 line-through'
+                        : darkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       {todo.title}
                     </span>
@@ -774,11 +907,11 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
 
       {/* Attendance Warning */}
       {attendancePercentage < 80 && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
+        <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
           <FaExclamationTriangle className="text-red-400 mt-1 flex-shrink-0" />
           <div>
             <p className="text-red-400 font-medium">Low Attendance Warning</p>
-            <p className="text-neutral-400 text-sm mt-1">
+            <p className={`text-sm mt-1 ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
               Your attendance is below the minimum required 80%. Please improve your attendance to avoid any issues.
             </p>
           </div>
@@ -794,6 +927,7 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
 
 function HistoryTab() {
   const { getAttendanceRecords } = useEmployeeAuth()
+  const { darkMode } = useTheme()
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMonth, setSelectedMonth] = useState(new Date())
@@ -829,17 +963,30 @@ function HistoryTab() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+      <div
+        className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
+        style={{
+          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
+        }}
+      >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <FaHistory className="text-primary-400" />
+          <h2 className={`text-lg sm:text-xl font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <FaHistory className="text-primary-500" />
             Attendance History
           </h2>
           <input
             type="month"
             value={`${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`}
             onChange={(e) => setSelectedMonth(new Date(e.target.value))}
-            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-primary-500"
+            className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 ${darkMode ? 'text-white' : 'text-gray-900'}`}
+            style={{
+              background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+              border: darkMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.09)',
+            }}
           />
         </div>
 
@@ -848,20 +995,27 @@ function HistoryTab() {
             <FaSpinner className="animate-spin text-3xl text-primary-500" />
           </div>
         ) : records.length === 0 ? (
-          <p className="text-neutral-500 text-center py-8">No attendance records for this month</p>
+          <p className={`text-center py-8 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No attendance records for this month</p>
         ) : (
           <div className="space-y-2 sm:space-y-3">
             {records.map((record) => {
               const config = statusConfig[record.status] || statusConfig.P
               const StatusIcon = config.icon
               return (
-                <div key={record.id} className="flex items-center justify-between p-3 sm:p-4 bg-neutral-900/50 rounded-lg sm:rounded-xl gap-3">
+                <div
+                  key={record.id}
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl gap-3"
+                  style={{
+                    background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
+                  }}
+                >
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                     <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${config.color} flex items-center justify-center flex-shrink-0`}>
                       <StatusIcon className="text-white text-sm sm:text-base" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-white font-medium text-sm sm:text-base truncate">
+                      <p className={`font-medium text-sm sm:text-base truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleDateString('en-US', {
@@ -871,7 +1025,7 @@ function HistoryTab() {
                           })
                         })()}
                       </p>
-                      <p className="text-xs text-neutral-500 truncate">
+                      <p className={`text-xs truncate ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleTimeString('en-US', {
@@ -910,16 +1064,25 @@ function StatCard({ title, value, icon: Icon, color, onClick }: {
   color: string
   onClick?: () => void
 }) {
+  const { darkMode } = useTheme()
   return (
     <motion.div
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className={`bg-neutral-800/50 border border-neutral-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 ${onClick ? 'cursor-pointer hover:border-primary-500/50 transition-colors' : ''}`}
+      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 ${onClick ? 'cursor-pointer' : ''}`}
+      style={{
+        background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
+        backdropFilter: 'blur(30px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+        border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+        boxShadow: darkMode ? '0 8px 24px rgba(0,0,0,0.25)' : '0 6px 20px rgba(124,58,237,0.06)',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+      }}
     >
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-neutral-400 text-xs sm:text-sm truncate">{title}</p>
-          <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">{value}</p>
+          <p className={`text-xs sm:text-sm truncate ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>{title}</p>
+          <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{value}</p>
         </div>
         <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
           <Icon className="text-lg sm:text-xl text-white" />
@@ -938,7 +1101,22 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('attendance')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ep-theme')
+      return saved ? saved === 'dark' : true
+    }
+    return true
+  })
   const isAdmin = employee?.role === 'admin'
+
+  const toggleTheme = () => {
+    setDarkMode(prev => {
+      const next = !prev
+      if (typeof window !== 'undefined') localStorage.setItem('ep-theme', next ? 'dark' : 'light')
+      return next
+    })
+  }
 
   // Handler for pending task click from Dashboard
   const handlePendingTaskClick = (taskId: string) => {
@@ -1198,7 +1376,15 @@ function Dashboard() {
   }, [employee?.employeeId])
 
   return (
-    <div className="min-h-screen bg-neutral-950 overflow-x-hidden max-w-[100vw]">
+    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
+    <div
+      className="min-h-screen overflow-x-hidden max-w-[100vw] transition-colors duration-500"
+      style={{
+        background: darkMode
+          ? 'radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.12) 0%, transparent 50%), #06060a'
+          : 'radial-gradient(ellipse at 20% 10%, rgba(167,139,250,0.25) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(196,181,253,0.2) 0%, transparent 50%), #f3f0ff',
+      }}
+    >
       {/* Top Navigation */}
       <TopNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
       
@@ -1228,12 +1414,16 @@ function Dashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800 py-6 mt-auto">
-        <p className="text-center text-neutral-500 text-sm">
+      <footer
+        className="py-6 mt-auto"
+        style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)' }}
+      >
+        <p className={`text-center text-sm ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
           © {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
         </p>
       </footer>
     </div>
+    </ThemeContext.Provider>
   )
 }
 
@@ -1246,8 +1436,8 @@ function EmployeePortalContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.2) 0%, transparent 60%), #06060a' }}>
+        <div className="text-center p-10 rounded-3xl" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <FaSpinner className="animate-spin text-5xl text-primary-500 mx-auto mb-4" />
           <p className="text-neutral-400">Loading...</p>
         </div>
