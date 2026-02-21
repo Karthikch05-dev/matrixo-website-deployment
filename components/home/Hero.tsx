@@ -6,16 +6,12 @@ import { FaCalendarCheck, FaRocket, FaUsers } from 'react-icons/fa'
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-black">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 opacity-20 dark:opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 dark:bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-400 dark:bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-300 dark:bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '4s' }} />
-      </div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-gray-950">
+      {/* Subtle dot pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+      {/* Very subtle top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gray-200 dark:bg-gray-800" />
 
       {/* Content */}
       <div className="relative z-10 container-custom px-4 sm:px-6 py-20 sm:py-24 md:py-32 text-center">
@@ -28,9 +24,9 @@ export default function Hero() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="inline-block mb-6 px-6 py-2 bg-blue-50 dark:bg-white/5 backdrop-blur-sm border border-blue-200 dark:border-blue-500/30 rounded-full"
+            className="inline-block mb-6 px-6 py-2 bg-gray-100/80 dark:bg-white/[0.05] backdrop-blur-sm border border-gray-200 dark:border-white/[0.08] rounded-full"
           >
-            <span className="text-blue-600 dark:text-blue-400 font-medium text-sm md:text-base">
+            <span className="text-gray-700 dark:text-gray-300 font-medium text-sm md:text-base">
               An Ed-Tech Startup 🚀
             </span>
           </motion.div>
@@ -69,7 +65,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-2xl md:text-3xl font-display font-bold gradient-text mb-12"
+            className="text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white mb-12"
           >
             Workshops. Hackathons. Bootcamps. Real Skills.
           </motion.p>
@@ -136,12 +132,12 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center"
+            className="w-6 h-10 border-2 border-gray-300 dark:border-gray-600 rounded-full flex justify-center"
           >
             <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="w-1.5 h-1.5 bg-neon-blue rounded-full mt-2"
+              className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full mt-2"
             />
           </motion.div>
         </motion.div>

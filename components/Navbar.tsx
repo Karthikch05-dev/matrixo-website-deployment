@@ -136,7 +136,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-40 transition-all duration-300 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl shadow-lg border-b border-gray-200/20 dark:border-gray-700/20`}
+      className={`fixed top-0 w-full z-40 transition-all duration-300 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/[0.06]`}
     >
       <div className="container-custom px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
@@ -202,12 +202,12 @@ export default function Navbar() {
                     href={link.href}
                     className={`font-medium transition-all duration-300 ease-out relative group ${
                       isActive 
-                        ? 'text-blue-500 dark:text-blue-400' 
-                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400'
+                        ? 'text-gray-900 dark:text-white' 
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
                     {link.name}
-                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 
+                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
                                    transition-all duration-300 ease-out ${
                                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
                                    }`} />
@@ -309,8 +309,8 @@ export default function Navbar() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                           rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 
+                           rounded-full font-semibold hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-all duration-200"
                 >
                   <FaUser className="text-sm" />
                   {profile?.fullName || user.displayName || user.email?.split('@')[0]}
@@ -323,7 +323,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                      className="absolute top-full right-0 mt-2 w-56 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-xl shadow-xl border border-gray-200/60 dark:border-white/[0.08] overflow-hidden"
                     >
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
@@ -370,8 +370,8 @@ export default function Navbar() {
               >
                 <Link
                   href="/auth"
-                  className="inline-flex items-center gap-2 px-4 py-2 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                           rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300 ease-out"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 
+                           rounded-full font-semibold hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-all duration-300 ease-out"
                 >
                   <FaUser className="text-sm" />
                   Login
@@ -545,8 +545,8 @@ export default function Navbar() {
                   <Link
                     href="/contact"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center w-full px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 
-                             text-white rounded-full font-semibold hover:shadow-lg transition-all duration-200"
+                    className="flex items-center justify-center w-full px-6 py-2.5 bg-gray-900 dark:bg-white 
+                             text-white dark:text-gray-900 rounded-full font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 hover:shadow-lg transition-all duration-200"
                   >
                     Get Started
                   </Link>

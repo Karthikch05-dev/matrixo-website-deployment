@@ -12,7 +12,7 @@ const stats = [
 
 export default function Stats() {
   return (
-    <section className="section-padding bg-white dark:bg-gray-900">
+    <section className="section-padding bg-white dark:bg-gray-950">
       <div className="container-custom">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
@@ -26,11 +26,11 @@ export default function Stats() {
             >
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl text-white"
+                className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gray-900 dark:bg-white rounded-2xl text-white dark:text-gray-900"
               >
                 <stat.icon size={28} />
               </motion.div>
-              <h3 className="text-3xl md:text-4xl font-bold gradient-text mb-2">
+              <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                 {stat.value}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 font-medium">

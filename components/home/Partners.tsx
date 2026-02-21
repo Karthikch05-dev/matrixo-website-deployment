@@ -13,7 +13,7 @@ const partners = [
 
 export default function Partners() {
   return (
-    <section className="section-padding bg-gray-50 dark:bg-gray-950">
+    <section className="section-padding bg-white dark:bg-gray-950">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -38,10 +38,10 @@ export default function Partners() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.6 }}
               whileHover={{ scale: 1.05, y: -5 }}
-              className="flex items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="flex items-center justify-center p-6 bg-white/80 dark:bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-white/[0.06] shadow-sm hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-none transition-all duration-300"
             >
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-3 bg-gradient-to-br from-blue-500/10 to-purple-600/10 rounded-full flex items-center justify-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+                <div className="w-20 h-20 mx-auto mb-3 bg-gray-100 dark:bg-white/[0.06] rounded-full flex items-center justify-center text-3xl font-bold text-gray-900 dark:text-white">
                   {partner.name.charAt(0)}
                 </div>
                 <p className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
@@ -67,9 +67,9 @@ export default function Partners() {
           </p>
           <a
             href="/contact"
-            className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 
-                     text-white rounded-full font-semibold hover:shadow-lg transition-all duration-200
-                     transform hover:scale-105"
+            className="inline-flex items-center px-8 py-3 bg-gray-900 dark:bg-white 
+                     text-white dark:text-gray-900 rounded-full font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 hover:shadow-lg transition-all duration-200
+                     transform hover:scale-[1.03]"
           >
             Contact Us
           </a>

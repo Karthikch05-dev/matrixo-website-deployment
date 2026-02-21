@@ -22,9 +22,9 @@ module.exports = {
           900: '#0c4a6e',
         },
         neon: {
-          blue: '#00d4ff',
-          purple: '#b400ff',
-          pink: '#ff0080',
+          blue: '#2563eb',
+          purple: '#7c3aed',
+          pink: '#db2777',
         },
       },
       fontFamily: {
@@ -57,8 +57,8 @@ module.exports = {
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
         glow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)' },
-          '50%': { boxShadow: '0 0 40px rgba(0, 212, 255, 0.8)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(0, 0, 0, 0.05)' },
+          '50%': { boxShadow: '0 0 40px rgba(0, 0, 0, 0.08)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
