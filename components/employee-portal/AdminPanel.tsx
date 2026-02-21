@@ -83,7 +83,7 @@ function EmployeeProfileModal({
   useEffect(() => {
     if (employee) {
       setLoading(true)
-      getEmployeeAttendanceHistory(employee.employeeId, 90)
+      getEmployeeAttendanceHistory(employee.employeeId, 30)
         .then((history) => {
           setAttendanceHistory(history)
           // Calculate stats from history
