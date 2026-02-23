@@ -208,5 +208,40 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    // ================================================
+    // SKILLDNA USERS COLLECTION
+    // ================================================
+    match /skillDNA_users/{userId} {
+      // Users can only read their own SkillDNA profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Users can create their own SkillDNA profile
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Users can update their own profile
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // Users cannot delete SkillDNA profiles
+      allow delete: if false;
+
+      // Version history subcollection
+      match /versions/{versionId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow create: if isAuthenticated() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+
+      // Assessment results subcollection
+      match /assessments/{assessmentId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow create: if isAuthenticated() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+
+      // Activity log subcollection
+      match /activityLog/{logId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow create: if isAuthenticated() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+    }
   }
 }

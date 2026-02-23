@@ -12,7 +12,6 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
-import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -358,11 +357,10 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const [showForm, setShowForm] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
-  const [uploadedResumeURL, setUploadedResumeURL] = useState('')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeFileName, setResumeFileName] = useState('')
+  const [uploadedResumeURL, setUploadedResumeURL] = useState('')
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -453,7 +451,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       return
     }
 
-    setUploading(true)
+    setIsUploading(true)
     setUploadProgress(0)
     setUploadError('')
     const fileName = `${roleId}_${Date.now()}_${file.name}`
@@ -466,7 +464,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     const timeoutId = setTimeout(() => {
       if (!hasProgress) {
         console.error('Upload timeout - no progress after 15s. Likely a CORS or rules issue.')
-        setUploading(false)
+        setIsUploading(false)
         setUploadProgress(0)
         setUploadError('Upload timed out. This may be a server configuration issue. Please try again or contact support.')
         toast.error('Upload timed out. Please try again.')
@@ -487,7 +485,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       (error: any) => {
         clearTimeout(timeoutId)
         console.error('Upload error:', error?.code, error?.message, error)
-        setUploading(false)
+        setIsUploading(false)
         setUploadProgress(0)
         
         let errorMsg = 'Upload failed. Please try again.'
@@ -507,12 +505,12 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
         try {
           const url = await getDownloadURL(uploadTask.snapshot.ref)
           setUploadedResumeURL(url)
-          setUploading(false)
+          setIsUploading(false)
           setUploadProgress(100)
           toast.success('Resume uploaded successfully!')
         } catch (err) {
           console.error('getDownloadURL error:', err)
-          setUploading(false)
+          setIsUploading(false)
           setUploadProgress(0)
           setUploadError('Failed to process upload. Please try again.')
           toast.error('Failed to process resume. Please try again.')
@@ -527,7 +525,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
     setUploadedResumeURL('')
     setUploadProgress(0)
     setUploadError('')
-    setUploading(false)
+    setIsUploading(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -580,13 +578,18 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (uploading) { toast.error('Please wait for resume upload to finish'); return }
+    if (isUploading) { toast.error('Please wait for resume upload to finish'); return }
     if (!validate()) { toast.error('Please fill in all required fields'); return }
     setSubmitting(true)
     setUploadError('')
     try {
-      // Resume is uploaded immediately on file select, use the stored URL
-      const resumeURL = uploadedResumeURL || ''
+      // Resume is already uploaded via uploadResumeImmediately
+      // If there's a resumeFile but no URL yet, the upload hasn't finished
+      if (resumeFile && !uploadedResumeURL) {
+        toast.error('Please wait for resume upload to complete')
+        setSubmitting(false)
+        return
+      }
 
       const formattedAnswers: Record<string, any> = {}
       questions.forEach((q) => {
@@ -609,14 +612,6 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
       setSubmitted(true)
       toast.success('Application submitted successfully!')
-
-      // Notify all admin team members about the new application
-      notifyAdminsOfNewApplication({
-        applicantName: formData.fullName,
-        roleTitle: role?.title || '',
-        roleId,
-      }).catch(err => console.error('Failed to send admin notifications:', err))
-
       setTimeout(() => router.push('/careers'), 4000)
     } catch (error: any) {
       console.error('Error submitting application:', error)
@@ -818,13 +813,13 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                                   <FaCheckCircle className="text-sm" /> Uploaded
                                 </span>
                               )}
-                              <button type="button" onClick={removeResume} disabled={uploading}
+                              <button type="button" onClick={removeResume} disabled={isUploading}
                                 className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors flex-shrink-0 disabled:opacity-50">
                                 <FaTimes />
                               </button>
                             </div>
                             {/* Upload Progress Bar - shown immediately on file select */}
-                            {uploading && (
+                            {isUploading && (
                               <div className="space-y-1">
                                 <div className="h-2 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
                                   <motion.div
@@ -892,14 +887,14 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
                   {/* Submit */}
                   <div className="pt-4 border-t border-gray-200 dark:border-neutral-800">
-                    <button type="submit" disabled={submitting || uploading}
+                    <button type="submit" disabled={submitting || isUploading}
                       className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                       {submitting ? (
                         <span className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           {isUploading ? `Uploading resume... ${uploadProgress}%` : 'Submitting application...'}
                         </span>
-                      ) : uploading ? (
+                      ) : isUploading ? (
                         <span className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           Waiting for upload...
