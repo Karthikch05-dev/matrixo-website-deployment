@@ -118,8 +118,10 @@ export default function TeamContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding">
-        <div className="container-custom px-6">
+      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="container-custom px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,7 +138,7 @@ export default function TeamContent() {
       </section>
 
       {/* Team Grid */}
-      <section className="section-padding bg-white dark:bg-gray-950">
+      <section className="section-padding bg-transparent">
         <div className="container-custom px-6">
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -199,7 +201,7 @@ export default function TeamContent() {
                         href={member.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center 
+                        className="w-10 h-10 glass-chip flex items-center justify-center 
                                  hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
                                  transition-all duration-300"
                       >
@@ -209,7 +211,7 @@ export default function TeamContent() {
                     {member.email && (
                       <a
                         href={`mailto:${member.email}`}
-                        className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center 
+                        className="w-10 h-10 glass-chip flex items-center justify-center 
                                  hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
                                  transition-all duration-300"
                       >
@@ -225,7 +227,7 @@ export default function TeamContent() {
       </section>
 
       {/* Join Us CTA */}
-      <section className="section-padding bg-gray-50 dark:bg-gray-900">
+      <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

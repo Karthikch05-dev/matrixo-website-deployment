@@ -113,13 +113,27 @@ service cloud.firestore {
     // USER PROFILES COLLECTION
     // ================================================
     match /UserProfiles/{userId} {
-      // Users can only read their own profile
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Anyone can read profiles (public profiles need this)
+      allow read: if true;
       // Users can create their own profile (once)
       allow create: if isAuthenticated() && request.auth.uid == userId;
       // Users can update their own profile (restricted fields enforced in app)
       allow update: if isAuthenticated() && request.auth.uid == userId;
       // Users cannot delete profiles
+      allow delete: if false;
+    }
+
+    // ================================================
+    // USERNAMES COLLECTION (username -> uid mapping)
+    // ================================================
+    match /Usernames/{usernameId} {
+      // Anyone can read (needed for public profile lookups & availability checks)
+      allow read: if true;
+      // Authenticated users can create username mappings
+      allow create: if isAuthenticated();
+      // Only the owner can update their username mapping
+      allow update: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      // Users cannot delete username mappings
       allow delete: if false;
     }
 

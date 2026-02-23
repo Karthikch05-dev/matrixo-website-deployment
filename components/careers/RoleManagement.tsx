@@ -257,7 +257,7 @@ export default function RoleManagement() {
                       value={formData.title}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                       placeholder="e.g., Full Stack Developer"
                     />
                   </div>
@@ -272,7 +272,7 @@ export default function RoleManagement() {
                       value={formData.team}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                       placeholder="e.g., Engineering"
                     />
                   </div>
@@ -288,7 +288,7 @@ export default function RoleManagement() {
                     onChange={handleInputChange}
                     required
                     rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                     placeholder="Brief description of the role"
                   />
                 </div>
@@ -302,7 +302,7 @@ export default function RoleManagement() {
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                     >
                       <option value="Remote">Remote</option>
                       <option value="On-site">On-site</option>
@@ -318,7 +318,7 @@ export default function RoleManagement() {
                       name="type"
                       value={formData.type}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                     >
                       <option value="Full-time">Full-time</option>
                       <option value="Part-time">Part-time</option>
@@ -337,7 +337,7 @@ export default function RoleManagement() {
                     value={formData.responsibilities}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                     placeholder="Develop features&#10;Write tests&#10;Code reviews"
                   />
                 </div>
@@ -351,7 +351,7 @@ export default function RoleManagement() {
                     value={formData.eligibility}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
                     placeholder="2+ years experience&#10;Knowledge of React&#10;Good communication"
                   />
                 </div>
@@ -369,7 +369,7 @@ export default function RoleManagement() {
                       setShowForm(false)
                       setEditingRole(null)
                     }}
-                    className="px-8 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+                    className="px-8 py-3 bg-white/40 dark:bg-white/[0.06] backdrop-blur-sm text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
                   >
                     Cancel
                   </button>

@@ -180,7 +180,7 @@ export default function AuthPage() {
             transition={{ duration: 0.6 }}
             className="w-full"
           >
-            <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-300 dark:border-gray-800 rounded-3xl p-6 lg:p-8 shadow-2xl">
+            <div className="glass-card-elevated p-6 lg:p-8">
               {/* Mobile Logo */}
               <div className="lg:hidden mb-8 flex justify-center relative h-12">
                 {/* Light Mode Logo (Black) */}
@@ -223,7 +223,7 @@ export default function AuthPage() {
                     </Link>
                     <button
                       onClick={async () => { await logout(); toast.success('Signed out successfully') }}
-                      className="w-full py-3 px-5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-3 px-5 border border-gray-200/30 dark:border-white/[0.06] text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-white/40 dark:hover:bg-white/[0.06] transition-all flex items-center justify-center gap-2"
                     >
                       <FaSignOutAlt />
                       <span>Sign out & use another account</span>
@@ -234,7 +234,7 @@ export default function AuthPage() {
               <>
 
               {/* Tab Switcher */}
-              <div className="flex gap-2 mb-6 p-1 bg-gray-200 dark:bg-gray-800/50 rounded-xl">
+              <div className="flex gap-2 mb-6 p-1 bg-white/40 dark:bg-white/[0.04] backdrop-blur-sm rounded-xl border border-gray-200/30 dark:border-white/[0.06]">
                 <button
                   onClick={() => setIsLogin(true)}
                   className={`flex-1 py-2.5 px-5 rounded-lg font-medium transition-all ${
@@ -262,7 +262,7 @@ export default function AuthPage() {
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-5 bg-white/80 dark:bg-white/90 text-gray-900 rounded-xl font-semibold hover:bg-white transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg backdrop-blur-sm"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
@@ -277,7 +277,7 @@ export default function AuthPage() {
 
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-800" />
+                  <div className="w-full border-t border-gray-200/30 dark:border-white/[0.06]" />
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-white/50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-500">Or continue with</span>
@@ -301,7 +301,7 @@ export default function AuthPage() {
                         value={formData.name}
                         onChange={handleChange}
                         required={!isLogin}
-                        className="w-full py-3 px-5 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500"
+                        className="w-full py-3 px-5 glass-input placeholder-gray-500 dark:placeholder-gray-500"
                       />
                     </motion.div>
                   )}
@@ -314,7 +314,7 @@ export default function AuthPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full py-3 px-5 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500"
+                  className="w-full py-3 px-5 glass-input placeholder-gray-500 dark:placeholder-gray-500"
                 />
 
                 <input
@@ -324,7 +324,7 @@ export default function AuthPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full py-3 px-5 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500"
+                  className="w-full py-3 px-5 glass-input placeholder-gray-500 dark:placeholder-gray-500"
                 />
 
                 <AnimatePresence mode="wait">
@@ -342,7 +342,7 @@ export default function AuthPage() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         required={!isLogin}
-                        className="w-full py-3 px-5 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500"
+                        className="w-full py-3 px-5 glass-input placeholder-gray-500 dark:placeholder-gray-500"
                       />
                     </motion.div>
                   )}

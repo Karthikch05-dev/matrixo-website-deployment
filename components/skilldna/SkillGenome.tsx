@@ -60,7 +60,7 @@ export default function SkillGenome({ data }: SkillGenomeProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white">
@@ -77,7 +77,7 @@ export default function SkillGenome({ data }: SkillGenomeProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white">
@@ -94,7 +94,7 @@ export default function SkillGenome({ data }: SkillGenomeProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white">
@@ -113,7 +113,7 @@ export default function SkillGenome({ data }: SkillGenomeProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12 mb-12"
+          className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-12 mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
             Your Skill DNA Map

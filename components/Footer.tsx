@@ -5,7 +5,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 pt-12 sm:pt-16 md:pt-20 pb-8 sm:pb-10 border-t border-gray-200/60 dark:border-white/[0.06]">
+    <footer className="bg-white/50 dark:bg-white/[0.02] backdrop-blur-xl text-gray-700 dark:text-gray-300 pt-12 sm:pt-16 md:pt-20 pb-8 sm:pb-10 border-t border-gray-200/30 dark:border-white/[0.06]">
       <div className="container-custom px-4 sm:px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-10 sm:mb-12">
           {/* Brand */}
@@ -81,7 +81,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200 dark:border-gray-800 pt-8 mt-8">
+        <div className="border-t border-gray-200/30 dark:border-white/[0.06] pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-500 dark:text-gray-500 text-sm">
               © {currentYear} matriXO - An Ed-Tech Startup. All rights reserved.

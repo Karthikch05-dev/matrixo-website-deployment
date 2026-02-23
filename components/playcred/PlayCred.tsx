@@ -140,7 +140,7 @@ export default function PlayCred() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl text-center"
+            className="glass-card p-6 text-center"
           >
             <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
               {badges.length}
@@ -152,7 +152,7 @@ export default function PlayCred() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl text-center"
+            className="glass-card p-6 text-center"
           >
             <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
               {badges.filter(b => b.rarity === 'legendary').length}
@@ -164,7 +164,7 @@ export default function PlayCred() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl text-center"
+            className="glass-card p-6 text-center"
           >
             <div className="text-4xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-2">
               {badges.filter(b => b.verified).length}
@@ -176,7 +176,7 @@ export default function PlayCred() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl text-center"
+            className="glass-card p-6 text-center"
           >
             <div className="text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent mb-2">
               {categories.length - 1}
@@ -196,7 +196,7 @@ export default function PlayCred() {
               className={`px-6 py-2 rounded-full font-medium transition-all ${
                 filter === category
                   ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md'
+                  : 'bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-700 dark:text-gray-300 hover:shadow-md'
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -273,7 +273,7 @@ export default function PlayCred() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-2xl w-full"
+                className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-2xl w-full"
               >
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
@@ -317,7 +317,7 @@ export default function PlayCred() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                  <div className="p-4 bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm rounded-xl">
                     <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                       Blockchain Hash:
                     </p>

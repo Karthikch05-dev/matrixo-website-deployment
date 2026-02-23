@@ -117,7 +117,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12"
+              className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-12"
             >
               {/* Category Badge */}
               <div className="inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium mb-6">
@@ -137,7 +137,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
                     onClick={() => handleAnswer(option.value)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="group relative p-6 rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all duration-300 text-left bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-xl"
+                    className="group relative p-6 rounded-2xl border-2 border-gray-200/30 dark:border-white/[0.06] hover:border-purple-500 dark:hover:border-purple-500 transition-all duration-300 text-left bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-xl"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
@@ -155,7 +155,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12 text-center"
+              className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-12 text-center"
             >
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center animate-pulse">
                 <FaBrain className="text-4xl text-white" />

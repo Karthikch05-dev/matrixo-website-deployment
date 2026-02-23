@@ -171,7 +171,7 @@ export default function ApplicationsDashboard() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -183,7 +183,7 @@ export default function ApplicationsDashboard() {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
               >
                 <option value="all">All Roles</option>
                 {roles.map(role => (
@@ -343,7 +343,7 @@ export default function ApplicationsDashboard() {
                     className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                       selectedApp.status === status
                         ? 'bg-cyan-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700'
+                        : 'bg-white/40 dark:bg-white/[0.06] backdrop-blur-sm text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700'
                     }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}

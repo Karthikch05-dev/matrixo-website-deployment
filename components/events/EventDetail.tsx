@@ -206,7 +206,7 @@ function DefaultEventDetail({ event }: { event: any }) {
       </section>
 
       {/* Main Content */}
-      <section className={`section-padding ${isTEDxEvent ? 'bg-white dark:from-black dark:via-gray-900 dark:to-black dark:bg-gradient-to-b' : 'bg-white dark:bg-gray-950'}`}>
+      <section className={`section-padding ${isTEDxEvent ? 'bg-white dark:from-black dark:via-gray-900 dark:to-black dark:bg-gradient-to-b' : 'bg-transparent'}`}>
         <div className="container-custom px-6">
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Left Column - Event Details */}
@@ -319,7 +319,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                         className={`relative aspect-square overflow-hidden rounded-2xl ${
                           isTEDxEvent 
                             ? 'border-2 border-red-200 dark:border-red-600/20 shadow-md hover:shadow-xl' 
-                            : 'border border-gray-200 dark:border-gray-700'
+                            : 'border border-gray-200/30 dark:border-white/[0.06]'
                         } hover:scale-105 transition-all duration-300 cursor-pointer group`}
                       >
                         <Image
@@ -370,7 +370,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                   </div>
                   
                   {/* Embedded Google Map */}
-                  <div className="mt-4 rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 dark:border-gray-700">
+                  <div className="mt-4 rounded-2xl overflow-hidden shadow-lg border border-gray-200/30 dark:border-white/[0.06]">
                     <iframe 
                       src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.553845987853!2d78.68277187462795!3d17.433186001485225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a33110155555557%3A0xb597e25edcbfbfbb!2sKommuri%20Pratap%20Reddy%20Institute%20Of%20Technology%20(Autonomous%20Institute)!5e0!3m2!1sen!2sin!4v1760181922948!5m2!1sen!2sin" 
                       width="100%" 
@@ -646,7 +646,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                         key={ticket.id}
                         className={`border-2 ${isTEDxEvent 
                           ? 'border-red-300 bg-red-50 dark:bg-gray-900/30 hover:border-red-500 hover:bg-red-100 dark:hover:bg-gray-900/50 rounded-3xl shadow-sm' 
-                          : 'border-gray-200 dark:border-gray-700 hover:border-neon-blue'} rounded-xl p-4 
+                          : 'border-gray-200/30 dark:border-white/[0.06] hover:border-neon-blue'} rounded-xl p-4 
                                  transition-all duration-300`}
                       >
                         <div className="flex items-start justify-between mb-3">
@@ -704,7 +704,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                   </div>
 
                   {/* Tags */}
-                  <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="pt-6 border-t border-gray-200/30 dark:border-white/[0.06]">
                     <div className="flex items-center flex-wrap gap-2">
                       <FaTag className="text-gray-400" />
                       {event.tags.map((tag: string) => (

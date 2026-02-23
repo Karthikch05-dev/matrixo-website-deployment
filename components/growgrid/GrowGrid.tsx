@@ -182,7 +182,7 @@ export default function GrowGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-2">
               <FaTrophy className="text-3xl text-yellow-500" />
@@ -199,7 +199,7 @@ export default function GrowGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-2">
               <FaStar className="text-3xl text-purple-500" />
@@ -212,7 +212,7 @@ export default function GrowGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-2">
               <FaCheckCircle className="text-3xl text-green-500" />
@@ -225,7 +225,7 @@ export default function GrowGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-2">
               <FaClock className="text-3xl text-blue-500" />
@@ -252,7 +252,7 @@ export default function GrowGrid() {
                   onClick={() => setSelectedPath(path.id)}
                   className={`text-left p-6 rounded-2xl transition-all duration-300 ${
                     selectedPath === path.id
-                      ? 'bg-white dark:bg-gray-800 shadow-2xl scale-105'
+                      ? 'bg-white/50 dark:bg-white/[0.03] backdrop-blur-md shadow-2xl scale-105'
                       : 'bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl hover:scale-102'
                   }`}
                 >
@@ -286,7 +286,7 @@ export default function GrowGrid() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8"
+          className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             {currentPath.name} Modules
@@ -306,7 +306,7 @@ export default function GrowGrid() {
                   onHoverEnd={() => setHoveredModule(null)}
                   className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 ${
                     module.locked
-                      ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 opacity-60'
+                      ? 'border-gray-200/30 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm opacity-60'
                       : module.completed
                       ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
                       : 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 hover:shadow-xl'

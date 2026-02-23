@@ -96,8 +96,10 @@ export default function ServicesContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding">
-        <div className="container-custom px-6">
+      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="container-custom px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -115,7 +117,7 @@ export default function ServicesContent() {
       </section>
 
       {/* Services Grid */}
-      <section id="programs" className="section-padding bg-white dark:bg-gray-950">
+      <section id="programs" className="section-padding bg-transparent">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -165,7 +167,7 @@ export default function ServicesContent() {
       </section>
 
       {/* How It Works */}
-      <section className="section-padding bg-gray-50 dark:bg-gray-900">
+      <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -208,7 +210,7 @@ export default function ServicesContent() {
       </section>
 
       {/* Partner as Ticketing Partner Section */}
-      <section className="section-padding bg-white dark:bg-gray-950">
+      <section className="section-padding bg-transparent">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -216,7 +218,7 @@ export default function ServicesContent() {
             viewport={{ once: true }}
             className="max-w-5xl mx-auto"
           >
-            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-12 text-white text-center relative overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-[var(--glass-radius-lg)] p-12 text-white text-center relative overflow-hidden">
               {/* Decorative Elements */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
@@ -283,7 +285,7 @@ export default function ServicesContent() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="section-padding bg-white dark:bg-gray-950">
+      <section id="pricing" className="section-padding bg-transparent">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -307,10 +309,10 @@ export default function ServicesContent() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className={`rounded-2xl p-8 ${
+                className={`rounded-[var(--glass-radius)] p-8 ${
                   plan.highlighted
                     ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white scale-105 shadow-2xl'
-                    : 'bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800'
+                    : 'glass-card'
                 }`}
               >
                 <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
@@ -347,7 +349,7 @@ export default function ServicesContent() {
       </section>
 
       {/* CTA */}
-      <section className="section-padding bg-gray-50 dark:bg-gray-900">
+      <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
         <div className="container-custom px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/AuthContext'
 import { db } from '@/lib/firebaseConfig'
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
 
 export interface PrivacySettings {
   showEmail: boolean
@@ -168,10 +168,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const available = await checkUsernameAvailable(username)
     if (!available) throw new Error('Username is already taken')
 
+    // Delete old username mapping if user had one
+    if (profile?.username && profile.username.toLowerCase() !== username.toLowerCase()) {
+      try {
+        const oldRef = doc(db, 'Usernames', profile.username.toLowerCase())
+        await deleteDoc(oldRef)
+      } catch (e) {
+        console.warn('Failed to delete old username mapping:', e)
+      }
+    }
+
     const docRef = doc(db, 'UserProfiles', user.uid)
     await updateDoc(docRef, { username: username.toLowerCase(), updatedAt: serverTimestamp() })
 
-    // Store username mapping
+    // Store new username mapping
     const usernameRef = doc(db, 'Usernames', username.toLowerCase())
     await setDoc(usernameRef, { uid: user.uid, username: username.toLowerCase() })
 

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ShippingPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-white dark:bg-gray-950">
+    <div className="min-h-screen pt-20 pb-20 bg-transparent">
       <div className="container-custom px-6 max-w-4xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
           Shipping & Delivery Policy

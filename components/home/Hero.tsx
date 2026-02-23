@@ -6,12 +6,16 @@ import { FaCalendarCheck, FaRocket, FaUsers } from 'react-icons/fa'
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-gray-950">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent">
       {/* Subtle dot pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+      {/* Ambient glow orbs */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/[0.07] rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-400/10 dark:bg-purple-500/[0.07] rounded-full blur-3xl" />
 
       {/* Very subtle top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gray-200 dark:bg-gray-800" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300/50 dark:via-white/[0.06] to-transparent" />
 
       {/* Content */}
       <div className="relative z-10 container-custom px-4 sm:px-6 py-20 sm:py-24 md:py-32 text-center">
@@ -24,7 +28,7 @@ export default function Hero() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="inline-block mb-6 px-6 py-2 bg-gray-100/80 dark:bg-white/[0.05] backdrop-blur-sm border border-gray-200 dark:border-white/[0.08] rounded-full"
+            className="inline-block mb-6 px-6 py-2 glass-chip"
           >
             <span className="text-gray-700 dark:text-gray-300 font-medium text-sm md:text-base">
               An Ed-Tech Startup 🚀
@@ -132,7 +136,7 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 border-2 border-gray-300 dark:border-gray-600 rounded-full flex justify-center"
+            className="w-6 h-10 border-2 border-gray-300/60 dark:border-white/[0.12] rounded-full flex justify-center backdrop-blur-sm"
           >
             <motion.div
               animate={{ y: [0, 12, 0] }}

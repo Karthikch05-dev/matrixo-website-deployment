@@ -98,7 +98,7 @@ export default function NotFound() {
           </Link>
 
           <Link href="/events">
-            <button className="group px-8 py-4 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-3">
+            <button className="group px-8 py-4 glass-card text-gray-900 dark:text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-3">
               <FaRocket className="text-xl text-purple-600 group-hover:translate-y-[-4px] transition-transform" />
               <span>Explore Events</span>
             </button>
@@ -112,7 +112,7 @@ export default function NotFound() {
           transition={{ delay: 0.6 }}
           className="mt-12 relative z-10"
         >
-          <div className="inline-block bg-white/50 dark:bg-gray-900/50 backdrop-blur-lg border border-gray-200 dark:border-gray-700 rounded-2xl px-6 py-4">
+          <div className="inline-block glass-card-elevated px-6 py-4">
             <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
               <FaBug className="text-red-500" />
               <code className="font-mono">

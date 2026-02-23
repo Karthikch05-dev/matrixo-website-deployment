@@ -6,10 +6,10 @@ import { FaArrowRight } from 'react-icons/fa'
 
 export default function CTA() {
   return (
-    <section className="section-padding bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
+    <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm relative overflow-hidden">
       {/* Subtle glass panel background */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gray-100 dark:bg-white/[0.02] rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-100/50 dark:bg-blue-500/[0.03] rounded-full blur-3xl" />
       </div>
 
       <div className="container-custom relative z-10">
@@ -45,8 +45,7 @@ export default function CTA() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-semibold rounded-full 
-                         hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-300"
+                className="btn-secondary flex items-center justify-center text-lg"
               >
                 Explore Programs
               </motion.button>

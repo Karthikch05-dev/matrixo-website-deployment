@@ -214,7 +214,7 @@ export default function MentorMatrix() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center"
+            className="glass-card p-4 text-center"
           >
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">250+</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Expert Mentors</p>
@@ -224,7 +224,7 @@ export default function MentorMatrix() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center"
+            className="glass-card p-4 text-center"
           >
             <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">5000+</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Sessions Completed</p>
@@ -234,7 +234,7 @@ export default function MentorMatrix() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center"
+            className="glass-card p-4 text-center"
           >
             <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">4.8★</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Average Rating</p>
@@ -244,7 +244,7 @@ export default function MentorMatrix() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center"
+            className="glass-card p-4 text-center"
           >
             <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">&lt; 3h</div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Avg Response Time</p>
@@ -252,7 +252,7 @@ export default function MentorMatrix() {
         </div>
 
         {/* Filters & Sort */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
+        <div className="glass-card p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
@@ -296,7 +296,7 @@ export default function MentorMatrix() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => setSelectedMentor(mentor)}
-              className="group cursor-pointer bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              className="group cursor-pointer glass-card p-6 hover:shadow-2xl transition-all duration-300 hover:scale-105"
             >
               {/* Match Score Badge */}
               <div className="flex items-center justify-between mb-4">
@@ -352,7 +352,7 @@ export default function MentorMatrix() {
               </div>
 
               {/* Price */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200/30 dark:border-white/[0.06]">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   ₹{mentor.price}
                   <span className="text-sm font-normal text-gray-600 dark:text-gray-400">/session</span>
@@ -384,7 +384,7 @@ export default function MentorMatrix() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
               >
                 {/* Close Button */}
                 <button

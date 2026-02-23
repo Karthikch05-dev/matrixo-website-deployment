@@ -51,8 +51,10 @@ export default function ContactContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding">
-        <div className="container-custom px-4 sm:px-6">
+      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="container-custom px-4 sm:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,7 +71,7 @@ export default function ContactContent() {
       </section>
 
       {/* Contact Section */}
-      <section className="section-padding bg-white dark:bg-gray-950">
+      <section className="section-padding bg-transparent">
         <div className="container-custom px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
@@ -89,9 +91,7 @@ export default function ContactContent() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 
-                             dark:border-gray-800 focus:border-neon-blue focus:outline-none transition-colors 
-                             text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-xl glass-input"
                     placeholder="John Doe"
                   />
                 </div>
@@ -106,9 +106,7 @@ export default function ContactContent() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 
-                             dark:border-gray-800 focus:border-neon-blue focus:outline-none transition-colors
-                             text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-xl glass-input"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -122,9 +120,7 @@ export default function ContactContent() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 
-                             dark:border-gray-800 focus:border-neon-blue focus:outline-none transition-colors
-                             text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-xl glass-input"
                     placeholder="+91 98765 43210"
                   />
                 </div>
@@ -138,9 +134,7 @@ export default function ContactContent() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 
-                             dark:border-gray-800 focus:border-neon-blue focus:outline-none transition-colors
-                             text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-xl glass-input"
                   >
                     <option value="">Select a subject</option>
                     <option value="general">General Inquiry</option>
@@ -161,9 +155,7 @@ export default function ContactContent() {
                     onChange={handleChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 
-                             dark:border-gray-800 focus:border-neon-blue focus:outline-none transition-colors
-                             text-gray-900 dark:text-white resize-none"
+                    className="w-full px-4 py-3 rounded-xl glass-input resize-none"
                     placeholder="Tell us more about your inquiry..."
                   />
                 </div>
@@ -230,7 +222,7 @@ export default function ContactContent() {
                     href="https://linkedin.com/company/matrixo"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center 
+                    className="w-12 h-12 glass-chip flex items-center justify-center 
                              hover:bg-gradient-to-br hover:from-neon-blue hover:to-neon-purple hover:text-white 
                              transition-all duration-300"
                   >
@@ -240,7 +232,7 @@ export default function ContactContent() {
                     href="https://instagram.com/matrixo_official"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center 
+                    className="w-12 h-12 glass-chip flex items-center justify-center 
                              hover:bg-gradient-to-br hover:from-neon-blue hover:to-neon-purple hover:text-white 
                              transition-all duration-300"
                   >

@@ -116,7 +116,7 @@ export default function ImpactVault() {
 
             <div className="flex items-center gap-3">
               {/* Time Range Selector */}
-              <div className="flex bg-white dark:bg-gray-800 rounded-lg shadow-lg p-1">
+              <div className="flex bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-lg shadow-lg p-1">
                 {(['week', 'month', 'quarter', 'year'] as const).map((range) => (
                   <button
                     key={range}
@@ -136,7 +136,7 @@ export default function ImpactVault() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg shadow-lg font-medium flex items-center gap-2 hover:shadow-xl"
+                className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg shadow-lg font-medium flex items-center gap-2 hover:shadow-xl"
               >
                 <FaDownload /> Export
               </motion.button>
@@ -150,7 +150,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xl">
@@ -173,7 +173,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xl">
@@ -196,7 +196,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl">
@@ -219,7 +219,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xl">
@@ -242,7 +242,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xl">
@@ -290,7 +290,7 @@ export default function ImpactVault() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
+          className="glass-card p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Course Performance</h2>
@@ -302,7 +302,7 @@ export default function ImpactVault() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
+                <tr className="border-b border-gray-200/30 dark:border-white/[0.06]">
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Course Name</th>
                   <th className="text-center py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Enrolled</th>
                   <th className="text-center py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Completed</th>
@@ -354,7 +354,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6"
+            className="glass-card p-6"
           >
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Skill Gap Analysis</h2>
             <div className="space-y-4">
@@ -393,7 +393,7 @@ export default function ImpactVault() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6"
+            className="glass-card p-6"
           >
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Top Performers</h2>
             <div className="space-y-4">

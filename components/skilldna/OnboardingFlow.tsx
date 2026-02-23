@@ -225,7 +225,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
             className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${
               value === opt.value
                 ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 text-gray-600 dark:text-gray-400'
+                : 'border-gray-200/30 dark:border-white/[0.06] hover:border-purple-300 text-gray-600 dark:text-gray-400'
             }`}
           >
             <span className="mr-1">{opt.emoji}</span> {opt.label}
@@ -288,7 +288,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                 <textarea
                   value={pastExperience}
                   onChange={(e) => setPastExperience(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+                  className="w-full p-4 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
                   rows={3}
                   placeholder="E.g., Built a weather app in React, participated in a hackathon, completed CS50..."
                 />
@@ -301,7 +301,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                 <textarea
                   value={currentSituation}
                   onChange={(e) => setCurrentSituation(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+                  className="w-full p-4 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
                   rows={3}
                   placeholder="E.g., 3rd year CSE student learning full-stack development, interning at..."
                 />
@@ -314,7 +314,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                 <textarea
                   value={futureAspiration}
                   onChange={(e) => setFutureAspiration(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+                  className="w-full p-4 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
                   rows={3}
                   placeholder="E.g., Senior Software Engineer at a top tech company, or launch my own startup..."
                 />
@@ -342,7 +342,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                 <select
                   value={academic.degree}
                   onChange={(e) => setAcademic({ ...academic, degree: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                 >
                   <option value="">Select degree</option>
                   <option value="B.Tech">B.Tech</option>
@@ -366,7 +366,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={academic.field}
                   onChange={(e) => setAcademic({ ...academic, field: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="e.g., Computer Science"
                 />
               </div>
@@ -377,7 +377,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={academic.institution}
                   onChange={(e) => setAcademic({ ...academic, institution: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="College / University name"
                 />
               </div>
@@ -387,7 +387,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                 <select
                   value={academic.year}
                   onChange={(e) => setAcademic({ ...academic, year: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                 >
                   <option value="">Select year</option>
                   <option value="1st Year">1st Year</option>
@@ -406,7 +406,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={academic.gpa || ''}
                   onChange={(e) => setAcademic({ ...academic, gpa: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="e.g., 8.5 or 85%"
                 />
               </div>
@@ -420,7 +420,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   value={newAchievement}
                   onChange={(e) => setNewAchievement(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAchievement(); } }}
-                  className="flex-1 p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="flex-1 p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="Add an achievement"
                 />
                 <button type="button" onClick={addAchievement} className="px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors flex-shrink-0">+</button>
@@ -454,7 +454,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
 
             <div className="space-y-4">
               {skills.map((skill, index) => (
-                <div key={index} className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div key={index} className="p-4 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-gray-50 dark:bg-gray-800/50">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">Skill Name</label>
@@ -462,7 +462,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                         type="text"
                         value={skill.name}
                         onChange={(e) => updateSkill(index, 'name', e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
+                        className="w-full p-2.5 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
                         placeholder="e.g., Python"
                       />
                     </div>
@@ -471,7 +471,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                       <select
                         value={skill.level}
                         onChange={(e) => updateSkill(index, 'level', e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
+                        className="w-full p-2.5 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
                       >
                         <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
@@ -484,7 +484,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                       <select
                         value={skill.category}
                         onChange={(e) => updateSkill(index, 'category', e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
+                        className="w-full p-2.5 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
                       >
                         {SKILL_CATEGORIES.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -500,7 +500,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                           max={30}
                           value={skill.yearsOfExperience}
                           onChange={(e) => updateSkill(index, 'yearsOfExperience', parseInt(e.target.value) || 0)}
-                          className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
+                          className="w-full p-2.5 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all text-sm"
                         />
                       </div>
                       {skills.length > 1 && (
@@ -547,7 +547,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   className={`px-4 py-2.5 rounded-full border-2 text-sm font-medium transition-all ${
                     interests.includes(interest)
                       ? 'border-purple-500 bg-purple-500 text-white shadow-lg shadow-purple-200 dark:shadow-purple-900/30'
-                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-purple-300'
+                      : 'border-gray-200/30 dark:border-white/[0.06] text-gray-600 dark:text-gray-400 hover:border-purple-300'
                   }`}
                 >
                   {interests.includes(interest) && <FaCheck className="inline mr-1 text-xs" />}
@@ -579,7 +579,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={careerGoals.dreamRole}
                   onChange={(e) => setCareerGoals({ ...careerGoals, dreamRole: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="e.g., Senior Software Engineer at Google"
                 />
               </div>
@@ -590,7 +590,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={careerGoals.shortTerm}
                   onChange={(e) => setCareerGoals({ ...careerGoals, shortTerm: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="What do you want to achieve in the next year?"
                 />
               </div>
@@ -601,7 +601,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={careerGoals.midTerm}
                   onChange={(e) => setCareerGoals({ ...careerGoals, midTerm: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="Where do you see yourself in 2-3 years?"
                 />
               </div>
@@ -612,7 +612,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   type="text"
                   value={careerGoals.longTerm}
                   onChange={(e) => setCareerGoals({ ...careerGoals, longTerm: e.target.value })}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  className="w-full p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="Your ultimate career vision"
                 />
               </div>
@@ -627,7 +627,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                       className={`px-3 py-2 rounded-lg border text-sm transition-all ${
                         careerGoals.targetIndustries.includes(industry)
                           ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-purple-300'
+                          : 'border-gray-200/30 dark:border-white/[0.06] text-gray-600 dark:text-gray-400 hover:border-purple-300'
                       }`}
                     >
                       {industry}

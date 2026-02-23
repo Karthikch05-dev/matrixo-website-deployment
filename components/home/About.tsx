@@ -5,7 +5,7 @@ import { FaGraduationCap, FaLightbulb, FaRocket } from 'react-icons/fa'
 
 export default function About() {
   return (
-    <section className="section-padding bg-gray-50/50 dark:bg-gray-900/50">
+    <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -49,7 +49,7 @@ export default function About() {
               transition={{ delay: index * 0.2, duration: 0.6 }}
               className="glass-card p-8 hover-lift hover-glow"
             >
-              <div className="w-16 h-16 bg-gray-900 dark:bg-white rounded-2xl flex items-center justify-center mb-6 text-white dark:text-gray-900">
+              <div className="w-16 h-16 bg-gray-900/90 dark:bg-white/90 backdrop-blur-sm rounded-[var(--glass-radius-sm)] flex items-center justify-center mb-6 text-white dark:text-gray-900 shadow-lg">
                 <item.icon size={28} />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
