@@ -182,22 +182,28 @@ export default function ProfileSetupPage() {
   }
 
   const inputClass = (field: string) =>
-    `w-full py-3 px-4 bg-white/50 dark:bg-white/[0.04] border ${errors[field] ? 'border-red-500' : 'border-gray-200 dark:border-white/[0.08]'} rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-white/20 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-400`
+    `w-full py-3 px-4 bg-white/5 dark:bg-white/[0.06] border ${errors[field] ? 'border-red-500' : 'border-white/10 dark:border-white/[0.1]'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500`
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 py-24">
+    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center px-4 py-24">
+      {/* BG decor */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 -right-32 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-3xl" />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-lg"
       >
-        <div className="bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-gray-200 dark:border-white/[0.08] rounded-3xl p-5 sm:p-8 shadow-xl">
+        <div className="rounded-3xl p-5 sm:p-8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+          <div className="h-1 -mx-5 sm:-mx-8 -mt-5 sm:-mt-8 mb-5 sm:mb-8 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'}`}>1</div>
-            <div className={`w-12 h-0.5 ${step >= 2 ? 'bg-gray-900 dark:bg-white' : 'bg-gray-200 dark:bg-gray-800'}`} />
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'}`}>2</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 dark:bg-white/[0.06] text-gray-500'}`}>1</div>
+            <div className={`w-12 h-0.5 ${step >= 2 ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-white/10 dark:bg-white/[0.08]'}`} />
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 dark:bg-white/[0.06] text-gray-500'}`}>2</div>
           </div>
 
           {/* Header */}
@@ -215,11 +221,11 @@ export default function ProfileSetupPage() {
               {/* Profile Photo */}
               <div className="flex flex-col items-center mb-2">
                 <label htmlFor="photo-upload" className="cursor-pointer group">
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-white/[0.12] group-hover:border-gray-400 dark:group-hover:border-white/20 transition-colors">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 dark:border-white/[0.12] group-hover:border-blue-400/50 dark:group-hover:border-blue-400/30 transition-colors">
                     {profilePhotoPreview ? (
                       <Image src={profilePhotoPreview} alt="Profile" fill className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 dark:bg-white/[0.04]">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 dark:bg-white/[0.04] bg-gradient-to-br from-blue-500/10 to-purple-500/10">
                         <FaCamera className="text-gray-400 text-lg mb-1" />
                         <span className="text-[10px] text-gray-400">Add Photo</span>
                       </div>
@@ -233,7 +239,7 @@ export default function ProfileSetupPage() {
               {/* Username */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaAt className="text-gray-500 text-xs" /> Username
+                  <FaAt className="text-blue-400 text-xs" /> Username
                 </label>
                 <div className="relative">
                   <input
@@ -260,7 +266,7 @@ export default function ProfileSetupPage() {
               {/* Full Name */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaUser className="text-gray-500 text-xs" /> Full Name
+                  <FaUser className="text-blue-400 text-xs" /> Full Name
                 </label>
                 <input
                   type="text" name="fullName" value={formData.fullName} onChange={handleChange}
@@ -273,7 +279,7 @@ export default function ProfileSetupPage() {
               {/* Bio */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaUser className="text-gray-500 text-xs" /> Bio <span className="text-gray-400 text-xs font-normal">(optional)</span>
+                  <FaUser className="text-blue-400 text-xs" /> Bio <span className="text-gray-400 text-xs font-normal">(optional)</span>
                 </label>
                 <textarea
                   name="bio" value={formData.bio} onChange={handleChange}
@@ -288,11 +294,11 @@ export default function ProfileSetupPage() {
               {/* Email (read-only) */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaEnvelope className="text-gray-500 text-xs" /> Email
+                  <FaEnvelope className="text-blue-400 text-xs" /> Email
                 </label>
                 <input
                   type="email" value={user?.email || ''} readOnly
-                  className="w-full py-3 px-4 bg-gray-100 dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] rounded-xl text-gray-400 cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-white/[0.02] border border-white/[0.06] rounded-xl text-gray-500 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-400 mt-1">Linked to your account</p>
               </div>
@@ -300,7 +306,7 @@ export default function ProfileSetupPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full py-3 px-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 px-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 mt-2"
               >
                 <span>Continue</span>
                 <FaArrowRight className="text-sm" />
@@ -311,7 +317,7 @@ export default function ProfileSetupPage() {
               {/* Roll Number */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaIdCard className="text-gray-500 text-xs" /> Roll Number
+                  <FaIdCard className="text-blue-400 text-xs" /> Roll Number
                 </label>
                 <input
                   type="text" name="rollNumber" value={formData.rollNumber} onChange={handleChange}
@@ -324,14 +330,14 @@ export default function ProfileSetupPage() {
               {/* Phone */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaPhone className="text-gray-500 text-xs" /> Phone Number
+                  <FaPhone className="text-blue-400 text-xs" /> Phone Number
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 bg-gray-100 dark:bg-white/[0.04] border border-r-0 border-gray-200 dark:border-white/[0.08] rounded-l-xl text-gray-500 text-sm">+91</span>
+                  <span className="inline-flex items-center px-3 bg-white/5 dark:bg-white/[0.06] border border-r-0 border-white/10 dark:border-white/[0.1] rounded-l-xl text-gray-500 text-sm">+91</span>
                   <input
                     type="tel" name="phone" value={formData.phone} onChange={handleChange}
                     placeholder="9876543210" maxLength={10}
-                    className={`w-full py-3 px-4 bg-white/50 dark:bg-white/[0.04] border ${errors.phone ? 'border-red-500' : 'border-gray-200 dark:border-white/[0.08]'} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-white/20 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-400`}
+                    className={`w-full py-3 px-4 bg-white/5 dark:bg-white/[0.06] border ${errors.phone ? 'border-red-500' : 'border-white/10 dark:border-white/[0.1]'} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500`}
                   />
                 </div>
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
@@ -340,7 +346,7 @@ export default function ProfileSetupPage() {
               {/* College */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaUniversity className="text-gray-500 text-xs" /> College Name
+                  <FaUniversity className="text-blue-400 text-xs" /> College Name
                 </label>
                 <input
                   type="text" name="college" value={formData.college} onChange={handleChange}
@@ -354,7 +360,7 @@ export default function ProfileSetupPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    <FaGraduationCap className="text-gray-500 text-xs" /> Year
+                    <FaGraduationCap className="text-blue-400 text-xs" /> Year
                   </label>
                   <select
                     name="year" value={formData.year} onChange={handleChange}
@@ -368,7 +374,7 @@ export default function ProfileSetupPage() {
 
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    <FaCodeBranch className="text-gray-500 text-xs" /> Branch
+                    <FaCodeBranch className="text-blue-400 text-xs" /> Branch
                   </label>
                   <select
                     name="branch" value={formData.branch} onChange={handleChange}
@@ -385,7 +391,7 @@ export default function ProfileSetupPage() {
               {formData.year === 'Graduate' && (
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    <FaGraduationCap className="text-gray-500 text-xs" /> Year of Graduation
+                    <FaGraduationCap className="text-blue-400 text-xs" /> Year of Graduation
                   </label>
                   <input
                     type="text" name="graduationYear" value={formData.graduationYear} onChange={handleChange}
@@ -401,13 +407,13 @@ export default function ProfileSetupPage() {
                 <button
                   type="button"
                   onClick={() => { setStep(1); setErrors({}) }}
-                  className="flex-1 py-3 px-4 border border-gray-200 dark:border-white/[0.08] text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all"
+                  className="flex-1 py-3 px-4 border border-white/10 dark:border-white/[0.1] text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-white/5 transition-all"
                 >
                   Back
                 </button>
                 <button
                   type="submit" disabled={loading}
-                  className="flex-1 py-3 px-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <FaSpinner className="animate-spin text-xl" />

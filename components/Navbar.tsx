@@ -250,6 +250,7 @@ export default function Navbar() {
                         <Link
                           key={link.name}
                           href={link.href}
+                          onClick={() => setShowFeaturesDropdown(false)}
                           className="block px-6 py-4 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                         >
                           <div className="font-bold text-purple-600 dark:text-purple-400 mb-1">
