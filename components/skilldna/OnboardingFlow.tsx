@@ -410,31 +410,31 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   placeholder="e.g., 8.5 or 85%"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Achievements</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newAchievement}
-                    onChange={(e) => setNewAchievement(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addAchievement()}
-                    className="flex-1 p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
-                    placeholder="Add an achievement"
-                  />
-                  <button onClick={addAchievement} className="px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">+</button>
-                </div>
-                {(academic.achievements || []).length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(academic.achievements || []).map((a, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm">
-                        {a}
-                        <button onClick={() => removeAchievement(i)} className="ml-1 hover:text-red-500">&times;</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Achievements</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAchievement}
+                  onChange={(e) => setNewAchievement(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAchievement(); } }}
+                  className="flex-1 p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
+                  placeholder="Add an achievement"
+                />
+                <button type="button" onClick={addAchievement} className="px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors flex-shrink-0">+</button>
               </div>
+              {(academic.achievements || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {(academic.achievements || []).map((a, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm">
+                      {a}
+                      <button type="button" onClick={() => removeAchievement(i)} className="ml-1 hover:text-red-500">&times;</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         );

@@ -52,6 +52,11 @@ const betaLinks = [
     href: '/impactvault',
     description: 'Real-time analytics and skill gap insights'
   },
+  { 
+    name: 'Profile & Username', 
+    href: '/profile',
+    description: 'Public profiles with usernames, privacy controls & sharing'
+  },
 ]
 
 export default function Navbar() {
@@ -71,7 +76,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true)
-    setIsBeta(window.location.hostname === 'beta.matrixo.in')
+    setIsBeta(window.location.hostname === 'beta.matrixo.in' || window.location.hostname === 'localhost')
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
     }
