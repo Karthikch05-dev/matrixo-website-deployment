@@ -27,7 +27,7 @@ type Tab = 'profile' | 'privacy' | 'share'
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const { profile, loading: profileLoading, profileExists, updateProfile } = useProfile()
+  const { profile, loading: profileLoading, profileExists, updateProfile, setUsername, checkUsernameAvailable } = useProfile()
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<Tab>('profile')
@@ -49,6 +49,12 @@ export default function ProfilePage() {
   })
   const [privacyData, setPrivacyData] = useState<PrivacySettings>(DEFAULT_PRIVACY)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  
+  // Username setup state (for users without a username)
+  const [showUsernameSetup, setShowUsernameSetup] = useState(false)
+  const [newUsername, setNewUsername] = useState('')
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [savingUsername, setSavingUsername] = useState(false)
 
   useEffect(() => {
     if (profile) {
@@ -65,8 +71,44 @@ export default function ProfilePage() {
         portfolio: profile.portfolio || '',
       })
       setPrivacyData(profile.privacy || DEFAULT_PRIVACY)
+      // Auto-show username setup if user doesn't have one
+      if (!profile.username) {
+        setShowUsernameSetup(true)
+      }
     }
   }, [profile])
+
+  // Username availability check with debounce
+  useEffect(() => {
+    const uname = newUsername.trim().toLowerCase()
+    if (!uname || uname.length < 3) { setUsernameStatus('idle'); return }
+    if (!/^[a-z0-9_]+$/.test(uname)) { setUsernameStatus('idle'); return }
+
+    setUsernameStatus('checking')
+    const timer = setTimeout(async () => {
+      const available = await checkUsernameAvailable(uname)
+      setUsernameStatus(available ? 'available' : 'taken')
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [newUsername, checkUsernameAvailable])
+
+  const handleSaveUsername = async () => {
+    const uname = newUsername.trim().toLowerCase()
+    if (!uname || uname.length < 3) { toast.error('Username must be at least 3 characters'); return }
+    if (!/^[a-z0-9_]+$/.test(uname)) { toast.error('Only lowercase letters, numbers, and underscores'); return }
+    if (usernameStatus !== 'available') { toast.error('Please choose an available username'); return }
+
+    setSavingUsername(true)
+    try {
+      await setUsername(uname)
+      toast.success('Username set successfully!')
+      setShowUsernameSetup(false)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to set username')
+    } finally {
+      setSavingUsername(false)
+    }
+  }
 
   if (!user) {
     router.replace('/auth')

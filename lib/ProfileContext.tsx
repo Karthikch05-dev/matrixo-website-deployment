@@ -55,6 +55,7 @@ interface ProfileContextType {
   fetchProfile: () => Promise<void>
   createProfile: (data: Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'updatedAt'>) => Promise<void>
   updateProfile: (data: Partial<Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'updatedAt' | 'username' | 'rollNumber'>>) => Promise<void>
+  setUsername: (username: string) => Promise<void>
   checkUsernameAvailable: (username: string) => Promise<boolean>
   getProfileByUsername: (username: string) => Promise<UserProfile | null>
 }
@@ -158,6 +159,25 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setProfile(prev => prev ? { ...prev, ...data, updatedAt: new Date() } : null)
   }
 
+  const setUsername = async (username: string) => {
+    if (!user) throw new Error('User not authenticated')
+    if (!profileExists) throw new Error('Profile does not exist')
+    if (!username || username.length < 3) throw new Error('Username must be at least 3 characters')
+    if (!/^[a-z0-9_]+$/.test(username)) throw new Error('Only lowercase letters, numbers, and underscores')
+
+    const available = await checkUsernameAvailable(username)
+    if (!available) throw new Error('Username is already taken')
+
+    const docRef = doc(db, 'UserProfiles', user.uid)
+    await updateDoc(docRef, { username: username.toLowerCase(), updatedAt: serverTimestamp() })
+
+    // Store username mapping
+    const usernameRef = doc(db, 'Usernames', username.toLowerCase())
+    await setDoc(usernameRef, { uid: user.uid, username: username.toLowerCase() })
+
+    setProfile(prev => prev ? { ...prev, username: username.toLowerCase(), updatedAt: new Date() } : null)
+  }
+
   const checkUsernameAvailable = async (username: string): Promise<boolean> => {
     if (!username || username.length < 3) return false
     const usernameRef = doc(db, 'Usernames', username.toLowerCase())
@@ -192,6 +212,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     fetchProfile,
     createProfile,
     updateProfile: updateProfileData,
+    setUsername,
     checkUsernameAvailable,
     getProfileByUsername,
   }

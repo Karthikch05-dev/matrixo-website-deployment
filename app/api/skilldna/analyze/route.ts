@@ -5,7 +5,7 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeUserProfile } from '@/lib/skilldna/ai-engine';
+import { analyzeUserProfile, generateMockProfile } from '@/lib/skilldna/ai-engine';
 import { AIAnalysisRequest } from '@/lib/skilldna/types';
 
 export const dynamic = 'force-dynamic';
@@ -85,12 +85,6 @@ export async function POST(request: NextRequest) {
   try {
     // Get API key from environment
     const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 503 }
-      );
-    }
 
     // Check authorization header (Firebase Auth token expected)
     const authHeader = request.headers.get('Authorization');
@@ -124,6 +118,18 @@ export async function POST(request: NextRequest) {
 
     // Sanitize input
     const sanitizedData = sanitizeOnboardingData(body.onboardingData);
+
+    // If no API key, use local fallback profile generator
+    if (!apiKey) {
+      console.warn('OPENROUTER_API_KEY not set — using fallback mock profile generator');
+      const fallbackResult = generateMockProfile(sanitizedData);
+      return NextResponse.json({
+        success: true,
+        data: fallbackResult,
+        fallback: true,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     const analysisRequest: AIAnalysisRequest = {
       onboardingData: sanitizedData,
