@@ -271,7 +271,7 @@ export default function Navbar() {
             )}
 
             {navLinksAfterFeatures.map((link, index) => {
-              const isActive = link.href === '/' 
+              const isActive = link.href === '/'
                 ? pathname === '/'
                 : pathname === link.href || pathname.startsWith(link.href + '/')
               return (
@@ -279,7 +279,7 @@ export default function Navbar() {
                   key={link.name}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
+                  transition={{
                     delay: (navLinksBeforeFeatures.length + index + 1) * 0.05,
                     duration: 0.3,
                     ease: [0.4, 0, 0.2, 1]
@@ -287,17 +287,15 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className={`font-medium transition-all duration-300 ease-out relative group ${
-                      isActive 
-                        ? 'text-blue-500 dark:text-blue-400' 
-                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400'
-                    }`}
+                    className={`font-medium transition-all duration-300 ease-out relative group ${isActive
+                      ? 'text-gray-900 dark:text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      }`}
                   >
                     {link.name}
-                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 
-                                   transition-all duration-300 ease-out ${
-                                     isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                                   }`} />
+                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
+                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`} />
                   </Link>
                 </motion.div>
               )
@@ -539,7 +537,7 @@ export default function Navbar() {
                 )}
 
                 {navLinksAfterFeatures.map((link) => {
-                  const isActive = link.href === '/' 
+                  const isActive = link.href === '/'
                     ? pathname === '/'
                     : pathname === link.href || pathname.startsWith(link.href + '/')
                   return (
@@ -547,11 +545,10 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-2 rounded-lg transition-all duration-200 ease-out ${
-                        isActive
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }`}
+                      className={`block px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
+                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
+                        }`}
                     >
                       {link.name}
                     </Link>
