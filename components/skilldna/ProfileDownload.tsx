@@ -41,9 +41,9 @@ export default function ProfileDownload({ targetRef, userName }: ProfileDownload
             const savedStyles: { el: HTMLElement; style: string }[] = [];
 
             elementsWithStyle.forEach((child) => {
-                const computed = getComputedStyle(child);
+                const computed = getComputedStyle(child) as any;
                 const hasBackdrop = computed.backdropFilter && computed.backdropFilter !== 'none';
-                const hasWebkitBackdrop = computed.webkitBackdropFilter && (computed.webkitBackdropFilter as string) !== 'none';
+                const hasWebkitBackdrop = computed['webkitBackdropFilter'] && computed['webkitBackdropFilter'] !== 'none';
 
                 if (hasBackdrop || hasWebkitBackdrop) {
                     savedStyles.push({ el: child, style: child.getAttribute('style') || '' });
@@ -54,7 +54,7 @@ export default function ProfileDownload({ targetRef, userName }: ProfileDownload
 
                     // Replace with solid fallback
                     child.style.backdropFilter = 'none';
-                    child.style.webkitBackdropFilter = 'none';
+                    (child.style as any)['webkitBackdropFilter'] = 'none';
 
                     // If background is nearly transparent, set a solid fallback
                     if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg.includes('0.0')) {
@@ -80,10 +80,10 @@ export default function ProfileDownload({ targetRef, userName }: ProfileDownload
                     const isDark = document.documentElement.classList.contains('dark');
 
                     allElements.forEach((node) => {
-                        const style = getComputedStyle(node);
-                        if (style.backdropFilter !== 'none' || (style.webkitBackdropFilter && style.webkitBackdropFilter !== 'none')) {
+                        const style = getComputedStyle(node) as any;
+                        if (style.backdropFilter !== 'none' || (style['webkitBackdropFilter'] && style['webkitBackdropFilter'] !== 'none')) {
                             node.style.backdropFilter = 'none';
-                            node.style.webkitBackdropFilter = 'none';
+                            (node.style as any)['webkitBackdropFilter'] = 'none';
                             if (!node.style.backgroundColor || node.style.backgroundColor === 'transparent') {
                                 node.style.backgroundColor = isDark ? '#1e1e35' : '#ffffff';
                             }
