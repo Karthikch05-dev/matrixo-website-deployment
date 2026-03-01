@@ -189,6 +189,11 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   const todayString = new Date().toISOString().split('T')[0]
   const isTodayHoliday = isHoliday(todayString)
   const todayHoliday = holidays.find(h => h.date === todayString)
+  const todayDayOfWeek = new Date().getDay() // 0 = Sunday, 6 = Saturday
+  const todayDayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][todayDayOfWeek]
+  const hasWorkingDayOverride = holidays.some(h => h.date === todayString && h.name === '__WORKING_DAY__')
+  const isWeekend = (todayDayOfWeek === 0 || todayDayOfWeek === 6) && !hasWorkingDayOverride
+  const isTodayOff = isTodayHoliday || isWeekend
 
   // Update time every second
   useEffect(() => {
@@ -507,23 +512,34 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     )
   }
 
-  // If today is a holiday, show holiday notice
-  if (isTodayHoliday) {
+  // If today is a holiday or weekend, show notice
+  if (isTodayOff) {
     return (
       <Card padding="lg" glow>
         <div className="text-center py-8">
           <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
             <FaPlane className="text-4xl text-purple-400" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">It's a Holiday! 🎉</h2>
-          <p className="text-neutral-400 mb-4">
-            {todayHoliday?.name || 'Holiday'}
-          </p>
-          {todayHoliday?.description && (
-            <p className="text-neutral-500 text-sm">{todayHoliday.description}</p>
+          {isWeekend ? (
+            <>
+              <h2 className="text-2xl font-bold text-white mb-2">It's {todayDayName}! 🌟</h2>
+              <p className="text-neutral-400 mb-4">
+                Enjoy your weekend — no attendance required!
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-white mb-2">It's a Holiday! 🎉</h2>
+              <p className="text-neutral-400 mb-4">
+                {todayHoliday?.name || 'Holiday'}
+              </p>
+              {todayHoliday?.description && (
+                <p className="text-neutral-500 text-sm">{todayHoliday.description}</p>
+              )}
+            </>
           )}
           <Badge variant="warning" className="mt-4">
-            Attendance marking is disabled for holidays
+            Attendance marking is disabled for {isWeekend ? 'weekends' : 'holidays'}
           </Badge>
         </div>
       </Card>
