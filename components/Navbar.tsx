@@ -14,12 +14,12 @@ import { getFirestore, collection, query, where, getDocs } from 'firebase/firest
 
 const navLinks = [
   { name: 'Home', href: '/' },
-  { name: 'Events', href: '/events' },
-  { name: 'Services', href: '/services' },
   { name: 'About', href: '/about' },
   { name: 'Team', href: '/team' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'Services', href: '/services' },
+  { name: 'Events', href: '/events' },
   { name: 'Careers', href: '/careers' },
+  { name: 'Contact', href: '/contact' },
 ]
 
 // Employee Portal URL - external domain
@@ -27,33 +27,33 @@ const EMPLOYEE_PORTAL_URL = 'https://team-auth.matrixo.in/employee-portal'
 
 // Beta-only links - matriXO Vision Platform with descriptions
 const betaLinks = [
-  { 
-    name: 'SkillDNA™', 
+  {
+    name: 'SkillDNA™',
     href: '/skilldna',
     description: 'AI-powered skill assessment and genome visualization'
   },
-  { 
-    name: 'GrowGrid™', 
+  {
+    name: 'GrowGrid™',
     href: '/growgrid',
     description: 'Adaptive learning paths with gamification'
   },
-  { 
-    name: 'PlayCred™', 
+  {
+    name: 'PlayCred™',
     href: '/playcred',
     description: 'Blockchain-verified achievement badges'
   },
-  { 
-    name: 'MentorMatrix™', 
+  {
+    name: 'MentorMatrix™',
     href: '/mentormatrix',
     description: 'AI-matched mentorship connections'
   },
-  { 
-    name: 'ImpactVault™', 
+  {
+    name: 'ImpactVault™',
     href: '/impactvault',
     description: 'Real-time analytics and skill gap insights'
   },
-  { 
-    name: 'Profile & Username', 
+  {
+    name: 'Profile & Username',
     href: '/profile',
     description: 'Public profiles with usernames, privacy controls & sharing'
   },
@@ -69,7 +69,7 @@ export default function Navbar() {
   const [showMobileFeaturesDropdown, setShowMobileFeaturesDropdown] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [isEmployee, setIsEmployee] = useState(false)
-  
+
   const { user, logout } = useAuth()
   const { profile } = useProfile()
   const pathname = usePathname()
@@ -91,26 +91,26 @@ export default function Navbar() {
         setIsEmployee(false)
         return
       }
-      
+
       try {
         const db = getFirestore()
         const employeesRef = collection(db, 'Employees')
         const q = query(employeesRef, where('email', '==', user.email))
         const querySnapshot = await getDocs(q)
-        
+
         setIsEmployee(!querySnapshot.empty)
       } catch (error) {
         console.error('Error checking employee status:', error)
         setIsEmployee(false)
       }
     }
-    
+
     checkIfEmployee()
   }, [user])
 
   useEffect(() => {
     if (!mounted) return
-    
+
     // Check current state from DOM
     const isDark = document.documentElement.classList.contains('dark')
     setDarkMode(isDark)
@@ -118,7 +118,7 @@ export default function Navbar() {
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode
-    
+
     if (newDarkMode) {
       document.documentElement.classList.add('dark')
       localStorage.setItem('theme', 'dark')
@@ -126,7 +126,7 @@ export default function Navbar() {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('theme', 'light')
     }
-    
+
     setDarkMode(newDarkMode)
   }
 
@@ -147,7 +147,7 @@ export default function Navbar() {
       <div className="container-custom px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo with BETA Badge */}
-          <button 
+          <button
             type="button"
             onClick={(e) => {
               e.preventDefault()
@@ -161,19 +161,19 @@ export default function Navbar() {
               className="relative h-10 w-auto"
             >
               {/* Light Mode Logo (Black) */}
-              <img 
-                src="/logos/logo-light.png" 
-                alt="matriXO Logo" 
+              <img
+                src="/logos/logo-light.png"
+                alt="matriXO Logo"
                 className="h-10 w-auto object-contain dark:hidden cursor-pointer"
               />
               {/* Dark Mode Logo (White) */}
-              <img 
-                src="/logos/logo-dark.png" 
-                alt="matriXO Logo" 
+              <img
+                src="/logos/logo-dark.png"
+                alt="matriXO Logo"
                 className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
               />
             </motion.div>
-            
+
             {/* BETA Badge */}
             {isBeta && (
               <motion.span
@@ -190,7 +190,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-6">
             {navLinks.map((link, index) => {
               // Check if active: exact match for home, startsWith for other routes
-              const isActive = link.href === '/' 
+              const isActive = link.href === '/'
                 ? pathname === '/'
                 : pathname === link.href || pathname.startsWith(link.href + '/')
               return (
@@ -198,7 +198,7 @@ export default function Navbar() {
                   key={link.name}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
+                  transition={{
                     delay: index * 0.05,
                     duration: 0.3,
                     ease: [0.4, 0, 0.2, 1]
@@ -206,37 +206,35 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className={`font-medium transition-all duration-300 ease-out relative group ${
-                      isActive 
-                        ? 'text-gray-900 dark:text-white' 
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
+                    className={`font-medium transition-all duration-300 ease-out relative group ${isActive
+                      ? 'text-gray-900 dark:text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      }`}
                   >
                     {link.name}
                     <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${
-                                     isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                                   }`} />
+                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`} />
                   </Link>
                 </motion.div>
               )
             })}
-            
+
             {/* Beta Features Dropdown */}
             {isBeta && (
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setShowFeaturesDropdown(true)}
                 onMouseLeave={() => setShowFeaturesDropdown(false)}
               >
                 <button
-                  className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 
-                           font-bold transition-all duration-300 ease-out relative group px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
+                           font-bold transition-all duration-300 ease-out relative group px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
                 >
                   Features
                   <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 <AnimatePresence>
                   {showFeaturesDropdown && (
                     <motion.div
@@ -253,7 +251,7 @@ export default function Navbar() {
                           onClick={() => setShowFeaturesDropdown(false)}
                           className="block px-6 py-4 hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors border-b border-gray-200/30 dark:border-white/[0.06] last:border-b-0"
                         >
-                          <div className="font-bold text-purple-600 dark:text-purple-400 mb-1">
+                          <div className="font-bold text-gray-900 dark:text-white mb-1">
                             {link.name}
                           </div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -304,10 +302,10 @@ export default function Navbar() {
                 </AnimatePresence>
               </motion.button>
             )}
-            
+
             {/* User Profile or Login Button */}
             {user ? (
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setShowUserDropdown(true)}
                 onMouseLeave={() => setShowUserDropdown(false)}
@@ -330,7 +328,7 @@ export default function Navbar() {
                   )}
                   <span className="hidden sm:inline">{profile?.fullName || user.displayName || user.email?.split('@')[0]}</span>
                 </motion.button>
-                
+
                 <AnimatePresence>
                   {showUserDropdown && (
                     <motion.div
@@ -437,7 +435,7 @@ export default function Navbar() {
               <div className="py-4 space-y-3">
                 {navLinks.map((link) => {
                   // Check if active: exact match for home, startsWith for other routes
-                  const isActive = link.href === '/' 
+                  const isActive = link.href === '/'
                     ? pathname === '/'
                     : pathname === link.href || pathname.startsWith(link.href + '/')
                   return (
@@ -445,11 +443,10 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${
-                        isActive
-                          ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
-                      }`}
+                      className={`block px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
+                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
+                        }`}
                     >
                       {link.name}
                     </Link>
@@ -461,13 +458,13 @@ export default function Navbar() {
                   <div className="border-t border-gray-200/30 dark:border-white/[0.06] pt-3 mt-3">
                     <button
                       onClick={() => setShowMobileFeaturesDropdown(!showMobileFeaturesDropdown)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 text-purple-600 dark:text-purple-400 
+                      className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 dark:text-gray-300 
                                font-bold hover:bg-white/40 dark:hover:bg-white/[0.06] rounded-2xl transition-colors"
                     >
                       <span>Features</span>
                       <FaChevronDown className={`text-xs transition-transform duration-200 ${showMobileFeaturesDropdown ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     <AnimatePresence>
                       {showMobileFeaturesDropdown && (
                         <motion.div
@@ -485,10 +482,10 @@ export default function Navbar() {
                                   setIsOpen(false)
                                   setShowMobileFeaturesDropdown(false)
                                 }}
-                                className="block px-4 py-3 bg-purple-500/10 dark:bg-purple-400/[0.06] hover:bg-purple-500/15 dark:hover:bg-purple-400/10 
+                                className="block px-4 py-3 bg-gray-500/10 dark:bg-white/[0.04] hover:bg-gray-500/15 dark:hover:bg-white/[0.08] 
                                          rounded-2xl transition-colors backdrop-blur-sm"
                               >
-                                <div className="font-bold text-purple-600 dark:text-purple-400 text-sm mb-1">
+                                <div className="font-bold text-gray-900 dark:text-white text-sm mb-1">
                                   {link.name}
                                 </div>
                                 <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -574,7 +571,7 @@ export default function Navbar() {
                   <Link
                     href="/contact"
                     onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-center w-full px-6 py-2.5 btn-primary
+                    className="flex items-center justify-center w-full px-6 py-2.5 btn-primary
                              rounded-full font-semibold hover:shadow-lg transition-all duration-200"
                   >
                     Get Started

@@ -7,9 +7,9 @@ export default function AboutContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
         {/* Glass overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/10 dark:to-black/20 backdrop-blur-[1px]" />
         <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="container-custom px-6 relative z-10">
@@ -21,7 +21,7 @@ export default function AboutContent() {
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
               About <span className="gradient-text">matriXO</span>
             </h1>
-            <p className="text-2xl text-gray-300 mb-8">
+            <p className="text-2xl text-gray-600 dark:text-gray-300 mb-8">
               Empowering students through technical workshops, hackathons, and career-focused bootcamps
             </p>
           </motion.div>
@@ -67,23 +67,23 @@ export default function AboutContent() {
                   <h3 className="text-4xl font-bold gradient-text mb-4">Why Choose matriXO?</h3>
                   <ul className="space-y-4 text-gray-600 dark:text-gray-400 text-lg">
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       <span>Hands-on technical training programs</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       <span>Industry-relevant curriculum</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       <span>Expert mentorship and guidance</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       <span>Growing partner network</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       <span>Career-focused approach</span>
                     </li>
                   </ul>

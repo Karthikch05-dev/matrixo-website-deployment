@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNA™ Skill Gap Cards
+// SkillDNAâ„¢ Skill Gap Cards
 // Visual representation of skill gaps with priorities
 // ============================================================
 
@@ -49,9 +49,9 @@ export default function SkillGapCards({ gaps }: SkillGapCardsProps) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-2">Skill Gap Analysis</h3>
-        <p className="text-sm text-gray-400 mb-6">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Skill Gap Analysis</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
           Areas where you need improvement to reach your career goals
         </p>
 
@@ -72,7 +72,7 @@ export default function SkillGapCards({ gaps }: SkillGapCardsProps) {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Icon className={config.color} />
-                    <h4 className="font-bold text-white text-sm">{gap.skill}</h4>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">{gap.skill}</h4>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${config.badge}`}>
                     {gap.priority.toUpperCase()}
@@ -82,10 +82,10 @@ export default function SkillGapCards({ gaps }: SkillGapCardsProps) {
                 {/* Gap bar */}
                 <div className="mb-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-400">Current: {gap.currentLevel}%</span>
-                    <span className="text-gray-400">Required: {gap.requiredLevel}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">Current: {gap.currentLevel}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">Required: {gap.requiredLevel}%</span>
                   </div>
-                  <div className="h-3 bg-gray-800 rounded-full overflow-hidden relative">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden relative">
                     {/* Required level marker */}
                     <div
                       className={`absolute h-full bg-gradient-to-r ${config.barRequired} rounded-full`}
@@ -114,7 +114,7 @@ export default function SkillGapCards({ gaps }: SkillGapCardsProps) {
                       {gap.suggestedResources.map((resource) => (
                         <span
                           key={resource}
-                          className="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 border border-gray-700"
+                          className="text-xs px-2 py-0.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700"
                         >
                           {resource}
                         </span>

@@ -281,10 +281,10 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     fetchTodayAttendance()
   }, [fetchTodayAttendance])
 
-  // Check if it's past the 6PM attendance cutoff
+  // Check if it's past the 7:30PM attendance cutoff
   const isPastCutoff = () => {
     const now = new Date()
-    return now.getHours() >= 18 // 6:00 PM or later
+    return now.getHours() > 19 || (now.getHours() === 19 && now.getMinutes() >= 30) // 7:30 PM or later
   }
 
   const handleMarkAttendance = async () => {
@@ -293,9 +293,9 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       return
     }
 
-    // 6PM cutoff check - only Leave requests can be submitted after 6PM
+    // 7:30PM cutoff check - only Leave requests can be submitted after 7:30PM
     if (isPastCutoff() && selectedStatus !== 'L') {
-      toast.error('Attendance marking is closed for today. The cutoff time is 6:00 PM. Please contact your admin if needed.')
+      toast.error('Attendance marking is closed for today. The cutoff time is 7:30 PM. Please contact your admin if needed.')
       return
     }
 
@@ -402,16 +402,17 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     }
   }
 
-  // Check if editing daily report is allowed (before 6:00 PM / 18:00)
+  // Check if editing daily report is allowed (before 7:30 PM / 19:30)
   const isEditingAllowed = () => {
     const now = new Date()
     const hours = now.getHours()
-    return hours < 18 // Before 6:00 PM
+    const minutes = now.getMinutes()
+    return hours < 19 || (hours === 19 && minutes < 30) // Before 7:30 PM
   }
 
   const handleUpdateNotes = async () => {
     if (!isEditingAllowed()) {
-      toast.error('Daily report can only be updated before 6:00 PM')
+      toast.error('Daily report can only be updated before 7:30 PM')
       return
     }
     
@@ -680,7 +681,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
         )}
       </AnimatePresence>
 
-      {/* 6PM Cutoff Banner */}
+      {/* 7:30PM Cutoff Banner */}
       {isPastCutoff() && !todayAttendance && (
         <div className="mb-6 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-xl">
           <div className="flex items-start gap-3">
@@ -690,7 +691,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             <div className="flex-1">
               <h3 className="font-semibold text-red-400">Attendance Cutoff Passed</h3>
               <p className="text-sm text-neutral-400 mt-1">
-                The attendance marking window has closed for today. The daily cutoff is 6:00 PM. 
+                The attendance marking window has closed for today. The daily cutoff is 7:30 PM. 
                 Your attendance for today will be marked as Absent. Contact your admin if you need corrections.
               </p>
             </div>

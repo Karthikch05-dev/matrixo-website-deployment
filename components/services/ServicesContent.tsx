@@ -46,7 +46,7 @@ const services = [
 const pricingPlans = [
   {
     name: 'Workshop',
-    price: '₹499',
+    price: 'Ã¢â€šÂ¹499',
     period: '/student',
     description: 'Single-day hands-on workshops',
     features: [
@@ -61,7 +61,7 @@ const pricingPlans = [
   },
   {
     name: 'Bootcamp',
-    price: '₹9,999',
+    price: 'Ã¢â€šÂ¹9,999',
     period: '/student',
     description: 'Intensive 4-6 week programs',
     features: [
@@ -96,7 +96,7 @@ export default function ServicesContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
         <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="container-custom px-6 relative z-10">
@@ -109,7 +109,7 @@ export default function ServicesContent() {
               Programs That Build
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 block mt-2">Real Tech Careers</span>
             </h1>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
               From beginner workshops to intensive bootcamps, we offer hands-on technical training that prepares students for industry success.
             </p>
           </motion.div>
@@ -155,7 +155,7 @@ export default function ServicesContent() {
                 <ul className="space-y-2">
                   {service.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-blue-500 mr-2">✓</span>
+                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
                       {feature}
                     </li>
                   ))}
@@ -245,9 +245,9 @@ export default function ServicesContent() {
 
                 <div className="grid md:grid-cols-3 gap-6 mb-10">
                   {[
-                    { icon: '🎫', title: 'Easy Ticketing', desc: 'Create and manage multiple ticket tiers' },
-                    { icon: '✉️', title: 'Email Confirmations', desc: 'Automated registration confirmations' },
-                    { icon: '📊', title: 'Real-time Analytics', desc: 'Track registrations and attendee insights' },
+                    { icon: 'Ã°Å¸Å½Â«', title: 'Easy Ticketing', desc: 'Create and manage multiple ticket tiers' },
+                    { icon: 'Ã¢Å“â€°Ã¯Â¸Â', title: 'Email Confirmations', desc: 'Automated registration confirmations' },
+                    { icon: 'Ã°Å¸â€œÅ ', title: 'Real-time Analytics', desc: 'Track registrations and attendee insights' },
                   ].map((benefit, index) => (
                     <motion.div
                       key={benefit.title}
@@ -271,7 +271,7 @@ export default function ServicesContent() {
                     className="px-10 py-4 bg-white text-blue-600 font-bold rounded-full hover:shadow-2xl 
                              transition-all duration-200 text-lg"
                   >
-                    Become a Partner →
+                    Become a Partner Ã¢â€ â€™
                   </motion.button>
                 </Link>
 
@@ -328,7 +328,7 @@ export default function ServicesContent() {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className={`flex items-center ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
-                      <span className={`mr-2 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}>✓</span>
+                      <span className={`mr-2 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}>Ã¢Å“â€œ</span>
                       {feature}
                     </li>
                   ))}

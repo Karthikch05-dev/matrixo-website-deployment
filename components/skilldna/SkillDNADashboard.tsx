@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNA™ Dashboard - Main Dashboard Component
+// SkillDNAâ„¢ Dashboard - Main Dashboard Component
 // Full-featured skill genome visualization
 // ============================================================
 
@@ -46,7 +46,7 @@ export default function SkillDNADashboard({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-blue-950/20 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50/20 to-indigo-50/20 dark:from-gray-950 dark:via-purple-950/20 dark:to-blue-950/20 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -56,15 +56,15 @@ export default function SkillDNADashboard({
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 px-4 py-1.5 rounded-full mb-3 text-sm">
+              <div className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 px-4 py-1.5 rounded-full mb-3 text-sm">
                 <FaDna className="animate-pulse" />
-                <span className="font-semibold">SkillDNA™ Dashboard</span>
+                <span className="font-semibold">SkillDNAâ„¢ Dashboard</span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                 {userName ? `${userName}'s` : 'Your'} Skill Genome
               </h1>
-              <p className="text-gray-400 mt-1">
-                Last updated: {new Date(profile.lastUpdated).toLocaleDateString()} · 
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Last updated: {new Date(profile.lastUpdated).toLocaleDateString()} Â· 
                 Version {profile.version}
               </p>
             </div>
@@ -76,13 +76,13 @@ export default function SkillDNADashboard({
                   {profile.dynamicSkillScore}
                 </div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                  / 1000 · {getScoreGrade(profile.dynamicSkillScore, 1000)}
+                  / 1000 Â· {getScoreGrade(profile.dynamicSkillScore, 1000)}
                 </p>
               </div>
               {onRefresh && (
                 <button
                   onClick={onRefresh}
-                  className="p-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all"
+                  className="p-3 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all"
                   title="Refresh profile"
                 >
                   <FaHistory />
@@ -101,7 +101,7 @@ export default function SkillDNADashboard({
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  : 'bg-gray-200/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <tab.icon className="text-sm" />
@@ -130,12 +130,12 @@ export default function SkillDNADashboard({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-5"
+                  className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-5"
                 >
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white mb-3`}>
                     <stat.icon />
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {stat.value}{stat.max ? <span className="text-sm text-gray-500 font-normal">/{stat.max}</span> : ''}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
@@ -146,8 +146,8 @@ export default function SkillDNADashboard({
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Radar Chart */}
-              <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FaChartLine className="text-purple-400" />
                   Skill Radar
                 </h3>
@@ -155,8 +155,8 @@ export default function SkillDNADashboard({
               </div>
 
               {/* Dynamic Score Meter */}
-              <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FaTrophy className="text-yellow-400" />
                   Dynamic Skill Score
                 </h3>
@@ -165,8 +165,8 @@ export default function SkillDNADashboard({
             </div>
 
             {/* Career Alignment */}
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaBullseye className="text-green-400" />
                 Career Alignment Progress
               </h3>
@@ -181,8 +181,8 @@ export default function SkillDNADashboard({
             <PersonaSummary persona={profile.persona} />
 
             {/* Behavioral Traits */}
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaLightbulb className="text-amber-400" />
                 Behavioral Profile
               </h3>
@@ -197,10 +197,10 @@ export default function SkillDNADashboard({
                   >
                     <div className="flex-1">
                       <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-300">{trait.name}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{trait.name}</span>
                         <span className={`text-sm font-bold ${getScoreColor(trait.score)}`}>{trait.score}%</span>
                       </div>
-                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                         <motion.div
                           className={`h-full bg-gradient-to-r ${getScoreGradient(trait.score)} rounded-full`}
                           initial={{ width: 0 }}
@@ -220,8 +220,8 @@ export default function SkillDNADashboard({
         {activeTab === 'skills' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Technical Skills Detail */}
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-white mb-6">Technical Skills Breakdown</h3>
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Technical Skills Breakdown</h3>
               <div className="space-y-4">
                 {profile.technicalSkills.map((skill, i) => (
                   <motion.div
@@ -232,14 +232,14 @@ export default function SkillDNADashboard({
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{skill.name}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">{skill.category}</span>
-                        {skill.trend === 'rising' && <span className="text-green-400 text-xs">↑</span>}
-                        {skill.trend === 'declining' && <span className="text-red-400 text-xs">↓</span>}
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">{skill.name}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">{skill.category}</span>
+                        {skill.trend === 'rising' && <span className="text-green-400 text-xs">â†‘</span>}
+                        {skill.trend === 'declining' && <span className="text-red-400 text-xs">â†“</span>}
                       </div>
                       <span className={`text-sm font-bold ${getScoreColor(skill.score)}`}>{skill.score}%</span>
                     </div>
-                    <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full bg-gradient-to-r ${getScoreGradient(skill.score)} rounded-full`}
                         initial={{ width: 0 }}
@@ -253,8 +253,8 @@ export default function SkillDNADashboard({
             </div>
 
             {/* Skill Clusters */}
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Skill Clusters</h3>
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Skill Clusters</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {profile.skillClusters.map((cluster, i) => (
                   <motion.div
@@ -262,13 +262,13 @@ export default function SkillDNADashboard({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-5 rounded-xl bg-gray-800/50 border border-gray-700/50"
+                    className="p-5 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-white text-sm">{cluster.name}</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm">{cluster.name}</h4>
                       <span className={`text-sm font-bold ${getScoreColor(cluster.strength)}`}>{cluster.strength}%</span>
                     </div>
-                    <p className="text-xs text-gray-400 mb-3">{cluster.description}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">{cluster.description}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {cluster.skills.map((skill) => (
                         <span key={skill} className="text-xs px-2 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">

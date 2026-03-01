@@ -11,12 +11,12 @@ import Script from 'next/script'
 import config from '@/lib/config'
 import { headers } from 'next/headers'
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 })
 
-const spaceGrotesk = Space_Grotesk({ 
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-space-grotesk',
 })
@@ -103,16 +103,16 @@ export default async function RootLayout({
       <head>
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        
+
         {/* iOS PWA Configuration - Required for location & other permissions in standalone mode */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="matriXO Team Auth" />
         <link rel="apple-touch-icon" href="/favicon.png" />
-        
+
         {/* Theme color for PWA */}
         <meta name="theme-color" content="#0a0a0a" />
-        
+
         {/* Dark Mode Script */}
         <script
           dangerouslySetInnerHTML={{

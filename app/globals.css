@@ -1152,3 +1152,47 @@ html {
 [data-portal-theme="light"] .border-l-2.border-transparent {
   border-left-color: transparent !important;
 }
+
+/* ============================================
+   PRINT STYLES for Profile PDF Export
+   ============================================ */
+@media print {
+  /* Hide navigation, footer, and download buttons */
+  nav, footer, .print\\:hidden,
+  [class*="BetaBanner"],
+  [class*="Navbar"],
+  [class*="Footer"] {
+    display: none !important;
+  }
+
+  /* Reset backgrounds for printing */
+  body {
+    background: #0a0a0f !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Ensure gradients and colors print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove fixed positioning for bg decorations */
+  .fixed.inset-0.pointer-events-none {
+    display: none !important;
+  }
+
+  /* Adjust page margins */
+  @page {
+    margin: 0.5in;
+    size: A4;
+  }
+
+  /* Prevent page breaks inside profile sections */
+  .rounded-2xl, .rounded-3xl {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaCalendarCheck, FaRocket, FaUsers } from 'react-icons/fa'
+import { FaDna, FaRocket, FaUniversity } from 'react-icons/fa'
 
 export default function Hero() {
   return (
@@ -11,8 +11,9 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       {/* Ambient glow orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/[0.07] rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-400/10 dark:bg-purple-500/[0.07] rounded-full blur-3xl" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-400/10 dark:bg-purple-500/[0.07] rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/[0.07] rounded-full blur-3xl" />
+      <div className="absolute top-2/3 left-1/3 w-64 h-64 bg-cyan-400/[0.06] dark:bg-cyan-500/[0.04] rounded-full blur-3xl" />
 
       {/* Very subtle top accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300/50 dark:via-white/[0.06] to-transparent" />
@@ -24,6 +25,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
+          {/* Badge */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -31,57 +33,59 @@ export default function Hero() {
             className="inline-block mb-6 px-6 py-2 glass-chip"
           >
             <span className="text-gray-700 dark:text-gray-300 font-medium text-sm md:text-base">
-              An Ed-Tech Startup 🚀
+              AI-Powered Career Growth Platform 🧬
             </span>
           </motion.div>
-        <br/>
-          {/* Dynamic Logo */}
+          <br />
+
+          {/* Logo */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
             className="relative inline-block mb-6"
           >
-            {/* Light Mode Logo (Black) */}
-            <img 
-              src="/logos/logo-light.png" 
-              alt="matriXO" 
+            <img
+              src="/logos/logo-light.png"
+              alt="matriXO"
               className="h-14 md:h-32 lg:h-20 w-auto mx-auto block dark:hidden"
             />
-            {/* Dark Mode Logo (White) */}
-            <img 
-              src="/logos/logo-dark.png" 
-              alt="matriXO" 
+            <img
+              src="/logos/logo-dark.png"
+              alt="matriXO"
               className="h-14 md:h-32 lg:h-20 w-auto mx-auto transform hidden dark:block"
             />
           </motion.div>
 
+          {/* Headline */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-xl md:text-3xl lg:text-4xl font-light text-gray-700 dark:text-gray-300 mb-4 max-w-4xl mx-auto"
           >
-            Where Technical Excellence Meets Career Growth
+            Where AI Meets Your Career Journey
           </motion.p>
 
+          {/* Bold tagline */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white mb-12"
           >
-            Workshops. Hackathons. Bootcamps. Real Skills.
+            Map Your Skills. Grow Smarter. Prove Your Worth.
           </motion.p>
 
+          {/* Description */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.8 }}
             className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto"
           >
-            Empowering students through hands-on technical training, competitive events, 
-            and industry-relevant bootcamps. Build skills that matter.
+            AI-driven skill analysis, personalized learning paths, blockchain-verified credentials,
+            and AI-matched mentorship — everything you need to become industry-ready, in one platform.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -91,14 +95,14 @@ export default function Hero() {
             transition={{ delay: 0.9, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-6 justify-center items-center"
           >
-            <Link href="/events">
+            <Link href="/skilldna">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary flex items-center space-x-2"
               >
-                <FaCalendarCheck />
-                <span>Explore Programs</span>
+                <FaDna />
+                <span>Discover Your SkillDNA</span>
               </motion.button>
             </Link>
 
@@ -109,7 +113,7 @@ export default function Hero() {
                 className="btn-secondary flex items-center space-x-2"
               >
                 <FaRocket />
-                <span>Our Programs</span>
+                <span>Explore Platform</span>
               </motion.button>
             </Link>
 
@@ -119,8 +123,8 @@ export default function Hero() {
                 whileTap={{ scale: 0.95 }}
                 className="btn-secondary flex items-center space-x-2"
               >
-                <FaUsers />
-                <span>Collaborate with Us</span>
+                <FaUniversity />
+                <span>For Colleges</span>
               </motion.button>
             </Link>
           </motion.div>

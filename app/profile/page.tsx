@@ -113,7 +113,8 @@ export default function ProfilePage() {
       await setUsername(uname)
       toast.success('Username updated!')
       setEditingUsername(false)
-    } catch (err: any) { toast.error(err.message || 'Failed to set username')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to set username')
     } finally { setSavingUsername(false) }
   }
 
@@ -342,11 +343,10 @@ export default function ProfilePage() {
         <div className="flex gap-1 p-1 rounded-2xl mb-4" style={cardStyle}>
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setIsEditing(false) }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === tab.id
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
                   ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
                   : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5'
-              }`}>
+                }`}>
               <tab.icon className="text-xs" />{tab.label}
             </button>
           ))}
@@ -459,11 +459,10 @@ export default function ProfilePage() {
                   <div className="flex gap-2">
                     {(['public', 'private'] as const).map(opt => (
                       <button key={opt} onClick={() => setPrivacyData(p => ({ ...p, profileVisibility: opt }))}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                          privacyData.profileVisibility === opt
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${privacyData.profileVisibility === opt
                             ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
                             : 'bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.08] text-gray-600 dark:text-gray-400'
-                        }`}>
+                          }`}>
                         {opt === 'public' ? <FaEye className="text-xs" /> : <FaEyeSlash className="text-xs" />}
                         {opt.charAt(0).toUpperCase() + opt.slice(1)}
                       </button>
@@ -511,8 +510,22 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 </div>
+                {/* Preview Button — prominent */}
+                {profile?.username && (
+                  <div className="mb-6">
+                    <Link href={`/u/${profile.username}`}
+                      className="group relative w-full py-4 px-5 rounded-2xl font-semibold transition-all flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-[1.02]">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <FaEye className="relative z-10 text-lg" />
+                      <span className="relative z-10 text-base">Preview Your Profile</span>
+                      <span className="relative z-10 text-xs opacity-75 ml-1">— See how others see you</span>
+                    </Link>
+                  </div>
+                )}
+
+                {/* Mini Preview Card */}
                 <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Preview</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Quick Preview</p>
                   <div className="p-5 rounded-2xl bg-white/5 dark:bg-white/[0.06] border border-white/[0.08]">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
@@ -537,10 +550,12 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
+
+                {/* Open in new tab link */}
                 {profile?.username && (
                   <Link href={`/u/${profile.username}`} target="_blank"
                     className="w-full mt-4 py-3 px-4 border border-white/10 dark:border-white/[0.1] text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                    <FaLink className="text-sm" /> View Public Profile
+                    <FaLink className="text-sm" /> Open in New Tab
                   </Link>
                 )}
               </div>

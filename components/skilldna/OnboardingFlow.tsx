@@ -825,14 +825,14 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
         {/* Progress */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-400">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
               Step {currentIndex + 1} of {STEPS.length}
             </span>
             <span className="text-sm font-medium text-purple-400">
               {Math.round(progress)}%
             </span>
           </div>
-          <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
               animate={{ width: `${progress}%` }}
@@ -853,7 +853,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
           <button
             onClick={goBack}
             disabled={currentStep === 'welcome'}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <FaArrowLeft /> Back
           </button>

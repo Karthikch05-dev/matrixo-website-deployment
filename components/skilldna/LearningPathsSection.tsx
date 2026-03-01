@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNA™ Learning Paths Section
+// SkillDNAâ„¢ Learning Paths Section
 // AI-recommended learning journeys
 // ============================================================
 
@@ -23,12 +23,12 @@ const difficultyColors = {
 export default function LearningPathsSection({ paths }: LearningPathsSectionProps) {
   return (
     <div className="space-y-4">
-      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
           <FaGraduationCap className="text-blue-400" />
           Recommended Learning Paths
         </h3>
-        <p className="text-sm text-gray-400 mb-6">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
           AI-curated learning journeys based on your SkillDNA profile
         </p>
 
@@ -46,7 +46,7 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
               >
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                   <div>
-                    <h4 className="text-lg font-bold text-white mb-1">{path.title}</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{path.title}</h4>
                     <p className="text-sm text-gray-400">{path.description}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
@@ -54,7 +54,7 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
                       <FaSignal className="inline mr-1" />
                       {path.difficulty.charAt(0).toUpperCase() + path.difficulty.slice(1)}
                     </span>
-                    <span className="text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-400 font-medium">
+                    <span className="text-xs px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">
                       <FaClock className="inline mr-1" />
                       {path.estimatedDuration}
                     </span>
@@ -67,7 +67,7 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
                   <div className="space-y-2">
                     {path.steps.map((step, j) => (
                       <div key={j} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center text-xs text-gray-600 dark:text-gray-400 flex-shrink-0">
                           {j + 1}
                         </div>
                         <span className="text-sm text-gray-300">{step}</span>
@@ -86,7 +86,7 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
                       {path.relatedSkills.map((skill) => (
                         <span
                           key={skill}
-                          className="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 border border-gray-700"
+                          className="text-xs px-2 py-0.5 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700"
                         >
                           {skill}
                         </span>

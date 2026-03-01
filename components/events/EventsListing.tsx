@@ -39,7 +39,7 @@ export default function EventsListing() {
   return (
     <div className="min-h-screen pt-5 pb-20">
       {/* Header */}
-      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white py-16 sm:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white py-16 sm:py-20 overflow-hidden">
         <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="container-custom px-4 sm:px-6 relative z-10">
@@ -51,7 +51,7 @@ export default function EventsListing() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 sm:mb-6">
               Explore <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Programs</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-300">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300">
               Workshops, hackathons, bootcamps, and technical events designed to accelerate your tech career
             </p>
           </motion.div>
@@ -190,7 +190,7 @@ export default function EventsListing() {
                           )}
                           {event.status === 'sold-out' && (
                             <div className="absolute top-4 right-4 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-celebrate animate-shine">
-                              🎉 SOLD OUT 🎊
+                              Ã°Å¸Å½â€° SOLD OUT Ã°Å¸Å½Å 
                             </div>
                           )}
                           <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -218,7 +218,7 @@ export default function EventsListing() {
                           <div className="space-y-2 mb-4 flex-1">
                             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                               <FaCalendar className="mr-2 text-blue-500 flex-shrink-0" />
-                              {format(new Date(event.date), 'MMM dd, yyyy • hh:mm a')}
+                              {format(new Date(event.date), 'MMM dd, yyyy Ã¢â‚¬Â¢ hh:mm a')}
                             </div>
                             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                               <FaMapMarkerAlt className="mr-2 text-purple-600 flex-shrink-0" />
@@ -231,12 +231,12 @@ export default function EventsListing() {
                             {event.status === 'sold-out' ? (
                               <div className="w-full">
                                 <div className="bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-red-500 rounded-xl p-4 text-center">
-                                  <span className="text-3xl mb-2 block">🎉</span>
+                                  <span className="text-3xl mb-2 block">Ã°Å¸Å½â€°</span>
                                   <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                                     SOLD OUT!
                                   </span>
                                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    🎊 All tickets claimed! 🎊
+                                    Ã°Å¸Å½Å  All tickets claimed! Ã°Å¸Å½Å 
                                   </p>
                                 </div>
                               </div>
@@ -246,11 +246,11 @@ export default function EventsListing() {
                                   <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">From</span>
                                   <div className="flex items-baseline gap-1 sm:gap-2">
                                     <span className="text-xl sm:text-2xl font-bold gradient-text">
-                                      ₹{Math.min(...event.tickets.map((t: any) => t.price))}
+                                      Ã¢â€šÂ¹{Math.min(...event.tickets.map((t: any) => t.price))}
                                     </span>
                                     {event.tickets.some((t: any) => t.originalPrice) && (
                                       <span className="text-xs sm:text-sm text-gray-400 line-through">
-                                        ₹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
+                                        Ã¢â€šÂ¹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
                                       </span>
                                     )}
                                   </div>

@@ -118,7 +118,7 @@ export default function TeamContent() {
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white section-padding overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
         <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="container-custom px-6 relative z-10">
@@ -130,7 +130,7 @@ export default function TeamContent() {
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
               Meet Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Team</span>
             </h1>
-            <p className="text-2xl text-gray-300">
+            <p className="text-2xl text-gray-600 dark:text-gray-300">
               The passionate individuals building the future of technical education
             </p>
           </motion.div>

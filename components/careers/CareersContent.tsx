@@ -147,7 +147,7 @@ export default function CareersContent() {
   return (
     <div className="min-h-screen pt-20">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white py-20 overflow-hidden">
         <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="container-custom px-4 sm:px-6 relative z-10">
@@ -159,10 +159,10 @@ export default function CareersContent() {
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
               Careers
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
               Join matriXO and help shape the future of technical education
             </p>
-            <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
               We're building innovative solutions that empower students and educational institutions. 
               Be part of a team that's making a real difference in how people learn and grow.
             </p>
@@ -194,7 +194,7 @@ export default function CareersContent() {
               >
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                   <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                    📢 Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
+                    Ã°Å¸â€œÂ¢ Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
                     Please allow some time for us to get back to you. We appreciate your patience and interest in joining matriXO!
                   </p>
                 </div>
@@ -426,17 +426,17 @@ export default function CareersContent() {
               {
                 title: 'Impact at Scale',
                 description: 'Work on products that directly impact thousands of students and educational institutions.',
-                icon: '🚀',
+                icon: 'Ã°Å¸Å¡â‚¬',
               },
               {
                 title: 'Innovation First',
                 description: 'Be at the forefront of EdTech innovation with AI, blockchain, and cutting-edge technologies.',
-                icon: '💡',
+                icon: 'Ã°Å¸â€™Â¡',
               },
               {
                 title: 'Growth & Learning',
                 description: 'Continuous learning opportunities, mentorship, and career development programs.',
-                icon: '📈',
+                icon: 'Ã°Å¸â€œË†',
               },
             ].map((benefit, index) => (
               <motion.div

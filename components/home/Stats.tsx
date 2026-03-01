@@ -1,13 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaUsers, FaGraduationCap, FaCalendarCheck, FaChartLine } from 'react-icons/fa'
+import { FaBrain, FaCubes, FaRoute, FaCertificate } from 'react-icons/fa'
 
 const stats = [
-  { icon: FaUsers, value: 'Growing', label: 'Community of Learners' },
-  { icon: FaCalendarCheck, value: 'Regular', label: 'Events & Workshops' },
-  { icon: FaGraduationCap, value: 'Quality', label: 'Technical Training' },
-  { icon: FaChartLine, value: 'Expanding', label: 'Partner Network' },
+  { icon: FaBrain, value: 'AI-Powered', label: 'Skill Analysis', gradient: 'from-purple-500 to-fuchsia-500' },
+  { icon: FaCubes, value: '5 Products', label: 'One Platform', gradient: 'from-blue-500 to-cyan-500' },
+  { icon: FaRoute, value: 'Personalized', label: 'Learning Paths', gradient: 'from-green-500 to-emerald-500' },
+  { icon: FaCertificate, value: 'Verifiable', label: 'Credentials', gradient: 'from-amber-500 to-orange-500' },
 ]
 
 export default function Stats() {
@@ -26,7 +26,7 @@ export default function Stats() {
             >
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gray-900/90 dark:bg-white/90 backdrop-blur-sm rounded-[var(--glass-radius-sm)] text-white dark:text-gray-900 shadow-lg"
+                className={`inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br ${stat.gradient} rounded-[var(--glass-radius-sm)] text-white shadow-lg`}
               >
                 <stat.icon size={28} />
               </motion.div>

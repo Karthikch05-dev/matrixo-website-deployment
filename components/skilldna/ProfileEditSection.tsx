@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNA™ Profile Edit Section
+// SkillDNAÃ¢â€žÂ¢ Profile Edit Section
 // User can update their profile information
 // ============================================================
 
@@ -13,9 +13,10 @@ import { SkillDNAProfile, SkillLevel } from '@/lib/skilldna/types';
 interface ProfileEditSectionProps {
   profile: SkillDNAProfile;
   onSave?: () => void;
+  onAddSkill?: (skill: { name: string; level: SkillLevel; category: string }) => Promise<void>;
 }
 
-export default function ProfileEditSection({ profile, onSave }: ProfileEditSectionProps) {
+export default function ProfileEditSection({ profile, onSave, onAddSkill }: ProfileEditSectionProps) {
   const [newSkillName, setNewSkillName] = useState('');
   const [newSkillLevel, setNewSkillLevel] = useState<SkillLevel>('beginner');
   const [newSkillCategory, setNewSkillCategory] = useState('Programming');
@@ -29,9 +30,12 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
     setMessage(null);
 
     try {
-      // In a full implementation, this would call the API to add the skill
-      // and trigger a profile recalculation
-      setMessage({ type: 'success', text: `Skill "${newSkillName}" would be added. Full save requires backend integration.` });
+      if (onAddSkill) {
+        await onAddSkill({ name: newSkillName.trim(), level: newSkillLevel, category: newSkillCategory });
+        setMessage({ type: 'success', text: `Skill "${newSkillName}" added successfully! Your profile will be recalculated.` });
+      } else {
+        setMessage({ type: 'success', text: `Skill "${newSkillName}" saved locally. Connect onAddSkill handler for full integration.` });
+      }
       setNewSkillName('');
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to add skill' });
@@ -43,8 +47,8 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
   return (
     <div className="space-y-6">
       {/* Add New Skill */}
-      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <FaEdit className="text-blue-400" />
           Add New Skills
         </h3>
@@ -58,12 +62,12 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
             value={newSkillName}
             onChange={(e) => setNewSkillName(e.target.value)}
             placeholder="Skill name (e.g., Docker)"
-            className="flex-1 p-3 rounded-xl border border-gray-700 bg-gray-800 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+            className="flex-1 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
           />
           <select
             value={newSkillLevel}
             onChange={(e) => setNewSkillLevel(e.target.value as SkillLevel)}
-            className="p-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-purple-500 transition-all"
+            className="p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
           >
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
@@ -73,7 +77,7 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
           <select
             value={newSkillCategory}
             onChange={(e) => setNewSkillCategory(e.target.value)}
-            className="p-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:border-purple-500 transition-all"
+            className="p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all"
           >
             <option value="Programming">Programming</option>
             <option value="Web Development">Web Development</option>
@@ -96,11 +100,10 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mt-4 p-3 rounded-xl text-sm ${
-              message.type === 'success' 
-                ? 'bg-green-500/10 border border-green-500/30 text-green-400' 
+            className={`mt-4 p-3 rounded-xl text-sm ${message.type === 'success'
+                ? 'bg-green-500/10 border border-green-500/30 text-green-400'
                 : 'bg-red-500/10 border border-red-500/30 text-red-400'
-            }`}
+              }`}
           >
             {message.text}
           </motion.div>
@@ -108,16 +111,16 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
       </div>
 
       {/* Current Skills List */}
-      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Current Skills</h3>
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Current Skills</h3>
         <div className="space-y-2">
           {profile.technicalSkills.map((skill) => (
             <div
               key={skill.name}
-              className="flex items-center justify-between p-3 rounded-xl bg-gray-800/50 border border-gray-700/50"
+              className="flex items-center justify-between p-3 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50"
             >
               <div className="flex items-center gap-3">
-                <span className="text-white font-medium text-sm">{skill.name}</span>
+                <span className="text-gray-900 dark:text-white font-medium text-sm">{skill.name}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">
                   {skill.category}
                 </span>
@@ -130,9 +133,9 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
                   />
                 </div>
                 <span className="text-sm text-gray-400 w-10 text-right">{skill.score}%</span>
-                {skill.trend === 'rising' && <span className="text-green-400 text-xs">↑</span>}
-                {skill.trend === 'declining' && <span className="text-red-400 text-xs">↓</span>}
-                {skill.trend === 'stable' && <span className="text-gray-500 text-xs">→</span>}
+                {skill.trend === 'rising' && <span className="text-green-400 text-xs">Ã¢â€ â€˜</span>}
+                {skill.trend === 'declining' && <span className="text-red-400 text-xs">Ã¢â€ â€œ</span>}
+                {skill.trend === 'stable' && <span className="text-gray-500 text-xs">Ã¢â€ â€™</span>}
               </div>
             </div>
           ))}
@@ -140,22 +143,22 @@ export default function ProfileEditSection({ profile, onSave }: ProfileEditSecti
       </div>
 
       {/* Profile Info */}
-      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Profile Statistics</h3>
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile Statistics</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="p-4 rounded-xl bg-gray-800/50">
+          <div className="p-4 rounded-xl bg-gray-100/50 dark:bg-gray-800/50">
             <p className="text-2xl font-bold text-purple-400">{profile.technicalSkills.length}</p>
             <p className="text-xs text-gray-500">Skills Tracked</p>
           </div>
-          <div className="p-4 rounded-xl bg-gray-800/50">
+          <div className="p-4 rounded-xl bg-gray-100/50 dark:bg-gray-800/50">
             <p className="text-2xl font-bold text-blue-400">{profile.skillClusters.length}</p>
             <p className="text-xs text-gray-500">Skill Clusters</p>
           </div>
-          <div className="p-4 rounded-xl bg-gray-800/50">
+          <div className="p-4 rounded-xl bg-gray-100/50 dark:bg-gray-800/50">
             <p className="text-2xl font-bold text-amber-400">{profile.skillGaps.length}</p>
             <p className="text-xs text-gray-500">Gaps Identified</p>
           </div>
-          <div className="p-4 rounded-xl bg-gray-800/50">
+          <div className="p-4 rounded-xl bg-gray-100/50 dark:bg-gray-800/50">
             <p className="text-2xl font-bold text-green-400">{profile.version}</p>
             <p className="text-xs text-gray-500">Profile Version</p>
           </div>
