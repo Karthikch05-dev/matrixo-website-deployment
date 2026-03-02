@@ -31,9 +31,11 @@ import {
   FaQrcode,
   FaVideo,
   FaSun,
-  FaMoon
+  FaMoon,
+  FaUserCircle
 } from 'react-icons/fa'
 import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import ProfilePhotoUpload from '@/components/employee-portal/ProfilePhotoUpload'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
 import { PortalThemeContext, usePortalTheme } from '@/lib/portalThemeContext'
@@ -237,6 +239,7 @@ const navigationItems = [
   { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
   { id: 'event-checkin', label: 'Event QR', icon: FaQrcode, mobileOnly: true },
+  { id: 'profile', label: 'My Profile', icon: FaUserCircle },
   { id: 'job-postings', label: 'Careers', icon: FaBriefcase, adminOnly: true },
 ]
 
@@ -528,6 +531,13 @@ function TopNavbar({
                     </div>
                     <div className="p-2">
                       <button
+                        onClick={() => { setActiveTab('profile'); setUserMenuOpen(false) }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'text-neutral-300 hover:bg-white/8' : 'text-gray-700 hover:bg-black/5'}`}
+                      >
+                        <FaUserCircle />
+                        <span>My Profile</span>
+                      </button>
+                    <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
                       >
@@ -1053,6 +1063,146 @@ function HistoryTab() {
 }
 
 // ============================================
+// PROFILE TAB COMPONENT
+// ============================================
+
+function ProfileTab() {
+  const { employee, refreshEmployee } = useEmployeeAuth()
+  const { darkMode } = useTheme()
+  const [localImageUrl, setLocalImageUrl] = useState<string>(employee?.profileImage || '')
+
+  const handleImageUpdated = async (newUrl: string) => {
+    setLocalImageUrl(newUrl)
+    // Refresh context so all other portal areas (navbar avatar, dashboard banner) update
+    await refreshEmployee()
+  }
+
+  if (!employee) return null
+
+  const displayImage = localImageUrl || employee.profileImage
+
+  const infoRows = [
+    { label: 'Employee ID', value: employee.employeeId },
+    { label: 'Department', value: employee.department },
+    { label: 'Designation', value: employee.designation },
+    { label: 'Email', value: employee.email },
+    { label: 'Role', value: employee.role },
+    { label: 'Joining Date', value: employee.joiningDate },
+  ]
+
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto">
+      {/* Card */}
+      <div
+        className="rounded-2xl p-6"
+        style={{
+          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
+          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.08)',
+        }}
+      >
+        {/* Avatar + name row */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-blue-500/40 bg-gradient-to-br from-blue-500 to-purple-600">
+              {displayImage ? (
+                <img
+                  src={displayImage}
+                  alt={employee.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                    const parent = e.currentTarget.parentElement
+                    if (parent && !parent.querySelector('.initials-fb')) {
+                      const fb = document.createElement('div')
+                      fb.className = 'initials-fb absolute inset-0 flex items-center justify-center text-white text-4xl font-bold'
+                      fb.textContent = employee.name.split(' ').map((n: string) => n.charAt(0)).join('').toUpperCase().slice(0, 2)
+                      parent.appendChild(fb)
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
+                  {employee.name.split(' ').map((n: string) => n.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Name + role + upload button */}
+          <div className="text-center sm:text-left flex-1">
+            <h2 className={`text-2xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {employee.name}
+            </h2>
+            <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium text-base mb-1">
+              {employee.designation || employee.role}
+            </p>
+            {employee.department && (
+              <p className={`text-sm mb-4 ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+                {employee.department}
+              </p>
+            )}
+            <ProfilePhotoUpload
+              employeeId={employee.employeeId}
+              currentImageUrl={displayImage}
+              employeeName={employee.name}
+              darkMode={darkMode}
+              onImageUpdated={handleImageUpdated}
+            />
+          </div>
+        </div>
+
+        {/* Info grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {infoRows.map(({ label, value }) =>
+            value ? (
+              <div
+                key={label}
+                className="rounded-xl px-4 py-3"
+                style={{
+                  background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
+                }}
+              >
+                <p className={`text-xs font-medium mb-0.5 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
+                  {label}
+                </p>
+                <p className={`text-sm font-medium break-all ${darkMode ? 'text-neutral-200' : 'text-gray-800'}`}>
+                  {value}
+                </p>
+              </div>
+            ) : null
+          )}
+        </div>
+      </div>
+
+      {/* Photo guidelines note */}
+      <div
+        className="rounded-xl px-5 py-4 text-sm"
+        style={{
+          background: darkMode ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)',
+          border: darkMode ? '1px solid rgba(59,130,246,0.2)' : '1px solid rgba(59,130,246,0.15)',
+        }}
+      >
+        <p className={`font-medium mb-1 ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+          Profile Photo Guidelines
+        </p>
+        <ul className={`space-y-0.5 list-disc list-inside text-xs ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+          <li>Accepted formats: JPEG, PNG, WebP</li>
+          <li>Maximum file size: 3MB</li>
+          <li>Photos are automatically cropped to a square (512×512) and optimized</li>
+          <li>Your photo appears on the public Team page and in the employee portal</li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+// ============================================
 // STAT CARD COMPONENT
 // ============================================
 
@@ -1413,6 +1563,7 @@ function Dashboard() {
             {activeTab === 'discussions' && <Discussions />}
             {activeTab === 'meetings' && <Meetings />}
             {activeTab === 'event-checkin' && <EventQRScanner />}
+            {activeTab === 'profile' && <ProfileTab />}
             {activeTab === 'job-postings' && isAdmin && <JobPostings />}
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </motion.div>

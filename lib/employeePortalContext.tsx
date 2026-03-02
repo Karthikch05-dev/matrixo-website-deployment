@@ -39,6 +39,7 @@ export interface EmployeeProfile {
   designation: string
   joiningDate: string
   profileImage: string
+  imageUpdatedAt?: Timestamp | string
   phone?: string
   role: 'employee' | 'admin' | 'Intern' | string
   createdAt?: Timestamp
@@ -311,6 +312,7 @@ interface EmployeeAuthContextType {
   getAllEmployees: () => Promise<EmployeeProfile[]>
   getEmployeeById: (employeeId: string) => Promise<EmployeeProfile | null>
   updateEmployeeProfile: (employeeId: string, updates: Partial<EmployeeProfile>) => Promise<void>
+  refreshEmployee: () => Promise<void>
   
   // Holidays
   holidays: Holiday[]
@@ -1180,6 +1182,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     if (querySnapshot.empty) return null
     return querySnapshot.docs[0].data() as EmployeeProfile
+  }
+
+  const refreshEmployee = async () => {
+    if (!user) return
+    try {
+      const employeeDoc = await getDoc(doc(db, 'Employees', user.uid))
+      if (employeeDoc.exists()) {
+        setEmployee(employeeDoc.data() as EmployeeProfile)
+        return
+      }
+      const employeesRef = collection(db, 'Employees')
+      const q = query(employeesRef, where('email', '==', user.email))
+      const querySnapshot = await getDocs(q)
+      if (!querySnapshot.empty) {
+        setEmployee(querySnapshot.docs[0].data() as EmployeeProfile)
+      }
+    } catch (error) {
+      console.error('Error refreshing employee profile:', error)
+    }
   }
 
   const updateEmployeeProfile = async (employeeId: string, updates: Partial<EmployeeProfile>) => {
@@ -2386,6 +2407,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       getAllEmployees,
       getEmployeeById,
       updateEmployeeProfile,
+      refreshEmployee,
       holidays,
       addHoliday,
       updateHoliday,

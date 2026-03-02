@@ -162,6 +162,7 @@ export default function TeamContent() {
                       <img 
                         src={member.profileImage} 
                         alt={member.name}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
