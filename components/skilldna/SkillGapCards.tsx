@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNAâ„¢ Skill Gap Cards
+// SkillDNA Skill Gap Cards
 // Visual representation of skill gaps with priorities
 // ============================================================
 

@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNAâ„¢ Dashboard - Main Dashboard Component
+// SkillDNA Dashboard - Main Dashboard Component
 // Full-featured skill genome visualization
 // ============================================================
 
@@ -76,13 +76,13 @@ export default function SkillDNADashboard({
             <div>
               <div className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 px-4 py-1.5 rounded-full mb-3 text-sm">
                 <FaDna className="animate-pulse" />
-                <span className="font-semibold">SkillDNAâ„¢ Dashboard</span>
+                <span className="font-semibold">SkillDNA&trade; Dashboard</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                 {userName ? `${userName}'s` : 'Your'} Skill Genome
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Last updated: {new Date(profile.lastUpdated).toLocaleDateString()} Â· 
+                Last updated: {new Date(profile.lastUpdated).toLocaleDateString()} &middot; 
                 Version {profile.version}
               </p>
             </div>
@@ -94,7 +94,7 @@ export default function SkillDNADashboard({
                   {profile.dynamicSkillScore}
                 </div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                  / 1000 Â· {getScoreGrade(profile.dynamicSkillScore, 1000)}
+                  / 1000 &middot; {getScoreGrade(profile.dynamicSkillScore, 1000)}
                 </p>
               </div>
               {onRefresh && (

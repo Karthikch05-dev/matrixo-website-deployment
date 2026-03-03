@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNAâ„¢ AI Persona Summary
+// SkillDNA AI Persona Summary
 // Personalized AI-generated identity card
 // ============================================================
 

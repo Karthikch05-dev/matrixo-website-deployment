@@ -16,7 +16,6 @@ import {
   limit,
   getDocs,
   serverTimestamp,
-  Timestamp,
 } from 'firebase/firestore';
 import {
   SkillDNAProfile,

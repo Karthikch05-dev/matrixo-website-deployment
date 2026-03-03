@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNAâ„¢ Learning Paths Section
+// SkillDNA Learning Paths Section
 // AI-recommended learning journeys
 // ============================================================
 

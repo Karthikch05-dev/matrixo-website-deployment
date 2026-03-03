@@ -157,10 +157,11 @@ export function useSkillDNA(): UseSkillDNAReturn {
       const result = await response.json();
       const analysisData: AIAnalysisResponse = result.data;
 
-      // Build full SkillDNA profile
+      // Build full SkillDNA profile (exclude learningVelocityEstimate from spread)
+      const { learningVelocityEstimate, ...profileFields } = analysisData;
       const skillDNAProfile: SkillDNAProfile = {
-        ...analysisData,
-        learningVelocity: analysisData.learningVelocityEstimate,
+        ...profileFields,
+        learningVelocity: learningVelocityEstimate,
         hiringReadiness: analysisData.hiringReadiness ?? 40,
         confidenceIndex: analysisData.confidenceIndex ?? 50,
         lastUpdated: new Date().toISOString(),
