@@ -1,5 +1,5 @@
-// ============================================================
-// SkillDNA™ Profile Edit Section — v2
+﻿// ============================================================
+// SkillDNAâ„¢ Profile Edit Section â€” v2
 // Skill CRUD + Goal Alignment Intelligence + Smart Stats
 // ============================================================
 
@@ -91,7 +91,7 @@ function getSeverityBadge(severity: string): { label: string; color: string } {
   return { label: 'Nice to Have', color: 'bg-blue-500/20 text-blue-400' };
 }
 
-// Score → level label
+// Score â†’ level label
 function scoreToLevel(score: number): SkillLevel {
   if (score >= 85) return 'expert';
   if (score >= 65) return 'advanced';
@@ -348,7 +348,7 @@ export default function ProfileEditSection({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Degree</label>
-                <select value={academic.degree} onChange={(e) => setAcademic({ ...academic, degree: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all">
+                <select value={academic.degree} onChange={(e) => setAcademic({ ...academic, degree: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all">
                   <option value="">Select degree</option>
                   {['B.Tech', 'B.E.', 'B.Sc', 'BCA', 'M.Tech', 'M.Sc', 'MCA', 'MBA', 'PhD', 'Diploma', 'Self-taught', 'Other'].map(d => (
                     <option key={d} value={d}>{d}</option>
@@ -357,15 +357,15 @@ export default function ProfileEditSection({
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Field of Study</label>
-                <input type="text" value={academic.field} onChange={(e) => setAcademic({ ...academic, field: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="e.g., Computer Science" />
+                <input type="text" value={academic.field} onChange={(e) => setAcademic({ ...academic, field: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="e.g., Computer Science" />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Institution</label>
-                <input type="text" value={academic.institution} onChange={(e) => setAcademic({ ...academic, institution: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="College / University name" />
+                <input type="text" value={academic.institution} onChange={(e) => setAcademic({ ...academic, institution: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="College / University name" />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Year</label>
-                <select value={academic.year} onChange={(e) => setAcademic({ ...academic, year: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all">
+                <select value={academic.year} onChange={(e) => setAcademic({ ...academic, year: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all">
                   <option value="">Select year</option>
                   {['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate', 'Post-Graduate', 'Working Professional'].map(y => (
                     <option key={y} value={y}>{y}</option>
@@ -413,7 +413,7 @@ export default function ProfileEditSection({
               {interests.length === 0 && <p className="text-gray-500 text-sm">No interests added yet.</p>}
             </div>
             <div className="flex gap-2">
-              <input type="text" value={newInterest} onChange={(e) => setNewInterest(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInterest(); } }} className="flex-1 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 transition-all" placeholder="Add a custom interest..." disabled={interests.length >= MAX_INTERESTS} />
+              <input type="text" value={newInterest} onChange={(e) => setNewInterest(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInterest(); } }} className="flex-1 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 transition-all" placeholder="Add a custom interest..." disabled={interests.length >= MAX_INTERESTS} />
               <button onClick={handleAddInterest} disabled={interests.length >= MAX_INTERESTS || !newInterest.trim()} className="px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-all"><FaPlus /></button>
             </div>
             {interests.length < MAX_INTERESTS && (
@@ -458,20 +458,20 @@ export default function ProfileEditSection({
           <div className="space-y-3">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Dream Role</label>
-              <input type="text" value={careerGoal.dreamRole} onChange={(e) => setCareerGoal({ ...careerGoal, dreamRole: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="e.g., Senior Software Engineer" />
+              <input type="text" value={careerGoal.dreamRole} onChange={(e) => setCareerGoal({ ...careerGoal, dreamRole: e.target.value })} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all" placeholder="e.g., Senior Software Engineer" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Short-term (1 year)</label>
-                <textarea value={careerGoal.shortTerm} onChange={(e) => setCareerGoal({ ...careerGoal, shortTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="Next year goals" />
+                <textarea value={careerGoal.shortTerm} onChange={(e) => setCareerGoal({ ...careerGoal, shortTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="Next year goals" />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Mid-term (2-3 years)</label>
-                <textarea value={careerGoal.midTerm} onChange={(e) => setCareerGoal({ ...careerGoal, midTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="2-3 year plan" />
+                <textarea value={careerGoal.midTerm} onChange={(e) => setCareerGoal({ ...careerGoal, midTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="2-3 year plan" />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Long-term (5+ years)</label>
-                <textarea value={careerGoal.longTerm} onChange={(e) => setCareerGoal({ ...careerGoal, longTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="Career vision" />
+                <textarea value={careerGoal.longTerm} onChange={(e) => setCareerGoal({ ...careerGoal, longTerm: e.target.value })} rows={2} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all resize-none" placeholder="Career vision" />
               </div>
             </div>
             <button onClick={handleSaveCareer} disabled={savingCareer} className="px-6 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-all flex items-center gap-2 text-sm font-medium">
@@ -514,17 +514,17 @@ export default function ProfileEditSection({
           Whether from YouTube, a bootcamp, a certification, or self-study &mdash; add it here.
         </p>
         <div className="space-y-3">
-          <input type="text" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !isSaving && newSkillName.trim() && handleAddSkill()} placeholder="e.g., Docker, Figma, TensorFlow, Excel..." className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all" />
+          <input type="text" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !isSaving && newSkillName.trim() && handleAddSkill()} placeholder="e.g., Docker, Figma, TensorFlow, Excel..." className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Category</label>
-              <select value={newSkillCategory} onChange={(e) => setNewSkillCategory(e.target.value)} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all">
+              <select value={newSkillCategory} onChange={(e) => setNewSkillCategory(e.target.value)} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all">
                 {SKILL_CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Proficiency Level</label>
-              <select value={newSkillLevel} onChange={(e) => setNewSkillLevel(e.target.value as SkillLevel)} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:border-purple-500 transition-all">
+              <select value={newSkillLevel} onChange={(e) => setNewSkillLevel(e.target.value as SkillLevel)} className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white focus:border-purple-500 transition-all">
                 {(Object.keys(LEVEL_INFO) as SkillLevel[]).map((lvl) => (
                   <option key={lvl} value={lvl}>{LEVEL_INFO[lvl].label} &mdash; {LEVEL_INFO[lvl].description}</option>
                 ))}
@@ -609,17 +609,17 @@ export default function ProfileEditSection({
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                               <label className="text-xs text-gray-500 mb-1 block">Skill Name</label>
-                              <input type="text" value={editSkillData.name} onChange={(e) => setEditSkillData({ ...editSkillData, name: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all" />
+                              <input type="text" value={editSkillData.name} onChange={(e) => setEditSkillData({ ...editSkillData, name: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all" />
                             </div>
                             <div>
                               <label className="text-xs text-gray-500 mb-1 block">Category</label>
-                              <select value={editSkillData.category} onChange={(e) => setEditSkillData({ ...editSkillData, category: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all">
+                              <select value={editSkillData.category} onChange={(e) => setEditSkillData({ ...editSkillData, category: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all">
                                 {SKILL_CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                               </select>
                             </div>
                             <div>
                               <label className="text-xs text-gray-500 mb-1 block">Level</label>
-                              <select value={editSkillData.level} onChange={(e) => setEditSkillData({ ...editSkillData, level: e.target.value as SkillLevel })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all">
+                              <select value={editSkillData.level} onChange={(e) => setEditSkillData({ ...editSkillData, level: e.target.value as SkillLevel })} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm focus:border-purple-500 transition-all">
                                 {(Object.keys(LEVEL_INFO) as SkillLevel[]).map((lvl) => (
                                   <option key={lvl} value={lvl}>{LEVEL_INFO[lvl].label}</option>
                                 ))}

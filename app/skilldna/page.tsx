@@ -94,11 +94,22 @@ export default function SkillDNAPage() {
   }
 
   // Regenerate AI persona by re-submitting saved onboarding data
+  // Preserves manually-managed skills so they are not overwritten by AI output
   const handleRegeneratePersona = async () => {
     if (!user || !userData?.onboardingData) throw new Error('No onboarding data found')
+
+    // Snapshot current skills before regeneration overwrites the profile
+    const preservedSkills = profile ? [...profile.technicalSkills] : []
+
     setIsAnalyzing(true)
     try {
       await submitOnboarding(userData.onboardingData)
+
+      // Restore the user's actual skills after AI regeneration
+      if (preservedSkills.length > 0) {
+        await updateSkillDNAProfile(user.uid, { technicalSkills: preservedSkills }, 'skills_restored')
+        await refreshProfile()
+      }
     } catch (err: any) {
       console.error('Regeneration failed:', err)
       throw err
