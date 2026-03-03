@@ -546,7 +546,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
     }
   }, [isOpen])
   
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
@@ -593,6 +593,9 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
       )}
     </AnimatePresence>
   )
+
+  if (typeof window === 'undefined') return modalContent
+  return createPortal(modalContent, document.body)
 }
 
 // ============================================
