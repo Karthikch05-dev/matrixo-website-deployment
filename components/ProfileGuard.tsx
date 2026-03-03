@@ -13,7 +13,7 @@ const PUBLIC_ROUTES = [
   '/terms',
   '/privacy',
   '/refund',
-  '/shipping',
+  '/data-protection',
   '/employee-portal',
   '/u',
 ]

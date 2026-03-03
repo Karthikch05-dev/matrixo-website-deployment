@@ -90,7 +90,7 @@ export default function Footer() {
               <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms & Conditions</Link>
               <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/refund" className="hover:text-gray-900 dark:hover:text-white transition-colors">Cancellations & Refunds</Link>
-              <Link href="/shipping" className="hover:text-gray-900 dark:hover:text-white transition-colors">Shipping & Delivery</Link>
+              <Link href="/data-protection" className="hover:text-gray-900 dark:hover:text-white transition-colors">Data Protection</Link>
               <Link href="/contact" className="hover:text-gray-900 dark:hover:text-white transition-colors">Contact Us</Link>
             </div>
           </div>
