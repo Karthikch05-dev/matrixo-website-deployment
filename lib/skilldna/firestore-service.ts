@@ -28,6 +28,8 @@ import {
   UserRole,
   AcademicBackground,
   CareerGoal,
+  TechnicalSkill,
+  SkillLevel,
 } from './types';
 
 const SKILLDNA_COLLECTION = 'skillDNA_users';
@@ -363,4 +365,197 @@ export async function getActivityLog(
     console.error('Error fetching activity log:', error);
     return [];
   }
+}
+
+// ---- Skill Array CRUD Operations ----
+
+const MAX_SKILLS = 50;
+
+const LEVEL_SCORE_MAP: Record<SkillLevel | string, number> = {
+  beginner: 30,
+  intermediate: 55,
+  advanced: 75,
+  expert: 90,
+};
+
+/**
+ * Add a skill to the user's profile (append to array).
+ * Prevents duplicates (case-insensitive), enforces max cap.
+ */
+export async function addSkillToProfile(
+  userId: string,
+  skill: { name: string; level: SkillLevel; category: string }
+): Promise<TechnicalSkill[]> {
+  const docRef = doc(db, SKILLDNA_COLLECTION, userId);
+  const currentDoc = await getDoc(docRef);
+
+  if (!currentDoc.exists()) throw new Error('User document not found');
+
+  const currentProfile = currentDoc.data().skillDNA as SkillDNAProfile | undefined;
+  const currentSkills = currentProfile?.technicalSkills || [];
+
+  // Validate name
+  const trimmedName = skill.name.trim();
+  if (!trimmedName) throw new Error('Skill name cannot be empty');
+
+  // Duplicate check (case-insensitive)
+  if (currentSkills.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
+    throw new Error(`"${trimmedName}" is already in your skill list`);
+  }
+
+  // Cap check
+  if (currentSkills.length >= MAX_SKILLS) {
+    throw new Error(`Maximum ${MAX_SKILLS} skills allowed`);
+  }
+
+  const newSkill: TechnicalSkill = {
+    name: trimmedName,
+    score: LEVEL_SCORE_MAP[skill.level] || 55,
+    category: skill.category,
+    trend: 'rising',
+    lastAssessed: new Date().toISOString(),
+  };
+
+  const updatedSkills = [...currentSkills, newSkill];
+  const newVersion = (currentProfile?.version || 0) + 1;
+
+  await updateDoc(docRef, {
+    'skillDNA.technicalSkills': updatedSkills,
+    'skillDNA.lastUpdated': new Date().toISOString(),
+    'skillDNA.version': newVersion,
+  });
+
+  return updatedSkills;
+}
+
+/**
+ * Remove a skill from the profile by name
+ */
+export async function removeSkillFromProfile(
+  userId: string,
+  skillName: string
+): Promise<TechnicalSkill[]> {
+  const docRef = doc(db, SKILLDNA_COLLECTION, userId);
+  const currentDoc = await getDoc(docRef);
+
+  if (!currentDoc.exists()) throw new Error('User document not found');
+
+  const currentProfile = currentDoc.data().skillDNA as SkillDNAProfile | undefined;
+  const currentSkills = currentProfile?.technicalSkills || [];
+
+  const updatedSkills = currentSkills.filter(
+    s => s.name.toLowerCase() !== skillName.toLowerCase()
+  );
+
+  if (updatedSkills.length === currentSkills.length) {
+    throw new Error(`Skill "${skillName}" not found`);
+  }
+
+  const newVersion = (currentProfile?.version || 0) + 1;
+
+  await updateDoc(docRef, {
+    'skillDNA.technicalSkills': updatedSkills,
+    'skillDNA.lastUpdated': new Date().toISOString(),
+    'skillDNA.version': newVersion,
+  });
+
+  return updatedSkills;
+}
+
+/**
+ * Update a skill's proficiency level
+ */
+export async function updateSkillProficiency(
+  userId: string,
+  skillName: string,
+  newLevel: SkillLevel
+): Promise<TechnicalSkill[]> {
+  const docRef = doc(db, SKILLDNA_COLLECTION, userId);
+  const currentDoc = await getDoc(docRef);
+
+  if (!currentDoc.exists()) throw new Error('User document not found');
+
+  const currentProfile = currentDoc.data().skillDNA as SkillDNAProfile | undefined;
+  const currentSkills = currentProfile?.technicalSkills || [];
+
+  let found = false;
+  const updatedSkills = currentSkills.map(s => {
+    if (s.name.toLowerCase() === skillName.toLowerCase()) {
+      found = true;
+      return {
+        ...s,
+        score: LEVEL_SCORE_MAP[newLevel] || s.score,
+        trend: (LEVEL_SCORE_MAP[newLevel] || 0) > s.score ? 'rising' as const : 'stable' as const,
+        lastAssessed: new Date().toISOString(),
+      };
+    }
+    return s;
+  });
+
+  if (!found) throw new Error(`Skill "${skillName}" not found`);
+
+  const newVersion = (currentProfile?.version || 0) + 1;
+
+  await updateDoc(docRef, {
+    'skillDNA.technicalSkills': updatedSkills,
+    'skillDNA.lastUpdated': new Date().toISOString(),
+    'skillDNA.version': newVersion,
+  });
+
+  return updatedSkills;
+}
+
+/**
+ * Edit a skill's name, category, and/or level
+ */
+export async function editSkill(
+  userId: string,
+  oldSkillName: string,
+  updates: { name?: string; level?: SkillLevel; category?: string }
+): Promise<TechnicalSkill[]> {
+  const docRef = doc(db, SKILLDNA_COLLECTION, userId);
+  const currentDoc = await getDoc(docRef);
+
+  if (!currentDoc.exists()) throw new Error('User document not found');
+
+  const currentProfile = currentDoc.data().skillDNA as SkillDNAProfile | undefined;
+  const currentSkills = currentProfile?.technicalSkills || [];
+
+  const newName = updates.name?.trim();
+
+  // If renaming, check for duplicate
+  if (newName && newName.toLowerCase() !== oldSkillName.toLowerCase()) {
+    if (currentSkills.some(s => s.name.toLowerCase() === newName.toLowerCase())) {
+      throw new Error(`"${newName}" already exists in your skill list`);
+    }
+  }
+
+  let found = false;
+  const updatedSkills = currentSkills.map(s => {
+    if (s.name.toLowerCase() === oldSkillName.toLowerCase()) {
+      found = true;
+      const newScore = updates.level ? (LEVEL_SCORE_MAP[updates.level] || s.score) : s.score;
+      return {
+        ...s,
+        name: newName || s.name,
+        category: updates.category || s.category,
+        score: newScore,
+        trend: newScore > s.score ? 'rising' as const : 'stable' as const,
+        lastAssessed: new Date().toISOString(),
+      };
+    }
+    return s;
+  });
+
+  if (!found) throw new Error(`Skill "${oldSkillName}" not found`);
+
+  const newVersion = (currentProfile?.version || 0) + 1;
+
+  await updateDoc(docRef, {
+    'skillDNA.technicalSkills': updatedSkills,
+    'skillDNA.lastUpdated': new Date().toISOString(),
+    'skillDNA.version': newVersion,
+  });
+
+  return updatedSkills;
 }

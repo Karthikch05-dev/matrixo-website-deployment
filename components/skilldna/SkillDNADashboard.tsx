@@ -29,6 +29,7 @@ interface SkillDNADashboardProps {
   onEditProfile?: () => void;
   onAddSkill?: (skill: { name: string; level: SkillLevel; category: string }) => Promise<void>;
   onRemoveSkill?: (skillName: string) => Promise<void>;
+  onEditSkill?: (oldName: string, updates: { name?: string; level?: SkillLevel; category?: string }) => Promise<void>;
   onUpdateAcademic?: (academic: AcademicBackground) => Promise<void>;
   onUpdateInterests?: (interests: string[]) => Promise<void>;
   onUpdateCareerGoal?: (goal: CareerGoal) => Promise<void>;
@@ -45,6 +46,7 @@ export default function SkillDNADashboard({
   onEditProfile,
   onAddSkill,
   onRemoveSkill,
+  onEditSkill,
   onUpdateAcademic,
   onUpdateInterests,
   onUpdateCareerGoal,
@@ -317,6 +319,7 @@ export default function SkillDNADashboard({
             onSave={onEditProfile}
             onAddSkill={onAddSkill}
             onRemoveSkill={onRemoveSkill}
+            onEditSkill={onEditSkill}
             onUpdateAcademic={onUpdateAcademic}
             onUpdateInterests={onUpdateInterests}
             onUpdateCareerGoal={onUpdateCareerGoal}

@@ -104,6 +104,37 @@ export interface TechnicalSkill {
   category: string;
   trend: 'rising' | 'stable' | 'declining';
   lastAssessed?: string;
+  goalAlignment?: SkillGoalAlignment;   // computed alignment to career goals
+}
+
+// ---- Goal Alignment Intelligence ----
+
+export type StrategicTag = 'Core' | 'Support' | 'Optional';
+
+export interface SkillGoalAlignment {
+  shortTermRelevance: number;     // 0-100
+  midTermRelevance: number;       // 0-100
+  longTermRelevance: number;      // 0-100
+  overallImpact: number;          // 0-100
+  strategicTag: StrategicTag;
+}
+
+export interface GoalAlignmentStats {
+  totalSkills: number;
+  coreSkills: number;             // high goal alignment
+  supportSkills: number;
+  optionalSkills: number;
+  skillGoalMatchPercent: number;  // 0-100
+  longTermReadiness: number;      // 0-100
+  shortTermExecution: number;     // 0-100
+}
+
+export interface SkillGapSuggestion {
+  skill: string;
+  severity: 'critical' | 'important' | 'nice-to-have';
+  reason: string;
+  relatedGoal: 'short' | 'mid' | 'long';
+  priorityAction: string;
 }
 
 export interface BehavioralTrait {

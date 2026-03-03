@@ -7,7 +7,7 @@ import OnboardingFlow from '@/components/skilldna/OnboardingFlow'
 import SkillDNADashboard from '@/components/skilldna/SkillDNADashboard'
 import AnalyzingScreen from '@/components/skilldna/AnalyzingScreen'
 import { OnboardingData, SkillLevel, TechnicalSkill, AcademicBackground, CareerGoal } from '@/lib/skilldna/types'
-import { updateSkillDNAProfile, updateAcademicBackground, updateInterests, updateCareerGoals } from '@/lib/skilldna/firestore-service'
+import { updateSkillDNAProfile, updateAcademicBackground, updateInterests, updateCareerGoals, editSkill } from '@/lib/skilldna/firestore-service'
 import { motion } from 'framer-motion'
 import { FaDna, FaSignInAlt, FaExclamationTriangle, FaRedo } from 'react-icons/fa'
 import Link from 'next/link'
@@ -105,6 +105,13 @@ export default function SkillDNAPage() {
     } finally {
       setIsAnalyzing(false)
     }
+  }
+
+  // Edit a skill (rename, change level/category)
+  const handleEditSkill = async (oldName: string, updates: { name?: string; level?: SkillLevel; category?: string }) => {
+    if (!user) throw new Error('Not authenticated')
+    await editSkill(user.uid, oldName, updates)
+    await refreshProfile()
   }
 
   // Initialize user document when authenticated
@@ -272,6 +279,7 @@ export default function SkillDNAPage() {
         onRefresh={refreshProfile}
         onAddSkill={handleAddSkill}
         onRemoveSkill={handleRemoveSkill}
+        onEditSkill={handleEditSkill}
         onUpdateAcademic={handleUpdateAcademic}
         onUpdateInterests={handleUpdateInterests}
         onUpdateCareerGoal={handleUpdateCareerGoal}
