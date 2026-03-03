@@ -1,5 +1,4 @@
-
-4)# Copilot Instructions for matriXO Website
+# Copilot Instructions for matriXO Website
 
 ## Architecture Overview
 
