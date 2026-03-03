@@ -24,9 +24,11 @@ const DIFFICULTY_WEIGHT: Record<Difficulty, number> = {
   hard: 2.0,
 };
 
-// ---- Cooldown: 24 hours between attempts ----
+// ---- Cooldown: max 3 attempts per day, 24h lockout after 3 consecutive fails ----
 
-const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+const COOLDOWN_MS = 24 * 60 * 60 * 1000;       // fallback 24 hours
+const MAX_DAILY_ATTEMPTS = 3;                    // per skill per day
+const CONSECUTIVE_FAIL_LOCKOUT = 3;              // 24h lockout after N fails in a row
 
 // ============================================================
 // GRADING — server-side only
@@ -191,50 +193,127 @@ export function gradeSubmission(
 
 /**
  * Check if a user can take a verification test for a skill.
- * Returns { allowed, remainingMs } where remainingMs is 0 if allowed.
+ *
+ * Rules:
+ *  1. Max 3 attempts per day per skill.
+ *  2. 24-hour hard lockout after 3 consecutive failed attempts.
+ *  3. Already-verified skills can be retaken (subject to the same limits).
+ *
+ * @param verification  Current verification record (if any).
+ * @param attempts      All prior attempt logs for this specific skill.
+ * @returns { allowed, remainingMs, reason }
  */
 export function checkCooldown(
   verification: SkillVerification | undefined,
-): { allowed: boolean; remainingMs: number } {
-  if (!verification || !verification.lastAttemptDate) {
+  attempts?: VerificationAttempt[],
+): { allowed: boolean; remainingMs: number; reason?: string } {
+  // No record at all → first attempt → always allowed
+  if (!verification && (!attempts || attempts.length === 0)) {
     return { allowed: true, remainingMs: 0 };
   }
 
-  // Already verified — allow retake but with cooldown
-  const lastAttempt = new Date(verification.lastAttemptDate).getTime();
-  const elapsed = Date.now() - lastAttempt;
+  const now = Date.now();
 
-  if (elapsed >= COOLDOWN_MS) {
-    return { allowed: true, remainingMs: 0 };
+  // --- Rule 2: 24h lockout after N consecutive fails ---
+  if (attempts && attempts.length >= CONSECUTIVE_FAIL_LOCKOUT) {
+    // Check the last N attempts
+    const sorted = [...attempts].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    const lastN = sorted.slice(0, CONSECUTIVE_FAIL_LOCKOUT);
+    const allFailed = lastN.every((a) => !a.passed);
+
+    if (allFailed) {
+      const oldestOfN = new Date(lastN[lastN.length - 1].timestamp).getTime();
+      const lockoutEnd = oldestOfN + COOLDOWN_MS;
+      if (now < lockoutEnd) {
+        return {
+          allowed: false,
+          remainingMs: lockoutEnd - now,
+          reason: `${CONSECUTIVE_FAIL_LOCKOUT} consecutive fails — locked out for 24 hours`,
+        };
+      }
+    }
   }
 
-  return {
-    allowed: false,
-    remainingMs: COOLDOWN_MS - elapsed,
-  };
+  // --- Rule 1: Max 3 attempts in the current 24-hour window ---
+  if (attempts && attempts.length > 0) {
+    const dayAgo = now - COOLDOWN_MS;
+    const todayAttempts = attempts.filter(
+      (a) => new Date(a.timestamp).getTime() > dayAgo
+    );
+
+    if (todayAttempts.length >= MAX_DAILY_ATTEMPTS) {
+      // Find the earliest of today's attempts and calculate when the window reopens
+      const earliest = todayAttempts.reduce((min, a) => {
+        const t = new Date(a.timestamp).getTime();
+        return t < min ? t : min;
+      }, Infinity);
+
+      const reopenAt = earliest + COOLDOWN_MS;
+      if (now < reopenAt) {
+        return {
+          allowed: false,
+          remainingMs: reopenAt - now,
+          reason: `Daily limit reached (${MAX_DAILY_ATTEMPTS}/${MAX_DAILY_ATTEMPTS}) — try again later`,
+        };
+      }
+    }
+  }
+
+  return { allowed: true, remainingMs: 0 };
 }
 
 /**
  * Build a SkillVerification record from a test result and existing data.
+ * cooldownUntil is only set when the daily limit / lockout applies.
  */
 export function buildVerificationRecord(
   result: TestResult,
   existing?: SkillVerification,
+  attempts?: VerificationAttempt[],
 ): SkillVerification {
-  const attempts = (existing?.verificationAttempts || 0) + 1;
+  const attemptCount = (existing?.verificationAttempts || 0) + 1;
   const bestScore = Math.max(
     existing?.bestScore || 0,
     result.normalizedScore
   );
 
+  // Determine if cooldown is needed after this attempt
+  let cooldownUntil: string | undefined;
+
+  if (attempts) {
+    // Add the current attempt to check limits
+    const allAttempts = [
+      ...attempts,
+      { passed: result.passed, timestamp: result.completedAt } as VerificationAttempt,
+    ];
+    const now = Date.now();
+    const dayAgo = now - COOLDOWN_MS;
+    const todayAttempts = allAttempts.filter(
+      (a) => new Date(a.timestamp).getTime() > dayAgo
+    );
+
+    // Check consecutive fail lockout
+    const sorted = [...allAttempts].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    const lastN = sorted.slice(0, CONSECUTIVE_FAIL_LOCKOUT);
+    const allFailed = lastN.length >= CONSECUTIVE_FAIL_LOCKOUT && lastN.every((a) => !a.passed);
+
+    if (allFailed || todayAttempts.length >= MAX_DAILY_ATTEMPTS) {
+      cooldownUntil = new Date(now + COOLDOWN_MS).toISOString();
+    }
+  }
+
   return {
     isVerified: result.passed,
     verificationScore: result.normalizedScore,
-    verificationAttempts: attempts,
+    verificationAttempts: attemptCount,
     lastAttemptDate: result.completedAt,
     bestScore,
     status: result.passed ? 'verified' : 'failed',
-    cooldownUntil: new Date(Date.now() + COOLDOWN_MS).toISOString(),
+    cooldownUntil,
   };
 }
 
@@ -310,14 +389,14 @@ export function calculateConfidence(
 
 /**
  * Calculate a skill score multiplier based on verification status.
- * Verified skills get 1.0x weight (full contribution).
- * Failed skills get 0.7x weight (reduced contribution).
- * Unverified skills get 0.85x weight.
+ * Verified skills get 1.0x weight  (100% — full contribution).
+ * Unverified skills get 0.4x weight (40% — must verify to count fully).
+ * Failed skills get 0.2x weight     (20% — significant penalty).
  */
 export function getVerificationMultiplier(
   verification?: SkillVerification,
 ): number {
-  if (!verification) return 0.85;
-  if (verification.isVerified) return 1.0;
-  return 0.7;
+  if (!verification) return 0.4;          // unverified
+  if (verification.isVerified) return 1.0; // verified
+  return 0.2;                              // failed
 }

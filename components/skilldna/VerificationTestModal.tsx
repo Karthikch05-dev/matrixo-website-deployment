@@ -18,9 +18,12 @@ import {
   getSkillVerification,
   saveSkillVerification,
   logVerificationAttempt,
+  getVerificationAttempts,
 } from '@/lib/skilldna/verification/firestore-service';
 
 // ---- Types for the modal ----
+
+const MAX_DAILY_ATTEMPTS = 3;
 
 interface VerificationTestModalProps {
   skillName: string;
@@ -136,8 +139,9 @@ export default function VerificationTestModal({
     setPhase('loading');
     setErrorMsg('');
     try {
-      // Fetch existing verification for cooldown check
+      // Fetch existing verification + attempt history for cooldown check
       const existingVerification = await getSkillVerification(userId, skillName);
+      const existingAttempts = await getVerificationAttempts(userId, skillName);
 
       const res = await fetch('/api/skilldna/verify/start', {
         method: 'POST',
@@ -149,6 +153,7 @@ export default function VerificationTestModal({
           userId,
           skillName,
           existingVerification: existingVerification || undefined,
+          existingAttempts,
         }),
       });
 
@@ -205,8 +210,9 @@ export default function VerificationTestModal({
         selectedIndex: answers[q.questionId] ?? -1,
       }));
 
-      // Fetch existing verification for the API to build updated record
+      // Fetch existing verification + attempts for the API to build updated record
       const existingVerification = await getSkillVerification(userId, skillName);
+      const existingAttempts = await getVerificationAttempts(userId, skillName);
 
       const res = await fetch('/api/skilldna/verify/submit', {
         method: 'POST',
@@ -223,6 +229,7 @@ export default function VerificationTestModal({
           startedAt: sessionData.startedAt,
           config: sessionData.config,
           existingVerification: existingVerification || undefined,
+          existingAttempts,
         }),
       });
 
@@ -529,7 +536,7 @@ export default function VerificationTestModal({
                     <FaTimesCircle className="text-3xl text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-red-400 mb-1">Not Yet Verified</h2>
-                  <p className="text-gray-400 text-sm">Keep practicing and try again in 24 hours</p>
+                  <p className="text-gray-400 text-sm">Keep practicing — you have {MAX_DAILY_ATTEMPTS} attempts per day</p>
                 </>
               )}
             </div>
@@ -658,7 +665,7 @@ export default function VerificationTestModal({
             <p className="text-center text-xs text-gray-600 mt-3">
               Attempt #{result.verification.verificationAttempts} &middot; Best score: {result.verification.bestScore}%
               {result.verification.cooldownUntil && !result.passed && (
-                <span className="ml-1">&middot; Retake available in 24h</span>
+                <span className="ml-1">&middot; Daily limit may apply ({MAX_DAILY_ATTEMPTS}/day)</span>
               )}
             </p>
           </div>

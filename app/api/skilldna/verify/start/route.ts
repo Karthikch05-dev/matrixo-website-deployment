@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createTestSession, DEFAULT_TEST_CONFIG } from '@/lib/skilldna/verification/test-engine';
 import { hasVerificationQuestions } from '@/lib/skilldna/verification/question-bank';
 import { checkCooldown } from '@/lib/skilldna/verification/scoring-engine';
-import { SkillVerification } from '@/lib/skilldna/verification/types';
+import { SkillVerification, VerificationAttempt } from '@/lib/skilldna/verification/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,21 +59,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check cooldown if client passes existing verification info
+    // Check cooldown — uses both verification record AND attempt history
     const existingVerification: SkillVerification | undefined = body.existingVerification || undefined;
-    if (existingVerification) {
-      const cooldown = checkCooldown(existingVerification);
-      if (!cooldown.allowed) {
-        const hoursLeft = Math.ceil(cooldown.remainingMs / (1000 * 60 * 60));
-        return NextResponse.json(
-          {
-            error: `Cooldown active. You can retake this test in ~${hoursLeft} hour(s).`,
-            cooldownUntil: existingVerification.cooldownUntil,
-            remainingMs: cooldown.remainingMs,
-          },
-          { status: 429 }
-        );
-      }
+    const existingAttempts: VerificationAttempt[] = body.existingAttempts || [];
+
+    const cooldown = checkCooldown(existingVerification, existingAttempts);
+    if (!cooldown.allowed) {
+      const hoursLeft = Math.ceil(cooldown.remainingMs / (1000 * 60 * 60));
+      return NextResponse.json(
+        {
+          error: cooldown.reason || `Cooldown active. You can retake this test in ~${hoursLeft} hour(s).`,
+          cooldownUntil: existingVerification?.cooldownUntil,
+          remainingMs: cooldown.remainingMs,
+        },
+        { status: 429 }
+      );
     }
 
     // Create test session

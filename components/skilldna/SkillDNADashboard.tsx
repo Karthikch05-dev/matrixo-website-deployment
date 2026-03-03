@@ -18,6 +18,7 @@ import { getScoreGrade, getScoreGradient, getScoreColor } from '@/lib/skilldna/s
 import { hasVerificationQuestions } from '@/lib/skilldna/verification/question-bank';
 import { calculateRealisticScores, SCORE_EXPLANATIONS } from '@/lib/skilldna/services/score-calculation-engine';
 import { analyzeGoalIntelligence } from '@/lib/skilldna/services/goal-intelligence-engine';
+import { getVerificationMultiplier } from '@/lib/skilldna/verification/scoring-engine';
 import SkillRadarChart from './charts/SkillRadarChart';
 import DynamicScoreMeter from './charts/DynamicScoreMeter';
 import CareerAlignmentBar from './charts/CareerAlignmentBar';
@@ -84,6 +85,28 @@ export default function SkillDNADashboard({
     }
     return null;
   }, [profile.technicalSkills, currentCareerGoal]);
+
+  // ---- Verification analytics ----
+  const verificationStats = useMemo(() => {
+    const skills = profile.technicalSkills;
+    const total = skills.length;
+    const verified = skills.filter((s) => s.verification?.status === 'verified').length;
+    const failed = skills.filter((s) => s.verification?.status === 'failed').length;
+    const unverified = total - verified - failed;
+    const pct = total > 0 ? Math.round((verified / total) * 100) : 0;
+
+    // Effective contribution: sum of (score * multiplier) vs sum of scores
+    let rawTotal = 0;
+    let effectiveTotal = 0;
+    for (const s of skills) {
+      rawTotal += s.score;
+      effectiveTotal += s.score * getVerificationMultiplier(s.verification as any);
+    }
+    const avgEffective = total > 0 ? Math.round(effectiveTotal / total) : 0;
+    const avgRaw = total > 0 ? Math.round(rawTotal / total) : 0;
+
+    return { total, verified, failed, unverified, pct, avgEffective, avgRaw };
+  }, [profile.technicalSkills]);
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: FaDna },
@@ -235,6 +258,71 @@ export default function SkillDNADashboard({
               />
             </div>
 
+            {/* Verification Analytics */}
+            {profile.technicalSkills.length > 0 && (
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <FaShieldAlt className="text-purple-400" />
+                  Verification Analytics
+                  <span className="text-sm font-normal text-gray-500 ml-auto">
+                    {verificationStats.verified}/{verificationStats.total} verified
+                  </span>
+                </h3>
+
+                {/* Stats cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                  <div className="text-center p-3 rounded-xl bg-green-500/5 border border-green-500/20">
+                    <p className="text-2xl font-bold text-green-400">{verificationStats.verified}</p>
+                    <p className="text-[10px] text-green-500/80 font-medium uppercase tracking-wider">Verified</p>
+                    <p className="text-[10px] text-gray-500">100% weight</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-gray-500/5 border border-gray-500/20">
+                    <p className="text-2xl font-bold text-gray-400">{verificationStats.unverified}</p>
+                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Unverified</p>
+                    <p className="text-[10px] text-gray-500">40% weight</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                    <p className="text-2xl font-bold text-red-400">{verificationStats.failed}</p>
+                    <p className="text-[10px] text-red-500/80 font-medium uppercase tracking-wider">Failed</p>
+                    <p className="text-[10px] text-gray-500">20% weight</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-purple-500/5 border border-purple-500/20">
+                    <p className="text-2xl font-bold text-purple-400">{verificationStats.pct}%</p>
+                    <p className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">Verified Rate</p>
+                    <p className="text-[10px] text-gray-500">{verificationStats.verified}/{verificationStats.total}</p>
+                  </div>
+                </div>
+
+                {/* Effective vs Raw score */}
+                <div className="bg-gray-100/50 dark:bg-gray-800/30 rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Effective Skill Average</span>
+                    <span className="text-sm font-bold text-purple-400">{verificationStats.avgEffective}%</span>
+                  </div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
+                      style={{ width: `${verificationStats.avgEffective}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Raw average: {verificationStats.avgRaw}%</span>
+                    <span className="text-xs text-gray-500">
+                      {verificationStats.avgEffective < verificationStats.avgRaw
+                        ? `\u2212${verificationStats.avgRaw - verificationStats.avgEffective}% from unverified penalty`
+                        : 'Fully verified \u2014 no penalty'}
+                    </span>
+                  </div>
+                  {verificationStats.unverified > 0 && (
+                    <p className="text-[11px] text-amber-400 mt-2 flex items-center gap-1.5">
+                      <FaExclamationTriangle size={10} />
+                      Verify {verificationStats.unverified} more skill{verificationStats.unverified > 1 ? 's' : ''} to unlock full score potential
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Goal Alignment Intelligence */}
             {goalIntelligence && (
               <GoalAlignmentSection intelligence={goalIntelligence} />
@@ -357,6 +445,8 @@ export default function SkillDNADashboard({
                   const vf = skill.verification;
                   const canVerify = !!userId && !!authToken && hasVerificationQuestions(skill.name);
                   const isOnCooldown = vf?.cooldownUntil ? new Date(vf.cooldownUntil) > new Date() : false;
+                  const mult = getVerificationMultiplier(vf as any);
+                  const effectiveScore = Math.round(skill.score * mult);
 
                   return (
                   <motion.div
@@ -381,6 +471,11 @@ export default function SkillDNADashboard({
                         {vf?.status === 'failed' && (
                           <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-medium" title={`Failed \u2014 ${vf.verificationScore}%`}>
                             <FaTimesCircle size={9} /> Failed
+                          </span>
+                        )}
+                        {!vf && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20 font-medium" title="Unverified — 40% weight">
+                            <FaShieldAlt size={8} /> 40%
                           </span>
                         )}
                       </div>
@@ -411,13 +506,27 @@ export default function SkillDNADashboard({
                           </button>
                         )}
                         <span className={`text-sm font-bold ${getScoreColor(skill.score)}`}>{skill.score}%</span>
+                        {mult < 1 && (
+                          <span className="text-[10px] text-gray-500" title={`Effective score: ${effectiveScore}% (${Math.round(mult * 100)}% weight)`}>
+                            → {effectiveScore}%
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden relative">
+                      {/* Effective score bar (dimmer) */}
+                      {mult < 1 && (
+                        <motion.div
+                          className="absolute top-0 left-0 h-full bg-gray-600/40 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${skill.score}%` }}
+                          transition={{ duration: 0.8, delay: i * 0.05 }}
+                        />
+                      )}
                       <motion.div
-                        className={`h-full bg-gradient-to-r ${getScoreGradient(skill.score)} rounded-full`}
+                        className={`h-full bg-gradient-to-r ${getScoreGradient(skill.score)} rounded-full relative z-10`}
                         initial={{ width: 0 }}
-                        animate={{ width: `${skill.score}%` }}
+                        animate={{ width: `${mult < 1 ? effectiveScore : skill.score}%` }}
                         transition={{ duration: 0.8, delay: i * 0.05 }}
                       />
                     </div>

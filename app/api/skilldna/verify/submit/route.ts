@@ -11,7 +11,7 @@ import {
   buildVerificationRecord,
   buildAttemptLog,
 } from '@/lib/skilldna/verification/scoring-engine';
-import { TestSession, TestSubmission, TestSessionQuestion, SkillVerification } from '@/lib/skilldna/verification/types';
+import { TestSession, TestSubmission, TestSessionQuestion, SkillVerification, VerificationAttempt } from '@/lib/skilldna/verification/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId, sessionId, skillName, questions, answers, startedAt, config, existingVerification } = body;
+    const { userId, sessionId, skillName, questions, answers, startedAt, config, existingVerification, existingAttempts } = body;
 
     if (!userId || !sessionId || !skillName || !answers || !questions) {
       return NextResponse.json(
@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
 
     // Build new verification record (client passes existing if any)
     const existing: SkillVerification | undefined = existingVerification || undefined;
-    const verification = buildVerificationRecord(result, existing);
+    const priorAttempts: VerificationAttempt[] = existingAttempts || [];
+    const verification = buildVerificationRecord(result, existing, priorAttempts);
 
     // Build attempt log
     const attempt = buildAttemptLog(result);

@@ -18,6 +18,7 @@ import {
   analyzeGoalIntelligence,
   GoalIntelligenceResult,
 } from './goal-intelligence-engine';
+import { getVerificationMultiplier } from '../verification/scoring-engine';
 
 // ---- Types ----
 
@@ -315,14 +316,19 @@ function calcDynamicScore(
   confidenceIndex: number,
   profile: SkillDNAProfile
 ): number {
-  // Technical skill average
+  // Technical skill average — weighted by verification status
+  // Verified = 100%, Unverified = 40%, Failed = 20%
   var techAvg = 0;
   if (profile.technicalSkills.length > 0) {
-    var sum = 0;
+    var weightedSum = 0;
+    var weightSum = 0;
     for (var i = 0; i < profile.technicalSkills.length; i++) {
-      sum += profile.technicalSkills[i].score;
+      var sk = profile.technicalSkills[i];
+      var mult = getVerificationMultiplier(sk.verification as any);
+      weightedSum += sk.score * mult;
+      weightSum += mult;
     }
-    techAvg = sum / profile.technicalSkills.length;
+    techAvg = weightSum > 0 ? weightedSum / profile.technicalSkills.length : 0;
   }
 
   // Behavioral average
