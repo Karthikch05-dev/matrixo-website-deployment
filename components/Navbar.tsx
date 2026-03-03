@@ -28,11 +28,6 @@ const EMPLOYEE_PORTAL_URL = 'https://team-auth.matrixo.in/employee-portal'
 // Beta-only links - matriXO Vision Platform with descriptions
 const betaLinks = [
   {
-    name: 'SkillDNA™',
-    href: '/skilldna',
-    description: 'AI-powered skill assessment and genome visualization'
-  },
-  {
     name: 'GrowGrid™',
     href: '/growgrid',
     description: 'Adaptive learning paths with gamification'

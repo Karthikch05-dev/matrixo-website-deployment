@@ -41,6 +41,18 @@ service firebase.storage {
       allow read: if true;  // Anyone can view event images
       allow write: if request.auth != null;  // Only authenticated users can upload
     }
+
+    // User profile photos - authenticated users can read/write their own photos
+    // Path: profile-photos/{userId}
+    match /profile-photos/{userId} {
+      allow read: if true;  // Public read so profiles can display photos
+      allow write: if request.auth != null  // Must be authenticated
+                   && request.auth.uid == userId  // Can only write to own folder
+                   && request.resource.size < 2 * 1024 * 1024  // Max 2MB
+                   && request.resource.contentType.matches('image/.*');  // Images only
+      allow delete: if request.auth != null
+                   && request.auth.uid == userId;  // Can only delete own photo
+    }
     
     // Default deny all other paths
     match /{allPaths=**} {

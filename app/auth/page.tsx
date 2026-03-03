@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt } from 'react-icons/fa'
+import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt, FaEnvelope } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
+import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebaseConfig'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -19,6 +21,9 @@ export default function AuthPage() {
     confirmPassword: ''
   })
   const [loading, setLoading] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
   
   const router = useRouter()
   const { user, signIn, signUp, signInWithGoogle, logout } = useAuth()
@@ -29,6 +34,31 @@ export default function AuthPage() {
       router.push(returnUrl)
     }
   }, [user, returnUrl, router])
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
+
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0) return
+    setLoading(true)
+    try {
+      // Sign in temporarily to resend verification
+      const userCredential = await signInWithEmailAndPassword(auth, verificationEmail, formData.password)
+      await sendEmailVerification(userCredential.user)
+      await signOut(auth)
+      toast.success('Verification email resent! Check your inbox.')
+      setResendCooldown(60)
+    } catch (error: any) {
+      toast.error('Failed to resend verification email. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,9 +75,16 @@ export default function AuthPage() {
           setLoading(false)
           return
         }
+        if (formData.password.length < 6) {
+          toast.error('Password should be at least 6 characters')
+          setLoading(false)
+          return
+        }
         await signUp(formData.email, formData.password, formData.name)
-        toast.success('Account created successfully!')
-        router.push(returnUrl)
+        setVerificationEmail(formData.email)
+        setShowVerification(true)
+        setResendCooldown(60)
+        toast.success('Account created! Please check your email to verify.')
       }
     } catch (error: any) {
       console.error('Auth error:', error)
@@ -59,6 +96,11 @@ export default function AuthPage() {
         toast.error('Invalid email address')
       } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         toast.error('Invalid email or password')
+      } else if (error.code === 'auth/email-not-verified') {
+        setVerificationEmail(formData.email)
+        setShowVerification(true)
+        setResendCooldown(60)
+        toast.info('Please verify your email to continue.')
       } else {
         toast.error(error.message || 'Authentication failed')
       }
@@ -227,6 +269,54 @@ export default function AuthPage() {
                     >
                       <FaSignOutAlt />
                       <span>Sign out & use another account</span>
+                    </button>
+                  </div>
+                </div>
+              ) : showVerification ? (
+                <div className="text-center space-y-6">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <FaEnvelope className="text-4xl text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Verify Your Email
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-1">
+                      We&apos;ve sent a verification link to
+                    </p>
+                    <p className="font-semibold text-blue-500 text-lg">
+                      {verificationEmail}
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-left">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Steps to verify:</strong>
+                    </p>
+                    <ol className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-decimal list-inside">
+                      <li>Check your inbox (and spam folder)</li>
+                      <li>Click the verification link in the email</li>
+                      <li>Come back here and sign in</li>
+                    </ol>
+                  </div>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={loading || resendCooldown > 0}
+                      className="w-full py-3 px-5 border border-gray-200/30 dark:border-white/[0.06] text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-white/40 dark:hover:bg-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : 'Resend Verification Email'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowVerification(false)
+                        setIsLogin(true)
+                      }}
+                      className="w-full py-3 px-5 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group"
+                    >
+                      <span>Go to Sign In</span>
+                      <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>

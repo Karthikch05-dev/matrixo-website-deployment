@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaDna, FaRocket, FaUniversity } from 'react-icons/fa'
+import { FaRocket, FaUniversity } from 'react-icons/fa'
 
 export default function Hero() {
   return (
@@ -95,14 +95,14 @@ export default function Hero() {
             transition={{ delay: 0.9, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-6 justify-center items-center"
           >
-            <Link href="/skilldna">
+            <Link href="/events">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary flex items-center space-x-2"
               >
-                <FaDna />
-                <span>Discover Your SkillDNA</span>
+                <FaRocket />
+                <span>Explore Events</span>
               </motion.button>
             </Link>
 

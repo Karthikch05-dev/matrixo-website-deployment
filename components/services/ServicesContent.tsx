@@ -46,7 +46,7 @@ const services = [
 const pricingPlans = [
   {
     name: 'Workshop',
-    price: 'Ã¢â€šÂ¹499',
+    price: '₹499',
     period: '/student',
     description: 'Single-day hands-on workshops',
     features: [
@@ -61,7 +61,7 @@ const pricingPlans = [
   },
   {
     name: 'Bootcamp',
-    price: 'Ã¢â€šÂ¹9,999',
+    price: '₹9,999',
     period: '/student',
     description: 'Intensive 4-6 week programs',
     features: [
@@ -155,7 +155,7 @@ export default function ServicesContent() {
                 <ul className="space-y-2">
                   {service.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       {feature}
                     </li>
                   ))}
@@ -245,9 +245,9 @@ export default function ServicesContent() {
 
                 <div className="grid md:grid-cols-3 gap-6 mb-10">
                   {[
-                    { icon: 'Ã°Å¸Å½Â«', title: 'Easy Ticketing', desc: 'Create and manage multiple ticket tiers' },
-                    { icon: 'Ã¢Å“â€°Ã¯Â¸Â', title: 'Email Confirmations', desc: 'Automated registration confirmations' },
-                    { icon: 'Ã°Å¸â€œÅ ', title: 'Real-time Analytics', desc: 'Track registrations and attendee insights' },
+                    { icon: '🎫', title: 'Easy Ticketing', desc: 'Create and manage multiple ticket tiers' },
+                    { icon: '✉️', title: 'Email Confirmations', desc: 'Automated registration confirmations' },
+                    { icon: '📊', title: 'Real-time Analytics', desc: 'Track registrations and attendee insights' },
                   ].map((benefit, index) => (
                     <motion.div
                       key={benefit.title}
@@ -271,7 +271,7 @@ export default function ServicesContent() {
                     className="px-10 py-4 bg-white text-blue-600 font-bold rounded-full hover:shadow-2xl 
                              transition-all duration-200 text-lg"
                   >
-                    Become a Partner Ã¢â€ â€™
+                    Become a Partner →
                   </motion.button>
                 </Link>
 
@@ -328,7 +328,7 @@ export default function ServicesContent() {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className={`flex items-center ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
-                      <span className={`mr-2 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}>Ã¢Å“â€œ</span>
+                      <span className={`mr-2 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}>✓</span>
                       {feature}
                     </li>
                   ))}

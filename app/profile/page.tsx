@@ -476,7 +476,7 @@ export default function ProfilePage() {
                   <PrivacyToggle label="Year" description="Show your academic year" checked={privacyData.showYear} onChange={v => setPrivacyData(p => ({ ...p, showYear: v }))} />
                   <PrivacyToggle label="Branch" description="Show your branch" checked={privacyData.showBranch} onChange={v => setPrivacyData(p => ({ ...p, showBranch: v }))} />
                   <PrivacyToggle label="Roll Number" description="Show your roll number" checked={privacyData.showRollNumber} onChange={v => setPrivacyData(p => ({ ...p, showRollNumber: v }))} />
-                  <PrivacyToggle label="SkillDNA" description="Share your SkillDNA" checked={privacyData.showSkillDNA} onChange={v => setPrivacyData(p => ({ ...p, showSkillDNA: v }))} />
+
                 </div>
                 <button onClick={handleSavePrivacy} disabled={saving}
                   className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">

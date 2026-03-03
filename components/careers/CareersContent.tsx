@@ -194,7 +194,7 @@ export default function CareersContent() {
               >
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                   <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                    Ã°Å¸â€œÂ¢ Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
+                    📝 Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
                     Please allow some time for us to get back to you. We appreciate your patience and interest in joining matriXO!
                   </p>
                 </div>
@@ -426,17 +426,17 @@ export default function CareersContent() {
               {
                 title: 'Impact at Scale',
                 description: 'Work on products that directly impact thousands of students and educational institutions.',
-                icon: 'Ã°Å¸Å¡â‚¬',
+                icon: '🚀',
               },
               {
                 title: 'Innovation First',
                 description: 'Be at the forefront of EdTech innovation with AI, blockchain, and cutting-edge technologies.',
-                icon: 'Ã°Å¸â€™Â¡',
+                icon: '💡',
               },
               {
                 title: 'Growth & Learning',
                 description: 'Continuous learning opportunities, mentorship, and career development programs.',
-                icon: 'Ã°Å¸â€œË†',
+                icon: '📈',
               },
             ].map((benefit, index) => (
               <motion.div
