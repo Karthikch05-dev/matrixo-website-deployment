@@ -16,7 +16,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebaseConfig'
 import { compressImage } from '@/lib/imageUtils'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -283,7 +282,8 @@ export default function ProfilePage() {
               <div className="relative group">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
                   {profile?.profilePhoto ? (
-                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.profilePhoto} alt={profile.fullName} className="object-cover w-full h-full" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
                       {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
@@ -543,7 +543,8 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
                         {profile?.profilePhoto ? (
-                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full" />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={profile.profilePhoto} alt={profile.fullName} className="object-cover w-full h-full" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
                         )}

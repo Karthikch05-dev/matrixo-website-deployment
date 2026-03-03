@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
@@ -314,7 +313,8 @@ export default function Navbar() {
                 >
                   {profile?.profilePhoto ? (
                     <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
-                      <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={profile.profilePhoto} alt="" className="object-cover w-full h-full" />
                     </div>
                   ) : (
                     <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -502,7 +502,8 @@ export default function Navbar() {
                       <div className="px-4 py-3 bg-white/50 dark:bg-white/[0.04] rounded-2xl flex items-center gap-3 backdrop-blur-sm">
                         {profile?.profilePhoto ? (
                           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-                            <Image src={profile.profilePhoto} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={profile.profilePhoto} alt="" className="object-cover w-full h-full" />
                           </div>
                         ) : (
                           <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
