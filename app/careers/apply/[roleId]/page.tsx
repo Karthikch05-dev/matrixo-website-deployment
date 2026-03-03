@@ -1,29 +1,15 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import ApplicationForm from '@/components/careers/ApplicationForm'
-import { doc, getDoc } from 'firebase/firestore'
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
+import PositionClosed from '@/components/careers/PositionClosed'
+import { validateRole } from '@/lib/careers/jobValidation'
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ",
-  authDomain: "matrixo-in-auth.firebaseapp.com",
-  projectId: "matrixo-in-auth",
-  storageBucket: "matrixo-in-auth.firebasestorage.app",
-  messagingSenderId: "431287252568",
-  appId: "1:431287252568:web:0bdc2975d8951203bf7c2d",
-}
-
-function getServerDb() {
-  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-  return getFirestore(app)
-}
 
 export async function generateMetadata({ params }: { params: { roleId: string } }): Promise<Metadata> {
   try {
-    const db = getServerDb()
-    const roleDoc = await getDoc(doc(db, 'roles', params.roleId))
-    if (roleDoc.exists()) {
-      const role = roleDoc.data()
+    const result = await validateRole(params.roleId, true) // preview=true → just for meta
+    if (result.ok || result.role) {
+      const role = result.ok ? result.role : result.role!
       return {
         title: `${role.title} - Apply | matriXO`,
         description: role.description?.slice(0, 160) || `Apply for ${role.title} at matriXO. ${role.team} team, ${role.location}, ${role.type}.`,
@@ -52,6 +38,27 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
   }
 }
 
-export default function ApplyPage({ params }: { params: { roleId: string } }) {
+export default async function ApplyPage({
+  params,
+  searchParams,
+}: {
+  params: { roleId: string }
+  searchParams: { preview?: string }
+}) {
+  // Admin preview: ?preview=matrixo-admin-preview
+  const isAdminPreview = searchParams.preview === 'matrixo-admin-preview'
+  const result = await validateRole(params.roleId, isAdminPreview)
+
+  // Role does not exist at all → Next.js 404 page
+  if (!result.ok && result.reason === 'not-found') {
+    notFound()
+  }
+
+  // Role exists but is not open → show PositionClosed page
+  if (!result.ok) {
+    return <PositionClosed reason={result.reason} roleTitle={result.role?.title} />
+  }
+
+  // Role is open → render the application form
   return <ApplicationForm roleId={params.roleId} />
 }

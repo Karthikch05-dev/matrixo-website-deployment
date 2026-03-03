@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
@@ -16,7 +16,8 @@ interface Role {
   team: string
   location: string
   type: string
-  status: 'open' | 'closed'
+  status: 'open' | 'closed' | 'draft' | 'archived'
+  expiryDate?: string | null
   createdAt: any
 }
 
@@ -51,11 +52,26 @@ export default function CareersContent() {
         querySnapshot.forEach((doc) => {
           fetchedRoles.push({ id: doc.id, ...doc.data() } as Role)
         })
+
+        // Client-side expiry filter: auto-close any expired roles
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const openRoles = fetchedRoles.filter((r) => {
+          if (r.expiryDate) {
+            const expiry = new Date(r.expiryDate)
+            if (expiry < today) {
+              // Auto-close in Firestore (best-effort)
+              updateDoc(doc(db, 'roles', r.id), { status: 'closed' }).catch(() => {})
+              return false
+            }
+          }
+          return true
+        })
         
         // Sort client-side (newest first)
-        fetchedRoles.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+        openRoles.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
         
-        setRoles(fetchedRoles)
+        setRoles(openRoles)
       } catch (error) {
         console.error('Error fetching roles:', error)
       } finally {
