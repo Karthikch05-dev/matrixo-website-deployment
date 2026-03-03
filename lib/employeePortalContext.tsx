@@ -775,10 +775,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const dateString = getLocalDateString(today)
     const now = new Date()
     
-    // 6PM cutoff: Prevent marking attendance after 6 PM (except Leave and admin modifications)
+    // 7:30PM cutoff: Prevent marking attendance after 7:30 PM (except Leave and admin modifications)
     const currentHour = now.getHours()
-    if (currentHour >= 18 && status !== 'L' && status !== 'A') {
-      throw new Error('Attendance marking is closed for today. The cutoff time is 6:00 PM.')
+    const currentMinutes = now.getMinutes()
+    const isPastCutoff = currentHour > 19 || (currentHour === 19 && currentMinutes >= 30)
+    if (isPastCutoff && status !== 'L' && status !== 'A') {
+      throw new Error('Attendance marking is closed for today. The cutoff time is 7:30 PM.')
     }
     
     const attendanceId = `${employee.employeeId}_${dateString}`

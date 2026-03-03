@@ -83,22 +83,76 @@ self.addEventListener('notificationclick', (event) => {
   // If user clicked dismiss, just close
   if (event.action === 'dismiss') return
 
-  const urlToOpen = event.notification.data?.url || '/employee-portal'
+  var rawUrl = (event.notification.data && event.notification.data.url) || '/employee-portal'
+
+  // Validate URL: only allow same-origin paths starting with /employee-portal
+  var targetUrl = '/employee-portal' // safe fallback
+  try {
+    if (rawUrl.startsWith('/')) {
+      if (rawUrl.startsWith('/employee-portal') || rawUrl === '/') {
+        targetUrl = rawUrl
+      }
+    } else if (rawUrl.startsWith('http')) {
+      var parsed = new URL(rawUrl)
+      var swOrigin = self.location.origin
+      if (parsed.origin === swOrigin && parsed.pathname.startsWith('/employee-portal')) {
+        targetUrl = parsed.pathname + parsed.search + parsed.hash
+      }
+    }
+  } catch (e) {
+    console.warn('[Service Worker] Invalid notification URL, using fallback:', rawUrl)
+  }
+
+  // Build absolute URL from service worker scope
+  var fullUrl = new URL(targetUrl, self.location.origin).href
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Check if there's already a window open with the portal
-        for (let i = 0; i < clientList.length; i++) {
-          const client = clientList[i]
-          if (client.url.includes('/employee-portal') && 'focus' in client) {
-            return client.focus()
+      .then(function (clientList) {
+        var matchingClient = null
+        var portalClient = null
+
+        for (var i = 0; i < clientList.length; i++) {
+          var client = clientList[i]
+          // Exact URL match — best case
+          if (client.url === fullUrl && 'focus' in client) {
+            matchingClient = client
+            break
+          }
+          // Any employee-portal tab
+          if (client.url.indexOf('/employee-portal') !== -1 && 'focus' in client) {
+            portalClient = client
           }
         }
-        
-        // If no window is open, open a new one
+
+        // Exact match — focus and notify to refresh
+        if (matchingClient) {
+          return matchingClient.focus().then(function (focused) {
+            focused.postMessage({ type: 'NOTIFICATION_CLICK', url: targetUrl, timestamp: Date.now() })
+            return focused
+          })
+        }
+
+        // Portal tab on different route — focus, navigate, notify
+        if (portalClient) {
+          return portalClient.focus().then(function (focused) {
+            focused.postMessage({ type: 'NOTIFICATION_NAVIGATE', url: targetUrl, timestamp: Date.now() })
+            if ('navigate' in focused) {
+              return focused.navigate(fullUrl)
+            }
+            return focused
+          })
+        }
+
+        // No portal tab open — open new window
         if (self.clients.openWindow) {
-          return self.clients.openWindow(urlToOpen)
+          return self.clients.openWindow(fullUrl)
+        }
+      })
+      .catch(function (err) {
+        console.error('[Service Worker] notificationclick error:', err)
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(new URL('/employee-portal', self.location.origin).href)
         }
       })
   )
