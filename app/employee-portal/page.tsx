@@ -272,11 +272,9 @@ function TopNavbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 0, isMobile: false })
-  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
-  const adminDropdownRef = useRef<HTMLDivElement>(null)
   const isAdmin = employee?.role === 'admin'
 
   // Track pending application count for Careers badge (admin only)
@@ -327,23 +325,6 @@ function TopNavbar({
       clearTimeout(timer)
     }
   }, [userMenuOpen])
-
-  // Close admin dropdown on outside click
-  useEffect(() => {
-    if (!adminDropdownOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (adminDropdownRef.current && !adminDropdownRef.current.contains(e.target as Node)) {
-        setAdminDropdownOpen(false)
-      }
-    }
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside)
-    }, 0)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      clearTimeout(timer)
-    }
-  }, [adminDropdownOpen])
 
   // Handle user menu click
   const handleUserMenuClick = (e: React.MouseEvent) => {
@@ -426,76 +407,42 @@ function TopNavbar({
               ))}
               
               {isAdmin && (
-                <div className="relative" ref={adminDropdownRef}>
+                <>
                   <button
-                    onClick={() => setAdminDropdownOpen(prev => !prev)}
+                    onClick={() => setActiveTab('job-postings')}
+                    className={`
+                      relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 font-medium text-xs whitespace-nowrap
+                      ${activeTab === 'job-postings'
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30'
+                        : darkMode
+                          ? 'text-neutral-400 hover:text-white hover:bg-white/8'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-black/6'
+                      }
+                    `}
+                  >
+                    <FaBriefcase className="text-xs shrink-0" />
+                    <span>Careers</span>
+                    {pendingAppCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                      </span>
+                    )}
+                  </button>
+                  <div className="w-px h-5 bg-white/10 mx-0.5" />
+                  <button
+                    onClick={() => setActiveTab('admin')}
                     className={`
                       flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 font-medium text-xs whitespace-nowrap
-                      ${(activeTab === 'admin' || activeTab === 'job-postings') 
-                        ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30' 
+                      ${activeTab === 'admin'
+                        ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30'
                         : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
                       }
                     `}
                   >
                     <FaUserShield className="text-xs shrink-0" />
                     <span>Admin</span>
-                    {pendingAppCount > 0 && (
-                      <span className="min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                        {pendingAppCount > 99 ? '99+' : pendingAppCount}
-                      </span>
-                    )}
-                    <FaChevronDown className={`text-[10px] transition-transform duration-200 ${adminDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-
-                  <AnimatePresence>
-                    {adminDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        transition={{ duration: 0.12 }}
-                        className="absolute top-full right-0 mt-1 w-48 rounded-2xl shadow-2xl overflow-hidden"
-                        style={{
-                          background: darkMode ? 'rgba(15,15,20,0.9)' : 'rgba(255,255,255,0.9)',
-                          backdropFilter: 'blur(40px) saturate(180%)',
-                          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.08)',
-                          boxShadow: darkMode ? '0 16px 40px rgba(0,0,0,0.5)' : '0 16px 40px rgba(0,0,0,0.12)',
-                          zIndex: 9999,
-                        }}
-                      >
-                        <button
-                          onClick={() => { setActiveTab('job-postings'); setAdminDropdownOpen(false) }}
-                          className={`relative w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                            activeTab === 'job-postings'
-                              ? darkMode ? 'bg-white/10 text-white' : 'bg-black/5 text-gray-900'
-                              : darkMode ? 'text-neutral-300 hover:bg-white/8' : 'text-gray-700 hover:bg-black/5'
-                          }`}
-                        >
-                          <FaBriefcase className="shrink-0" />
-                          <span>Careers</span>
-                          {pendingAppCount > 0 && (
-                            <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                              {pendingAppCount > 99 ? '99+' : pendingAppCount}
-                            </span>
-                          )}
-                        </button>
-                        <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
-                        <button
-                          onClick={() => { setActiveTab('admin'); setAdminDropdownOpen(false) }}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                            activeTab === 'admin'
-                              ? darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-500/15 text-amber-600'
-                              : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
-                          }`}
-                        >
-                          <FaUserShield className="shrink-0" />
-                          <span>Admin Panel</span>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                </>
               )}
             </div>
           </div>
