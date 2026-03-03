@@ -1,5 +1,6 @@
 // Service Worker for Web Push Notifications
 // This file handles background push notifications for the Employee Portal
+// SW_VERSION: 2.1.0 — force-update cache bust
 
 /* eslint-disable no-restricted-globals */
 

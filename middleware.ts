@@ -28,6 +28,30 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // ── Careers admin route protection ────────────────────────
+  // /careers/admin/* and /careers/dashboard are employee-only pages.
+  // Middleware cannot check Firestore auth, but blocking unauthenticated
+  // crawlers / bots that hit these paths directly adds a layer of defence.
+  // Actual auth is enforced in the components themselves.
+  if (
+    pathname.startsWith('/careers/admin') ||
+    pathname.startsWith('/careers/dashboard')
+  ) {
+    // No cookie/session check possible at edge without JWT,
+    // but we set a cache-control to prevent caching of admin pages.
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    response.headers.set('x-careers-admin', '1')
+  }
+
+  // ── Careers preview access ──────────────────────────────
+  // Allow ?preview=matrixo-admin-preview to bypass status checks
+  // (handled in page.tsx server component, but we tag the response
+  //  so CDN / cache layers don't cache a preview render for public users)
+  if (pathname.startsWith('/careers/apply/') && request.nextUrl.searchParams.get('preview')) {
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    response.headers.set('x-careers-preview', '1')
+  }
+
   return response
 }
 

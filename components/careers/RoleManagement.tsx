@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaPlus, FaEdit, FaTrash, FaLock, FaUnlock } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash, FaLock, FaUnlock, FaEye, FaArchive } from 'react-icons/fa'
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, Timestamp, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { getFirestore } from 'firebase/firestore'
 import { useAuth } from '@/lib/AuthContext'
+
+import type { JobStatus } from '@/lib/careers/types'
+import { STATUS_LABELS, STATUS_COLORS, ALL_STATUSES } from '@/lib/careers/types'
 
 interface Role {
   id: string
@@ -17,7 +20,8 @@ interface Role {
   team: string
   location: string
   type: string
-  status: 'open' | 'closed'
+  status: JobStatus
+  expiryDate?: string | null
   createdAt: any
   createdBy?: string
   responsibilities?: string[]
@@ -41,6 +45,7 @@ export default function RoleManagement() {
     type: 'Full-time',
     responsibilities: '',
     eligibility: '',
+    expiryDate: '',
   })
 
   // Check if user is an employee
@@ -121,6 +126,7 @@ export default function RoleManagement() {
         type: formData.type,
         responsibilities: formData.responsibilities.split('\n').filter(r => r.trim()),
         eligibility: formData.eligibility.split('\n').filter(e => e.trim()),
+        expiryDate: formData.expiryDate || null,
         status: 'open' as const,
         createdAt: Timestamp.now(),
         createdBy: user?.email || 'Unknown',
@@ -144,6 +150,7 @@ export default function RoleManagement() {
         type: 'Full-time',
         responsibilities: '',
         eligibility: '',
+        expiryDate: '',
       })
       fetchRoles()
     } catch (error) {
@@ -162,15 +169,19 @@ export default function RoleManagement() {
       type: role.type,
       responsibilities: role.responsibilities?.join('\n') || '',
       eligibility: role.eligibility?.join('\n') || '',
+      expiryDate: role.expiryDate || '',
     })
     setShowForm(true)
   }
 
   const handleToggleStatus = async (role: Role) => {
+    // Cycle: open → closed → draft → archived → open
+    const cycle: JobStatus[] = ['open', 'closed', 'draft', 'archived']
+    const currentIdx = cycle.indexOf(role.status)
+    const nextStatus = cycle[(currentIdx + 1) % cycle.length]
     try {
-      const newStatus = role.status === 'open' ? 'closed' : 'open'
-      await updateDoc(doc(db, 'roles', role.id), { status: newStatus })
-      toast.success(`Role ${newStatus === 'open' ? 'opened' : 'closed'} successfully`)
+      await updateDoc(doc(db, 'roles', role.id), { status: nextStatus })
+      toast.success(`Role status changed to ${STATUS_LABELS[nextStatus]}`)
       fetchRoles()
     } catch (error) {
       console.error('Error updating role status:', error)
@@ -225,6 +236,7 @@ export default function RoleManagement() {
                   type: 'Full-time',
                   responsibilities: '',
                   eligibility: '',
+                  expiryDate: '',
                 })
               }}
               className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center"
@@ -330,6 +342,19 @@ export default function RoleManagement() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Application Expiry Date <span className="text-xs text-gray-400 font-normal">(optional — role auto-closes after this date)</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Responsibilities (one per line)
                   </label>
                   <textarea
@@ -400,17 +425,18 @@ export default function RoleManagement() {
                           {role.title}
                         </h3>
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            role.status === 'open'
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                          }`}
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${STATUS_COLORS[role.status] || STATUS_COLORS.closed}`}
                         >
-                          {role.status === 'open' ? 'Open' : 'Closed'}
+                          {STATUS_LABELS[role.status] || role.status}
                         </span>
                       </div>
                       <p className="text-cyan-600 dark:text-cyan-400 mb-2">
                         {role.team} • {role.location} • {role.type}
+                        {role.expiryDate && (
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                            • Expires: {new Date(role.expiryDate).toLocaleDateString()}
+                          </span>
+                        )}
                       </p>
                       <p className="text-gray-600 dark:text-gray-400">
                         {role.description}
@@ -428,9 +454,12 @@ export default function RoleManagement() {
                       <button
                         onClick={() => handleToggleStatus(role)}
                         className="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
-                        title={role.status === 'open' ? 'Close' : 'Open'}
+                        title={`Change status (currently: ${STATUS_LABELS[role.status]})`}
                       >
-                        {role.status === 'open' ? <FaLock size={18} /> : <FaUnlock size={18} />}
+                        {role.status === 'open' ? <FaLock size={18} /> :
+                         role.status === 'archived' ? <FaUnlock size={18} /> :
+                         role.status === 'draft' ? <FaArchive size={18} /> :
+                         <FaEye size={18} />}
                       </button>
                       <button
                         onClick={() => handleDelete(role.id)}

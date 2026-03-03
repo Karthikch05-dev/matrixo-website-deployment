@@ -7,7 +7,7 @@ import {
   FaCloudUploadAlt, FaFilePdf, FaTimes, FaStar, FaChevronDown,
   FaCheck, FaArrowRight
 } from 'react-icons/fa'
-import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, Timestamp, updateDoc } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
@@ -15,6 +15,7 @@ import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import PositionClosed from './PositionClosed'
 
 // ============================================
 // TYPES
@@ -52,6 +53,7 @@ interface Role {
   location: string
   type: string
   status: string
+  expiryDate?: string | null
   responsibilities?: string[]
   eligibility?: string[]
   customQuestions?: FormQuestion[] | string[]
@@ -390,12 +392,42 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
   const questions = normalizeQuestions(role?.customQuestions)
 
+  // Client-side closure reason (mirrors server guard as a safety net)
+  const [closedReason, setClosedReason] = useState<'closed' | 'expired' | 'draft' | 'archived' | null>(null)
+
   useEffect(() => {
     const fetchRole = async () => {
       try {
         const roleDoc = await getDoc(doc(db, 'roles', roleId))
         if (roleDoc.exists()) {
-          setRole({ id: roleDoc.id, ...roleDoc.data() } as Role)
+          const roleData = { id: roleDoc.id, ...roleDoc.data() } as Role
+
+          // ── Client-side expiry auto-close ──────────────────
+          if (roleData.expiryDate && roleData.status === 'open') {
+            const expiry = new Date(roleData.expiryDate)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            if (expiry < today) {
+              // Auto-close in Firestore
+              try {
+                await updateDoc(doc(db, 'roles', roleId), { status: 'closed' })
+              } catch (_) { /* best-effort */ }
+              roleData.status = 'closed'
+            }
+          }
+
+          // ── Client-side status gate ────────────────────────
+          if (roleData.status !== 'open') {
+            const reason = (['closed', 'draft', 'archived'] as const).find(
+              (s) => s === roleData.status
+            ) || 'closed'
+            setClosedReason(roleData.expiryDate && reason === 'closed' ? 'expired' : reason)
+            setRole(roleData)
+            setLoading(false)
+            return
+          }
+
+          setRole(roleData)
         } else {
           toast.error('Role not found')
           router.push('/careers')
@@ -631,6 +663,11 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   }
 
   if (!role) return null
+
+  // Client-side safety: if role slipped past the server guard, block it here
+  if (closedReason) {
+    return <PositionClosed reason={closedReason} roleTitle={role.title} />
+  }
 
   if (submitted) {
     return (
