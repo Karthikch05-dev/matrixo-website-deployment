@@ -55,6 +55,10 @@ const linkedinMap: Record<string, string> = {
   'karthik': 'https://www.linkedin.com/in/karthik-chinthakindi-aa93a7287',
   'jahnavi': 'https://www.linkedin.com/in/jahnavi-mulukutla',
   'shravya': 'https://www.linkedin.com/in/shravya-datla-388447287',
+  'manideep': 'https://www.linkedin.com/in/manideep-botsa/',
+  'akshar': 'https://www.linkedin.com/in/akshar-sunkari-523aaa278/',
+  'praneep': 'https://www.linkedin.com/in/praneep-sri-32564a355/',
+  'nithin': 'https://www.linkedin.com/in/nithin-yelamati-273513290/',
 }
 
 // Fallback profile images for interns (mapped by employeeId)
@@ -230,10 +234,9 @@ export default function TeamContent() {
                     {member.email && (
                       <a
                         href={`mailto:${member.email}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         aria-label={`Email ${member.name}`}
                         onClick={(e) => {
+                          e.preventDefault()
                           e.stopPropagation()
                           window.location.href = `mailto:${member.email}`
                         }}
