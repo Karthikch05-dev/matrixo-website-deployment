@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com', 'avatars.githubusercontent.com', 'tedxkprit.in'],
+    domains: ['images.unsplash.com', 'avatars.githubusercontent.com', 'tedxkprit.in', 'firebasestorage.googleapis.com', 'lh3.googleusercontent.com'],
   },
   async redirects() {
     return [

@@ -32,7 +32,7 @@ export default function Footer() {
                  className="hover:text-gray-900 dark:hover:text-white transition-colors duration-300">
                 <FaLinkedin size={20} />
               </a>
-              <a href="https://instagram.com/matrixo_official" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.instagram.com/matrixo_in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer"
                  className="hover:text-gray-900 dark:hover:text-white transition-colors duration-300">
                 <FaInstagram size={20} />
               </a>

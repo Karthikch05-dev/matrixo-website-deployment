@@ -134,14 +134,14 @@ export default function ContactContent() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl glass-input"
+                    className="w-full px-4 py-3 rounded-xl glass-input bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   >
-                    <option value="">Select a subject</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="event">List an Event</option>
-                    <option value="partnership">Partnership Opportunity</option>
-                    <option value="support">Technical Support</option>
-                    <option value="other">Other</option>
+                    <option value="" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Select a subject</option>
+                    <option value="general" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">General Inquiry</option>
+                    <option value="event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">List an Event</option>
+                    <option value="partnership" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Partnership Opportunity</option>
+                    <option value="support" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Technical Support</option>
+                    <option value="other" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Other</option>
                   </select>
                 </div>
 
@@ -229,7 +229,7 @@ export default function ContactContent() {
                     <FaLinkedin size={24} />
                   </a>
                   <a
-                    href="https://instagram.com/matrixo_official"
+                    href="https://www.instagram.com/matrixo_in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 glass-chip flex items-center justify-center 

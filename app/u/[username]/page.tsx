@@ -293,7 +293,7 @@ export default function PublicProfilePage() {
           <div className="relative h-36 sm:h-44 overflow-hidden rounded-t-[28px] group/cover">
             {/* Cover photo or gradient fallback */}
             {userProfile.coverPhoto ? (
-              <Image src={userProfile.coverPhoto} alt="Cover" fill className="object-cover" />
+              <Image src={userProfile.coverPhoto} alt="Cover" fill className="object-cover" unoptimized />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600" />
             )}
@@ -341,7 +341,7 @@ export default function PublicProfilePage() {
                 }}
               >
                 {userProfile.profilePhoto ? (
-                  <Image src={userProfile.profilePhoto} alt={userProfile.fullName} width={112} height={112} className="object-cover w-full h-full" />
+                  <Image src={userProfile.profilePhoto} alt={userProfile.fullName} width={112} height={112} className="object-cover w-full h-full" unoptimized />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-bold bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-gray-400">
                     {userProfile.fullName?.charAt(0)?.toUpperCase() || 'U'}

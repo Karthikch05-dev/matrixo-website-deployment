@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt } from 'react-icons/fa'
+import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt, FaArrowLeft, FaEnvelope } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
+
+type AuthStep = 'form' | 'otp'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -19,6 +21,11 @@ export default function AuthPage() {
     confirmPassword: ''
   })
   const [loading, setLoading] = useState(false)
+  const [authStep, setAuthStep] = useState<AuthStep>('form')
+  const [otpValues, setOtpValues] = useState(['', '', '', '', '', ''])
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [resendTimer, setResendTimer] = useState(0)
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   
   const router = useRouter()
   const { user, signIn, signUp, signInWithGoogle, logout } = useAuth()
@@ -30,6 +37,46 @@ export default function AuthPage() {
     }
   }, [user, returnUrl, router])
 
+  // Resend timer countdown
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendTimer])
+
+  const sendOTP = async (email: string) => {
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, action: 'send' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send OTP')
+      return true
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send verification code')
+      return false
+    }
+  }
+
+  const verifyOTP = async (email: string, otp: string) => {
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, action: 'verify', otp }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Verification failed')
+      return true
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid verification code')
+      return false
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -40,14 +87,25 @@ export default function AuthPage() {
         toast.success('Welcome back!')
         router.push(returnUrl)
       } else {
+        // Signup flow - validate first
         if (formData.password !== formData.confirmPassword) {
           toast.error('Passwords do not match')
           setLoading(false)
           return
         }
-        await signUp(formData.email, formData.password, formData.name)
-        toast.success('Account created successfully!')
-        router.push(returnUrl)
+        if (formData.password.length < 6) {
+          toast.error('Password should be at least 6 characters')
+          setLoading(false)
+          return
+        }
+
+        // Send OTP before creating account
+        const sent = await sendOTP(formData.email)
+        if (sent) {
+          setAuthStep('otp')
+          setResendTimer(60)
+          toast.success('Verification code sent to your email!')
+        }
       }
     } catch (error: any) {
       console.error('Auth error:', error)
@@ -64,6 +122,83 @@ export default function AuthPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleOTPSubmit = async () => {
+    const otp = otpValues.join('')
+    if (otp.length !== 6) {
+      toast.error('Please enter the complete 6-digit code')
+      return
+    }
+
+    setOtpLoading(true)
+    try {
+      const verified = await verifyOTP(formData.email, otp)
+      if (verified) {
+        // OTP verified - now create the account
+        await signUp(formData.email, formData.password, formData.name)
+        toast.success('Account created successfully!')
+        router.push(returnUrl)
+      }
+    } catch (error: any) {
+      console.error('OTP/Signup error:', error)
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('Email already in use. Please sign in instead.')
+        setAuthStep('form')
+        setIsLogin(true)
+      } else {
+        toast.error(error.message || 'Failed to create account')
+      }
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleResendOTP = async () => {
+    if (resendTimer > 0) return
+    setOtpLoading(true)
+    const sent = await sendOTP(formData.email)
+    if (sent) {
+      setOtpValues(['', '', '', '', '', ''])
+      setResendTimer(60)
+      toast.success('New verification code sent!')
+    }
+    setOtpLoading(false)
+  }
+
+  const handleOTPChange = (index: number, value: string) => {
+    if (value.length > 1) {
+      // Handle paste
+      const digits = value.replace(/\D/g, '').slice(0, 6)
+      const newValues = [...otpValues]
+      for (let i = 0; i < digits.length && index + i < 6; i++) {
+        newValues[index + i] = digits[i]
+      }
+      setOtpValues(newValues)
+      const nextIdx = Math.min(index + digits.length, 5)
+      otpRefs.current[nextIdx]?.focus()
+      return
+    }
+
+    if (value && !/^\d$/.test(value)) return
+
+    const newValues = [...otpValues]
+    newValues[index] = value
+    setOtpValues(newValues)
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleOTPKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus()
+    }
+    if (e.key === 'Enter' && otpValues.join('').length === 6) {
+      handleOTPSubmit()
     }
   }
 
@@ -93,8 +228,6 @@ export default function AuthPage() {
     }
     setLoading(false)
   }
-
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -234,6 +367,7 @@ export default function AuthPage() {
               <>
 
               {/* Tab Switcher */}
+              {authStep === 'form' && (
               <div className="flex gap-2 mb-6 p-1 bg-white/40 dark:bg-white/[0.04] backdrop-blur-sm rounded-xl border border-gray-200/30 dark:border-white/[0.06]">
                 <button
                   onClick={() => setIsLogin(true)}
@@ -256,6 +390,94 @@ export default function AuthPage() {
                   Sign Up
                 </button>
               </div>
+              )}
+
+              {/* OTP Verification Step */}
+              {authStep === 'otp' ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6"
+                >
+                  <button
+                    onClick={() => { setAuthStep('form'); setOtpValues(['', '', '', '', '', '']) }}
+                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    <FaArrowLeft className="text-xs" /> Back
+                  </button>
+
+                  <div className="text-center space-y-3">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-purple-500/10 flex items-center justify-center">
+                      <FaEnvelope className="text-2xl text-purple-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      Verify Your Email
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      We&apos;ve sent a 6-digit verification code to
+                    </p>
+                    <p className="font-semibold text-purple-500">{formData.email}</p>
+                  </div>
+
+                  {/* OTP Input */}
+                  <div className="flex justify-center gap-2 sm:gap-3">
+                    {otpValues.map((val, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => { otpRefs.current[idx] = el }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={val}
+                        onChange={(e) => handleOTPChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOTPKeyDown(idx, e)}
+                        onPaste={(e) => {
+                          e.preventDefault()
+                          const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+                          handleOTPChange(0, paste)
+                        }}
+                        className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold rounded-xl glass-input 
+                                 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500/40 
+                                 focus:border-purple-500 transition-all"
+                        autoFocus={idx === 0}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleOTPSubmit}
+                    disabled={otpLoading || otpValues.join('').length !== 6}
+                    className="w-full py-3 px-5 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {otpLoading ? (
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <FaCheckCircle />
+                        <span>Verify & Create Account</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500">
+                      Didn&apos;t receive the code?{' '}
+                      {resendTimer > 0 ? (
+                        <span className="text-gray-400">Resend in {resendTimer}s</span>
+                      ) : (
+                        <button
+                          onClick={handleResendOTP}
+                          disabled={otpLoading}
+                          className="text-purple-500 hover:text-purple-400 font-medium transition-colors disabled:opacity-50"
+                        >
+                          Resend Code
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+              <>
 
               {/* OAuth Buttons */}
               <div className="space-y-2.5 mb-6">
@@ -382,6 +604,8 @@ export default function AuthPage() {
                   Privacy Policy
                 </Link>
               </div>
+              </>
+              )}
               </>
               )}
             </div>

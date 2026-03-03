@@ -219,9 +219,10 @@ export default function TeamContent() {
                         href={member.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`${member.name} LinkedIn`}
                         className="w-10 h-10 glass-chip flex items-center justify-center 
                                  hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
-                                 transition-all duration-300"
+                                 transition-all duration-300 cursor-pointer relative z-10"
                       >
                         <FaLinkedin size={20} />
                       </a>
@@ -229,9 +230,16 @@ export default function TeamContent() {
                     {member.email && (
                       <a
                         href={`mailto:${member.email}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Email ${member.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.location.href = `mailto:${member.email}`
+                        }}
                         className="w-10 h-10 glass-chip flex items-center justify-center 
                                  hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
-                                 transition-all duration-300"
+                                 transition-all duration-300 cursor-pointer relative z-10"
                       >
                         <FaEnvelope size={20} />
                       </a>

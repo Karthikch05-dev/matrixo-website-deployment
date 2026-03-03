@@ -124,7 +124,7 @@ export default function PublicProfile({ username }: { username: string }) {
           <div className="p-6 sm:p-8 text-center">
             <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden bg-gray-100 dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.08] mb-4">
               {profile?.profilePhoto ? (
-                <Image src={profile.profilePhoto} alt={profile.fullName} width={96} height={96} className="object-cover w-full h-full" />
+                <Image src={profile.profilePhoto} alt={profile.fullName} width={96} height={96} className="object-cover w-full h-full" unoptimized />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
                   {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}

@@ -189,15 +189,18 @@ export default function ProfilePage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 2 * 1024 * 1024) { toast.error('Photo must be <2MB'); return }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be <5MB'); return }
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
     setUploadingPhoto(true)
     try {
-      const photoRef = ref(storage, `profile-photos/${user.uid}`)
-      await uploadBytes(photoRef, file)
+      const extension = file.name.split('.').pop() || 'jpg'
+      const photoRef = ref(storage, `profile-photos/${user.uid}.${extension}`)
+      const metadata = { contentType: file.type }
+      await uploadBytes(photoRef, file, metadata)
       const url = await getDownloadURL(photoRef)
       await updateProfile({ profilePhoto: url })
       toast.success('Photo updated!')
-    } catch { toast.error('Failed to upload') } finally { setUploadingPhoto(false) }
+    } catch (err) { console.error('Photo upload error:', err); toast.error('Failed to upload photo') } finally { setUploadingPhoto(false) }
   }
 
   const handleCopyLink = () => {
@@ -270,7 +273,7 @@ export default function ProfilePage() {
               <div className="relative group">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
                   {profile?.profilePhoto ? (
-                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover" />
+                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover" unoptimized />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
                       {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
@@ -530,7 +533,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
                         {profile?.profilePhoto ? (
-                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full" />
+                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full" unoptimized />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
                         )}

@@ -1,5 +1,5 @@
 // ============================================================
-// SkillDNAÃ¢â€žÂ¢ Profile Edit Section
+// SkillDNA™ Profile Edit Section
 // User can update their profile information
 // ============================================================
 
@@ -133,9 +133,9 @@ export default function ProfileEditSection({ profile, onSave, onAddSkill }: Prof
                   />
                 </div>
                 <span className="text-sm text-gray-400 w-10 text-right">{skill.score}%</span>
-                {skill.trend === 'rising' && <span className="text-green-400 text-xs">Ã¢â€ â€˜</span>}
-                {skill.trend === 'declining' && <span className="text-red-400 text-xs">Ã¢â€ â€œ</span>}
-                {skill.trend === 'stable' && <span className="text-gray-500 text-xs">Ã¢â€ â€™</span>}
+                {skill.trend === 'rising' && <span className="text-green-400 text-xs">↑</span>}
+                {skill.trend === 'declining' && <span className="text-red-400 text-xs">↓</span>}
+                {skill.trend === 'stable' && <span className="text-gray-500 text-xs">→</span>}
               </div>
             </div>
           ))}

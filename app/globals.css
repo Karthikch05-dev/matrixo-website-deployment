@@ -197,6 +197,19 @@
     outline: none;
   }
 
+  /* Dark mode styling for select dropdowns and option elements */
+  .dark select.glass-input {
+    color-scheme: dark;
+  }
+  .dark select.glass-input option {
+    background-color: #111827;
+    color: #f3f4f6;
+  }
+  select.glass-input option {
+    background-color: #ffffff;
+    color: #111827;
+  }
+
   /* iOS 26 Liquid Glass Hero section */
   .glass-hero {
     background: linear-gradient(

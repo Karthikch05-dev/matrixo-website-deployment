@@ -67,23 +67,23 @@ export default function AboutContent() {
                   <h3 className="text-4xl font-bold gradient-text mb-4">Why Choose matriXO?</h3>
                   <ul className="space-y-4 text-gray-600 dark:text-gray-400 text-lg">
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       <span>Hands-on technical training programs</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       <span>Industry-relevant curriculum</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       <span>Expert mentorship and guidance</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       <span>Growing partner network</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-500 mr-2">Ã¢Å“â€œ</span>
+                      <span className="text-blue-500 mr-2">✓</span>
                       <span>Career-focused approach</span>
                     </li>
                   </ul>
