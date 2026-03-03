@@ -213,6 +213,73 @@ export default function SkillDNADashboard({
             {/* Persona Summary */}
             <PersonaSummary persona={profile.persona} />
 
+            {/* Skills Overview with Verification Status */}
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FaChartBar className="text-purple-400" />
+                Your Skills
+                <span className="text-sm font-normal text-gray-500">({profile.technicalSkills.length})</span>
+              </h3>
+              {profile.technicalSkills.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-4">No skills added yet. Go to the Edit tab to add skills.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {profile.technicalSkills.map((skill, i) => {
+                    const vf = skill.verification;
+                    const isVerified = vf?.status === 'verified';
+                    const isFailed = vf?.status === 'failed';
+                    return (
+                      <motion.div
+                        key={skill.name}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        className={`p-3.5 rounded-xl border transition-all ${
+                          isVerified
+                            ? 'bg-green-500/5 border-green-500/30'
+                            : isFailed
+                            ? 'bg-red-500/5 border-red-500/20'
+                            : 'bg-gray-100/50 dark:bg-gray-800/50 border-gray-300/50 dark:border-gray-700/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{skill.name}</span>
+                          {isVerified ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 font-bold flex-shrink-0">
+                              <FaCheckCircle size={9} /> Verified
+                            </span>
+                          ) : isFailed ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-bold flex-shrink-0">
+                              <FaTimesCircle size={9} /> Failed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/20 font-medium flex-shrink-0">
+                              <FaShieldAlt size={8} /> Unverified
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full bg-gradient-to-r ${getScoreGradient(skill.score)}`}
+                              style={{ width: `${skill.score}%` }}
+                            />
+                          </div>
+                          <span className={`text-xs font-bold ${getScoreColor(skill.score)} w-8 text-right`}>{skill.score}%</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[10px] text-gray-500">{skill.category}</span>
+                          {isVerified && vf && (
+                            <span className="text-[10px] text-green-500">Best: {vf.bestScore}%</span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* Behavioral Traits */}
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
