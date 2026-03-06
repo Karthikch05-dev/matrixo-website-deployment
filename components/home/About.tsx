@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaDna, FaGraduationCap, FaRocket } from 'react-icons/fa'
+import { FaCode, FaGraduationCap, FaRocket } from 'react-icons/fa'
 
 export default function About() {
   return (
@@ -26,21 +26,21 @@ export default function About() {
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
-              icon: FaDna,
-              title: 'AI Skill Mapping',
-              description: 'Our SkillDNA™ engine analyzes your technical abilities, behavioral traits, and learning patterns to create a unique skill genome — giving you clarity on exactly where you stand.',
+              icon: FaCode,
+              title: 'Hands-on Training',
+              description: 'Industry-relevant workshops and bootcamps with real coding projects. Learn web development, AI/ML, cloud computing, and more from expert instructors.',
               gradient: 'from-purple-500 to-fuchsia-500',
             },
             {
               icon: FaGraduationCap,
-              title: 'Adaptive Growth',
-              description: 'No generic courses. GrowGrid™ builds personalized learning paths that adapt to your pace, goals, and skill gaps — so every hour you invest moves the needle.',
+              title: 'Career Growth',
+              description: 'Placement preparation, resume building, mock interviews, and mentorship programs designed to help you land your dream tech job.',
               gradient: 'from-blue-500 to-cyan-500',
             },
             {
               icon: FaRocket,
-              title: 'Verified Credentials',
-              description: 'Prove your worth with blockchain-backed PlayCred™ badges that recruiters can trust. Your achievements, permanently verifiable and shareable.',
+              title: 'Industry Partnerships',
+              description: 'We partner with leading institutions and companies to deliver cutting-edge technical training and create career opportunities for students.',
               gradient: 'from-green-500 to-emerald-500',
             },
           ].map((item, index) => (

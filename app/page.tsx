@@ -8,8 +8,8 @@ import Stats from '@/components/home/Stats'
 
 export const metadata: Metadata = {
   title: 'matriXO - AI-Powered Career Growth Platform',
-  description: 'matriXO is an AI-powered career growth platform. SkillDNA™ maps your skills, GrowGrid™ builds personalized learning paths, PlayCred™ verifies your achievements, and MentorMatrix™ connects you with industry mentors.',
-  keywords: 'matriXO, SkillDNA, AI skill analysis, career growth, personalized learning, blockchain credentials, ed-tech, skill genome, mentorship, GrowGrid, PlayCred',
+  description: 'matriXO is an ed-tech platform offering hands-on technical workshops, hackathons, bootcamps, and career-focused events for students. Build industry-ready skills with expert mentorship.',
+  keywords: 'matriXO, technical workshops, hackathons, bootcamps, career events, ed-tech, coding workshops, student training, industry skills',
   openGraph: {
     type: 'website',
     url: 'https://matrixo.in',

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useProfile, DEFAULT_PRIVACY } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { compressImage } from '@/lib/imageUtils'
 import { storage } from '@/lib/firebaseConfig'
 import Image from 'next/image'
 
@@ -72,21 +73,28 @@ export default function ProfileSetupPage() {
     return () => clearTimeout(timer)
   }, [formData.username, checkUsernameAvailable])
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Photo must be less than 2MB')
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Photo must be less than 10MB')
       return
     }
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
       return
     }
-    setProfilePhotoFile(file)
-    const reader = new FileReader()
-    reader.onloadend = () => setProfilePhotoPreview(reader.result as string)
-    reader.readAsDataURL(file)
+    try {
+      // Compress image client-side before storing
+      const compressedBlob = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 })
+      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' })
+      setProfilePhotoFile(compressedFile)
+      const reader = new FileReader()
+      reader.onloadend = () => setProfilePhotoPreview(reader.result as string)
+      reader.readAsDataURL(compressedBlob)
+    } catch {
+      toast.error('Failed to process image. Please try another photo.')
+    }
   }
 
   const validateStep1 = (): boolean => {
@@ -148,7 +156,7 @@ export default function ProfileSetupPage() {
 
       if (profilePhotoFile && user) {
         const photoRef = ref(storage, `profile-photos/${user.uid}`)
-        await uploadBytes(photoRef, profilePhotoFile)
+        await uploadBytes(photoRef, profilePhotoFile, { contentType: 'image/jpeg' })
         profilePhotoUrl = await getDownloadURL(photoRef)
       }
 

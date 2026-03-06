@@ -14,7 +14,6 @@ const routeOrder = [
     '/contact',
     '/careers',
     // Beta features (positioned after main nav)
-    '/skilldna',
     '/growgrid',
     '/playcred',
     '/mentormatrix',

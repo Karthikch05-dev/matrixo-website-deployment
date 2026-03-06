@@ -2,49 +2,49 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaDna, FaChartLine, FaMedal, FaUserFriends, FaChartBar, FaUserCircle } from 'react-icons/fa'
+import { FaCode, FaTrophy, FaLaptopCode, FaBriefcase, FaRocket, FaUsers } from 'react-icons/fa'
 
 const features = [
   {
-    icon: FaDna,
-    title: 'SkillDNA™',
-    description: 'AI maps your unique skill genome — technical abilities, behavioral traits, and learning patterns analyzed in real time.',
-    href: '/skilldna',
+    icon: FaCode,
+    title: 'Technical Workshops',
+    description: 'Hands-on coding workshops on cutting-edge technologies taught by industry experts. Web development, AI/ML, cloud, and more.',
+    href: '/services',
     gradient: 'from-purple-500 to-fuchsia-500',
   },
   {
-    icon: FaChartLine,
-    title: 'GrowGrid™',
-    description: 'Adaptive learning paths that evolve with you. AI-recommended courses, projects, and milestones personalized to your goals.',
-    href: '/growgrid',
+    icon: FaTrophy,
+    title: 'Hackathons',
+    description: 'Competitive coding events where students build real projects and solve industry challenges with prizes and recognition.',
+    href: '/events',
     gradient: 'from-blue-500 to-cyan-500',
   },
   {
-    icon: FaMedal,
-    title: 'PlayCred™',
-    description: 'Earn blockchain-verified achievement badges. Prove your skills with tamper-proof credentials that recruiters trust.',
-    href: '/playcred',
+    icon: FaLaptopCode,
+    title: 'Bootcamps',
+    description: 'Intensive multi-week training programs covering full-stack development, data science, cybersecurity, and more.',
+    href: '/services',
     gradient: 'from-amber-500 to-orange-500',
   },
   {
-    icon: FaUserFriends,
-    title: 'MentorMatrix™',
-    description: 'AI-matched mentorship connections. Get paired with industry professionals who align with your career trajectory.',
-    href: '/mentormatrix',
+    icon: FaBriefcase,
+    title: 'Career Programs',
+    description: 'Placement preparation, resume building, mock interviews, and DSA training to help you land your dream job.',
+    href: '/services',
     gradient: 'from-green-500 to-emerald-500',
   },
   {
-    icon: FaChartBar,
-    title: 'ImpactVault™',
-    description: 'Real-time analytics dashboard showing your growth, skill gaps, and career alignment scores — powered by AI insights.',
-    href: '/impactvault',
+    icon: FaRocket,
+    title: 'Campus Events',
+    description: 'Large-scale technical events, seminars, and conferences hosted at educational institutions across India.',
+    href: '/events',
     gradient: 'from-red-500 to-rose-500',
   },
   {
-    icon: FaUserCircle,
-    title: 'Public Profiles',
-    description: 'Your professional identity — LinkedIn-style profiles with SkillDNA integration, shareable and downloadable as PDF or JPG.',
-    href: '/profile',
+    icon: FaUsers,
+    title: 'Corporate Collaboration',
+    description: 'Partner with us to train students, host events, run internship drives, and build a talent pipeline for your organization.',
+    href: '/contact',
     gradient: 'from-indigo-500 to-violet-500',
   },
 ]
@@ -60,11 +60,11 @@ export default function Features() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            The <span className="gradient-text">matriXO</span> Platform
+            What We <span className="gradient-text">Offer</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Six AI-powered products working together to map, grow, verify,
-            and showcase your skills — from first code to first job.
+            Comprehensive technical training programs designed to build
+            industry-ready skills and launch successful tech careers.
           </p>
         </motion.div>
 

@@ -775,10 +775,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const dateString = getLocalDateString(today)
     const now = new Date()
     
-    // 6PM cutoff: Prevent marking attendance after 6 PM (except Leave and admin modifications)
+    // 7:30PM cutoff: Prevent marking attendance after 7:30 PM (except Leave and admin modifications)
     const currentHour = now.getHours()
-    if (currentHour >= 18 && status !== 'L' && status !== 'A') {
-      throw new Error('Attendance marking is closed for today. The cutoff time is 6:00 PM.')
+    const currentMinutes = now.getMinutes()
+    const isPastCutoff = currentHour > 19 || (currentHour === 19 && currentMinutes >= 30)
+    if (isPastCutoff && status !== 'L' && status !== 'A') {
+      throw new Error('Attendance marking is closed for today. The cutoff time is 7:30 PM.')
     }
     
     const attendanceId = `${employee.employeeId}_${dateString}`
@@ -1116,10 +1118,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const q = query(attendanceRef, where('employeeId', '==', employeeId))
     const querySnapshot = await getDocs(q)
     
+    // Get the employee's joining date to filter out records before it
+    let joiningDate: string | undefined
+    const empRef = collection(db, 'Employees')
+    const empQuery = query(empRef, where('employeeId', '==', employeeId))
+    const empSnap = await getDocs(empQuery)
+    if (!empSnap.empty) {
+      const empData = empSnap.docs[0].data() as EmployeeProfile
+      joiningDate = empData.joiningDate
+    }
+    
     let records = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as AttendanceRecord[]
+    
+    // Filter out records before the employee's joining date
+    if (joiningDate) {
+      records = records.filter(r => r.date >= joiningDate!)
+    }
     
     // Deduplicate: keep only one record per date
     // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
@@ -2240,6 +2257,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       for (const emp of allEmployees) {
         const attendanceId = `${emp.employeeId}_${dateString}`
         const leaveKey = `${emp.employeeId}_${dateString}`
+        
+        // Skip if this date is before the employee's joining date
+        if (emp.joiningDate && dateString < emp.joiningDate) {
+          continue
+        }
         
         // Check for any existing records for this employee on this date
         const attendanceRef = collection(db, 'attendance')

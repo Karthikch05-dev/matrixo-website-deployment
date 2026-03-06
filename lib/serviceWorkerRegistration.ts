@@ -38,6 +38,12 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     console.log('[SW] Service Worker registered:', registration)
 
+    // Force-check for a new SW version on every page load so updated code
+    // is picked up immediately rather than waiting for the browser's ~24h cycle.
+    registration.update().catch((err) =>
+      console.warn('[SW] update() check failed:', err)
+    )
+
     // Wait for the service worker to be ready
     await navigator.serviceWorker.ready
     console.log('[SW] Service Worker is ready')

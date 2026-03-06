@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaArrowRight, FaDna } from 'react-icons/fa'
+import { FaArrowRight, FaCalendar } from 'react-icons/fa'
 
 export default function CTA() {
   return (
@@ -20,24 +20,24 @@ export default function CTA() {
           className="text-center max-w-4xl mx-auto"
         >
           <h2 className="text-4xl md:text-6xl font-display font-bold mb-6 text-gray-900 dark:text-white">
-            Ready to Discover
-            <span className="gradient-text block mt-2">Your Skill Genome?</span>
+            Ready to Build
+            <span className="gradient-text block mt-2">Your Tech Career?</span>
           </h2>
 
           <p className="text-xl text-gray-700 dark:text-gray-300 mb-12">
-            Join matriXO&apos;s AI-powered platform and get a personalized roadmap
-            from where you are to where you want to be.
+            Join matriXO&apos;s workshops, hackathons, and bootcamps to gain
+            industry-ready skills and kickstart your career.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Link href="/skilldna">
+            <Link href="/events">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary flex items-center justify-center space-x-2 text-lg"
               >
-                <FaDna />
-                <span>Start Your SkillDNA</span>
+                <FaCalendar />
+                <span>Browse Events</span>
                 <FaArrowRight />
               </motion.button>
             </Link>
@@ -62,15 +62,15 @@ export default function CTA() {
           >
             <div className="flex items-center space-x-2">
               <span className="text-gray-900 dark:text-white text-2xl">✓</span>
-              <span>AI Skill Analysis</span>
+              <span>Hands-on Workshops</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-900 dark:text-white text-2xl">✓</span>
-              <span>Personalized Paths</span>
+              <span>Expert Mentorship</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-900 dark:text-white text-2xl">✓</span>
-              <span>Verified Credentials</span>
+              <span>Industry Certifications</span>
             </div>
           </motion.div>
         </motion.div>
