@@ -29,34 +29,29 @@ export default function Partners() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-stretch">
           {partners.map((partner, index) => (
             <motion.div
               key={partner.name}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="flex items-center justify-center p-6 glass-card hover-lift transition-all duration-300"
+              transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
+              className="flex items-center justify-center px-5 py-8 glass-card hover-lift transition-shadow duration-300"
             >
-              <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-3 bg-white/60 dark:bg-white/[0.06] backdrop-blur-sm rounded-full flex items-center justify-center text-3xl font-bold text-gray-900 dark:text-white">
-                  {partner.name.charAt(0)}
-                </div>
-                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
-                  {partner.name}
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug">
+                {partner.name}
+              </p>
             </motion.div>
           ))}
         </div>
 
         {/* Partnership CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-16 text-center glass-card p-8"
         >
           <h3 className="text-2xl font-bold mb-4 gradient-text">
@@ -67,7 +62,7 @@ export default function Partners() {
           </p>
           <a
             href="/contact"
-            className="btn-primary inline-flex items-center transform hover:scale-[1.03]"
+            className="btn-primary inline-flex items-center"
           >
             Contact Us
           </a>

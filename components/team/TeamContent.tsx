@@ -61,24 +61,6 @@ const linkedinMap: Record<string, string> = {
   'nithin': 'https://www.linkedin.com/in/nithin-yelamati-273513290/',
 }
 
-// Fallback profile images for interns (mapped by employeeId)
-const internImageMap: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.jpeg',
-  'M-A009': '/intern-images/M-A009.jpg',
-  'M-A010': '/intern-images/M-A010.png',
-  'M-A011': '/intern-images/M-A011.png',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
-
-function getProfileImage(employeeId: string, firestoreImage?: string): string {
-  if (firestoreImage) return firestoreImage
-  return internImageMap[employeeId] || ''
-}
-
 function getLinkedin(name: string, firestoreLinkedin?: string): string {
   if (firestoreLinkedin) return firestoreLinkedin
   const nameLower = name.toLowerCase()
@@ -86,6 +68,22 @@ function getLinkedin(name: string, firestoreLinkedin?: string): string {
     if (nameLower.includes(key)) return url
   }
   return ''
+}
+
+// Local profile image mapping (fallback when Firestore profileImage is empty)
+const localProfileImages: Record<string, string> = {
+  'M-A001': '/intern-images/M-A001.webp',
+  'M-A005': '/intern-images/M-A005.webp',
+  'M-A006': '/intern-images/M-A006.webp',
+  'M-A008': '/intern-images/M-A008.webp',
+  'M-A009': '/intern-images/M-A009.webp',
+  'M-A010': '/intern-images/M-A010.webp',
+  'M-A011': '/intern-images/M-A011.webp',
+}
+
+function getProfileImage(employeeId: string, firestoreImage: string): string {
+  if (firestoreImage) return firestoreImage
+  return localProfileImages[employeeId] || ''
 }
 
 export default function TeamContent() {
@@ -113,7 +111,7 @@ export default function TeamContent() {
             department: data.department || '',
             designation: data.designation || '',
             joiningDate: data.joiningDate || '',
-            profileImage: getProfileImage(employeeId, data.profileImage),
+            profileImage: getProfileImage(data.employeeId || doc.id, data.profileImage || ''),
             role: data.role || 'employee',
             linkedin: getLinkedin(name, data.linkedin),
           })

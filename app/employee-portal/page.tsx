@@ -74,12 +74,10 @@ const localProfileImages: Record<string, string> = {
   'M-A001': '/intern-images/M-A001.webp',
   'M-A005': '/intern-images/M-A005.webp',
   'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.jpeg',
-  'M-A009': '/intern-images/M-A009.jpg',
-  'M-A010': '/intern-images/M-A010.png',
-  'M-A011': '/intern-images/M-A011.png',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
+  'M-A008': '/intern-images/M-A008.webp',
+  'M-A009': '/intern-images/M-A009.webp',
+  'M-A010': '/intern-images/M-A010.webp',
+  'M-A011': '/intern-images/M-A011.webp',
 }
 
 // Simple helper to get profile image

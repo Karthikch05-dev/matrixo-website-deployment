@@ -32,8 +32,8 @@ export default function CTA() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link href="/events">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="btn-primary flex items-center justify-center space-x-2 text-lg"
               >
                 <FaCalendar />
@@ -44,8 +44,8 @@ export default function CTA() {
 
             <Link href="/contact">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="btn-secondary flex items-center justify-center text-lg"
               >
                 Partner with Us
