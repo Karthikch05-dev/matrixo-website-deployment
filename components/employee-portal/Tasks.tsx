@@ -1383,7 +1383,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
         return assignedTo.some(empId => {
           const emp = employees.find(e => e.employeeId === empId)
           if (filterRole === 'Intern') {
-            return isIntern(emp)
+            return emp ? isIntern(emp) : false
           }
           return emp?.role === filterRole
         })
