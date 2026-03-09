@@ -386,6 +386,15 @@ const INTERN_SPECIALIZATIONS = [
 const normalizeSpecText = (text: string) =>
   text.toLowerCase().replace(/&/g, 'and').replace(/\bintern\b/gi, '').replace(/\s+/g, ' ').trim()
 
+// Universal intern detector — checks ALL possible ways an employee can be an intern in Firebase
+// Matches: department="Intern", designation contains "Intern", or role="Intern"
+const isIntern = (emp: EmployeeProfile): boolean => {
+  const dept = (emp.department || '').toLowerCase()
+  const desig = (emp.designation || '').toLowerCase()
+  const role = (emp.role || '').toLowerCase()
+  return dept === 'intern' || desig.includes('intern') || role === 'intern'
+}
+
 // ============================================
 // CREATE/EDIT TASK MODAL
 // ============================================
@@ -526,8 +535,8 @@ function TaskModal({
     // Filter by department if selected
     if (form.department) {
       if (form.department === 'Intern') {
-        // For Intern department, filter by department field (Firebase stores department: "Intern")
-        result = result.filter(emp => (emp.department || '').toLowerCase() === 'intern')
+        // For Intern department, use universal intern detection
+        result = result.filter(emp => isIntern(emp))
         
         // If specialization is selected, filter by designation (normalized match)
         if (form.specialization) {
@@ -666,7 +675,7 @@ function TaskModal({
                   <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate">{emp.name}</p>
-                    <p className="text-xs text-neutral-500">{(emp.department || '').toLowerCase() === 'intern' ? 'Intern' : emp.department}</p>
+                    <p className="text-xs text-neutral-500">{isIntern(emp) ? 'Intern' : emp.department}</p>
                   </div>
                   {form.assignedTo.includes(emp.employeeId) && (
                     <FaCheckCircle className="text-primary-500" />
@@ -1374,7 +1383,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
         return assignedTo.some(empId => {
           const emp = employees.find(e => e.employeeId === empId)
           if (filterRole === 'Intern') {
-            return (emp?.department || '').toLowerCase() === 'intern'
+            return isIntern(emp)
           }
           return emp?.role === filterRole
         })
