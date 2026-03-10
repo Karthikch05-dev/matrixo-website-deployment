@@ -32,11 +32,12 @@ import { formatDistanceToNow } from 'date-fns'
 // Notification type
 interface Notification {
   id: string
-  type: 'task' | 'discussion' | 'calendar' | 'application'
+  type: 'task' | 'discussion' | 'calendar' | 'application' | 'attendance' | 'meeting'
   action?: string
   title: string
   message: string
   createdByName?: string
+  targetUrl?: string
   read: boolean
   createdAt: Timestamp
 }
