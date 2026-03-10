@@ -266,7 +266,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                   </h3>
                 )}
                 
-                <p className={`${isTEDxEvent ? 'text-gray-800 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'} text-lg leading-relaxed mb-6`}>
+                <p className={`${isTEDxEvent ? 'text-gray-800 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'} text-lg leading-relaxed mb-6 whitespace-pre-line`}>
                   {event.description}
                 </p>
               </motion.div>

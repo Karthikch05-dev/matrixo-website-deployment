@@ -1,5 +1,186 @@
 [
   {
+    "id": "pottery-workshop-wranglex-2026",
+    "slug": "pottery-workshop",
+    "title": "Pottery Workshop",
+    "tagline": "Hands-on Creative Session",
+    "description": "INFOQUEST 2026 – POTTERY WORKSHOP 🎨\n\nGet ready for a hands-on creative experience with clay! Design and build your own unique pottery based on a given theme and explore the art of pottery in a fun and interactive session.\n\n🎯 What's in?\n• Creative clay modelling session\n• Machines & tools provided for each team\n• Guidance from an instructor\n• Refreshments during the event\n• Take home your handmade pottery item\n\n💰 Registration Fee\nTeam of 3 – ₹449\nTeam of 4 – ₹549\n\n📅 Event Date: 13th March 2026",
+    "date": "2026-03-13T10:00:00",
+    "venue": "JBIET Campus",
+    "location": "JBIET Campus, Hyderabad",
+    "totalCapacity": 500,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "Workshop",
+    "externalRegistrationLink": "https://datawranglers-jbiet.in/pottery/",
+    "images": {
+      "banner": "/events/pottery-workshop-banner.png",
+      "thumbnail": "/events/pottery-workshop-thumbnail.png",
+      "gallery": ["/events/pottery-workshop-banner.png", "/events/pottery-workshop-thumbnail.png"]
+    },
+    "tickets": [
+      {
+        "id": "team3",
+        "name": "Team of 3",
+        "price": 449,
+        "available": 500,
+        "description": "3 Members",
+        "perks": [
+          "Creative clay modelling session",
+          "Machines & tools provided",
+          "Guidance from an instructor",
+          "Refreshments during the event",
+          "Take home your handmade pottery item"
+        ]
+      },
+      {
+        "id": "team4",
+        "name": "Team of 4",
+        "price": 549,
+        "available": 500,
+        "description": "4 Members",
+        "perks": [
+          "Creative clay modelling session",
+          "Machines & tools provided",
+          "Guidance from an instructor",
+          "Refreshments during the event",
+          "Take home your handmade pottery item"
+        ]
+      }
+    ],
+    "partners": [],
+    "sponsors": [],
+    "agenda": [],
+    "tags": ["Workshop", "Creative", "Clay", "Pottery", "INFOQUEST 2026"],
+    "organizer": "WrangleX",
+    "contactEmail": "",
+    "socialLinks": {},
+    "highlights": [
+      "Hands-on creative clay modelling",
+      "Machines & tools provided for each team",
+      "Guidance from an instructor",
+      "Refreshments included",
+      "Take home your handmade pottery item"
+    ]
+  },
+  {
+    "id": "tech-presenta-wranglex-2026",
+    "slug": "tech-presenta-wranglex",
+    "title": "Tech Presenta",
+    "tagline": "Where Technology Meets Innovation",
+    "description": "🚀 INFOQUEST 2026 – TECH PRESENTA 🚀\n\n🎯 Technical Presentation Competition\n\n💰 Individual: ₹99 | Team: ₹169 (2 members max)\n\n🧠 Rounds:\n1️⃣ Idea Screening\n2️⃣ Final Presentation & Q&A\n\n🏆 Win Exciting Prize Money & Certificates!\n\n📌 About the Event\nTech Presenta is a technical presentation competition organized by WrangleX under INFOQUEST 2026. Participants will present innovative ideas, research, or technical concepts in front of judges and compete for prizes.\n\n📋 Rounds\n\n🔹 Round 1 – Idea Screening\nParticipants submit their technical idea or concept.\n\n🔹 Round 2 – Final Presentation\nShortlisted participants present their idea followed by a Q&A session.\n\n👥 Who Can Participate\n• Engineering students\n• Individual participants\n• Teams of 2 members\n\n🏆 Prizes\n• Prize money for winners\n• Participation certificates",
+    "date": "2026-03-11T10:00:00",
+    "venue": "J.B Institute of Engineering and Technology",
+    "location": "Hyderabad",
+    "totalCapacity": 500,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "Competition",
+    "externalRegistrationLink": "https://datawranglers-jbiet.in/tech-presenta/",
+    "images": {
+      "banner": "/events/tech-presenta-banner.png",
+      "thumbnail": "/events/tech-presenta-thumbnail.png",
+      "gallery": ["/events/tech-presenta-banner.png", "/events/tech-presenta-thumbnail.png"]
+    },
+    "tickets": [
+      {
+        "id": "individual-pass",
+        "name": "Individual Pass",
+        "price": 99,
+        "available": 500,
+        "description": "Individual registration for Tech Presenta",
+        "perks": [
+          "Technical presentation competition entry",
+          "Participation certificate",
+          "Chance to win prize money"
+        ]
+      },
+      {
+        "id": "team-pass",
+        "name": "Team Pass (2 Members)",
+        "price": 169,
+        "available": 250,
+        "description": "Team registration (2 members max)",
+        "perks": [
+          "Technical presentation competition entry for team",
+          "Participation certificates for both members",
+          "Chance to win prize money"
+        ]
+      }
+    ],
+    "partners": [],
+    "sponsors": [],
+    "agenda": [
+      { "time": "Round 1", "title": "Idea Screening – Submit your technical idea or concept" },
+      { "time": "Round 2", "title": "Final Presentation & Q&A – Present your idea to the judges" }
+    ],
+    "tags": ["Competition", "Tech Presentation", "INFOQUEST 2026", "WrangleX"],
+    "organizer": "WrangleX",
+    "contactEmail": "",
+    "socialLinks": {},
+    "highlights": [
+      "Technical presentation competition",
+      "Individual or team participation (2 members max)",
+      "Prize money for winners",
+      "Participation certificates for all"
+    ]
+  },
+  {
+    "id": "promptoff-championship-jbiet-2026",
+    "slug": "promptoff-championship-jbiet",
+    "title": "Promptoff Championship",
+    "tagline": "AI Prompt Engineering Competition",
+    "description": "INFOQUEST 2026 – WRANGLE X 🔥\nPresented by the Departments of AI&DS and CSE(DS), J.B Institute of Engineering and Technology\n\n🎯 PROMPTOFF CHAMPIONSHIP – AI Prompt Engineering Competition\n\nStep into the world of Artificial Intelligence and Prompt Engineering and prove your skills through an exciting multi-round challenge designed to test your creativity, logic, and technical thinking.\n\n🧠 Competition Rounds:\n🔹 Round 1: Fundamental & Constraint-Based Prompting\n🔹 Round 2: Applied Real-World Use Cases\n🔹 Round 3: Advanced Problem Solving & Live Challenge\n\n💰 Registration Fee: ₹149 (Individual)\n📜 Microsoft Participation Certificates will be provided to all eligible participants.\n\n🏆 Exciting Opportunity:\nWin an exclusive campus tour at Microsoft Hyderabad!\n\n📅 Event Date: 11th March 2026\n📝 Last Date for Registration: 9th March 2026",
+    "date": "2026-03-11T10:00:00",
+    "venue": "J.B Institute of Engineering and Technology",
+    "location": "J.B Institute of Engineering and Technology, Hyderabad",
+    "totalCapacity": 500,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "Competition",
+    "externalRegistrationLink": "https://datawranglers-jbiet.in/promptoff/",
+    "images": {
+      "banner": "/events/promptoff-1.png",
+      "thumbnail": "/events/promptoff-1.png",
+      "gallery": ["/events/promptoff-1.png", "/events/promptoff-2.png"]
+    },
+    "tickets": [
+      {
+        "id": "individual-pass",
+        "name": "Individual Pass",
+        "price": 149,
+        "available": 500,
+        "description": "Individual registration for Promptoff Championship",
+        "perks": [
+          "Multi-round AI prompt engineering challenge",
+          "Microsoft Participation Certificate",
+          "Chance to win Microsoft Hyderabad campus tour",
+          "Fundamental, Applied & Advanced rounds"
+        ]
+      }
+    ],
+    "partners": [],
+    "sponsors": [],
+    "agenda": [
+      { "time": "Round 1", "title": "Fundamental & Constraint-Based Prompting" },
+      { "time": "Round 2", "title": "Applied Real-World Use Cases" },
+      { "time": "Round 3", "title": "Advanced Problem Solving & Live Challenge" }
+    ],
+    "tags": ["AI", "Prompt Engineering", "Competition", "INFOQUEST 2026"],
+    "organizer": "Departments of AI&DS and CSE(DS), JBIET",
+    "contactEmail": "",
+    "socialLinks": {},
+    "highlights": [
+      "Multi-round AI Prompt Engineering challenge",
+      "Microsoft Participation Certificates for all",
+      "Win exclusive Microsoft Hyderabad campus tour",
+      "Test your creativity, logic, and technical thinking"
+    ]
+  },
+  {
     "id": "vibecoding-irl-kprit-2026",
     "slug": "vibecoding-irl-kprit",
     "title": "VibeCode IRL",
