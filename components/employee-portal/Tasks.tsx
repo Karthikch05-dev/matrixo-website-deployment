@@ -23,7 +23,8 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaSearch,
-  FaSmile
+  FaSmile,
+  FaCalendar
 } from 'react-icons/fa'
 import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
@@ -1230,6 +1231,12 @@ function TaskCard({
         </div>
       )}
 
+      {task.createdAt?.toDate && (
+        <p className="text-xs text-neutral-500 mb-2">
+          Created: {task.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </p>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Badge size="sm" className={(statusConfig[task.status || 'todo'] || statusConfig.todo).color}>
@@ -1308,6 +1315,8 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
   const [filterSource, setFilterSource] = useState<string>('')
   const [filterInternSpecialization, setFilterInternSpecialization] = useState<string>('')
   const [showMyTasks, setShowMyTasks] = useState(showOnlyMyTasks)
+  const [filterDate, setFilterDate] = useState<string>('')
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Fetch employees on mount
   useEffect(() => {
@@ -1399,6 +1408,16 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
       }
     }
 
+    // Date filter — match tasks created on selected date (ignores time)
+    if (filterDate) {
+      result = result.filter(task => {
+        if (!task?.createdAt?.toDate) return false
+        const taskDate = task.createdAt.toDate()
+        const taskDateStr = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`
+        return taskDateStr === filterDate
+      })
+    }
+
     // Intern Specialization filter (filters by task specialization field)
     if (filterInternSpecialization) {
       result = result.filter(task => {
@@ -1425,7 +1444,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
 
     return result
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees])
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees, filterDate])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -1436,9 +1455,11 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     setFilterSource('')
     setFilterInternSpecialization('')
     setShowMyTasks(false)
+    setFilterDate('')
+    setShowDatePicker(false)
   }
 
-  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterSource || filterInternSpecialization || showMyTasks
+  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterSource || filterInternSpecialization || showMyTasks || filterDate
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -1534,6 +1555,35 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
             >
               My Tasks
             </Button>
+
+            <div className="relative">
+              <Button
+                variant={filterDate ? 'primary' : 'secondary'}
+                size="sm"
+                icon={<FaCalendar />}
+                onClick={() => setShowDatePicker(v => !v)}
+              >
+                {filterDate ? new Date(filterDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date'}
+              </Button>
+              {showDatePicker && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-neutral-800 border border-neutral-700 rounded-lg p-2 shadow-xl">
+                  <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => { setFilterDate(e.target.value); setShowDatePicker(false) }}
+                    className="bg-neutral-900 text-white text-sm border border-neutral-600 rounded px-2 py-1 focus:outline-none focus:border-primary-500"
+                  />
+                  {filterDate && (
+                    <button
+                      onClick={() => { setFilterDate(''); setShowDatePicker(false) }}
+                      className="mt-1 w-full text-xs text-neutral-400 hover:text-white py-1"
+                    >
+                      Clear date
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
