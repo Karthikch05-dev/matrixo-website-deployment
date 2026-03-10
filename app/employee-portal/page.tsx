@@ -375,7 +375,7 @@ function TopNavbar({
           {/* Desktop Navigation - Centered */}
           <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-0.5">
-              {navigationItems.filter(item => !item.mobileOnly && !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
+              {navigationItems.filter(item => !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
