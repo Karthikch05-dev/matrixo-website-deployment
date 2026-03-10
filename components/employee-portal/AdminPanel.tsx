@@ -1816,16 +1816,15 @@ export function AdminPanel() {
       const empsWithStats: EmployeeWithStats[] = await Promise.all(
         uniqueEmps.map(async (emp) => {
           const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
-          const presentDays = history.filter(r => r.status === 'P').length
+          const presentDays = history.filter(r => r.status === 'P' || r.status === 'W').length
           const absentDays = history.filter(r => r.status === 'A').length
           const lateDays = history.filter(r => r.status === 'L').length
           const onDutyDays = history.filter(r => r.status === 'O').length
           const unauthLeaveDays = history.filter(r => r.status === 'U').length
-          const wfhDays = history.filter(r => r.status === 'W').length
           const totalDays = history.length
-          // Match profile modal formula: (present + onDuty + wfh) / total
+          // Match profile modal formula: (present+wfh + onDuty) / total
           const attendancePercentage = totalDays > 0 
-            ? ((presentDays + onDutyDays + wfhDays) / totalDays) * 100 
+            ? ((presentDays + onDutyDays) / totalDays) * 100 
             : 0
 
           return {
@@ -1836,7 +1835,7 @@ export function AdminPanel() {
             lateDays,
             onDutyDays,
             unauthLeaveDays,
-            wfhDays,
+            wfhDays: 0,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
