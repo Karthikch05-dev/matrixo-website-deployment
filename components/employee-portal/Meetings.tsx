@@ -29,8 +29,9 @@ import {
 } from 'react-icons/fa'
 import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import type { EmployeeProfile } from '@/lib/employeePortalContext'
+import { isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { createGlobalNotification } from '@/lib/notificationUtils'
-import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal } from './ui'
+import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { db } from '@/lib/firebaseConfig'
 import {
@@ -48,19 +49,8 @@ import {
 } from 'firebase/firestore'
 
 // ============================================
-// LOCAL PROFILE IMAGE FALLBACKS
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
 // ============================================
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
 
 // ============================================
 // TYPES
@@ -150,8 +140,8 @@ function formatDuration(start?: string, end?: string): string {
 
 function getProfileImageUrl(url?: string, name?: string, employeeId?: string): string {
   if (name && isMatriXOAccount(name)) return MATRIXO_LOGO_URL
-  if (url) return url
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -595,7 +585,7 @@ function MeetingDetailModal({
   onDeleteCustomTask: (meetingId: number, taskIndex: number) => void
 }) {
   const [activeSection, setActiveSection] = useState<'summary' | 'actions' | 'attendees'>('summary')
-  const isAdmin = employeeData?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employeeData?.role)
   
   // Admin edit state
   const [showAddTask, setShowAddTask] = useState(false)
@@ -1025,7 +1015,7 @@ function MeetingDetailModal({
 
 export function Meetings() {
   const { employee, getAllEmployees } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const [meetings, setMeetings] = useState<FathomMeeting[]>([])
   const [loading, setLoading] = useState(true)

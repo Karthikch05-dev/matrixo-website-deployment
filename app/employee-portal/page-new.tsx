@@ -31,7 +31,7 @@ import {
   FaComments,
   FaHome
 } from 'react-icons/fa'
-import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { EmployeeAuthProvider, useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { toast, Toaster } from 'sonner'
 import Link from 'next/link'
 
@@ -41,13 +41,15 @@ import Attendance from '@/components/employee-portal/Attendance'
 import Tasks from '@/components/employee-portal/Tasks'
 import Discussions from '@/components/employee-portal/Discussions'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
+import { getLocalProfileImage } from '@/components/employee-portal/ui'
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
 
-// Simple helper to get profile image
-const getProfileImageUrl = (url: string | undefined, name?: string): string => {
-  if (url) return url
+// Simple helper to get profile image (uses centralized getLocalProfileImage)
+const getProfileImageUrl = (url: string | undefined, name?: string, employeeId?: string): string => {
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -242,7 +244,7 @@ function Sidebar({
   onClose: () => void 
 }) {
   const { employee, logout } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const handleLogout = async () => {
     try {
@@ -340,7 +342,7 @@ function Sidebar({
         <div className="p-4 border-t border-neutral-800">
           <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50">
             <img
-              src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+              src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
               alt={employee?.name}
               className="w-10 h-10 rounded-full object-cover border-2 border-primary-500"
               onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
@@ -422,7 +424,7 @@ function TopHeader({
           
           <div className="flex items-center gap-2">
             <img
-              src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+              src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
               alt={employee?.name}
               className="w-8 h-8 rounded-full object-cover border-2 border-primary-500 lg:hidden"
             />
@@ -486,7 +488,7 @@ function DashboardOverview() {
       <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-6">
         <div className="flex items-center gap-4">
           <img
-            src={getProfileImageUrl(employee?.profileImage, employee?.name)}
+            src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
             alt={employee?.name}
             className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-500"
             onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
@@ -653,7 +655,7 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   return (
     <div className="min-h-screen bg-neutral-950 flex">

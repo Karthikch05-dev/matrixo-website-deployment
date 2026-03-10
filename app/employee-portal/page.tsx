@@ -34,7 +34,7 @@ import {
   FaMoon,
   FaUserCircle
 } from 'react-icons/fa'
-import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { EmployeeAuthProvider, useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import ProfilePhotoUpload from '@/components/employee-portal/ProfilePhotoUpload'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
@@ -54,7 +54,7 @@ import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
 import JobPostings from '@/components/employee-portal/JobPostings'
-import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
+import { ProfileInfo, employeeToProfileData, getLocalProfileImage } from '@/components/employee-portal/ui'
 
 // ============================================
 // THEME CONTEXT
@@ -69,24 +69,10 @@ const useTheme = usePortalTheme
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
 
-// Local profile image mapping (fallback when Firestore profileImage is empty)
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
-
-// Simple helper to get profile image
+// Simple helper to get profile image (uses centralized getLocalProfileImage)
 const getProfileImageUrl = (url: string | undefined, name?: string, employeeId?: string): string => {
-  if (url) return url
-  // Check local intern images fallback
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -246,7 +232,7 @@ function LoginForm() {
 // ============================================
 
 const navigationItems = [
-  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck },
+  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck, adminHidden: true },
   { id: 'dashboard', label: 'Dashboard', icon: FaChartLine },
   { id: 'history', label: 'History', icon: FaHistory },
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
@@ -277,7 +263,7 @@ function TopNavbar({
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   // Track pending application count for Careers badge (admin only)
   const [pendingAppCount, setPendingAppCount] = useState(0)
@@ -389,7 +375,7 @@ function TopNavbar({
           {/* Desktop Navigation - Centered */}
           <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-0.5">
-              {navigationItems.filter(item => !item.mobileOnly && !item.adminOnly).map((item) => (
+              {navigationItems.filter(item => !item.mobileOnly && !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
@@ -602,7 +588,7 @@ function TopNavbar({
               style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}
             >
               <div className="grid grid-cols-2 gap-2">
-                {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => (
+                {navigationItems.filter(item => (!item.adminOnly || isAdmin) && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
@@ -1109,7 +1095,7 @@ function ProfileTab() {
 
   if (!employee) return null
 
-  const displayImage = localImageUrl || employee.profileImage
+  const displayImage = localImageUrl || getLocalProfileImage(employee.profileImage, employee.employeeId)
 
   const infoRows = [
     { label: 'Employee ID', value: employee.employeeId },
@@ -1287,7 +1273,7 @@ function Dashboard() {
     }
     return true
   })
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const toggleTheme = () => {
     setDarkMode(prev => {
@@ -1585,7 +1571,7 @@ function Dashboard() {
             transition={{ duration: 0.2 }}
             className="w-full"
           >
-            {activeTab === 'attendance' && <Attendance />}
+            {activeTab === 'attendance' && employee?.role !== 'admin' && <Attendance />}
             {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} onShowMyTasks={handleShowMyTasks} />}
             {activeTab === 'history' && <HistoryTab />}
             {activeTab === 'calendar' && <Calendar />}

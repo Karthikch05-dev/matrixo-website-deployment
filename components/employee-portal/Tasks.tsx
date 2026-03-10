@@ -26,30 +26,14 @@ import {
   FaSmile,
   FaCalendar
 } from 'react-icons/fa'
-import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
+import { useEmployeeAuth, Task, TaskComment, EmployeeProfile, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData, getLocalProfileImage } from './ui'
 import { RichTextRenderer } from './RichTextEditor'
 
 // ============================================
-// LOCAL PROFILE IMAGE FALLBACKS
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
 // ============================================
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
-
-const getEmpProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
-  if (profileImage) return profileImage
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
-  return undefined
-}
+const getEmpProfileImage = getLocalProfileImage
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -730,7 +714,7 @@ function TaskDetailModal({
 
   if (!task) return null
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
   const isOwner = task.createdBy === employee?.employeeId
   const isAssignee = task.assignedTo?.includes(employee?.employeeId || '')
   const canEdit = isAdmin
@@ -1007,7 +991,7 @@ function TaskDetailModal({
                     }}
                     isAdmin={false}
                   >
-                    <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
+                    <Avatar src={getEmpProfileImage(comment.authorImage, comment.authorId)} name={comment.authorName} size="sm" showBorder={false} employeeId={comment.authorId} />
                   </ProfileInfo>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -1085,7 +1069,7 @@ function TaskDetailModal({
                                       {reactedUsers.map((user) => (
                                         <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-neutral-700/50">
                                           <img
-                                            src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=24`}
+                                            src={getEmpProfileImage(user!.profileImage, user!.employeeId) || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=24`}
                                             alt={user!.name}
                                             className="w-5 h-5 rounded-full object-cover flex-shrink-0"
                                           />

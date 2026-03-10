@@ -33,31 +33,15 @@ import {
   FaHome,
   FaListAlt
 } from 'react-icons/fa'
-import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
+import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
 // ============================================
-// LOCAL PROFILE IMAGE FALLBACKS
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
 // ============================================
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
-
-const getEmpProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
-  if (profileImage) return profileImage
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
-  return undefined
-}
+const getEmpProfileImage = getLocalProfileImage
 
 // ============================================
 // TYPES
@@ -195,8 +179,8 @@ function EmployeeProfileModal({
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
             <Badge variant="primary">{employee.employeeId}</Badge>
             {employee.department && employee.department !== employee.role && <Badge variant="info">{employee.department}</Badge>}
-            <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
-              {employee.role === 'admin' ? '👑 Admin' : employee.role}
+            <Badge variant={isAdminOrSubAdmin(employee.role) ? 'warning' : 'default'}>
+              {employee.role === 'admin' ? '👑 Admin' : employee.role === 'sub-admin' ? '⭐ Sub-Admin' : employee.role}
             </Badge>
           </div>
           {employee.email && (
@@ -1945,7 +1929,7 @@ export function AdminPanel() {
 
   const hasFilters = searchQuery || filterDepartment || filterStatus || filterDateFrom || filterDateTo
 
-  if (employee?.role !== 'admin') {
+  if (!isAdminOrSubAdmin(employee?.role)) {
     return (
       <EmptyState
         icon={<FaExclamationTriangle className="text-2xl text-red-400" />}

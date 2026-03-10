@@ -17,7 +17,7 @@ import {
 } from 'react-icons/md'
 import { collection, addDoc, updateDoc, doc, deleteDoc, Timestamp, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
-import { useEmployeeAuth } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Alert } from './ui'
 import { toast } from 'sonner'
 import type { FormQuestion } from '@/components/careers/ApplicationForm'
@@ -971,7 +971,7 @@ function ApplicationsModal({
 
 export default function JobPostings() {
   const { employee } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const [roles, setRoles] = useState<JobRole[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])

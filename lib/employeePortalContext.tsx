@@ -41,7 +41,7 @@ export interface EmployeeProfile {
   profileImage: string
   imageUpdatedAt?: Timestamp | string
   phone?: string
-  role: 'employee' | 'admin' | 'Intern' | string
+  role: 'employee' | 'admin' | 'sub-admin' | 'Intern' | string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -215,6 +215,9 @@ export const OFFICE_LOCATION = {
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+// Check if a role has admin-level privileges (admin or sub-admin)
+export const isAdminOrSubAdmin = (role?: string): boolean => role === 'admin' || role === 'sub-admin'
 
 // Calculate distance between two coordinates using Haversine formula
 export function calculateDistance(
@@ -620,8 +623,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     }
     
     const leaveRequestsRef = collection(db, 'leaveRequests')
-    // Admins see all leave requests, employees see only their own
-    const q = employee.role === 'admin'
+    // Admins/sub-admins see all leave requests, employees see only their own
+    const q = isAdminOrSubAdmin(employee.role)
       ? query(leaveRequestsRef, orderBy('createdAt', 'desc'))
       : query(leaveRequestsRef, where('employeeId', '==', employee.employeeId))
     
@@ -755,7 +758,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const setGlobalWorkMode = async (mode: 'WFO' | 'WFH') => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await setDoc(doc(db, 'systemConfig', 'workMode'), {
       mode,
       updatedBy: employee.employeeId,
@@ -1032,7 +1035,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const updateEmployeeAttendance = async (attendanceId: string, updates: Partial<AttendanceRecord>, reason: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const attendanceRef = doc(db, 'attendance', attendanceId)
     const existingDoc = await getDoc(attendanceRef)
@@ -1221,7 +1224,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateEmployeeProfile = async (employeeId: string, updates: Partial<EmployeeProfile>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const employeesRef = collection(db, 'Employees')
     const q = query(employeesRef, where('employeeId', '==', employeeId))
@@ -1258,7 +1261,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const addHoliday = async (holiday: Omit<Holiday, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const holidayDoc = await addDoc(collection(db, 'holidays'), {
       ...holiday,
@@ -1288,12 +1291,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateHoliday = async (id: string, updates: Partial<Holiday>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await updateDoc(doc(db, 'holidays', id), updates)
   }
 
   const deleteHoliday = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     // Delete the holiday
     await deleteDoc(doc(db, 'holidays', id))
@@ -1315,7 +1318,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const addCalendarEvent = async (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const eventDoc = await addDoc(collection(db, 'calendarEvents'), {
       ...event,
@@ -1339,12 +1342,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateCalendarEvent = async (id: string, updates: Partial<CalendarEvent>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await updateDoc(doc(db, 'calendarEvents', id), updates)
   }
 
   const deleteCalendarEvent = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     // Delete the calendar event
     await deleteDoc(doc(db, 'calendarEvents', id))
@@ -1414,14 +1417,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       editedByName: employee.name
     }
     
-    // If non-admin tries to mark task as completed, move to review with pending approval
-    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role !== 'admin') {
+    // If non-admin/sub-admin tries to mark task as completed, move to review with pending approval
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && !isAdminOrSubAdmin(employee.role)) {
       updatePayload.status = 'review' // Change to review instead of completed
       updatePayload.approvalStatus = 'pending'
     }
     
-    // If admin marks task as completed, auto-approve
-    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role === 'admin') {
+    // If admin/sub-admin marks task as completed, auto-approve
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && isAdminOrSubAdmin(employee.role)) {
       updatePayload.approvalStatus = 'approved'
       updatePayload.approvedBy = employee.employeeId
       updatePayload.approvedByName = employee.name
@@ -1482,8 +1485,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     const task = taskDoc.data() as Task
     
-    // Only creator or admin can delete
-    if (task.createdBy !== employee.employeeId && employee.role !== 'admin') {
+    // Only creator or admin/sub-admin can delete
+    if (task.createdBy !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
     
@@ -1525,7 +1528,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const approveTask = async (id: string) => {
     if (!employee) throw new Error('Not authenticated')
-    if (employee.role !== 'admin') throw new Error('Only admins can approve tasks')
+    if (!isAdminOrSubAdmin(employee.role)) throw new Error('Only admins can approve tasks')
     
     const taskRef = doc(db, 'tasks', id)
     const taskDoc = await getDoc(taskRef)
@@ -1622,8 +1625,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const task = taskDoc.data() as Task
     const comment = task.comments?.find(c => c.id === commentId)
     
-    // Only comment author or admin can delete
-    if (comment?.authorId !== employee.employeeId && employee.role !== 'admin') {
+    // Only comment author or admin/sub-admin can delete
+    if (comment?.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
     
@@ -1717,8 +1720,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     const discussion = discussionDoc.data() as Discussion
     
-    // Only author or admin can edit
-    if (discussion.authorId !== employee.employeeId && employee.role !== 'admin') {
+    // Only author or admin/sub-admin can edit
+    if (discussion.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
     
@@ -1736,8 +1739,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     const discussion = discussionDoc.data() as Discussion
     
-    // Only author or admin can delete
-    if (discussion.authorId !== employee.employeeId && employee.role !== 'admin') {
+    // Only author or admin/sub-admin can delete
+    if (discussion.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
     
@@ -1837,8 +1840,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const discussion = discussionDoc.data() as Discussion
     const reply = discussion.replies?.find(r => r.id === replyId)
     
-    // Only reply author or admin can delete
-    if (reply?.authorId !== employee.employeeId && employee.role !== 'admin') {
+    // Only reply author or admin/sub-admin can delete
+    if (reply?.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
     
@@ -1880,7 +1883,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const togglePinDiscussion = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const discussionDoc = await getDoc(doc(db, 'discussions', id))
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
@@ -2084,7 +2087,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const approveLeaveRequest = async (requestId: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const requestRef = doc(db, 'leaveRequests', requestId)
     const requestDoc = await getDoc(requestRef)
@@ -2144,7 +2147,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const rejectLeaveRequest = async (requestId: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const requestRef = doc(db, 'leaveRequests', requestId)
     const requestDoc = await getDoc(requestRef)
@@ -2215,7 +2218,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const runAutoAbsentJob = async () => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     
     const allEmployees = await getAllEmployees()
     
@@ -2255,6 +2258,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       const absentTimestamp = Timestamp.fromDate(absentDayCutoff)
       
       for (const emp of allEmployees) {
+        // Skip admins — they don't participate in attendance tracking
+        if (emp.role === 'admin') continue
+
         const attendanceId = `${emp.employeeId}_${dateString}`
         const leaveKey = `${emp.employeeId}_${dateString}`
         

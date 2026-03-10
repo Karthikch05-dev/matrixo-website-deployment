@@ -16,31 +16,15 @@ import {
   FaTimes,
   FaSmile
 } from 'react-icons/fa'
-import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo } from './ui'
+import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
+import { Card, Button, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
 // ============================================
-// LOCAL PROFILE IMAGE FALLBACKS
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
 // ============================================
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-  'M-A012': '/intern-images/M-A012.webp',
-  'M-A013': '/intern-images/M-A013.webp',
-}
-
-const getEmpProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
-  if (profileImage) return profileImage
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
-  return undefined
-}
+const getEmpProfileImage = getLocalProfileImage
 
 // ============================================
 // MENTION INPUT COMPONENT (PORTAL-BASED)
@@ -419,7 +403,7 @@ function ReplyItem({
           }}
           isAdmin={false}
         >
-          <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
+          <Avatar src={getEmpProfileImage(reply.authorImage, reply.authorId)} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} employeeId={reply.authorId} />
         </ProfileInfo>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -548,7 +532,7 @@ function DiscussionPost({
   const [editContent, setEditContent] = useState(discussion.content || '')
   const [editSubmitting, setEditSubmitting] = useState(false)
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
   const isAuthor = discussion.authorId === employee?.employeeId
   const canDelete = isAdmin || isAuthor
   const canEdit = isAuthor // Only author can edit their own message
@@ -784,10 +768,11 @@ function DiscussionPost({
             isAdmin={false}
           >
             <Avatar 
-              src={discussion.authorImage} 
+              src={getEmpProfileImage(discussion.authorImage, discussion.authorId)} 
               name={discussion.authorName || 'Anonymous'} 
               size="md" 
-              showBorder={false} 
+              showBorder={false}
+              employeeId={discussion.authorId}
             />
           </ProfileInfo>
           
@@ -954,7 +939,7 @@ function DiscussionPost({
                           {reactedUsers.map((user) => (
                             <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-neutral-700/50">
                               <img
-                                src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=32`}
+                                src={getEmpProfileImage(user!.profileImage, user!.employeeId) || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=32`}
                                 alt={user!.name}
                                 className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                               />
@@ -1189,7 +1174,7 @@ export function Discussions() {
       {/* Create New Post */}
       <Card padding="md">
         <div className="flex items-start gap-3">
-          <Avatar src={employee?.profileImage} name={employee?.name} size="md" showBorder={false} />
+          <Avatar src={getEmpProfileImage(employee?.profileImage, employee?.employeeId)} name={employee?.name} size="md" showBorder={false} employeeId={employee?.employeeId} />
           <div className="flex-1">
             <MentionInput
               value={newPostContent}
