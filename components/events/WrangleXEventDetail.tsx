@@ -269,7 +269,7 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
               onTouchEnd={handleTouchEnd}
             >
               {/* Main Slide */}
-              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gradient-to-br dark:from-white/5 dark:to-white/[0.02] border border-gray-200 dark:border-white/10 backdrop-blur-sm shadow-xl dark:shadow-none">
+              <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 backdrop-blur-sm shadow-xl dark:shadow-none">
                 <AnimatePresence mode="wait" custom={direction}>
                   <motion.div
                     key={currentIndex}
@@ -301,7 +301,7 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
 
                     {/* Event Details */}
                     <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-center">
-                      <div className="mb-2 text-gray-400 dark:text-gray-500 text-sm font-medium">
+                      <div className="mb-2 text-gray-400 dark:text-gray-400 text-sm font-medium">
                         Event {currentIndex + 1} of {subEvents.length}
                       </div>
 
@@ -309,7 +309,7 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
                         {currentEvent?.name}
                       </h3>
 
-                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 text-base">
+                      <p className="text-gray-600 dark:text-gray-200 leading-relaxed mb-8 text-base">
                         {currentEvent?.description}
                       </p>
 
