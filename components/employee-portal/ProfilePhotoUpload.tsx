@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaCamera, FaTimes, FaUpload, FaTrash, FaCheck, FaExclamationTriangle, FaSpinner } from 'react-icons/fa'
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { storage, db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 
@@ -120,8 +120,12 @@ export default function ProfilePhotoUpload({
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Ensure we're client-side before using createPortal ──────────────────
+  useEffect(() => setMounted(true), [])
 
   // ── Lock body scroll while modal is open ────────────────────────────────
   useEffect(() => {
@@ -221,7 +225,7 @@ export default function ProfilePhotoUpload({
                 },
                 { merge: true }
               )
-              
+
               onImageUpdated?.(downloadUrl)
               toast.success('Profile photo updated successfully!')
               closeModal()
@@ -294,8 +298,9 @@ export default function ProfilePhotoUpload({
       </button>
 
       {/* Modal – rendered in a portal so parent transforms can't break fixed centering */}
-      <AnimatePresence>
-        {isOpen && typeof document !== 'undefined' && createPortal(
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
           <div
             role="dialog"
             aria-modal="true"
@@ -528,10 +533,11 @@ export default function ProfilePhotoUpload({
                 </p>
               </div>
             </motion.div>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+          </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   )
 }
