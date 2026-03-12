@@ -105,7 +105,7 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
 
         {/* iOS PWA Configuration - Required for location & other permissions in standalone mode */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="matriXO Team Auth" />
         <link rel="apple-touch-icon" href="/favicon.png" />
