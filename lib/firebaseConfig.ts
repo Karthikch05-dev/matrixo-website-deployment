@@ -4,7 +4,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, Auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import { getFirestore } from 'firebase/firestore';
-import { getAnalytics, Analytics } from 'firebase/analytics';
+import { initializeAnalytics, getAnalytics, Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ",
@@ -31,7 +31,7 @@ export const db = getFirestore(app);
 // Initialize Analytics (only in browser environment)
 let analytics: Analytics | null = null;
 if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+  analytics = initializeAnalytics(app);
 }
 
 export { analytics };
