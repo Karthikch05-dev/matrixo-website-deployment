@@ -386,13 +386,13 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
               {matched.role && (
                 <div className="mt-2 flex items-center gap-1.5">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    matched.role === 'admin'
+                    isAdminOrSubAdmin(matched.role)
                       ? 'bg-amber-500/15 text-amber-400'
                       : (matched.role || '').toLowerCase().includes('intern')
                         ? 'bg-purple-500/15 text-purple-400'
                         : 'bg-blue-500/15 text-blue-400'
                   }`}>
-                    {matched.role}
+                    {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                   </span>
                   {matched.email && (
                     <span className="text-[10px] text-neutral-600 truncate">{matched.email}</span>
@@ -979,19 +979,19 @@ function MeetingDetailModal({
                       <div className="flex items-center gap-2">
                         {att.email && <p className="text-xs text-neutral-500 truncate">{att.email}</p>}
                         {matched?.designation && (
-                          <span className="text-[10px] text-neutral-600">â€¢ {matched.designation}</span>
+                          <span className="text-[10px] text-neutral-600">&#x2022; {matched.designation}</span>
                         )}
                       </div>
                     </div>
                     {matched?.role && (
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        matched.role === 'admin'
+                        isAdminOrSubAdmin(matched.role)
                           ? 'bg-amber-500/15 text-amber-400'
                           : (matched.role || '').toLowerCase().includes('intern')
                             ? 'bg-purple-500/15 text-purple-400'
                             : 'bg-blue-500/15 text-blue-400'
                       }`}>
-                        {matched.role}
+                        {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                       </span>
                     )}
                     {att.isExternal && (
