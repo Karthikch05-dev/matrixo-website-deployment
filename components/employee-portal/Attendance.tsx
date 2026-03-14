@@ -1388,8 +1388,12 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
         const endDate = new Date()
 
         if (timeRange === 'week') {
-          startDate = new Date()
-          startDate.setDate(startDate.getDate() - 7)
+          // Current week: Monday to Saturday
+          const now = new Date()
+          const dayOfWeek = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+          startDate = new Date(now)
+          startDate.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+          startDate.setHours(0, 0, 0, 0)
         } else if (timeRange === 'month') {
           startDate = new Date()
           startDate.setDate(1)
