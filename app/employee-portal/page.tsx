@@ -32,8 +32,11 @@ import {
   FaVideo,
   FaSun,
   FaMoon,
-  FaUserCircle
+  FaUserCircle,
+  FaEye,
+  FaEyeSlash
 } from 'react-icons/fa'
+import { HiCalendarDays } from "react-icons/hi2"
 import { EmployeeAuthProvider, useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import ProfilePhotoUpload from '@/components/employee-portal/ProfilePhotoUpload'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
@@ -178,7 +181,7 @@ function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? 'ðŸ™ˆ' : 'ðŸ‘ï¸'}
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               <p className="text-xs text-neutral-500 mt-2 flex items-start gap-1">
@@ -210,7 +213,7 @@ function LoginForm() {
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-neutral-400 hover:text-primary-400 transition-colors">
-              â† Back to matriXO Website
+              ← Back to matriXO Website
             </Link>
           </div>
         </div>
@@ -219,7 +222,7 @@ function LoginForm() {
           <span className="flex items-center gap-1">
             <FaLock className="text-green-500" /> Secure Login
           </span>
-          <span>â€¢</span>
+          <span>•</span>
           <span>256-bit Encryption</span>
         </div>
       </motion.div>
@@ -764,14 +767,14 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
                 Welcome back, {employee?.name?.split(' ')[0]}!
               </h2>
               <p className={`text-sm sm:text-base truncate ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
-                {employee?.department} â€¢ {employee?.designation}
+                {employee?.department} • {employee?.designation}
               </p>
             </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Attendance Rate"
           value={`${attendancePercentage}%`}
@@ -793,15 +796,8 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
         <StatCard
           title="Working Days"
           value={monthlyStats.totalWorkingDays}
-          icon={FaCalendarAlt}
-          color="bg-indigo-500"
-        />
-        <StatCard
-          title="Pending Tasks"
-          value={myTasks.length}
           icon={FaTasks}
-          color="bg-primary-500"
-          onClick={onShowMyTasks}
+          color="bg-indigo-500"
         />
       </div>
 
@@ -1065,7 +1061,7 @@ function HistoryTab() {
                             minute: '2-digit'
                           })
                         })()}
-                        {record.notes && <span className="hidden sm:inline"> â€¢ {record.notes}</span>}
+                        {record.notes && <span className="hidden sm:inline"> • {record.notes}</span>}
                       </p>
                     </div>
                   </div>

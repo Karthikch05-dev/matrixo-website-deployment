@@ -116,8 +116,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             
             // Show push for new unread notifications
             if (!notification.read && permissionState === 'granted') {
+              // Strip mojibake from title before sending browser notification
+              const cleanTitle = notification.title
+                .replace(/^[\u0080-\u00ff\u00c0-\u00ff\u2018-\u201f\u2039\u203a]+\s*/g, '')
+                .trim() || notification.title.trim()
               sendBrowserNotification(
-                notification.title,
+                cleanTitle,
                 notification.message,
                 undefined,
                 notification.targetUrl

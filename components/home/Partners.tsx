@@ -9,6 +9,7 @@ const partners = [
   { name: 'TEDxCMRIT Hyderabad', logo: '/partners/tedx-cmrit.png' },
   { name: 'Kommuri Pratap Reddy Institute of Technology', logo: '/partners/kprit.png' },
   { name: 'TEDxKPRIT', logo: '/events/tedxkprit-logo.png' },
+  { name: 'J B Institute of Engineering and Technology', logo: '/logos/jbiet.png' },
 ]
 
 export default function Partners() {
@@ -29,7 +30,7 @@ export default function Partners() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {partners.map((partner, index) => (
             <motion.div
               key={partner.name}
@@ -37,17 +38,15 @@ export default function Partners() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="flex items-center justify-center p-6 glass-card hover-lift transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              className="group flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300 hover:border-blue-400 hover:shadow-xl h-full"
             >
-              <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-3 bg-white dark:bg-white/90 rounded-full flex items-center justify-center overflow-hidden p-1">
-                  <PartnerLogo name={partner.name} logo={partner.logo} />
-                </div>
-                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
-                  {partner.name}
-                </p>
+              <div className="w-16 h-16 rounded-full bg-white dark:bg-white/90 flex items-center justify-center mb-4 overflow-hidden transition-colors duration-300 group-hover:bg-blue-500/20 p-1">
+                <PartnerLogo name={partner.name} logo={partner.logo} />
               </div>
+              <p className="text-sm text-gray-300 text-center">
+                {partner.name}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -80,7 +79,7 @@ export default function Partners() {
 function PartnerLogo({ name, logo }: { name: string; logo: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) {
-    return <span className="text-3xl font-bold text-gray-700">{name.charAt(0)}</span>
+    return <span className="text-2xl font-bold text-gray-700">{name.charAt(0)}</span>
   }
   return (
     <img

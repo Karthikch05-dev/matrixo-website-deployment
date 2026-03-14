@@ -1378,7 +1378,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     await createGlobalNotification({
       type: 'calendar',
       action: 'created',
-      title: 'ðŸ–ï¸ Holiday Added',
+      title: 'Holiday Added',
       message: `${holiday.name} on ${new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
       relatedEntityId: holidayDoc.id,
       targetUrl: '/employee-portal#calendar',

@@ -10,7 +10,9 @@ import {
   FaCalendarAlt, 
   FaCheckDouble,
   FaTrash,
-  FaBriefcase
+  FaBriefcase,
+  FaVideo,
+  FaClipboardCheck
 } from 'react-icons/fa'
 import { 
   collection, 
@@ -249,12 +251,29 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
     setIsOpen(false)
   }
 
+  // Strip leading mojibake characters (corrupted emoji stored as Latin-1 sequences)
+  const sanitizeTitle = (title: string) => {
+  if (!title) return ''
+
+  // Remove common mojibake sequences like Â, Ã, â€
+  return title
+    .replace(/Â/g, '')
+    .replace(/Ã/g, '')
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€/g, '"')
+    .replace(/â€“/g, '-')
+    .replace(/â€”/g, '-')
+    .trim()
+}
   const getIcon = (type: string) => {
     switch (type) {
       case 'task': return <FaTasks className="text-blue-400" />
       case 'discussion': return <FaComments className="text-green-400" />
       case 'calendar': return <FaCalendarAlt className="text-purple-400" />
       case 'application': return <FaBriefcase className="text-cyan-400" />
+      case 'meeting': return <FaVideo className="text-amber-400" />
+      case 'attendance': return <FaClipboardCheck className="text-emerald-400" />
       default: return <FaBell className="text-neutral-400" />
     }
   }
@@ -404,7 +423,7 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className={`text-sm font-medium truncate ${!notification.read ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-neutral-300' : 'text-gray-600')}`}>
-                            {notification.title}
+                            {sanitizeTitle(notification.title)}
                           </p>
                           {getActionBadge(notification.action)}
                           {!notification.read && (

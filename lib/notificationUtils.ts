@@ -119,6 +119,12 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       return false
     }
 
+    // Sanitize title: strip any mojibake / corrupted emoji prefixes before storing
+    const sanitizedTitle = params.title
+      .replace(/^[\u0080-\u00ff\u00c0-\u00ff\u2018-\u201f\u2039\u203a]+\s*/g, '')
+      .trim() || params.title.trim()
+    const sanitizedParams = { ...params, title: sanitizedTitle }
+
     const notificationsRef = collection(db, 'userNotifications')
     const addPromises: Promise<any>[] = []
     const recipientIds: string[] = []
@@ -158,7 +164,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       recipientIds.push(recipientId)
       addPromises.push(
         addDoc(notificationsRef, {
-          ...params,
+          ...sanitizedParams,
           recipientId: recipientId,
           read: false,
           createdAt: Timestamp.now()
@@ -171,7 +177,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
 
     // Send Web Push notifications to all recipients
     await sendPushToRecipients(recipientIds, {
-      title: params.title,
+      title: sanitizedTitle,
       message: params.message,
       targetUrl: params.targetUrl,
       type: params.type

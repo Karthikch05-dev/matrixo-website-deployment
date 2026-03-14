@@ -151,16 +151,18 @@ function getProfileImageUrl(url?: string, name?: string, employeeId?: string): s
 
 function renderMarkdownClean(md: string): string {
   let html = md
-    // Normalize bullet characters: Unicode bullet, and corrupted UTF-8 variant
-    .replace(/^[\u2022\u2023\u25e6\u2043\u2219]\s+/gm, '- ')
-    .replace(/^â€¢\s+/gm, '- ')
-    // Strip markdown links: [text](url) â†’ text
+    // Normalize bullet characters (•, ‣, ◦, ⁃, ∙)
+    .replace(/^[\u2022\u2023\u25E6\u2043\u2219]\s+/gm, '- ')
+    // Handle corrupted UTF-8 bullet (mojibake for •)
+    .replace(/^[\u00e2\u0080\u00a2]+\s+/gm, '- ')
+    .replace(/^\u00e2\u20ac\u00a2\s+/gm, '- ')
+    // Strip markdown links: [text](url) → text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     // Strip bare URLs in parentheses: (https://...)
     .replace(/\(https?:\/\/[^)]+\)/g, '')
-    // Strip any remaining standalone URLs
+    // Strip remaining URLs
     .replace(/https?:\/\/\S+/g, '')
-    // Clean up double spaces
+    // Clean double spaces
     .replace(/ {2,}/g, ' ')
     .trim()
 
@@ -1275,7 +1277,7 @@ export function Meetings() {
         await createGlobalNotification({
           type: 'meeting',
           action: 'created',
-          title: `ðŸ“‹ Meeting Summary Ready: ${meetingTitle}`,
+          title: `Meeting Summary Ready: ${meetingTitle}`,
           message: `The MoM for "${meetingTitle}" is ready with ${taskCount} action item${taskCount !== 1 ? 's' : ''}. Check your tasks!`,
           relatedEntityId: String(meeting.recording_id),
           targetUrl: '/employee-portal#meetings',
