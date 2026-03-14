@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
+import { FaBars, FaTimes, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
+import { Sun, Moon } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
@@ -280,7 +281,7 @@ export default function Navbar() {
                       exit={{ rotate: 45, opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
-                      <FaSun className="w-5 h-5" />
+                      <Sun className="w-5 h-5 text-yellow-400" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -290,7 +291,7 @@ export default function Navbar() {
                       exit={{ rotate: -45, opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
-                      <FaMoon className="w-5 h-5" />
+                      <Moon className="w-5 h-5 text-blue-400" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -399,7 +400,7 @@ export default function Navbar() {
                 className="p-2 rounded-2xl glass-card-thin text-gray-700 dark:text-gray-300"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? <FaSun className="w-5 h-5" /> : <FaMoon className="w-5 h-5" />}
+                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-400" />}
               </button>
             )}
 
