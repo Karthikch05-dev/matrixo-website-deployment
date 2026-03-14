@@ -243,17 +243,23 @@ export default function EventsListing() {
                             ) : (
                               <>
                                 <div>
-                                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">From</span>
-                                  <div className="flex items-baseline gap-1 sm:gap-2">
-                                    <span className="text-xl sm:text-2xl font-bold gradient-text">
-                                      ₹{Math.min(...event.tickets.map((t: any) => t.price))}
-                                    </span>
-                                    {event.tickets.some((t: any) => t.originalPrice) && (
-                                      <span className="text-xs sm:text-sm text-gray-400 line-through">
-                                        ₹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
-                                      </span>
-                                    )}
-                                  </div>
+                                  {(event as any).googleFormLink ? (
+                                    <span className="text-xl sm:text-2xl font-bold gradient-text">Free</span>
+                                  ) : (
+                                    <>
+                                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">From</span>
+                                      <div className="flex items-baseline gap-1 sm:gap-2">
+                                        <span className="text-xl sm:text-2xl font-bold gradient-text">
+                                          ₹{Math.min(...event.tickets.map((t: any) => t.price))}
+                                        </span>
+                                        {event.tickets.some((t: any) => t.originalPrice) && (
+                                          <span className="text-xs sm:text-sm text-gray-400 line-through">
+                                            ₹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
