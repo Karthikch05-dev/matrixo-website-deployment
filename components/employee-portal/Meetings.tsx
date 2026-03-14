@@ -238,19 +238,19 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
   
   // 1. Exact email match (highest priority)
   if (personEmail) {
-    const byEmail = employees.find(emp => emp.email.toLowerCase() === personEmail.toLowerCase())
+    const byEmail = employees.find(emp => emp.email?.toLowerCase() === personEmail.toLowerCase())
     if (byEmail) return byEmail
   }
 
   // 2. Exact name match
-  const exactMatch = employees.find(emp => emp.name.toLowerCase() === personName.toLowerCase())
+  const exactMatch = employees.find(emp => emp.name?.toLowerCase() === personName.toLowerCase())
   if (exactMatch) return exactMatch
 
   // 3. Normalized name match (strips "Matrixo", "Official" suffixes)
   const normalized = normalizeForMatch(personName)
   if (normalized) {
     const normalizedMatch = employees.find(emp => {
-      const empNorm = normalizeForMatch(emp.name)
+      const empNorm = normalizeForMatch(emp.name || '')
       return empNorm === normalized ||
              empNorm.includes(normalized) ||
              normalized.includes(empNorm)
@@ -262,7 +262,7 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
   const firstName = personName.split(' ')[0].toLowerCase()
   if (firstName.length >= 3) {
     const firstNameMatches = employees.filter(emp => {
-      const empFirst = emp.name.split(' ')[0].toLowerCase()
+      const empFirst = (emp.name || '').split(' ')[0].toLowerCase()
       return empFirst === firstName
     })
     if (firstNameMatches.length === 1) return firstNameMatches[0]
@@ -270,8 +270,8 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
 
   // 5. Partial name containment
   const partialMatch = employees.find(emp =>
-    emp.name.toLowerCase().includes(personName.toLowerCase()) ||
-    personName.toLowerCase().includes(emp.name.toLowerCase())
+    (emp.name || '').toLowerCase().includes(personName.toLowerCase()) ||
+    personName.toLowerCase().includes((emp.name || '').toLowerCase())
   )
   if (partialMatch) return partialMatch
 
@@ -287,7 +287,7 @@ function getAllAttendees(meeting: FathomMeeting): { name: string; email?: string
     if (!key) return
     // Check if already exists by email or name
     if (attendees.has(key)) return
-    const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === name.toLowerCase())
+    const existsByName = Array.from(attendees.values()).some(a => (a.name || '').toLowerCase() === (name || '').toLowerCase())
     if (existsByName) return
     attendees.set(key, { name: name || email?.split('@')[0] || 'Unknown', email, isExternal })
   }
@@ -1341,8 +1341,8 @@ export function Meetings() {
             const assigneeNames: string[] = []
             if (item.assignee) {
               const matched = employees.find(
-                emp => (item.assignee!.email && emp.email.toLowerCase() === item.assignee!.email.toLowerCase()) ||
-                       (item.assignee!.name && emp.name.toLowerCase() === item.assignee!.name.toLowerCase())
+                emp => (item.assignee!.email && emp.email?.toLowerCase() === item.assignee!.email.toLowerCase()) ||
+                       (item.assignee!.name && emp.name?.toLowerCase() === item.assignee!.name.toLowerCase())
               )
               if (matched) {
                 assigneeIds.push(matched.employeeId)
@@ -1353,8 +1353,8 @@ export function Meetings() {
               // Fall back to the recorder or current user
               if (meeting.recorded_by) {
                 const recorder = employees.find(
-                  emp => emp.email.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
-                         emp.name.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
+                  emp => emp.email?.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
+                         emp.name?.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
                 )
                 if (recorder) {
                   assigneeIds.push(recorder.employeeId)
