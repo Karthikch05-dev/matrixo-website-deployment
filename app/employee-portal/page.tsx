@@ -654,9 +654,19 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     const fetchAttendance = async () => {
       setLoading(true)
       try {
-        const startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        const records = await getAttendanceRecords(startDate, new Date())
+        // Calculate current week range (Monday to Saturday)
+        const now = new Date()
+        const dayOfWeek = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+        const monday = new Date(now)
+        // If Sunday (0), go back 6 days to previous Monday; otherwise go back (dayOfWeek - 1) days
+        monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+        monday.setHours(0, 0, 0, 0)
+
+        const saturday = new Date(monday)
+        saturday.setDate(monday.getDate() + 5)
+        saturday.setHours(23, 59, 59, 999)
+
+        const records = await getAttendanceRecords(monday, saturday)
         setAttendanceRecords(records || [])
       } catch (error) {
         console.error('Error fetching attendance:', error)
@@ -667,14 +677,14 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     }
     fetchAttendance()
   }, [getAttendanceRecords])
-  
-  const presentDays = attendanceRecords.filter(r => r.status === 'P').length
+
+  // Weekly attendance calculation (Mon-Sat working week)
+  const presentDays = attendanceRecords.filter(r => r.status === 'P' || r.status === 'W').length
   const absentDays = attendanceRecords.filter(r => r.status === 'A').length
   const onDutyDays = attendanceRecords.filter(r => r.status === 'O').length
-  const totalDays = attendanceRecords.length
-  // FIXED: Match Admin formula - (present + onDuty) / total
-  const attendancePercentage = totalDays > 0 
-    ? Math.round(((presentDays + onDutyDays) / totalDays) * 100) 
+  const totalDaysPassed = attendanceRecords.length
+  const attendancePercentage = totalDaysPassed > 0
+    ? Math.round(((presentDays + onDutyDays) / totalDaysPassed) * 100)
     : 0
 
   // Safely filter tasks - handle both array and string for assignedTo
