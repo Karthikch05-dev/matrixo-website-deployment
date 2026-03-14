@@ -304,6 +304,7 @@ interface EmployeeAuthContextType {
   getAttendanceRecords: (startDate?: Date, endDate?: Date) => Promise<AttendanceRecord[]>
   getTodayAttendance: () => Promise<AttendanceRecord | null>
   calculateAttendancePercentage: (records: AttendanceRecord[]) => number
+  getMonthlyAttendanceStats: (records: AttendanceRecord[]) => { presentDays: number; absentDays: number; leaveDays: number; onDutyDays: number; unauthorisedLeaveDays: number; totalWorkingDays: number; workingDaysSoFar: number; totalDaysInMonth: number; attendanceRate: number; isMonthComplete: boolean; monthName: string; year: number }
   markAttendanceWithLocation: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<{ success: boolean; locationVerified: boolean; workFromHome?: boolean; error?: string }>
   
   // Admin Attendance
@@ -1024,10 +1025,104 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     return records
   }, [employee])
 
+  // ============================================
+  // ATTENDANCE ENGINE — HR-grade monthly calculation
+  // Excludes Sundays + holidays, respects joining date
+  // ============================================
+
+  const calculateWorkingDays = useCallback((startDate: Date, endDate: Date): number => {
+    let workingDays = 0
+    const current = new Date(startDate)
+    current.setHours(0, 0, 0, 0)
+    const end = new Date(endDate)
+    end.setHours(0, 0, 0, 0)
+
+    while (current <= end) {
+      const dateString = getLocalDateString(current)
+      if (isWorkingDay(dateString)) {
+        workingDays++
+      }
+      current.setDate(current.getDate() + 1)
+    }
+    return workingDays
+  }, [holidays])
+
+  const getMonthlyStartDate = useCallback((): Date => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    if (!employee?.joiningDate) return monthStart
+
+    const joiningDate = new Date(employee.joiningDate)
+    // If employee joined in the current month, start from joining date
+    if (joiningDate.getFullYear() === now.getFullYear() && joiningDate.getMonth() === now.getMonth()) {
+      return joiningDate
+    }
+    // Otherwise start from 1st of the month
+    return monthStart
+  }, [employee])
+
   const calculateAttendancePercentage = (records: AttendanceRecord[]): number => {
-    if (records.length === 0) return 0
-    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').length
-    return Math.round((presentDays / records.length) * 100)
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const monthEnd = new Date(year, month + 1, 0)
+    const startDate = getMonthlyStartDate()
+
+    // Filter records to current month (from effective start date)
+    const startStr = getLocalDateString(startDate)
+    const endStr = getLocalDateString(monthEnd)
+    const monthlyRecords = records.filter(r => r.date >= startStr && r.date <= endStr)
+
+    const presentDays = monthlyRecords.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').length
+    const totalWorkingDays = calculateWorkingDays(startDate, monthEnd)
+
+    if (totalWorkingDays === 0) return 0
+    return parseFloat(((presentDays / totalWorkingDays) * 100).toFixed(2))
+  }
+
+  const getMonthlyAttendanceStats = (records: AttendanceRecord[]) => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const monthEnd = new Date(year, month + 1, 0)
+    const totalDaysInMonth = monthEnd.getDate()
+    const today = now.getDate()
+    const isMonthComplete = today === totalDaysInMonth
+
+    const startDate = getMonthlyStartDate()
+    const totalWorkingDays = calculateWorkingDays(startDate, monthEnd)
+    const workingDaysSoFar = calculateWorkingDays(startDate, now)
+
+    // Filter records to current month (from effective start date)
+    const startStr = getLocalDateString(startDate)
+    const endStr = getLocalDateString(monthEnd)
+    const monthlyRecords = records.filter(r => r.date >= startStr && r.date <= endStr)
+
+    const presentDays = monthlyRecords.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').length
+    const absentDays = monthlyRecords.filter(r => r.status === 'A').length
+    const leaveDays = monthlyRecords.filter(r => r.status === 'L').length
+    const onDutyDays = monthlyRecords.filter(r => r.status === 'O').length
+    const unauthorisedLeaveDays = monthlyRecords.filter(r => r.status === 'U').length
+
+    const attendanceRate = totalWorkingDays > 0
+      ? parseFloat(((presentDays / totalWorkingDays) * 100).toFixed(2))
+      : 0
+
+    return {
+      presentDays,
+      absentDays,
+      leaveDays,
+      onDutyDays,
+      unauthorisedLeaveDays,
+      totalWorkingDays,
+      workingDaysSoFar,
+      totalDaysInMonth,
+      attendanceRate,
+      isMonthComplete,
+      monthName: now.toLocaleString('default', { month: 'long' }),
+      year,
+    }
   }
 
   // ============================================
@@ -2433,6 +2528,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       getAttendanceRecords,
       getTodayAttendance,
       calculateAttendancePercentage,
+      getMonthlyAttendanceStats,
       markAttendanceWithLocation,
       updateEmployeeAttendance,
       getAllEmployeesAttendance,

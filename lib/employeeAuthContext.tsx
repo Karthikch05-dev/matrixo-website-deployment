@@ -255,9 +255,28 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const calculateAttendancePercentage = (records: AttendanceRecord[]): number => {
-    if (records.length === 0) return 0
-    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O').length
-    return Math.round((presentDays / records.length) * 100)
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const monthEnd = new Date(year, month + 1, 0)
+    const monthStart = new Date(year, month, 1)
+
+    // Calculate working days (exclude Sundays)
+    let workingDays = 0
+    const cursor = new Date(monthStart)
+    while (cursor <= monthEnd) {
+      if (cursor.getDay() !== 0) workingDays++ // exclude Sundays
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`
+    const monthlyRecords = records.filter(r => r.date >= startStr && r.date <= endStr)
+
+    const presentDays = monthlyRecords.filter(r => r.status === 'P' || r.status === 'O').length
+
+    if (workingDays === 0) return 0
+    return parseFloat(((presentDays / workingDays) * 100).toFixed(2))
   }
 
   return (

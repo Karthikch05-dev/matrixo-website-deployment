@@ -1375,29 +1375,18 @@ function StatsCard({ title, value, icon: Icon, color, subtext }: StatsCardProps)
 // ============================================
 
 export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
-  const { getAttendanceRecords, calculateAttendancePercentage } = useEmployeeAuth()
+  const { getAttendanceRecords, getMonthlyAttendanceStats } = useEmployeeAuth()
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('month')
 
   useEffect(() => {
     const fetchRecords = async () => {
       setLoading(true)
       try {
-        let startDate: Date | undefined
+        // Fetch current month's records
+        const now = new Date()
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
         const endDate = new Date()
-
-        if (timeRange === 'week') {
-          // Current week: Monday to Saturday
-          const now = new Date()
-          const dayOfWeek = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
-          startDate = new Date(now)
-          startDate.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
-          startDate.setHours(0, 0, 0, 0)
-        } else if (timeRange === 'month') {
-          startDate = new Date()
-          startDate.setDate(1)
-        }
 
         const data = await getAttendanceRecords(startDate, endDate)
         setRecords(data)
@@ -1408,34 +1397,21 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
       }
     }
     fetchRecords()
-  }, [timeRange, getAttendanceRecords, refreshKey])
+  }, [getAttendanceRecords, refreshKey])
 
-  const presentDays = records.filter(r => r.status === 'P' || r.status === 'W').length
-  const absentDays = records.filter(r => r.status === 'A').length
-  const leaveDays = records.filter(r => r.status === 'L').length
-  const onDutyDays = records.filter(r => r.status === 'O').length
-  const unauthorisedLeaveDays = records.filter(r => r.status === 'U').length
-  const percentage = calculateAttendancePercentage(records)
+  const stats = getMonthlyAttendanceStats(records)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-white">Attendance Overview</h2>
-        <div className="flex items-center bg-neutral-800 rounded-lg p-1">
-          {(['week', 'month', 'all'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                timeRange === range
-                  ? 'bg-primary-600 text-white'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              {range === 'week' ? 'Week' : range === 'month' ? 'This Month' : 'All Time'}
-            </button>
-          ))}
-        </div>
+        <h2 className="text-xl font-bold text-white">
+          {stats.monthName} {stats.year} Attendance
+        </h2>
+        <span className="text-sm text-neutral-400">
+          {stats.isMonthComplete
+            ? 'Final Monthly Report'
+            : `${stats.workingDaysSoFar} of ${stats.totalWorkingDays} working days elapsed`}
+        </span>
       </div>
 
       {loading ? (
@@ -1444,41 +1420,46 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
-            <StatsCard 
-              title="Attendance Rate" 
-              value={`${percentage}%`} 
-              icon={FaCalendarCheck} 
-              color="bg-gradient-to-br from-primary-500 to-purple-600"
-              subtext={`${records.length} total days`}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <StatsCard title="Present" value={stats.presentDays} icon={FaCheckCircle} color="bg-emerald-500" />
+            <StatsCard title="Absent" value={stats.absentDays} icon={FaTimesCircle} color="bg-red-500" />
+            <StatsCard title="Leave" value={stats.leaveDays} icon={FaUmbrellaBeach} color="bg-amber-500" />
+            <StatsCard title="On Duty" value={stats.onDutyDays} icon={FaBriefcase} color="bg-blue-500" />
+            <StatsCard title="Unauth. Leave" value={stats.unauthorisedLeaveDays} icon={FaBan} color="bg-rose-600" />
+            <StatsCard
+              title="Working Days"
+              value={stats.totalWorkingDays}
+              icon={FaCalendarCheck}
+              color="bg-indigo-500"
+              subtext={`Sundays & holidays excluded`}
             />
-            <StatsCard title="Present" value={presentDays} icon={FaCheckCircle} color="bg-emerald-500" />
-            <StatsCard title="Absent" value={absentDays} icon={FaTimesCircle} color="bg-red-500" />
-            <StatsCard title="Leave" value={leaveDays} icon={FaUmbrellaBeach} color="bg-amber-500" />
-            <StatsCard title="On Duty" value={onDutyDays} icon={FaBriefcase} color="bg-blue-500" />
-            <StatsCard title="Unauth. Leave" value={unauthorisedLeaveDays} icon={FaBan} color="bg-rose-600" />
           </div>
 
           {/* Progress Bar */}
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-neutral-300">Overall Attendance</span>
+              <span className="text-neutral-300">
+                {stats.isMonthComplete ? 'Final Monthly Attendance' : 'Attendance Rate'}
+              </span>
               <span className={`text-2xl font-bold ${
-                percentage >= 80 ? 'text-emerald-400' : 
-                percentage >= 60 ? 'text-amber-400' : 'text-red-400'
+                stats.attendanceRate >= 80 ? 'text-emerald-400' :
+                stats.attendanceRate >= 60 ? 'text-amber-400' : 'text-red-400'
               }`}>
-                {percentage}%
+                {stats.attendanceRate}%
               </span>
             </div>
+            <p className="text-xs text-neutral-500 mb-3">
+              {stats.presentDays} present of {stats.totalWorkingDays} working days
+            </p>
             <div className="h-3 bg-neutral-800 rounded-full overflow-hidden relative">
               <div className="absolute left-[80%] top-0 bottom-0 w-0.5 bg-white/30 z-10" />
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${percentage}%` }}
+                animate={{ width: `${Math.min(stats.attendanceRate, 100)}%` }}
                 transition={{ duration: 1, ease: 'easeOut' }}
                 className={`h-full rounded-full ${
-                  percentage >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 
-                  percentage >= 60 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 
+                  stats.attendanceRate >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' :
+                  stats.attendanceRate >= 60 ? 'bg-gradient-to-r from-amber-500 to-amber-400' :
                   'bg-gradient-to-r from-red-500 to-red-400'
                 }`}
               />
@@ -1488,7 +1469,7 @@ export function AttendanceDashboard({ refreshKey }: { refreshKey?: number }) {
               <span className="text-amber-400 font-medium">Target: 80%</span>
               <span>100%</span>
             </div>
-            {percentage < 80 && (
+            {stats.attendanceRate < 80 && (
               <Alert variant="error" className="mt-4">
                 <FaExclamationTriangle className="mr-2" />
                 Your attendance is below the minimum required 80%. Please improve.

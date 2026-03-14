@@ -643,7 +643,7 @@ function TopNavbar({
 // ============================================
 
 function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void }) {
-  const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
+  const { employee, getAttendanceRecords, getMonthlyAttendanceStats, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
   const { darkMode } = useTheme()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -654,19 +654,13 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     const fetchAttendance = async () => {
       setLoading(true)
       try {
-        // Calculate current week range (Monday to Saturday)
+        // Fetch current month's attendance records
         const now = new Date()
-        const dayOfWeek = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
-        const monday = new Date(now)
-        // If Sunday (0), go back 6 days to previous Monday; otherwise go back (dayOfWeek - 1) days
-        monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
-        monday.setHours(0, 0, 0, 0)
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date()
 
-        const saturday = new Date(monday)
-        saturday.setDate(monday.getDate() + 5)
-        saturday.setHours(23, 59, 59, 999)
-
-        const records = await getAttendanceRecords(monday, saturday)
+        const records = await getAttendanceRecords(startDate, endDate)
         setAttendanceRecords(records || [])
       } catch (error) {
         console.error('Error fetching attendance:', error)
@@ -678,14 +672,11 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     fetchAttendance()
   }, [getAttendanceRecords])
 
-  // Weekly attendance calculation (Mon-Sat working week)
-  const presentDays = attendanceRecords.filter(r => r.status === 'P' || r.status === 'W').length
-  const absentDays = attendanceRecords.filter(r => r.status === 'A').length
-  const onDutyDays = attendanceRecords.filter(r => r.status === 'O').length
-  const totalDaysPassed = attendanceRecords.length
-  const attendancePercentage = totalDaysPassed > 0
-    ? Math.round(((presentDays + onDutyDays) / totalDaysPassed) * 100)
-    : 0
+  // Monthly attendance calculation
+  const monthlyStats = getMonthlyAttendanceStats(attendanceRecords)
+  const attendancePercentage = monthlyStats.attendanceRate
+  const presentDays = monthlyStats.presentDays
+  const absentDays = monthlyStats.absentDays
 
   // Safely filter tasks - handle both array and string for assignedTo
   const myTasks = (tasks || []).filter(t => {
@@ -780,7 +771,7 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Attendance Rate"
           value={`${attendancePercentage}%`}
@@ -798,6 +789,12 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           value={absentDays}
           icon={FaTimesCircle}
           color="bg-red-500"
+        />
+        <StatCard
+          title="Working Days"
+          value={monthlyStats.totalWorkingDays}
+          icon={FaCalendarAlt}
+          color="bg-indigo-500"
         />
         <StatCard
           title="Pending Tasks"
