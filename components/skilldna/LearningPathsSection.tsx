@@ -6,7 +6,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { FaGraduationCap, FaClock, FaSignal, FaCode, FaCheckCircle } from 'react-icons/fa';
+import { FaGraduationCap, FaClock, FaSignal, FaCode } from 'react-icons/fa';
 import { LearningPath } from '@/lib/skilldna/types';
 
 interface LearningPathsSectionProps {
@@ -26,18 +26,19 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
   const sortedPaths = [...paths].sort(
     (a, b) => (difficultyOrder[a.difficulty] ?? 99) - (difficultyOrder[b.difficulty] ?? 99)
   );
+
   return (
-    <div className="space-y-4">
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+    <div className="space-y-3">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-5">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
           <FaGraduationCap className="text-blue-400" />
           Recommended Learning Paths
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 md:mb-4">
           AI-curated learning journeys based on your SkillDNA profile
         </p>
 
-        <div className="space-y-6">
+        <div className="space-y-3 md:space-y-4">
           {sortedPaths.map((path, i) => {
             const colors = difficultyColors[path.difficulty] || difficultyColors.intermediate;
 
@@ -47,14 +48,14 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.15 }}
-                className={`p-6 rounded-xl border ${colors.bg}`}
+                className={`p-4 md:p-5 rounded-xl border ${colors.bg}`}
               >
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2.5 md:gap-3 mb-2.5 md:mb-3">
                   <div>
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{path.title}</h4>
                     <p className="text-sm text-gray-400">{path.description}</p>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-2.5 md:gap-3 flex-shrink-0">
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${colors.badge} ${colors.text}`}>
                       <FaSignal className="inline mr-1" />
                       {path.difficulty.charAt(0).toUpperCase() + path.difficulty.slice(1)}
@@ -67,11 +68,11 @@ export default function LearningPathsSection({ paths }: LearningPathsSectionProp
                 </div>
 
                 {/* Steps */}
-                <div className="mb-4">
+                <div className="mb-2.5 md:mb-3">
                   <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Learning Steps</p>
                   <div className="space-y-2">
                     {path.steps.map((step, j) => (
-                      <div key={j} className="flex items-center gap-3">
+                      <div key={j} className="flex items-center gap-2.5 md:gap-3">
                         <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center text-xs text-gray-600 dark:text-gray-400 flex-shrink-0">
                           {j + 1}
                         </div>
