@@ -72,6 +72,7 @@ export default function SkillDNADashboard({
 }: SkillDNADashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'skills' | 'gaps' | 'paths' | 'edit'>('overview');
   const [verifyingSkill, setVerifyingSkill] = useState<string | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // Compute realistic scores and goal intelligence
   const realisticScores = useMemo(
@@ -191,12 +192,12 @@ export default function SkillDNADashboard({
             {/* Top Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
-                { label: 'Cognitive Score', value: realisticScores.cognitiveScore, max: 100, icon: FaBrain, color: 'from-purple-500 to-fuchsia-500' },
-                { label: 'Learning Velocity', value: realisticScores.learningVelocity, max: 100, icon: FaRocket, color: 'from-blue-500 to-cyan-500' },
-                { label: 'Career Alignment', value: realisticScores.careerAlignmentScore, max: 100, icon: FaBullseye, color: 'from-green-500 to-emerald-500' },
-                { label: 'Hiring Readiness', value: realisticScores.hiringReadiness, max: 100, icon: FaTrophy, color: 'from-amber-500 to-orange-500' },
-                { label: 'Confidence Index', value: realisticScores.confidenceIndex, max: 100, icon: FaLightbulb, color: 'from-cyan-500 to-teal-500' },
-                { label: 'Skill Clusters', value: profile.skillClusters.length, max: undefined, icon: FaFire, color: 'from-orange-500 to-red-500' },
+                { tooltipId: 'cognitive', label: 'Cognitive Score', value: realisticScores.cognitiveScore, max: 100, icon: FaBrain, color: 'from-purple-500 to-fuchsia-500' },
+                { tooltipId: 'learningVelocity', label: 'Learning Velocity', value: realisticScores.learningVelocity, max: 100, icon: FaRocket, color: 'from-blue-500 to-cyan-500' },
+                { tooltipId: 'careerAlignment', label: 'Career Alignment', value: realisticScores.careerAlignmentScore, max: 100, icon: FaBullseye, color: 'from-green-500 to-emerald-500' },
+                { tooltipId: 'hiringReadiness', label: 'Hiring Readiness', value: realisticScores.hiringReadiness, max: 100, icon: FaTrophy, color: 'from-amber-500 to-orange-500' },
+                { tooltipId: 'confidenceIndex', label: 'Confidence Index', value: realisticScores.confidenceIndex, max: 100, icon: FaLightbulb, color: 'from-cyan-500 to-teal-500' },
+                { tooltipId: 'skillClusters', label: 'Skill Clusters', value: profile.skillClusters.length, max: undefined, icon: FaFire, color: 'from-orange-500 to-red-500' },
               ].map((stat, i) => {
                 const explanation = SCORE_EXPLANATIONS[stat.label];
                 return (
@@ -212,7 +213,12 @@ export default function SkillDNADashboard({
                       <stat.icon />
                     </div>
                     {explanation && (
-                      <ScoreTooltip data={explanation} />
+                      <ScoreTooltip
+                        data={explanation}
+                        tooltipId={stat.tooltipId}
+                        activeTooltip={activeTooltip}
+                        setActiveTooltip={setActiveTooltip}
+                      />
                     )}
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">

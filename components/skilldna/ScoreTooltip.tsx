@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 
 export interface ScoreTooltipData {
@@ -18,30 +17,21 @@ export interface ScoreTooltipData {
 
 interface ScoreTooltipProps {
   data: ScoreTooltipData;
+  tooltipId: string;
+  activeTooltip: string | null;
+  setActiveTooltip: (id: string | null) => void;
 }
 
-export default function ScoreTooltip({ data }: ScoreTooltipProps) {
-  const [open, setOpen] = useState(false);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-
-  // Close on click outside
-  useEffect(() => {
-    if (!open) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+export default function ScoreTooltip({ data, tooltipId, activeTooltip, setActiveTooltip }: ScoreTooltipProps) {
+  const isOpen = activeTooltip === tooltipId;
 
   return (
-    <div className="relative inline-block" ref={tooltipRef}>
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setActiveTooltip(tooltipId)}
+      onMouseLeave={() => setActiveTooltip(null)}
+    >
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => { /* keep open on click, close on mouse leave only if not clicked */ }}
         className="text-gray-400 hover:text-purple-400 transition-colors p-0.5 rounded-full focus:outline-none"
         aria-label={`Info about ${data.title}`}
         type="button"
@@ -49,10 +39,9 @@ export default function ScoreTooltip({ data }: ScoreTooltipProps) {
         <FaQuestionCircle size={13} />
       </button>
 
-      {open && (
+      {isOpen && (
         <div
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 sm:w-80 p-4 rounded-xl bg-gray-900/95 dark:bg-gray-950/95 border border-gray-700/60 shadow-2xl shadow-purple-900/20 backdrop-blur-md text-left"
-          style={{ pointerEvents: 'auto' }}
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 sm:w-80 p-4 rounded-xl bg-gray-900/95 dark:bg-gray-950/95 border border-gray-700/60 shadow-2xl shadow-purple-900/20 backdrop-blur-md text-left pointer-events-none"
         >
           {/* Arrow */}
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-gray-900/95 dark:bg-gray-950/95 border-r border-b border-gray-700/60" />
@@ -75,13 +64,6 @@ export default function ScoreTooltip({ data }: ScoreTooltipProps) {
               <p className="mt-0.5">{data.whyItMatters}</p>
             </div>
           </div>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); setOpen(false); }}
-            className="mt-3 text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
-          >
-            Dismiss
-          </button>
         </div>
       )}
     </div>

@@ -24,6 +24,7 @@ import {
 // ---- Types for the modal ----
 
 const MAX_DAILY_ATTEMPTS = 3;
+const TEST_REQUEST_TIMEOUT_MS = 10000;
 
 interface VerificationTestModalProps {
   skillName: string;
@@ -53,6 +54,40 @@ interface VerificationResult {
 }
 
 type ModalPhase = 'loading' | 'intro' | 'test' | 'submitting' | 'result' | 'error';
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.floor(timeoutMs / 1000)}s`));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`Request timed out after ${Math.floor(timeoutMs / 1000)}s`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 // ---- Timer hook ----
 
@@ -105,6 +140,14 @@ export default function VerificationTestModal({
   onClose,
   onVerified,
 }: VerificationTestModalProps) {
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // ---- State ----
   const [phase, setPhase] = useState<ModalPhase>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -119,6 +162,10 @@ export default function VerificationTestModal({
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [timerActive, setTimerActive] = useState(false);
+
+  useEffect(() => {
+    console.log('[VerificationTestModal] phase changed:', phase);
+  }, [phase]);
 
   const timeLimitSec = sessionData?.config.timeLimitSeconds || 600;
 
@@ -136,14 +183,27 @@ export default function VerificationTestModal({
   }, []);
 
   const startTest = async () => {
+    console.log('[VerificationTestModal] startTest initiated', { userId, skillName });
     setPhase('loading');
     setErrorMsg('');
+
     try {
       // Fetch existing verification + attempt history for cooldown check
-      const existingVerification = await getSkillVerification(userId, skillName);
-      const existingAttempts = await getVerificationAttempts(userId, skillName);
+      const [existingVerification, existingAttempts] = await withTimeout(
+        Promise.all([
+          getSkillVerification(userId, skillName),
+          getVerificationAttempts(userId, skillName),
+        ]),
+        TEST_REQUEST_TIMEOUT_MS,
+        'Verification metadata fetch',
+      );
 
-      const res = await fetch('/api/skilldna/verify/start', {
+      console.log('[VerificationTestModal] metadata loaded', {
+        hasExistingVerification: Boolean(existingVerification),
+        attemptsCount: existingAttempts.length,
+      });
+
+      const res = await fetchWithTimeout('/api/skilldna/verify/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,23 +215,45 @@ export default function VerificationTestModal({
           existingVerification: existingVerification || undefined,
           existingAttempts,
         }),
+      }, TEST_REQUEST_TIMEOUT_MS);
+
+      const json = await withTimeout(res.json(), TEST_REQUEST_TIMEOUT_MS, 'Verification start response parse');
+
+      console.log('[VerificationTestModal] /verify/start response', {
+        status: res.status,
+        ok: res.ok,
+        hasData: Boolean(json?.data),
+        error: json?.error,
       });
 
-      const json = await res.json();
-
       if (!res.ok) {
-        setErrorMsg(json.error || 'Failed to start test.');
-        setPhase('error');
+        if (isMountedRef.current) {
+          setErrorMsg(json.error || 'Failed to start test.');
+          setPhase('error');
+        }
         return;
       }
 
-      setSessionData(json.data);
-      setCurrentIdx(0);
-      setAnswers({});
-      setPhase('intro');
+      if (!json?.data?.sessionId || !Array.isArray(json?.data?.questions) || !json?.data?.config) {
+        if (isMountedRef.current) {
+          setErrorMsg('Verification test response is incomplete. Please try again.');
+          setPhase('error');
+        }
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setSessionData(json.data);
+        setCurrentIdx(0);
+        setAnswers({});
+        setPhase('intro');
+      }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Network error');
-      setPhase('error');
+      console.error('[VerificationTestModal] startTest failed', err);
+      if (isMountedRef.current) {
+        setErrorMsg(err.message || 'Network error');
+        setPhase('error');
+      }
     }
   };
 
@@ -203,6 +285,11 @@ export default function VerificationTestModal({
     if (!sessionData) return;
     setTimerActive(false);
     setPhase('submitting');
+    console.log('[VerificationTestModal] submit initiated', {
+      sessionId: sessionData.sessionId,
+      answeredCount: Object.keys(answers).length,
+      questionCount: sessionData.questions.length,
+    });
 
     try {
       const answerArray = sessionData.questions.map((q) => ({
@@ -211,10 +298,16 @@ export default function VerificationTestModal({
       }));
 
       // Fetch existing verification + attempts for the API to build updated record
-      const existingVerification = await getSkillVerification(userId, skillName);
-      const existingAttempts = await getVerificationAttempts(userId, skillName);
+      const [existingVerification, existingAttempts] = await withTimeout(
+        Promise.all([
+          getSkillVerification(userId, skillName),
+          getVerificationAttempts(userId, skillName),
+        ]),
+        TEST_REQUEST_TIMEOUT_MS,
+        'Verification metadata fetch',
+      );
 
-      const res = await fetch('/api/skilldna/verify/submit', {
+      const res = await fetchWithTimeout('/api/skilldna/verify/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -231,13 +324,22 @@ export default function VerificationTestModal({
           existingVerification: existingVerification || undefined,
           existingAttempts,
         }),
+      }, TEST_REQUEST_TIMEOUT_MS);
+
+      const json = await withTimeout(res.json(), TEST_REQUEST_TIMEOUT_MS, 'Verification submit response parse');
+
+      console.log('[VerificationTestModal] /verify/submit response', {
+        status: res.status,
+        ok: res.ok,
+        hasData: Boolean(json?.data),
+        error: json?.error,
       });
 
-      const json = await res.json();
-
       if (!res.ok) {
-        setErrorMsg(json.error || 'Submission failed.');
-        setPhase('error');
+        if (isMountedRef.current) {
+          setErrorMsg(json.error || 'Submission failed.');
+          setPhase('error');
+        }
         return;
       }
 
@@ -246,12 +348,17 @@ export default function VerificationTestModal({
       await saveSkillVerification(userId, skillName, data.verification);
       await logVerificationAttempt(userId, data.attempt);
 
-      setResult(data);
-      setPhase('result');
+      if (isMountedRef.current) {
+        setResult(data);
+        setPhase('result');
+      }
       onVerified(data);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Network error');
-      setPhase('error');
+      console.error('[VerificationTestModal] submit failed', err);
+      if (isMountedRef.current) {
+        setErrorMsg(err.message || 'Network error');
+        setPhase('error');
+      }
     }
   }, [sessionData, answers, authToken, userId, skillName, onVerified]);
 
@@ -306,12 +413,20 @@ export default function VerificationTestModal({
             <FaExclamationTriangle className="text-4xl text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-white mb-2">Cannot Start Test</h3>
             <p className="text-gray-400 mb-6 text-sm">{errorMsg}</p>
-            <button
-              onClick={onClose}
-              className="px-6 py-2.5 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-all"
-            >
-              Close
-            </button>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={startTest}
+                className="px-6 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all"
+              >
+                Retry
+              </button>
+              <button
+                onClick={onClose}
+                className="px-6 py-2.5 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-all"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
 

@@ -29,22 +29,34 @@ function checkRateLimit(id: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[verify/start] Request received');
+
     // Auth check
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.warn('[verify/start] Missing or invalid Authorization header');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.split(' ')[1];
     const tokenId = token.slice(-16);
 
     if (!checkRateLimit(tokenId)) {
+      console.warn('[verify/start] Rate limited request', { tokenId });
       return NextResponse.json({ error: 'Rate limited. Try again later.' }, { status: 429 });
     }
 
     const body = await request.json();
     const { userId, skillName } = body;
 
+    console.log('[verify/start] Payload parsed', {
+      userId,
+      skillName,
+      hasExistingVerification: Boolean(body?.existingVerification),
+      existingAttemptsCount: Array.isArray(body?.existingAttempts) ? body.existingAttempts.length : 0,
+    });
+
     if (!userId || !skillName) {
+      console.warn('[verify/start] Missing required fields', { userId, skillName });
       return NextResponse.json(
         { error: 'userId and skillName are required' },
         { status: 400 }
@@ -53,6 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Check if questions exist for this skill
     if (!hasVerificationQuestions(skillName)) {
+      console.warn('[verify/start] No question bank found for skill', { skillName });
       return NextResponse.json(
         { error: `No verification test available for "${skillName}" yet.` },
         { status: 404 }
@@ -66,6 +79,11 @@ export async function POST(request: NextRequest) {
     const cooldown = checkCooldown(existingVerification, existingAttempts);
     if (!cooldown.allowed) {
       const hoursLeft = Math.ceil(cooldown.remainingMs / (1000 * 60 * 60));
+      console.warn('[verify/start] Cooldown active', {
+        userId,
+        skillName,
+        remainingMs: cooldown.remainingMs,
+      });
       return NextResponse.json(
         {
           error: cooldown.reason || `Cooldown active. You can retake this test in ~${hoursLeft} hour(s).`,
@@ -79,6 +97,7 @@ export async function POST(request: NextRequest) {
     // Create test session
     const session = createTestSession(userId, skillName);
     if (!session) {
+      console.error('[verify/start] createTestSession returned null', { userId, skillName });
       return NextResponse.json(
         { error: 'Failed to create test session.' },
         { status: 500 }
@@ -86,6 +105,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Return session to client (questions have shuffled options, no correct answers)
+    console.log('[verify/start] Session created', {
+      sessionId: session.sessionId,
+      questionCount: session.questions.length,
+      timeLimitSeconds: session.config.timeLimitSeconds,
+    });
+
     return NextResponse.json({
       success: true,
       data: {

@@ -32,22 +32,43 @@ function checkRateLimit(id: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[verify/submit] Request received');
+
     // Auth check
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.warn('[verify/submit] Missing or invalid Authorization header');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.split(' ')[1];
     const tokenId = token.slice(-16);
 
     if (!checkRateLimit(tokenId)) {
+      console.warn('[verify/submit] Rate limited request', { tokenId });
       return NextResponse.json({ error: 'Rate limited.' }, { status: 429 });
     }
 
     const body = await request.json();
     const { userId, sessionId, skillName, questions, answers, startedAt, config, existingVerification, existingAttempts } = body;
 
+    console.log('[verify/submit] Payload parsed', {
+      userId,
+      sessionId,
+      skillName,
+      questionCount: Array.isArray(questions) ? questions.length : 0,
+      answerCount: Array.isArray(answers) ? answers.length : 0,
+      hasExistingVerification: Boolean(existingVerification),
+      existingAttemptsCount: Array.isArray(existingAttempts) ? existingAttempts.length : 0,
+    });
+
     if (!userId || !sessionId || !skillName || !answers || !questions) {
+      console.warn('[verify/submit] Missing required fields', {
+        userId,
+        sessionId,
+        skillName,
+        hasAnswers: Boolean(answers),
+        hasQuestions: Boolean(questions),
+      });
       return NextResponse.json(
         { error: 'Missing required fields: userId, sessionId, skillName, questions, answers' },
         { status: 400 }
@@ -56,6 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Validate answers is an array
     if (!Array.isArray(answers)) {
+      console.warn('[verify/submit] Invalid answers payload type');
       return NextResponse.json(
         { error: 'answers must be an array' },
         { status: 400 }
@@ -94,6 +116,13 @@ export async function POST(request: NextRequest) {
 
     // Build attempt log
     const attempt = buildAttemptLog(result);
+
+    console.log('[verify/submit] Submission graded', {
+      sessionId,
+      passed: result.passed,
+      normalizedScore: result.normalizedScore,
+      totalQuestions: result.totalQuestions,
+    });
 
     // Return result (without correct answers)
     return NextResponse.json({
