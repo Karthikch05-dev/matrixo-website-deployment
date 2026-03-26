@@ -160,6 +160,13 @@ export default function ServicesContent() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-6">
+                  <Link href={`/contact?type=${encodeURIComponent(service.title)}`}>
+                    <button className="btn-primary w-full">
+                      Contact Us
+                    </button>
+                  </Link>
+                </div>
               </motion.div>
             ))}
           </div>
