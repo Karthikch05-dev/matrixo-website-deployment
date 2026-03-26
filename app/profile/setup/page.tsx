@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { FaUser, FaIdCard, FaPhone, FaEnvelope, FaUniversity, FaGraduationCap, FaCodeBranch, FaArrowRight, FaSpinner, FaAt, FaCheck, FaTimes, FaCamera } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile, DEFAULT_PRIVACY } from '@/lib/ProfileContext'
+import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
 import { toast } from 'sonner'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { compressImage } from '@/lib/imageUtils'
@@ -28,11 +29,17 @@ export default function ProfileSetupPage() {
     username: '',
     rollNumber: '',
     phone: '',
-    college: '',
     year: '',
     branch: '',
     graduationYear: '',
     bio: '',
+  })
+  const [location, setLocation] = useState<LocationSelectionState>({
+    country: '',
+    state: '',
+    district: '',
+    collegeId: '',
+    collegeName: '',
   })
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null)
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null)
@@ -122,7 +129,7 @@ export default function ProfileSetupPage() {
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
     else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Enter a valid 10-digit phone number'
 
-    if (!formData.college.trim()) newErrors.college = 'College name is required'
+    if (!location.collegeId) newErrors.college = 'Please select your college'
     if (!formData.year) newErrors.year = 'Select your year'
     if (formData.year === 'Graduate' && !formData.graduationYear.trim()) {
       newErrors.graduationYear = 'Graduation year is required'
@@ -165,7 +172,8 @@ export default function ProfileSetupPage() {
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim().toUpperCase(),
         phone: formData.phone.trim(),
-        college: formData.college.trim(),
+        collegeId: location.collegeId,
+        college: location.collegeName, // Keep for backward compatibility
         year: formData.year,
         branch: formData.branch,
         graduationYear: formData.year === 'Graduate' ? formData.graduationYear.trim() : '',
@@ -351,15 +359,12 @@ export default function ProfileSetupPage() {
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
-              {/* College */}
+              {/* Location & College Selection */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  <FaUniversity className="text-blue-400 text-xs" /> College Name
-                </label>
-                <input
-                  type="text" name="college" value={formData.college} onChange={handleChange}
-                  placeholder="e.g. KPRIT, Hyderabad"
-                  className={inputClass('college')}
+                <LocationSelection
+                  value={location}
+                  onChange={setLocation}
+                  disabled={loading}
                 />
                 {errors.college && <p className="text-red-500 text-xs mt-1">{errors.college}</p>}
               </div>
