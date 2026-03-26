@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 
 const partners = [
-  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/partners/smartzy.png' },
+  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png' },
   { name: 'TEDxIARE', logo: '/partners/tedx-iare.png' },
   { name: 'TEDxCMRIT Hyderabad', logo: '/partners/tedx-cmrit.png' },
   { name: 'Kommuri Pratap Reddy Institute of Technology', logo: '/partners/kprit.png', darkBg: true },
