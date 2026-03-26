@@ -16,6 +16,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebaseConfig'
 import Link from 'next/link'
 import Image from 'next/image'
+import ImageCropModal from '@/components/shared/ImageCropModal'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -54,6 +55,12 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
   const [isDark, setIsDark] = useState(false)
+  
+  // Crop modal states
+  const [photoCropModalOpen, setPhotoCropModalOpen] = useState(false)
+  const [coverCropModalOpen, setCoverCropModalOpen] = useState(false)
+  const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null)
+  const [tempCoverUrl, setTempCoverUrl] = useState<string | null>(null)
   const [editData, setEditData] = useState({
     fullName: '', phone: '', college: '', year: '', branch: '',
     graduationYear: '', bio: '', linkedin: '', github: '', portfolio: '',
@@ -192,16 +199,34 @@ export default function ProfilePage() {
     if (!file || !user) return
     if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be <5MB'); return }
     if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
+    
+    // Open crop modal
+    const objectUrl = URL.createObjectURL(file)
+    setTempPhotoUrl(objectUrl)
+    setPhotoCropModalOpen(true)
+    
+    // Reset input
+    e.target.value = ''
+  }
+
+  const handlePhotoCropComplete = async (croppedBlob: Blob) => {
+    if (!user) return
     setUploadingPhoto(true)
     try {
-      const extension = file.name.split('.').pop() || 'jpg'
-      const photoRef = ref(storage, `profile-photos/${user.uid}.${extension}`)
-      const metadata = { contentType: file.type }
-      await uploadBytes(photoRef, file, metadata)
+      const photoRef = ref(storage, `profile-photos/${user.uid}.jpg`)
+      const metadata = { contentType: 'image/jpeg' }
+      await uploadBytes(photoRef, croppedBlob, metadata)
       const url = await getDownloadURL(photoRef)
       await updateProfile({ profilePhoto: url })
-      toast.success('Photo updated!')
-    } catch (err) { console.error('Photo upload error:', err); toast.error('Failed to upload photo') } finally { setUploadingPhoto(false) }
+      toast.success('Profile photo updated!')
+    } catch (err) {
+      console.error('Photo upload error:', err)
+      toast.error('Failed to upload photo')
+    } finally {
+      setUploadingPhoto(false)
+      if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl)
+      setTempPhotoUrl(null)
+    }
   }
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,16 +234,34 @@ export default function ProfilePage() {
     if (!file || !user) return
     if (file.size > 5 * 1024 * 1024) { toast.error('Cover photo must be <5MB'); return }
     if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
+    
+    // Open crop modal
+    const objectUrl = URL.createObjectURL(file)
+    setTempCoverUrl(objectUrl)
+    setCoverCropModalOpen(true)
+    
+    // Reset input
+    e.target.value = ''
+  }
+
+  const handleCoverCropComplete = async (croppedBlob: Blob) => {
+    if (!user) return
     setUploadingCover(true)
     try {
-      const extension = file.name.split('.').pop() || 'jpg'
-      const coverRef = ref(storage, `cover-photos/${user.uid}.${extension}`)
-      const metadata = { contentType: file.type }
-      await uploadBytes(coverRef, file, metadata)
+      const coverRef = ref(storage, `cover-photos/${user.uid}.jpg`)
+      const metadata = { contentType: 'image/jpeg' }
+      await uploadBytes(coverRef, croppedBlob, metadata)
       const url = await getDownloadURL(coverRef)
       await updateProfile({ coverPhoto: url })
       toast.success('Cover photo updated!')
-    } catch (err) { console.error('Cover upload error:', err); toast.error('Failed to upload cover photo') } finally { setUploadingCover(false) }
+    } catch (err) {
+      console.error('Cover upload error:', err)
+      toast.error('Failed to upload cover photo')
+    } finally {
+      setUploadingCover(false)
+      if (tempCoverUrl) URL.revokeObjectURL(tempCoverUrl)
+      setTempCoverUrl(null)
+    }
   }
 
   const handleCopyLink = () => {
@@ -305,9 +348,9 @@ export default function ProfilePage() {
           </div>
           <div className="p-6 sm:p-8 -mt-10 relative">
             <div className="flex items-end gap-5 mb-4">
-              {/* Photo */}
+              {/* Photo - Square with rounded corners */}
               <div className="relative group flex-shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
                   {profile?.profilePhoto ? (
                     <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover" unoptimized />
                   ) : (
@@ -316,7 +359,7 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   {uploadingPhoto ? <FaSpinner className="animate-spin text-white" /> : <FaCamera className="text-white" />}
                 </label>
                 <input id="photo-change" type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
@@ -567,7 +610,7 @@ export default function ProfilePage() {
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Quick Preview</p>
                   <div className="p-5 rounded-2xl bg-white/5 dark:bg-white/[0.06] border border-white/[0.08]">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
                         {profile?.profilePhoto ? (
                           <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full" unoptimized />
                         ) : (
@@ -603,6 +646,41 @@ export default function ProfilePage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Crop Modals */}
+      {tempPhotoUrl && (
+        <ImageCropModal
+          isOpen={photoCropModalOpen}
+          imageSrc={tempPhotoUrl}
+          aspectRatio={1}
+          onClose={() => {
+            setPhotoCropModalOpen(false)
+            if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl)
+            setTempPhotoUrl(null)
+          }}
+          onComplete={handlePhotoCropComplete}
+          title="Crop Profile Photo"
+          cropShape="rect"
+          darkMode={isDark}
+        />
+      )}
+
+      {tempCoverUrl && (
+        <ImageCropModal
+          isOpen={coverCropModalOpen}
+          imageSrc={tempCoverUrl}
+          aspectRatio={820 / 360}
+          onClose={() => {
+            setCoverCropModalOpen(false)
+            if (tempCoverUrl) URL.revokeObjectURL(tempCoverUrl)
+            setTempCoverUrl(null)
+          }}
+          onComplete={handleCoverCropComplete}
+          title="Crop Cover Photo (820x360)"
+          cropShape="rect"
+          darkMode={isDark}
+        />
+      )}
     </div>
   )
 }
