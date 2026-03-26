@@ -1,427 +1,436 @@
 {
   "countries": [
-    {
-      "id": "IN",
-      "name": "India",
-      "code": "IN"
-    }
+    { "id": "IN", "name": "India", "code": "IN" },
+    { "id": "US", "name": "United States", "code": "US" },
+    { "id": "UK", "name": "United Kingdom", "code": "UK" },
+    { "id": "CA", "name": "Canada", "code": "CA" },
+    { "id": "AU", "name": "Australia", "code": "AU" },
+    { "id": "DE", "name": "Germany", "code": "DE" },
+    { "id": "FR", "name": "France", "code": "FR" },
+    { "id": "SG", "name": "Singapore", "code": "SG" },
+    { "id": "AE", "name": "United Arab Emirates", "code": "AE" },
+    { "id": "NZ", "name": "New Zealand", "code": "NZ" }
   ],
   "states": [
-    {
-      "id": "AN",
-      "name": "Andaman and Nicobar Islands",
-      "country": "IN",
-      "code": "AN"
-    },
-    {
-      "id": "AP",
-      "name": "Andhra Pradesh",
-      "country": "IN",
-      "code": "AP"
-    },
-    {
-      "id": "AR",
-      "name": "Arunachal Pradesh",
-      "country": "IN",
-      "code": "AR"
-    },
-    {
-      "id": "AS",
-      "name": "Assam",
-      "country": "IN",
-      "code": "AS"
-    },
-    {
-      "id": "BR",
-      "name": "Bihar",
-      "country": "IN",
-      "code": "BR"
-    },
-    {
-      "id": "CG",
-      "name": "Chhattisgarh",
-      "country": "IN",
-      "code": "CG"
-    },
-    {
-      "id": "CH",
-      "name": "Chandigarh",
-      "country": "IN",
-      "code": "CH"
-    },
-    {
-      "id": "CT",
-      "name": "Chhattisgarh",
-      "country": "IN",
-      "code": "CT"
-    },
-    {
-      "id": "DD",
-      "name": "Daman and Diu",
-      "country": "IN",
-      "code": "DD"
-    },
-    {
-      "id": "DL",
-      "name": "Delhi",
-      "country": "IN",
-      "code": "DL"
-    },
-    {
-      "id": "DN",
-      "name": "Dadra and Nagar Haveli",
-      "country": "IN",
-      "code": "DN"
-    },
-    {
-      "id": "GA",
-      "name": "Goa",
-      "country": "IN",
-      "code": "GA"
-    },
-    {
-      "id": "GJ",
-      "name": "Gujarat",
-      "country": "IN",
-      "code": "GJ"
-    },
-    {
-      "id": "HR",
-      "name": "Haryana",
-      "country": "IN",
-      "code": "HR"
-    },
-    {
-      "id": "HP",
-      "name": "Himachal Pradesh",
-      "country": "IN",
-      "code": "HP"
-    },
-    {
-      "id": "JK",
-      "name": "Jammu and Kashmir",
-      "country": "IN",
-      "code": "JK"
-    },
-    {
-      "id": "JH",
-      "name": "Jharkhand",
-      "country": "IN",
-      "code": "JH"
-    },
-    {
-      "id": "KA",
-      "name": "Karnataka",
-      "country": "IN",
-      "code": "KA"
-    },
-    {
-      "id": "KL",
-      "name": "Kerala",
-      "country": "IN",
-      "code": "KL"
-    },
-    {
-      "id": "LA",
-      "name": "Ladakh",
-      "country": "IN",
-      "code": "LA"
-    },
-    {
-      "id": "LD",
-      "name": "Lakshadweep",
-      "country": "IN",
-      "code": "LD"
-    },
-    {
-      "id": "MH",
-      "name": "Maharashtra",
-      "country": "IN",
-      "code": "MH"
-    },
-    {
-      "id": "ML",
-      "name": "Meghalaya",
-      "country": "IN",
-      "code": "ML"
-    },
-    {
-      "id": "MN",
-      "name": "Manipur",
-      "country": "IN",
-      "code": "MN"
-    },
-    {
-      "id": "MZ",
-      "name": "Mizoram",
-      "country": "IN",
-      "code": "MZ"
-    },
-    {
-      "id": "NL",
-      "name": "Nagaland",
-      "country": "IN",
-      "code": "NL"
-    },
-    {
-      "id": "OR",
-      "name": "Odisha",
-      "country": "IN",
-      "code": "OR"
-    },
-    {
-      "id": "PB",
-      "name": "Punjab",
-      "country": "IN",
-      "code": "PB"
-    },
-    {
-      "id": "PY",
-      "name": "Puducherry",
-      "country": "IN",
-      "code": "PY"
-    },
-    {
-      "id": "RJ",
-      "name": "Rajasthan",
-      "country": "IN",
-      "code": "RJ"
-    },
-    {
-      "id": "SK",
-      "name": "Sikkim",
-      "country": "IN",
-      "code": "SK"
-    },
-    {
-      "id": "TG",
-      "name": "Telangana",
-      "country": "IN",
-      "code": "TG"
-    },
-    {
-      "id": "TN",
-      "name": "Tamil Nadu",
-      "country": "IN",
-      "code": "TN"
-    },
-    {
-      "id": "TR",
-      "name": "Tripura",
-      "country": "IN",
-      "code": "TR"
-    },
-    {
-      "id": "UP",
-      "name": "Uttar Pradesh",
-      "country": "IN",
-      "code": "UP"
-    },
-    {
-      "id": "UT",
-      "name": "Uttarakhand",
-      "country": "IN",
-      "code": "UT"
-    },
-    {
-      "id": "WB",
-      "name": "West Bengal",
-      "country": "IN",
-      "code": "WB"
-    }
+    { "id": "AN", "name": "Andaman and Nicobar Islands", "country": "IN", "code": "AN" },
+    { "id": "AP", "name": "Andhra Pradesh", "country": "IN", "code": "AP" },
+    { "id": "AR", "name": "Arunachal Pradesh", "country": "IN", "code": "AR" },
+    { "id": "AS", "name": "Assam", "country": "IN", "code": "AS" },
+    { "id": "BR", "name": "Bihar", "country": "IN", "code": "BR" },
+    { "id": "CG", "name": "Chhattisgarh", "country": "IN", "code": "CG" },
+    { "id": "CH", "name": "Chandigarh", "country": "IN", "code": "CH" },
+    { "id": "DD", "name": "Dadra and Nagar Haveli and Daman and Diu", "country": "IN", "code": "DD" },
+    { "id": "DL", "name": "Delhi", "country": "IN", "code": "DL" },
+    { "id": "GA", "name": "Goa", "country": "IN", "code": "GA" },
+    { "id": "GJ", "name": "Gujarat", "country": "IN", "code": "GJ" },
+    { "id": "HP", "name": "Himachal Pradesh", "country": "IN", "code": "HP" },
+    { "id": "HR", "name": "Haryana", "country": "IN", "code": "HR" },
+    { "id": "JH", "name": "Jharkhand", "country": "IN", "code": "JH" },
+    { "id": "JK", "name": "Jammu and Kashmir", "country": "IN", "code": "JK" },
+    { "id": "KA", "name": "Karnataka", "country": "IN", "code": "KA" },
+    { "id": "KL", "name": "Kerala", "country": "IN", "code": "KL" },
+    { "id": "LA", "name": "Ladakh", "country": "IN", "code": "LA" },
+    { "id": "LD", "name": "Lakshadweep", "country": "IN", "code": "LD" },
+    { "id": "MH", "name": "Maharashtra", "country": "IN", "code": "MH" },
+    { "id": "ML", "name": "Meghalaya", "country": "IN", "code": "ML" },
+    { "id": "MN", "name": "Manipur", "country": "IN", "code": "MN" },
+    { "id": "MP", "name": "Madhya Pradesh", "country": "IN", "code": "MP" },
+    { "id": "MZ", "name": "Mizoram", "country": "IN", "code": "MZ" },
+    { "id": "NL", "name": "Nagaland", "country": "IN", "code": "NL" },
+    { "id": "OD", "name": "Odisha", "country": "IN", "code": "OD" },
+    { "id": "PB", "name": "Punjab", "country": "IN", "code": "PB" },
+    { "id": "PY", "name": "Puducherry", "country": "IN", "code": "PY" },
+    { "id": "RJ", "name": "Rajasthan", "country": "IN", "code": "RJ" },
+    { "id": "SK", "name": "Sikkim", "country": "IN", "code": "SK" },
+    { "id": "TN", "name": "Tamil Nadu", "country": "IN", "code": "TN" },
+    { "id": "TS", "name": "Telangana", "country": "IN", "code": "TS" },
+    { "id": "TR", "name": "Tripura", "country": "IN", "code": "TR" },
+    { "id": "UK", "name": "Uttarakhand", "country": "IN", "code": "UK" },
+    { "id": "UP", "name": "Uttar Pradesh", "country": "IN", "code": "UP" },
+    { "id": "WB", "name": "West Bengal", "country": "IN", "code": "WB" }
   ],
   "majorDistricts": [
-    {
-      "id": "MH-PN",
-      "name": "Pune",
-      "state": "MH",
-      "country": "IN",
-      "code": "PN"
-    },
-    {
-      "id": "MH-MM",
-      "name": "Mumbai",
-      "state": "MH",
-      "country": "IN",
-      "code": "MM"
-    },
-    {
-      "id": "MH-NP",
-      "name": "Nagpur",
-      "state": "MH",
-      "country": "IN",
-      "code": "NP"
-    },
-    {
-      "id": "KA-BG",
-      "name": "Bangalore",
-      "state": "KA",
-      "country": "IN",
-      "code": "BG"
-    },
-    {
-      "id": "DL-DL",
-      "name": "South Delhi",
-      "state": "DL",
-      "country": "IN",
-      "code": "DL"
-    },
-    {
-      "id": "DL-ND",
-      "name": "North Delhi",
-      "state": "DL",
-      "country": "IN",
-      "code": "ND"
-    },
-    {
-      "id": "TN-CH",
-      "name": "Chennai",
-      "state": "TN",
-      "country": "IN",
-      "code": "CH"
-    },
-    {
-      "id": "KL-KC",
-      "name": "Kochi",
-      "state": "KL",
-      "country": "IN",
-      "code": "KC"
-    },
-    {
-      "id": "GJ-AH",
-      "name": "Ahmedabad",
-      "state": "GJ",
-      "country": "IN",
-      "code": "AH"
-    },
-    {
-      "id": "WB-KL",
-      "name": "Kolkata",
-      "state": "WB",
-      "country": "IN",
-      "code": "KL"
-    }
+    { "id": "AP-VIS", "name": "Visakhapatnam", "state": "AP", "country": "IN" },
+    { "id": "AP-VIJ", "name": "Vijayawada", "state": "AP", "country": "IN" },
+    { "id": "AP-GUN", "name": "Guntur", "state": "AP", "country": "IN" },
+    { "id": "AP-NEL", "name": "Nellore", "state": "AP", "country": "IN" },
+    { "id": "AP-KUR", "name": "Kurnool", "state": "AP", "country": "IN" },
+    { "id": "AP-RAJ", "name": "Rajahmundry", "state": "AP", "country": "IN" },
+    { "id": "AP-TIR", "name": "Tirupati", "state": "AP", "country": "IN" },
+    { "id": "AP-KAK", "name": "Kakinada", "state": "AP", "country": "IN" },
+    { "id": "AP-ANA", "name": "Anantapur", "state": "AP", "country": "IN" },
+    { "id": "AP-ELU", "name": "Eluru", "state": "AP", "country": "IN" },
+    { "id": "AP-ONG", "name": "Ongole", "state": "AP", "country": "IN" },
+    { "id": "AP-SRI", "name": "Srikakulam", "state": "AP", "country": "IN" },
+    { "id": "AP-CHI", "name": "Chittoor", "state": "AP", "country": "IN" },
+
+    { "id": "TS-HYD", "name": "Hyderabad", "state": "TS", "country": "IN" },
+    { "id": "TS-RAN", "name": "Rangareddy", "state": "TS", "country": "IN" },
+    { "id": "TS-MED", "name": "Medchal-Malkajgiri", "state": "TS", "country": "IN" },
+    { "id": "TS-WAR", "name": "Warangal", "state": "TS", "country": "IN" },
+    { "id": "TS-KAR", "name": "Karimnagar", "state": "TS", "country": "IN" },
+    { "id": "TS-NIZ", "name": "Nizamabad", "state": "TS", "country": "IN" },
+    { "id": "TS-KHA", "name": "Khammam", "state": "TS", "country": "IN" },
+    { "id": "TS-MAH", "name": "Mahbubnagar", "state": "TS", "country": "IN" },
+    { "id": "TS-NAL", "name": "Nalgonda", "state": "TS", "country": "IN" },
+    { "id": "TS-ADI", "name": "Adilabad", "state": "TS", "country": "IN" },
+    { "id": "TS-SID", "name": "Siddipet", "state": "TS", "country": "IN" },
+    { "id": "TS-SAN", "name": "Sangareddy", "state": "TS", "country": "IN" },
+
+    { "id": "KA-BLR", "name": "Bangalore Urban", "state": "KA", "country": "IN" },
+    { "id": "KA-BRU", "name": "Bangalore Rural", "state": "KA", "country": "IN" },
+    { "id": "KA-MYS", "name": "Mysore", "state": "KA", "country": "IN" },
+    { "id": "KA-HUB", "name": "Hubli-Dharwad", "state": "KA", "country": "IN" },
+    { "id": "KA-MAN", "name": "Mangalore", "state": "KA", "country": "IN" },
+    { "id": "KA-BEL", "name": "Belgaum", "state": "KA", "country": "IN" },
+    { "id": "KA-GUL", "name": "Gulbarga", "state": "KA", "country": "IN" },
+    { "id": "KA-DAV", "name": "Davangere", "state": "KA", "country": "IN" },
+    { "id": "KA-BEL2", "name": "Bellary", "state": "KA", "country": "IN" },
+    { "id": "KA-SHI", "name": "Shimoga", "state": "KA", "country": "IN" },
+    { "id": "KA-TUM", "name": "Tumkur", "state": "KA", "country": "IN" },
+    { "id": "KA-RAI", "name": "Raichur", "state": "KA", "country": "IN" },
+    { "id": "KA-BID", "name": "Bidar", "state": "KA", "country": "IN" },
+
+    { "id": "TN-CHE", "name": "Chennai", "state": "TN", "country": "IN" },
+    { "id": "TN-COI", "name": "Coimbatore", "state": "TN", "country": "IN" },
+    { "id": "TN-MAD", "name": "Madurai", "state": "TN", "country": "IN" },
+    { "id": "TN-TIR", "name": "Tiruchirappalli", "state": "TN", "country": "IN" },
+    { "id": "TN-SAL", "name": "Salem", "state": "TN", "country": "IN" },
+    { "id": "TN-TIV", "name": "Tirunelveli", "state": "TN", "country": "IN" },
+    { "id": "TN-ERO", "name": "Erode", "state": "TN", "country": "IN" },
+    { "id": "TN-VEL", "name": "Vellore", "state": "TN", "country": "IN" },
+    { "id": "TN-THA", "name": "Thanjavur", "state": "TN", "country": "IN" },
+    { "id": "TN-DIN", "name": "Dindigul", "state": "TN", "country": "IN" },
+    { "id": "TN-KAN", "name": "Kanchipuram", "state": "TN", "country": "IN" },
+    { "id": "TN-TUT", "name": "Tuticorin", "state": "TN", "country": "IN" },
+
+    { "id": "KL-THI", "name": "Thiruvananthapuram", "state": "KL", "country": "IN" },
+    { "id": "KL-KOC", "name": "Kochi", "state": "KL", "country": "IN" },
+    { "id": "KL-KOZ", "name": "Kozhikode", "state": "KL", "country": "IN" },
+    { "id": "KL-THR", "name": "Thrissur", "state": "KL", "country": "IN" },
+    { "id": "KL-KOL", "name": "Kollam", "state": "KL", "country": "IN" },
+    { "id": "KL-PAL", "name": "Palakkad", "state": "KL", "country": "IN" },
+    { "id": "KL-KAN", "name": "Kannur", "state": "KL", "country": "IN" },
+    { "id": "KL-ALA", "name": "Alappuzha", "state": "KL", "country": "IN" },
+    { "id": "KL-MAL", "name": "Malappuram", "state": "KL", "country": "IN" },
+    { "id": "KL-KOT", "name": "Kottayam", "state": "KL", "country": "IN" },
+    { "id": "KL-ERN", "name": "Ernakulam", "state": "KL", "country": "IN" },
+    { "id": "KL-IDU", "name": "Idukki", "state": "KL", "country": "IN" },
+    { "id": "KL-WAY", "name": "Wayanad", "state": "KL", "country": "IN" },
+    { "id": "KL-KAS", "name": "Kasaragod", "state": "KL", "country": "IN" },
+
+    { "id": "MH-MUM", "name": "Mumbai", "state": "MH", "country": "IN" },
+    { "id": "MH-PUN", "name": "Pune", "state": "MH", "country": "IN" },
+    { "id": "MH-NAG", "name": "Nagpur", "state": "MH", "country": "IN" },
+    { "id": "MH-THA", "name": "Thane", "state": "MH", "country": "IN" },
+    { "id": "MH-NAS", "name": "Nashik", "state": "MH", "country": "IN" },
+    { "id": "MH-AUR", "name": "Aurangabad", "state": "MH", "country": "IN" },
+    { "id": "MH-SOL", "name": "Solapur", "state": "MH", "country": "IN" },
+    { "id": "MH-AMR", "name": "Amravati", "state": "MH", "country": "IN" },
+    { "id": "MH-KOL", "name": "Kolhapur", "state": "MH", "country": "IN" },
+    { "id": "MH-NAV", "name": "Navi Mumbai", "state": "MH", "country": "IN" },
+    { "id": "MH-SAN", "name": "Sangli", "state": "MH", "country": "IN" },
+    { "id": "MH-JAL", "name": "Jalgaon", "state": "MH", "country": "IN" },
+    { "id": "MH-AHM", "name": "Ahmednagar", "state": "MH", "country": "IN" },
+    { "id": "MH-LAT", "name": "Latur", "state": "MH", "country": "IN" },
+    { "id": "MH-SAT", "name": "Satara", "state": "MH", "country": "IN" },
+    { "id": "MH-RAT", "name": "Ratnagiri", "state": "MH", "country": "IN" },
+
+    { "id": "DL-NEW", "name": "New Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-NOR", "name": "North Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-SOU", "name": "South Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-EAS", "name": "East Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-WES", "name": "West Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-CEN", "name": "Central Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-NWD", "name": "North West Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-SWD", "name": "South West Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-NED", "name": "North East Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-SED", "name": "South East Delhi", "state": "DL", "country": "IN" },
+    { "id": "DL-SHA", "name": "Shahdara", "state": "DL", "country": "IN" },
+
+    { "id": "GJ-AHM", "name": "Ahmedabad", "state": "GJ", "country": "IN" },
+    { "id": "GJ-SUR", "name": "Surat", "state": "GJ", "country": "IN" },
+    { "id": "GJ-VAD", "name": "Vadodara", "state": "GJ", "country": "IN" },
+    { "id": "GJ-RAJ", "name": "Rajkot", "state": "GJ", "country": "IN" },
+    { "id": "GJ-BHA", "name": "Bhavnagar", "state": "GJ", "country": "IN" },
+    { "id": "GJ-JAM", "name": "Jamnagar", "state": "GJ", "country": "IN" },
+    { "id": "GJ-GAN", "name": "Gandhinagar", "state": "GJ", "country": "IN" },
+    { "id": "GJ-JUN", "name": "Junagadh", "state": "GJ", "country": "IN" },
+    { "id": "GJ-ANA", "name": "Anand", "state": "GJ", "country": "IN" },
+    { "id": "GJ-MEH", "name": "Mehsana", "state": "GJ", "country": "IN" },
+    { "id": "GJ-KUT", "name": "Kutch", "state": "GJ", "country": "IN" },
+
+    { "id": "RJ-JAI", "name": "Jaipur", "state": "RJ", "country": "IN" },
+    { "id": "RJ-JOD", "name": "Jodhpur", "state": "RJ", "country": "IN" },
+    { "id": "RJ-KOT", "name": "Kota", "state": "RJ", "country": "IN" },
+    { "id": "RJ-BIK", "name": "Bikaner", "state": "RJ", "country": "IN" },
+    { "id": "RJ-AJM", "name": "Ajmer", "state": "RJ", "country": "IN" },
+    { "id": "RJ-UDA", "name": "Udaipur", "state": "RJ", "country": "IN" },
+    { "id": "RJ-BHA", "name": "Bharatpur", "state": "RJ", "country": "IN" },
+    { "id": "RJ-ALW", "name": "Alwar", "state": "RJ", "country": "IN" },
+    { "id": "RJ-SIK", "name": "Sikar", "state": "RJ", "country": "IN" },
+    { "id": "RJ-SRI", "name": "Sri Ganganagar", "state": "RJ", "country": "IN" },
+
+    { "id": "UP-LUC", "name": "Lucknow", "state": "UP", "country": "IN" },
+    { "id": "UP-KAN", "name": "Kanpur", "state": "UP", "country": "IN" },
+    { "id": "UP-GHA", "name": "Ghaziabad", "state": "UP", "country": "IN" },
+    { "id": "UP-AGR", "name": "Agra", "state": "UP", "country": "IN" },
+    { "id": "UP-VAR", "name": "Varanasi", "state": "UP", "country": "IN" },
+    { "id": "UP-MER", "name": "Meerut", "state": "UP", "country": "IN" },
+    { "id": "UP-ALL", "name": "Prayagraj", "state": "UP", "country": "IN" },
+    { "id": "UP-BAR", "name": "Bareilly", "state": "UP", "country": "IN" },
+    { "id": "UP-MOR", "name": "Moradabad", "state": "UP", "country": "IN" },
+    { "id": "UP-SAN", "name": "Saharanpur", "state": "UP", "country": "IN" },
+    { "id": "UP-GOR", "name": "Gorakhpur", "state": "UP", "country": "IN" },
+    { "id": "UP-NOI", "name": "Noida", "state": "UP", "country": "IN" },
+    { "id": "UP-ALI", "name": "Aligarh", "state": "UP", "country": "IN" },
+    { "id": "UP-JHA", "name": "Jhansi", "state": "UP", "country": "IN" },
+    { "id": "UP-MAT", "name": "Mathura", "state": "UP", "country": "IN" },
+
+    { "id": "MP-BHO", "name": "Bhopal", "state": "MP", "country": "IN" },
+    { "id": "MP-IND", "name": "Indore", "state": "MP", "country": "IN" },
+    { "id": "MP-JAB", "name": "Jabalpur", "state": "MP", "country": "IN" },
+    { "id": "MP-GWA", "name": "Gwalior", "state": "MP", "country": "IN" },
+    { "id": "MP-UJJ", "name": "Ujjain", "state": "MP", "country": "IN" },
+    { "id": "MP-SAG", "name": "Sagar", "state": "MP", "country": "IN" },
+    { "id": "MP-DEW", "name": "Dewas", "state": "MP", "country": "IN" },
+    { "id": "MP-SAT", "name": "Satna", "state": "MP", "country": "IN" },
+    { "id": "MP-RCL", "name": "Ratlam", "state": "MP", "country": "IN" },
+    { "id": "MP-REW", "name": "Rewa", "state": "MP", "country": "IN" },
+
+    { "id": "WB-KOL", "name": "Kolkata", "state": "WB", "country": "IN" },
+    { "id": "WB-HOW", "name": "Howrah", "state": "WB", "country": "IN" },
+    { "id": "WB-DUR", "name": "Durgapur", "state": "WB", "country": "IN" },
+    { "id": "WB-ASA", "name": "Asansol", "state": "WB", "country": "IN" },
+    { "id": "WB-SIL", "name": "Siliguri", "state": "WB", "country": "IN" },
+    { "id": "WB-BAR", "name": "Bardhaman", "state": "WB", "country": "IN" },
+    { "id": "WB-MAL", "name": "Malda", "state": "WB", "country": "IN" },
+    { "id": "WB-KHA", "name": "Kharagpur", "state": "WB", "country": "IN" },
+    { "id": "WB-HAL", "name": "Haldia", "state": "WB", "country": "IN" },
+    { "id": "WB-NOR", "name": "North 24 Parganas", "state": "WB", "country": "IN" },
+    { "id": "WB-SOU", "name": "South 24 Parganas", "state": "WB", "country": "IN" },
+
+    { "id": "BR-PAT", "name": "Patna", "state": "BR", "country": "IN" },
+    { "id": "BR-GAY", "name": "Gaya", "state": "BR", "country": "IN" },
+    { "id": "BR-BHA", "name": "Bhagalpur", "state": "BR", "country": "IN" },
+    { "id": "BR-MUZ", "name": "Muzaffarpur", "state": "BR", "country": "IN" },
+    { "id": "BR-PUR", "name": "Purnia", "state": "BR", "country": "IN" },
+    { "id": "BR-DAR", "name": "Darbhanga", "state": "BR", "country": "IN" },
+    { "id": "BR-ARA", "name": "Ara", "state": "BR", "country": "IN" },
+    { "id": "BR-BEG", "name": "Begusarai", "state": "BR", "country": "IN" },
+
+    { "id": "OD-BHU", "name": "Bhubaneswar", "state": "OD", "country": "IN" },
+    { "id": "OD-CUT", "name": "Cuttack", "state": "OD", "country": "IN" },
+    { "id": "OD-ROU", "name": "Rourkela", "state": "OD", "country": "IN" },
+    { "id": "OD-BER", "name": "Berhampur", "state": "OD", "country": "IN" },
+    { "id": "OD-SAM", "name": "Sambalpur", "state": "OD", "country": "IN" },
+    { "id": "OD-PUR", "name": "Puri", "state": "OD", "country": "IN" },
+    { "id": "OD-BAL", "name": "Balasore", "state": "OD", "country": "IN" },
+
+    { "id": "JH-RAN", "name": "Ranchi", "state": "JH", "country": "IN" },
+    { "id": "JH-JAM", "name": "Jamshedpur", "state": "JH", "country": "IN" },
+    { "id": "JH-DHA", "name": "Dhanbad", "state": "JH", "country": "IN" },
+    { "id": "JH-BOK", "name": "Bokaro", "state": "JH", "country": "IN" },
+    { "id": "JH-DEO", "name": "Deoghar", "state": "JH", "country": "IN" },
+    { "id": "JH-HAZ", "name": "Hazaribagh", "state": "JH", "country": "IN" },
+
+    { "id": "CG-RAI", "name": "Raipur", "state": "CG", "country": "IN" },
+    { "id": "CG-BHI", "name": "Bhilai", "state": "CG", "country": "IN" },
+    { "id": "CG-BIL", "name": "Bilaspur", "state": "CG", "country": "IN" },
+    { "id": "CG-KOR", "name": "Korba", "state": "CG", "country": "IN" },
+    { "id": "CG-DUR", "name": "Durg", "state": "CG", "country": "IN" },
+    { "id": "CG-RAJ", "name": "Rajnandgaon", "state": "CG", "country": "IN" },
+
+    { "id": "AS-GUW", "name": "Guwahati", "state": "AS", "country": "IN" },
+    { "id": "AS-DIB", "name": "Dibrugarh", "state": "AS", "country": "IN" },
+    { "id": "AS-SIL", "name": "Silchar", "state": "AS", "country": "IN" },
+    { "id": "AS-JOR", "name": "Jorhat", "state": "AS", "country": "IN" },
+    { "id": "AS-NAG", "name": "Nagaon", "state": "AS", "country": "IN" },
+    { "id": "AS-TIN", "name": "Tinsukia", "state": "AS", "country": "IN" },
+    { "id": "AS-TEZ", "name": "Tezpur", "state": "AS", "country": "IN" },
+
+    { "id": "PB-LUD", "name": "Ludhiana", "state": "PB", "country": "IN" },
+    { "id": "PB-AMR", "name": "Amritsar", "state": "PB", "country": "IN" },
+    { "id": "PB-JAL", "name": "Jalandhar", "state": "PB", "country": "IN" },
+    { "id": "PB-PAT", "name": "Patiala", "state": "PB", "country": "IN" },
+    { "id": "PB-BAT", "name": "Bathinda", "state": "PB", "country": "IN" },
+    { "id": "PB-MOH", "name": "Mohali", "state": "PB", "country": "IN" },
+    { "id": "PB-HOH", "name": "Hoshiarpur", "state": "PB", "country": "IN" },
+
+    { "id": "HR-GUR", "name": "Gurugram", "state": "HR", "country": "IN" },
+    { "id": "HR-FAR", "name": "Faridabad", "state": "HR", "country": "IN" },
+    { "id": "HR-PAN", "name": "Panipat", "state": "HR", "country": "IN" },
+    { "id": "HR-AMB", "name": "Ambala", "state": "HR", "country": "IN" },
+    { "id": "HR-KAR", "name": "Karnal", "state": "HR", "country": "IN" },
+    { "id": "HR-HIS", "name": "Hisar", "state": "HR", "country": "IN" },
+    { "id": "HR-ROH", "name": "Rohtak", "state": "HR", "country": "IN" },
+    { "id": "HR-SON", "name": "Sonipat", "state": "HR", "country": "IN" },
+
+    { "id": "CH-CHD", "name": "Chandigarh", "state": "CH", "country": "IN" },
+
+    { "id": "UK-DEH", "name": "Dehradun", "state": "UK", "country": "IN" },
+    { "id": "UK-HAR", "name": "Haridwar", "state": "UK", "country": "IN" },
+    { "id": "UK-ROO", "name": "Roorkee", "state": "UK", "country": "IN" },
+    { "id": "UK-HAL", "name": "Haldwani", "state": "UK", "country": "IN" },
+    { "id": "UK-NAI", "name": "Nainital", "state": "UK", "country": "IN" },
+    { "id": "UK-KAS", "name": "Kashipur", "state": "UK", "country": "IN" },
+
+    { "id": "HP-SHI", "name": "Shimla", "state": "HP", "country": "IN" },
+    { "id": "HP-MAN", "name": "Manali", "state": "HP", "country": "IN" },
+    { "id": "HP-DHA", "name": "Dharamshala", "state": "HP", "country": "IN" },
+    { "id": "HP-SOL", "name": "Solan", "state": "HP", "country": "IN" },
+    { "id": "HP-KAN", "name": "Kangra", "state": "HP", "country": "IN" },
+    { "id": "HP-MAN2", "name": "Mandi", "state": "HP", "country": "IN" },
+
+    { "id": "JK-SRI", "name": "Srinagar", "state": "JK", "country": "IN" },
+    { "id": "JK-JAM", "name": "Jammu", "state": "JK", "country": "IN" },
+    { "id": "JK-ANA", "name": "Anantnag", "state": "JK", "country": "IN" },
+    { "id": "JK-BAR", "name": "Baramulla", "state": "JK", "country": "IN" },
+
+    { "id": "GA-PAN", "name": "Panaji", "state": "GA", "country": "IN" },
+    { "id": "GA-VAD", "name": "Vasco da Gama", "state": "GA", "country": "IN" },
+    { "id": "GA-MAR", "name": "Margao", "state": "GA", "country": "IN" },
+    { "id": "GA-MAP", "name": "Mapusa", "state": "GA", "country": "IN" },
+
+    { "id": "PY-PUD", "name": "Puducherry", "state": "PY", "country": "IN" },
+    { "id": "AN-POR", "name": "Port Blair", "state": "AN", "country": "IN" },
+    { "id": "SK-GAN", "name": "Gangtok", "state": "SK", "country": "IN" },
+    { "id": "AR-ITA", "name": "Itanagar", "state": "AR", "country": "IN" },
+    { "id": "ML-SHI", "name": "Shillong", "state": "ML", "country": "IN" },
+    { "id": "MN-IMP", "name": "Imphal", "state": "MN", "country": "IN" },
+    { "id": "MZ-AIZ", "name": "Aizawl", "state": "MZ", "country": "IN" },
+    { "id": "NL-KOH", "name": "Kohima", "state": "NL", "country": "IN" },
+    { "id": "NL-DIM", "name": "Dimapur", "state": "NL", "country": "IN" },
+    { "id": "TR-AGA", "name": "Agartala", "state": "TR", "country": "IN" },
+    { "id": "LA-LEH", "name": "Leh", "state": "LA", "country": "IN" },
+    { "id": "LA-KAR", "name": "Kargil", "state": "LA", "country": "IN" },
+    { "id": "LD-KAV", "name": "Kavaratti", "state": "LD", "country": "IN" },
+    { "id": "DD-DND", "name": "Daman", "state": "DD", "country": "IN" },
+    { "id": "DD-SIL", "name": "Silvassa", "state": "DD", "country": "IN" }
   ],
   "sampleColleges": [
-    {
-      "id": "mit-pune-001",
-      "name": "MIT College",
-      "normalizedName": "mit college",
-      "city": "Pune",
-      "state": "MH",
-      "district": "MH-PN",
-      "country": "IN",
-      "address": "Paud Road, Pune",
-      "postalCode": "411038",
-      "approved": true
-    },
-    {
-      "id": "symbi-pune-001",
-      "name": "Symbiosis College of Arts and Science",
-      "normalizedName": "symbiosis college",
-      "city": "Pune",
-      "state": "MH",
-      "district": "MH-PN",
-      "country": "IN",
-      "address": "Senapati Bapat Road, Pune",
-      "postalCode": "411004",
-      "approved": true
-    },
-    {
-      "id": "fcpu-pune-001",
-      "name": "Fergusson College",
-      "normalizedName": "fergusson college",
-      "city": "Pune",
-      "state": "MH",
-      "district": "MH-PN",
-      "country": "IN",
-      "address": "Fergusson College Road, Pune",
-      "postalCode": "411004",
-      "approved": true
-    },
-    {
-      "id": "vesit-mumbai-001",
-      "name": "Vivekanand Education Society's Institute of Technology",
-      "normalizedName": "vesit",
-      "city": "Mumbai",
-      "state": "MH",
-      "district": "MH-MM",
-      "country": "IN",
-      "address": "Hasama, Charkop, Navi Mumbai",
-      "postalCode": "400706",
-      "approved": true
-    },
-    {
-      "id": "jce-mumbai-001",
-      "name": "Jamnalal Bajaj Institute of Management Studies",
-      "normalizedName": "jbimm",
-      "city": "Mumbai",
-      "state": "MH",
-      "district": "MH-MM",
-      "country": "IN",
-      "address": "Vile Parle, Mumbai",
-      "postalCode": "400056",
-      "approved": true
-    },
-    {
-      "id": "iiit-hyd-001",
-      "name": "IIIT Hyderabad",
-      "normalizedName": "iiit hyderabad",
-      "city": "Hyderabad",
-      "state": "TG",
-      "district": "TG-HY",
-      "country": "IN",
-      "address": "Gachibowli, Hyderabad",
-      "postalCode": "500032",
-      "approved": true
-    },
-    {
-      "id": "iim-bangalore-001",
-      "name": "IIM Bangalore",
-      "normalizedName": "iim bangalore",
-      "city": "Bangalore",
-      "state": "KA",
-      "district": "KA-BG",
-      "country": "IN",
-      "address": "Bannerghatta Road, Bangalore",
-      "postalCode": "560076",
-      "approved": true
-    },
-    {
-      "id": "iit-delhi-001",
-      "name": "IIT Delhi",
-      "normalizedName": "iit delhi",
-      "city": "Delhi",
-      "state": "DL",
-      "district": "DL-ND",
-      "country": "IN",
-      "address": "Hauz Khas, Delhi",
-      "postalCode": "110016",
-      "approved": true
-    },
-    {
-      "id": "nmims-mumbai-001",
-      "name": "NMIMS Mumbai",
-      "normalizedName": "nmims mumbai",
-      "city": "Mumbai",
-      "state": "MH",
-      "district": "MH-MM",
-      "country": "IN",
-      "address": "NMIMS Campus, Ghatkopar, Mumbai",
-      "postalCode": "400076",
-      "approved": true
-    },
-    {
-      "id": "christ-bangalore-001",
-      "name": "Christ University Bangalore",
-      "normalizedName": "christ bangalore",
-      "city": "Bangalore",
-      "state": "KA",
-      "district": "KA-BG",
-      "country": "IN",
-      "address": "Fern Hill, Bangalore",
-      "postalCode": "560029",
-      "approved": true
-    }
+    { "id": "mit-pune-001", "name": "MIT College of Engineering", "normalizedName": "mit college of engineering pune", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "Paud Road, Kothrud", "postalCode": "411038", "approved": true },
+    { "id": "symbi-pune-001", "name": "Symbiosis Institute of Technology", "normalizedName": "symbiosis institute of technology pune", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "Lavale", "postalCode": "412115", "approved": true },
+    { "id": "fergu-pune-001", "name": "Fergusson College", "normalizedName": "fergusson college pune", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "FC Road", "postalCode": "411004", "approved": true },
+    { "id": "coep-pune-001", "name": "College of Engineering Pune", "normalizedName": "college of engineering pune coep", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "Shivajinagar", "postalCode": "411005", "approved": true },
+    { "id": "vit-pune-001", "name": "Vishwakarma Institute of Technology", "normalizedName": "vishwakarma institute of technology pune", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "Bibwewadi", "postalCode": "411037", "approved": true },
+    { "id": "pict-pune-001", "name": "Pune Institute of Computer Technology", "normalizedName": "pune institute of computer technology pict", "city": "Pune", "state": "MH", "district": "MH-PUN", "country": "IN", "address": "Dhankawadi", "postalCode": "411043", "approved": true },
+
+    { "id": "vesit-mum-001", "name": "Vivekanand Education Society's Institute of Technology", "normalizedName": "vesit mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Chembur", "postalCode": "400074", "approved": true },
+    { "id": "jbims-mum-001", "name": "Jamnalal Bajaj Institute of Management Studies", "normalizedName": "jbims mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Churchgate", "postalCode": "400020", "approved": true },
+    { "id": "iitb-mum-001", "name": "Indian Institute of Technology Bombay", "normalizedName": "iit bombay mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Powai", "postalCode": "400076", "approved": true },
+    { "id": "vjti-mum-001", "name": "Veermata Jijabai Technological Institute", "normalizedName": "vjti mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Matunga", "postalCode": "400019", "approved": true },
+    { "id": "spit-mum-001", "name": "Sardar Patel Institute of Technology", "normalizedName": "spit mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Andheri West", "postalCode": "400058", "approved": true },
+    { "id": "nmims-mum-001", "name": "NMIMS University", "normalizedName": "nmims mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Vile Parle West", "postalCode": "400056", "approved": true },
+    { "id": "dj-mum-001", "name": "Dwarkadas J. Sanghvi College of Engineering", "normalizedName": "dj sanghvi mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Vile Parle West", "postalCode": "400056", "approved": true },
+    { "id": "kjsce-mum-001", "name": "K J Somaiya College of Engineering", "normalizedName": "kj somaiya mumbai", "city": "Mumbai", "state": "MH", "district": "MH-MUM", "country": "IN", "address": "Vidyanagar, Vidya Vihar", "postalCode": "400077", "approved": true },
+
+    { "id": "iiith-hyd-001", "name": "IIIT Hyderabad", "normalizedName": "iiit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Gachibowli", "postalCode": "500032", "approved": true },
+    { "id": "bits-hyd-001", "name": "BITS Pilani Hyderabad Campus", "normalizedName": "bits pilani hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Jawahar Nagar, Shamirpet", "postalCode": "500078", "approved": true },
+    { "id": "osmania-hyd-001", "name": "Osmania University", "normalizedName": "osmania university hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Amberpet", "postalCode": "500007", "approved": true },
+    { "id": "jntu-hyd-001", "name": "JNTUH College of Engineering", "normalizedName": "jntuh hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Kukatpally", "postalCode": "500085", "approved": true },
+    { "id": "cbit-hyd-001", "name": "Chaitanya Bharathi Institute of Technology", "normalizedName": "cbit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Gandipet", "postalCode": "500075", "approved": true },
+    { "id": "cvr-hyd-001", "name": "CVR College of Engineering", "normalizedName": "cvr college hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Vastunagar, Ibrahimpatnam", "postalCode": "501510", "approved": true },
+    { "id": "vasavi-hyd-001", "name": "Vasavi College of Engineering", "normalizedName": "vasavi college hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Ibrahimbagh", "postalCode": "500031", "approved": true },
+    { "id": "mlrit-hyd-001", "name": "MLR Institute of Technology", "normalizedName": "mlrit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-MED", "country": "IN", "address": "Dundigal", "postalCode": "500043", "approved": true },
+    { "id": "mgit-hyd-001", "name": "Mahatma Gandhi Institute of Technology", "normalizedName": "mgit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Gandipet", "postalCode": "500075", "approved": true },
+    { "id": "vjit-hyd-001", "name": "Vidya Jyothi Institute of Technology", "normalizedName": "vjit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Aziz Nagar", "postalCode": "500075", "approved": true },
+    { "id": "snist-hyd-001", "name": "Sreenidhi Institute of Science and Technology", "normalizedName": "snist hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Yamnampet, Ghatkesar", "postalCode": "501301", "approved": true },
+    { "id": "kprit-hyd-001", "name": "KPR Institute of Engineering and Technology", "normalizedName": "kprit hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-HYD", "country": "IN", "address": "Bowrampet", "postalCode": "500043", "approved": true },
+
+    { "id": "nitw-war-001", "name": "National Institute of Technology Warangal", "normalizedName": "nit warangal", "city": "Warangal", "state": "TS", "district": "TS-WAR", "country": "IN", "address": "NIT Campus", "postalCode": "506004", "approved": true },
+    { "id": "kakatiya-war-001", "name": "Kakatiya University", "normalizedName": "kakatiya university warangal", "city": "Warangal", "state": "TS", "district": "TS-WAR", "country": "IN", "address": "Vidyaranyapuri", "postalCode": "506009", "approved": true },
+
+    { "id": "iimb-blr-001", "name": "IIM Bangalore", "normalizedName": "iim bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "Bannerghatta Road", "postalCode": "560076", "approved": true },
+    { "id": "iisc-blr-001", "name": "Indian Institute of Science", "normalizedName": "iisc bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "CV Raman Road", "postalCode": "560012", "approved": true },
+    { "id": "rvce-blr-001", "name": "RV College of Engineering", "normalizedName": "rvce bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "Mysore Road", "postalCode": "560059", "approved": true },
+    { "id": "bmsit-blr-001", "name": "BMS Institute of Technology", "normalizedName": "bmsit bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "Doddaballapur Road", "postalCode": "560064", "approved": true },
+    { "id": "christ-blr-001", "name": "Christ University", "normalizedName": "christ university bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "Hosur Road", "postalCode": "560029", "approved": true },
+    { "id": "pes-blr-001", "name": "PES University", "normalizedName": "pes university bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "100 Feet Ring Road", "postalCode": "560085", "approved": true },
+    { "id": "msrit-blr-001", "name": "M S Ramaiah Institute of Technology", "normalizedName": "msrit bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "MSR Nagar", "postalCode": "560054", "approved": true },
+    { "id": "nie-mys-001", "name": "National Institute of Engineering", "normalizedName": "nie mysore", "city": "Mysore", "state": "KA", "district": "KA-MYS", "country": "IN", "address": "Manandavadi Road", "postalCode": "570008", "approved": true },
+
+    { "id": "iitd-del-001", "name": "IIT Delhi", "normalizedName": "iit delhi", "city": "New Delhi", "state": "DL", "district": "DL-SOU", "country": "IN", "address": "Hauz Khas", "postalCode": "110016", "approved": true },
+    { "id": "dce-del-001", "name": "Delhi Technological University", "normalizedName": "dtu delhi", "city": "New Delhi", "state": "DL", "district": "DL-NOR", "country": "IN", "address": "Shahbad Daulatpur", "postalCode": "110042", "approved": true },
+    { "id": "nsut-del-001", "name": "Netaji Subhas University of Technology", "normalizedName": "nsut delhi", "city": "New Delhi", "state": "DL", "district": "DL-SWD", "country": "IN", "address": "Azad Hind Fauj Marg", "postalCode": "110078", "approved": true },
+    { "id": "iiitd-del-001", "name": "IIIT Delhi", "normalizedName": "iiit delhi", "city": "New Delhi", "state": "DL", "district": "DL-SOU", "country": "IN", "address": "Okhla Industrial Estate", "postalCode": "110020", "approved": true },
+    { "id": "du-del-001", "name": "Delhi University", "normalizedName": "delhi university du", "city": "New Delhi", "state": "DL", "district": "DL-NOR", "country": "IN", "address": "University Road", "postalCode": "110007", "approved": true },
+    { "id": "igdtuw-del-001", "name": "IGDTUW", "normalizedName": "igdtuw delhi", "city": "New Delhi", "state": "DL", "district": "DL-EAS", "country": "IN", "address": "Kashmere Gate", "postalCode": "110006", "approved": true },
+    { "id": "jmi-del-001", "name": "Jamia Millia Islamia", "normalizedName": "jamia millia islamia delhi", "city": "New Delhi", "state": "DL", "district": "DL-SOU", "country": "IN", "address": "Jamia Nagar", "postalCode": "110025", "approved": true },
+
+    { "id": "iitk-kan-001", "name": "IIT Kanpur", "normalizedName": "iit kanpur", "city": "Kanpur", "state": "UP", "district": "UP-KAN", "country": "IN", "address": "Kalyanpur", "postalCode": "208016", "approved": true },
+    { "id": "iitr-roo-001", "name": "IIT Roorkee", "normalizedName": "iit roorkee", "city": "Roorkee", "state": "UK", "district": "UK-ROO", "country": "IN", "address": "IIT Campus", "postalCode": "247667", "approved": true },
+    { "id": "bhu-var-001", "name": "Banaras Hindu University", "normalizedName": "bhu varanasi", "city": "Varanasi", "state": "UP", "district": "UP-VAR", "country": "IN", "address": "Lanka", "postalCode": "221005", "approved": true },
+    { "id": "amu-ali-001", "name": "Aligarh Muslim University", "normalizedName": "amu aligarh", "city": "Aligarh", "state": "UP", "district": "UP-ALI", "country": "IN", "address": "AMU Campus", "postalCode": "202002", "approved": true },
+
+    { "id": "iitm-che-001", "name": "IIT Madras", "normalizedName": "iit madras chennai", "city": "Chennai", "state": "TN", "district": "TN-CHE", "country": "IN", "address": "IIT Post", "postalCode": "600036", "approved": true },
+    { "id": "anna-che-001", "name": "Anna University", "normalizedName": "anna university chennai", "city": "Chennai", "state": "TN", "district": "TN-CHE", "country": "IN", "address": "Guindy", "postalCode": "600025", "approved": true },
+    { "id": "srmist-che-001", "name": "SRM Institute of Science and Technology", "normalizedName": "srm chennai", "city": "Chennai", "state": "TN", "district": "TN-KAN", "country": "IN", "address": "Kattankulathur", "postalCode": "603203", "approved": true },
+    { "id": "vit-vel-001", "name": "VIT University", "normalizedName": "vit vellore", "city": "Vellore", "state": "TN", "district": "TN-VEL", "country": "IN", "address": "VIT Campus", "postalCode": "632014", "approved": true },
+    { "id": "sastra-thn-001", "name": "SASTRA University", "normalizedName": "sastra thanjavur", "city": "Thanjavur", "state": "TN", "district": "TN-THA", "country": "IN", "address": "Tirumalaisamudram", "postalCode": "613401", "approved": true },
+    { "id": "psgtech-coi-001", "name": "PSG College of Technology", "normalizedName": "psg coimbatore", "city": "Coimbatore", "state": "TN", "district": "TN-COI", "country": "IN", "address": "Peelamedu", "postalCode": "641004", "approved": true },
+    { "id": "nitt-tri-001", "name": "NIT Trichy", "normalizedName": "nit trichy tiruchirappalli", "city": "Tiruchirappalli", "state": "TN", "district": "TN-TIR", "country": "IN", "address": "Tanjore Road", "postalCode": "620015", "approved": true },
+
+    { "id": "iitg-guw-001", "name": "IIT Guwahati", "normalizedName": "iit guwahati", "city": "Guwahati", "state": "AS", "district": "AS-GUW", "country": "IN", "address": "North Guwahati", "postalCode": "781039", "approved": true },
+    { "id": "tezu-guw-001", "name": "Tezpur University", "normalizedName": "tezpur university", "city": "Tezpur", "state": "AS", "district": "AS-TEZ", "country": "IN", "address": "Napaam", "postalCode": "784028", "approved": true },
+
+    { "id": "iitkgp-kgp-001", "name": "IIT Kharagpur", "normalizedName": "iit kharagpur", "city": "Kharagpur", "state": "WB", "district": "WB-KHA", "country": "IN", "address": "IIT Campus", "postalCode": "721302", "approved": true },
+    { "id": "ju-kol-001", "name": "Jadavpur University", "normalizedName": "jadavpur university kolkata", "city": "Kolkata", "state": "WB", "district": "WB-KOL", "country": "IN", "address": "Jadavpur", "postalCode": "700032", "approved": true },
+    { "id": "iiest-kol-001", "name": "IIEST Shibpur", "normalizedName": "iiest shibpur kolkata", "city": "Howrah", "state": "WB", "district": "WB-HOW", "country": "IN", "address": "Shibpur", "postalCode": "711103", "approved": true },
+
+    { "id": "iimk-koz-001", "name": "IIM Kozhikode", "normalizedName": "iim kozhikode", "city": "Kozhikode", "state": "KL", "district": "KL-KOZ", "country": "IN", "address": "IIMK Campus", "postalCode": "673570", "approved": true },
+    { "id": "nitc-cal-001", "name": "NIT Calicut", "normalizedName": "nit calicut kozhikode", "city": "Kozhikode", "state": "KL", "district": "KL-KOZ", "country": "IN", "address": "NIT Campus", "postalCode": "673601", "approved": true },
+    { "id": "cusat-koc-001", "name": "Cochin University of Science and Technology", "normalizedName": "cusat kochi", "city": "Kochi", "state": "KL", "district": "KL-ERN", "country": "IN", "address": "South Kalamassery", "postalCode": "682022", "approved": true },
+    { "id": "cet-tvm-001", "name": "College of Engineering Trivandrum", "normalizedName": "cet trivandrum", "city": "Thiruvananthapuram", "state": "KL", "district": "KL-THI", "country": "IN", "address": "Sreekaryam", "postalCode": "695016", "approved": true },
+
+    { "id": "iima-ahm-001", "name": "IIM Ahmedabad", "normalizedName": "iim ahmedabad", "city": "Ahmedabad", "state": "GJ", "district": "GJ-AHM", "country": "IN", "address": "Vastrapur", "postalCode": "380015", "approved": true },
+    { "id": "nirma-ahm-001", "name": "Nirma University", "normalizedName": "nirma university ahmedabad", "city": "Ahmedabad", "state": "GJ", "district": "GJ-AHM", "country": "IN", "address": "Sarkhej-Gandhinagar Highway", "postalCode": "382481", "approved": true },
+    { "id": "daiict-gan-001", "name": "DA-IICT", "normalizedName": "daiict gandhinagar", "city": "Gandhinagar", "state": "GJ", "district": "GJ-GAN", "country": "IN", "address": "Near Infocity", "postalCode": "382007", "approved": true },
+    { "id": "svnit-sur-001", "name": "SVNIT Surat", "normalizedName": "svnit surat", "city": "Surat", "state": "GJ", "district": "GJ-SUR", "country": "IN", "address": "Ichchhanath", "postalCode": "395007", "approved": true },
+    { "id": "msu-vad-001", "name": "MS University Baroda", "normalizedName": "msu baroda vadodara", "city": "Vadodara", "state": "GJ", "district": "GJ-VAD", "country": "IN", "address": "Pratapgunj", "postalCode": "390002", "approved": true },
+
+    { "id": "bits-pil-001", "name": "BITS Pilani", "normalizedName": "bits pilani rajasthan", "city": "Pilani", "state": "RJ", "district": "RJ-SIK", "country": "IN", "address": "Vidya Vihar", "postalCode": "333031", "approved": true },
+    { "id": "mnit-jai-001", "name": "MNIT Jaipur", "normalizedName": "mnit jaipur", "city": "Jaipur", "state": "RJ", "district": "RJ-JAI", "country": "IN", "address": "JLN Marg", "postalCode": "302017", "approved": true },
+    { "id": "iitj-jod-001", "name": "IIT Jodhpur", "normalizedName": "iit jodhpur", "city": "Jodhpur", "state": "RJ", "district": "RJ-JOD", "country": "IN", "address": "NH-65", "postalCode": "342037", "approved": true },
+
+    { "id": "isb-hyd-001", "name": "Indian School of Business", "normalizedName": "isb hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Gachibowli", "postalCode": "500032", "approved": true },
+
+    { "id": "nita-ran-001", "name": "NIT Raipur", "normalizedName": "nit raipur", "city": "Raipur", "state": "CG", "district": "CG-RAI", "country": "IN", "address": "GE Road", "postalCode": "492010", "approved": true },
+
+    { "id": "nitp-pat-001", "name": "NIT Patna", "normalizedName": "nit patna", "city": "Patna", "state": "BR", "district": "BR-PAT", "country": "IN", "address": "Ashok Rajpath", "postalCode": "800005", "approved": true },
+    { "id": "iitbhu-var-001", "name": "IIT BHU Varanasi", "normalizedName": "iit bhu varanasi", "city": "Varanasi", "state": "UP", "district": "UP-VAR", "country": "IN", "address": "BHU Campus", "postalCode": "221005", "approved": true },
+
+    { "id": "bitmesra-ran-001", "name": "BIT Mesra", "normalizedName": "bit mesra ranchi", "city": "Ranchi", "state": "JH", "district": "JH-RAN", "country": "IN", "address": "Mesra", "postalCode": "835215", "approved": true },
+    { "id": "nitjsr-jam-001", "name": "NIT Jamshedpur", "normalizedName": "nit jamshedpur", "city": "Jamshedpur", "state": "JH", "district": "JH-JAM", "country": "IN", "address": "Adityapur", "postalCode": "831014", "approved": true },
+    { "id": "xlri-jam-001", "name": "XLRI Jamshedpur", "normalizedName": "xlri jamshedpur", "city": "Jamshedpur", "state": "JH", "district": "JH-JAM", "country": "IN", "address": "CH Area", "postalCode": "831001", "approved": true },
+
+    { "id": "manipal-001", "name": "Manipal Institute of Technology", "normalizedName": "mit manipal", "city": "Manipal", "state": "KA", "district": "KA-MAN", "country": "IN", "address": "MIT Campus", "postalCode": "576104", "approved": true },
+
+    { "id": "thapar-001", "name": "Thapar Institute of Engineering and Technology", "normalizedName": "thapar patiala", "city": "Patiala", "state": "PB", "district": "PB-PAT", "country": "IN", "address": "TIET Campus", "postalCode": "147004", "approved": true },
+    { "id": "pec-chd-001", "name": "Punjab Engineering College", "normalizedName": "pec chandigarh", "city": "Chandigarh", "state": "CH", "district": "CH-CHD", "country": "IN", "address": "Sector 12", "postalCode": "160012", "approved": true },
+
+    { "id": "iim-luc-001", "name": "IIM Lucknow", "normalizedName": "iim lucknow", "city": "Lucknow", "state": "UP", "district": "UP-LUC", "country": "IN", "address": "Prabandh Nagar", "postalCode": "226013", "approved": true },
+    { "id": "iiit-all-001", "name": "IIIT Allahabad", "normalizedName": "iiit allahabad prayagraj", "city": "Prayagraj", "state": "UP", "district": "UP-ALL", "country": "IN", "address": "Deoghat", "postalCode": "211015", "approved": true },
+    { "id": "hbtu-kan-001", "name": "HBTU Kanpur", "normalizedName": "hbtu kanpur", "city": "Kanpur", "state": "UP", "district": "UP-KAN", "country": "IN", "address": "Nawabganj", "postalCode": "208002", "approved": true },
+    { "id": "mnnit-all-001", "name": "MNNIT Allahabad", "normalizedName": "mnnit allahabad prayagraj", "city": "Prayagraj", "state": "UP", "district": "UP-ALL", "country": "IN", "address": "Teliarganj", "postalCode": "211004", "approved": true },
+
+    { "id": "iim-ind-001", "name": "IIM Indore", "normalizedName": "iim indore", "city": "Indore", "state": "MP", "district": "MP-IND", "country": "IN", "address": "Rau-Pithampur Road", "postalCode": "453556", "approved": true },
+    { "id": "iit-ind-001", "name": "IIT Indore", "normalizedName": "iit indore", "city": "Indore", "state": "MP", "district": "MP-IND", "country": "IN", "address": "Simrol", "postalCode": "453552", "approved": true },
+    { "id": "manit-bho-001", "name": "MANIT Bhopal", "normalizedName": "manit bhopal", "city": "Bhopal", "state": "MP", "district": "MP-BHO", "country": "IN", "address": "Link Road", "postalCode": "462003", "approved": true },
+
+    { "id": "nitk-sur-001", "name": "NIT Karnataka Surathkal", "normalizedName": "nitk surathkal mangalore", "city": "Mangalore", "state": "KA", "district": "KA-MAN", "country": "IN", "address": "Surathkal", "postalCode": "575025", "approved": true },
+
+    { "id": "bits-goa-001", "name": "BITS Pilani Goa Campus", "normalizedName": "bits pilani goa", "city": "Zuarinagar", "state": "GA", "district": "GA-VAD", "country": "IN", "address": "NH 17B", "postalCode": "403726", "approved": true },
+    { "id": "gec-goa-001", "name": "Goa Engineering College", "normalizedName": "gec goa", "city": "Ponda", "state": "GA", "district": "GA-PAN", "country": "IN", "address": "Farmagudi", "postalCode": "403401", "approved": true },
+
+    { "id": "nalsar-hyd-001", "name": "NALSAR University of Law", "normalizedName": "nalsar hyderabad", "city": "Hyderabad", "state": "TS", "district": "TS-RAN", "country": "IN", "address": "Justice City, Shameerpet", "postalCode": "500101", "approved": true },
+    { "id": "nlsiu-blr-001", "name": "National Law School of India University", "normalizedName": "nlsiu bangalore", "city": "Bangalore", "state": "KA", "district": "KA-BLR", "country": "IN", "address": "Nagarbhavi", "postalCode": "560072", "approved": true },
+
+    { "id": "aiims-del-001", "name": "AIIMS Delhi", "normalizedName": "aiims delhi", "city": "New Delhi", "state": "DL", "district": "DL-SOU", "country": "IN", "address": "Ansari Nagar", "postalCode": "110029", "approved": true },
+
+    { "id": "nift-del-001", "name": "NIFT Delhi", "normalizedName": "nift delhi", "city": "New Delhi", "state": "DL", "district": "DL-WES", "country": "IN", "address": "Hauz Khas", "postalCode": "110016", "approved": true },
+    { "id": "nid-ahm-001", "name": "National Institute of Design", "normalizedName": "nid ahmedabad", "city": "Ahmedabad", "state": "GJ", "district": "GJ-AHM", "country": "IN", "address": "Paldi", "postalCode": "380007", "approved": true },
+
+    { "id": "jipmer-pud-001", "name": "JIPMER", "normalizedName": "jipmer puducherry", "city": "Puducherry", "state": "PY", "district": "PY-PUD", "country": "IN", "address": "Dhanvantri Nagar", "postalCode": "605006", "approved": true }
   ]
 }
