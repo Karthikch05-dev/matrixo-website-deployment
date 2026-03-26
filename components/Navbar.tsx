@@ -21,7 +21,6 @@ const navLinksBeforeFeatures = [
 
 const navLinksAfterFeatures = [
   { name: 'Events', href: '/events' },
-  { name: 'Career', href: '/careers' },
   { name: 'Contact', href: '/contact' },
 ]
 
