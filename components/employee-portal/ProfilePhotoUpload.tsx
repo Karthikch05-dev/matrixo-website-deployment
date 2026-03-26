@@ -7,14 +7,14 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebas
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { storage, db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
+import ImageCropModal from '@/components/shared/ImageCropModal'
 
 // ============================================
 // CONSTANTS & TYPES
 // ============================================
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const MAX_SIZE_BYTES = 3 * 1024 * 1024 // 3MB
-const OUTPUT_SIZE = 512 // 512×512 px output
+const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 
 interface ProfilePhotoUploadProps {
   employeeId: string
@@ -26,48 +26,8 @@ interface ProfilePhotoUploadProps {
 }
 
 // ============================================
-// CLIENT-SIDE IMAGE PROCESSING
+// CLIENT-SIDE IMAGE PROCESSING (REMOVED - using crop modal)
 // ============================================
-
-/** Resize and center-crop an image File to OUTPUT_SIZE×OUTPUT_SIZE WebP using Canvas */
-async function processImage(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const objectUrl = URL.createObjectURL(file)
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl)
-
-      const canvas = document.createElement('canvas')
-      canvas.width = OUTPUT_SIZE
-      canvas.height = OUTPUT_SIZE
-      const ctx = canvas.getContext('2d')!
-
-      // Center-crop: fill the square from the center of the source image
-      const srcSize = Math.min(img.width, img.height)
-      const srcX = (img.width - srcSize) / 2
-      const srcY = (img.height - srcSize) / 2
-
-      ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error('Canvas toBlob failed'))
-        },
-        'image/webp',
-        0.88 // quality
-      )
-    }
-
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl)
-      reject(new Error('Failed to load image'))
-    }
-
-    img.src = objectUrl
-  })
-}
 
 /** Validate a File before processing */
 function validateFile(file: File): string | null {
@@ -75,7 +35,7 @@ function validateFile(file: File): string | null {
     return `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP`
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 3MB`
+    return `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 5MB`
   }
   return null
 }
@@ -93,7 +53,7 @@ function InitialsAvatar({ name, size = 128 }: { name: string; size?: number }) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold select-none"
+      className="flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold select-none"
       style={{ width: size, height: size, fontSize: size * 0.33 }}
     >
       {initials}
@@ -119,6 +79,10 @@ export default function ProfilePhotoUpload({
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
+  
+  // Crop modal states
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -130,7 +94,10 @@ export default function ProfilePhotoUpload({
     setDragActive(false)
     setProgress(0)
     setValidationError(null)
-  }, [])
+    setCropModalOpen(false)
+    if (tempImageUrl) URL.revokeObjectURL(tempImageUrl)
+    setTempImageUrl(null)
+  }, [tempImageUrl])
 
   // ── Handle file selection ───────────────────────────────────────────────
   const handleFile = useCallback((file: File) => {
@@ -144,7 +111,8 @@ export default function ProfilePhotoUpload({
     setValidationError(null)
     setSelectedFile(file)
     const objectUrl = URL.createObjectURL(file)
-    setPreview(objectUrl)
+    setTempImageUrl(objectUrl)
+    setCropModalOpen(true)
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,25 +136,27 @@ export default function ProfilePhotoUpload({
   }
 
   // ── Upload ──────────────────────────────────────────────────────────────
-  const handleUpload = async () => {
-    if (!selectedFile || !employeeId) return
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!employeeId) return
 
     setUploading(true)
     setProgress(0)
+    setCropModalOpen(false)
+
+    // Set preview
+    const previewUrl = URL.createObjectURL(croppedBlob)
+    setPreview(previewUrl)
 
     try {
-      // 1. Process image client-side (resize + crop + webp)
-      const processedBlob = await processImage(selectedFile)
-
-      // 2. Build storage path
+      // Build storage path
       const timestamp = Date.now()
-      const storagePath = `profile-images/${employeeId}/${timestamp}.webp`
+      const storagePath = `profile-images/${employeeId}/${timestamp}.jpg`
       const storageRef = ref(storage, storagePath)
 
-      // 3. Upload with progress tracking
+      // Upload with progress tracking
       await new Promise<void>((resolve, reject) => {
-        const uploadTask = uploadBytesResumable(storageRef, processedBlob, {
-          contentType: 'image/webp',
+        const uploadTask = uploadBytesResumable(storageRef, croppedBlob, {
+          contentType: 'image/jpeg',
         })
 
         uploadTask.on(
@@ -200,7 +170,7 @@ export default function ProfilePhotoUpload({
             try {
               const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref)
 
-              // 4. Update Firestore
+              // Update Firestore
               const employeeRef = doc(db, 'Employees', employeeId)
               await updateDoc(employeeRef, {
                 profileImage: downloadUrl,
@@ -223,6 +193,7 @@ export default function ProfilePhotoUpload({
     } finally {
       setUploading(false)
       setProgress(0)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
   }
 
@@ -335,9 +306,9 @@ export default function ProfilePhotoUpload({
 
               {/* Body */}
               <div className="p-6 space-y-5">
-                {/* Current / Preview avatar */}
+                {/* Current / Preview avatar - Square with rounded corners */}
                 <div className="flex justify-center">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-blue-500/40">
+                  <div className="relative w-32 h-32 rounded-xl overflow-hidden ring-4 ring-blue-500/40">
                     {preview ? (
                       <img
                         src={preview}
@@ -383,7 +354,7 @@ export default function ProfilePhotoUpload({
                     {dragActive ? 'Drop to select' : 'Click or drag & drop an image'}
                   </p>
                   <p className={`text-xs mt-1 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
-                    JPEG · PNG · WebP · Max 3MB
+                    JPEG · PNG · WebP · Max 5MB
                   </p>
                 </div>
 
@@ -447,31 +418,14 @@ export default function ProfilePhotoUpload({
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-3">
-                  {/* Upload button */}
-                  <button
-                    onClick={handleUpload}
-                    disabled={!selectedFile || uploading}
-                    className={`
-                      w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-200
-                      ${selectedFile && !uploading
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-400 hover:to-purple-500 shadow-lg shadow-blue-500/25'
-                        : darkMode
-                          ? 'bg-white/5 text-neutral-500 cursor-not-allowed'
-                          : 'bg-black/5 text-gray-400 cursor-not-allowed'}
-                    `}
-                  >
-                    {uploading ? (
-                      <>
-                        <FaSpinner className="animate-spin" size={14} />
-                        Uploading…
-                      </>
-                    ) : (
-                      <>
-                        <FaCheck size={13} />
-                        Save Photo
-                      </>
-                    )}
-                  </button>
+                  {/* Upload progress indicator */}
+                  {uploading && (
+                    <div className="text-center py-2">
+                      <p className={`text-sm ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+                        Uploading your photo...
+                      </p>
+                    </div>
+                  )}
 
                   {/* Remove photo button (only if current image exists) */}
                   {currentImageUrl && !uploading && (
@@ -492,7 +446,7 @@ export default function ProfilePhotoUpload({
 
                 {/* Info note */}
                 <p className={`text-xs text-center ${darkMode ? 'text-neutral-600' : 'text-gray-400'}`}>
-                  Photos are resized to 512×512 and stored securely.
+                  Photos are cropped to square and compressed to ≤100KB.
                   <br />
                   Only you and admins can change this photo.
                 </p>
@@ -501,6 +455,25 @@ export default function ProfilePhotoUpload({
           </div>
         )}
       </AnimatePresence>
+
+      {/* Crop Modal */}
+      {tempImageUrl && (
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          imageSrc={tempImageUrl}
+          aspectRatio={1}
+          onClose={() => {
+            setCropModalOpen(false)
+            if (tempImageUrl) URL.revokeObjectURL(tempImageUrl)
+            setTempImageUrl(null)
+            setSelectedFile(null)
+          }}
+          onComplete={handleCropComplete}
+          title="Crop Profile Photo (Square)"
+          cropShape="rect"
+          darkMode={darkMode}
+        />
+      )}
     </>
   )
 }
