@@ -150,7 +150,11 @@ export default function ProfileEditSection({
   const [verifyingSkill, setVerifyingSkill] = useState<string | null>(null);
 
   // ---- Computed: Goal Alignment Intelligence ----
-  const goals = currentCareerGoal || { shortTerm: '', midTerm: '', longTerm: '', dreamRole: '', targetIndustries: [] };
+  // Memoize goals to prevent useMemo dependency warnings
+  const goals = useMemo(() =>
+    currentCareerGoal || { shortTerm: '', midTerm: '', longTerm: '', dreamRole: '', targetIndustries: [] as string[] },
+    [currentCareerGoal]
+  );
   const hasGoals = !!(goals.shortTerm || goals.midTerm || goals.longTerm || goals.dreamRole);
 
   const enrichedSkills: TechnicalSkill[] = useMemo(() => {
