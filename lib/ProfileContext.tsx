@@ -34,7 +34,8 @@ export interface UserProfile {
   rollNumber: string
   phone: string
   email: string
-  college: string
+  college?: string // Deprecated - remove in migration
+  collegeId?: string // New normalized college ID (optional during transition)
   year: string
   branch: string
   graduationYear?: string

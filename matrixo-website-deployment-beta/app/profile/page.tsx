@@ -79,7 +79,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setEditData({
-        fullName: profile.fullName, phone: profile.phone, college: profile.college,
+        fullName: profile.fullName, phone: profile.phone, college: profile.college || '',
         year: profile.year, branch: profile.branch,
         graduationYear: profile.graduationYear || '', bio: profile.bio || '',
         linkedin: profile.linkedin || '', github: profile.github || '', portfolio: profile.portfolio || '',
@@ -171,7 +171,7 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (profile) {
       setEditData({
-        fullName: profile.fullName, phone: profile.phone, college: profile.college,
+        fullName: profile.fullName, phone: profile.phone, college: profile.college || '',
         year: profile.year, branch: profile.branch, graduationYear: profile.graduationYear || '',
         bio: profile.bio || '', linkedin: profile.linkedin || '',
         github: profile.github || '', portfolio: profile.portfolio || '',
