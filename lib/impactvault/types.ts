@@ -13,8 +13,9 @@ export type ImpactVaultRole = 'super_admin' | 'institution_admin' | 'faculty' | 
 export interface ImpactVaultAccess {
   userId: string;
   role: ImpactVaultRole;
-  institution: string;       // college name (empty for super_admin)
-  department?: string;       // branch (only for faculty)
+  collegeId: string;       // Normalized college ID (FK)
+  institution?: string;    // Deprecated - for backward compatibility
+  department?: string;     // branch (only for faculty)
   grantedBy: string;
   grantedAt: string;
 }
@@ -133,6 +134,6 @@ export interface ImpactVaultData {
   placementMetrics: PlacementMetrics;
   loading: boolean;
   error: string | null;
-  institution: string;
+  collegeId: string;
   role: ImpactVaultRole;
 }

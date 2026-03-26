@@ -1,0 +1,427 @@
+{
+  "countries": [
+    {
+      "id": "IN",
+      "name": "India",
+      "code": "IN"
+    }
+  ],
+  "states": [
+    {
+      "id": "AN",
+      "name": "Andaman and Nicobar Islands",
+      "country": "IN",
+      "code": "AN"
+    },
+    {
+      "id": "AP",
+      "name": "Andhra Pradesh",
+      "country": "IN",
+      "code": "AP"
+    },
+    {
+      "id": "AR",
+      "name": "Arunachal Pradesh",
+      "country": "IN",
+      "code": "AR"
+    },
+    {
+      "id": "AS",
+      "name": "Assam",
+      "country": "IN",
+      "code": "AS"
+    },
+    {
+      "id": "BR",
+      "name": "Bihar",
+      "country": "IN",
+      "code": "BR"
+    },
+    {
+      "id": "CG",
+      "name": "Chhattisgarh",
+      "country": "IN",
+      "code": "CG"
+    },
+    {
+      "id": "CH",
+      "name": "Chandigarh",
+      "country": "IN",
+      "code": "CH"
+    },
+    {
+      "id": "CT",
+      "name": "Chhattisgarh",
+      "country": "IN",
+      "code": "CT"
+    },
+    {
+      "id": "DD",
+      "name": "Daman and Diu",
+      "country": "IN",
+      "code": "DD"
+    },
+    {
+      "id": "DL",
+      "name": "Delhi",
+      "country": "IN",
+      "code": "DL"
+    },
+    {
+      "id": "DN",
+      "name": "Dadra and Nagar Haveli",
+      "country": "IN",
+      "code": "DN"
+    },
+    {
+      "id": "GA",
+      "name": "Goa",
+      "country": "IN",
+      "code": "GA"
+    },
+    {
+      "id": "GJ",
+      "name": "Gujarat",
+      "country": "IN",
+      "code": "GJ"
+    },
+    {
+      "id": "HR",
+      "name": "Haryana",
+      "country": "IN",
+      "code": "HR"
+    },
+    {
+      "id": "HP",
+      "name": "Himachal Pradesh",
+      "country": "IN",
+      "code": "HP"
+    },
+    {
+      "id": "JK",
+      "name": "Jammu and Kashmir",
+      "country": "IN",
+      "code": "JK"
+    },
+    {
+      "id": "JH",
+      "name": "Jharkhand",
+      "country": "IN",
+      "code": "JH"
+    },
+    {
+      "id": "KA",
+      "name": "Karnataka",
+      "country": "IN",
+      "code": "KA"
+    },
+    {
+      "id": "KL",
+      "name": "Kerala",
+      "country": "IN",
+      "code": "KL"
+    },
+    {
+      "id": "LA",
+      "name": "Ladakh",
+      "country": "IN",
+      "code": "LA"
+    },
+    {
+      "id": "LD",
+      "name": "Lakshadweep",
+      "country": "IN",
+      "code": "LD"
+    },
+    {
+      "id": "MH",
+      "name": "Maharashtra",
+      "country": "IN",
+      "code": "MH"
+    },
+    {
+      "id": "ML",
+      "name": "Meghalaya",
+      "country": "IN",
+      "code": "ML"
+    },
+    {
+      "id": "MN",
+      "name": "Manipur",
+      "country": "IN",
+      "code": "MN"
+    },
+    {
+      "id": "MZ",
+      "name": "Mizoram",
+      "country": "IN",
+      "code": "MZ"
+    },
+    {
+      "id": "NL",
+      "name": "Nagaland",
+      "country": "IN",
+      "code": "NL"
+    },
+    {
+      "id": "OR",
+      "name": "Odisha",
+      "country": "IN",
+      "code": "OR"
+    },
+    {
+      "id": "PB",
+      "name": "Punjab",
+      "country": "IN",
+      "code": "PB"
+    },
+    {
+      "id": "PY",
+      "name": "Puducherry",
+      "country": "IN",
+      "code": "PY"
+    },
+    {
+      "id": "RJ",
+      "name": "Rajasthan",
+      "country": "IN",
+      "code": "RJ"
+    },
+    {
+      "id": "SK",
+      "name": "Sikkim",
+      "country": "IN",
+      "code": "SK"
+    },
+    {
+      "id": "TG",
+      "name": "Telangana",
+      "country": "IN",
+      "code": "TG"
+    },
+    {
+      "id": "TN",
+      "name": "Tamil Nadu",
+      "country": "IN",
+      "code": "TN"
+    },
+    {
+      "id": "TR",
+      "name": "Tripura",
+      "country": "IN",
+      "code": "TR"
+    },
+    {
+      "id": "UP",
+      "name": "Uttar Pradesh",
+      "country": "IN",
+      "code": "UP"
+    },
+    {
+      "id": "UT",
+      "name": "Uttarakhand",
+      "country": "IN",
+      "code": "UT"
+    },
+    {
+      "id": "WB",
+      "name": "West Bengal",
+      "country": "IN",
+      "code": "WB"
+    }
+  ],
+  "majorDistricts": [
+    {
+      "id": "MH-PN",
+      "name": "Pune",
+      "state": "MH",
+      "country": "IN",
+      "code": "PN"
+    },
+    {
+      "id": "MH-MM",
+      "name": "Mumbai",
+      "state": "MH",
+      "country": "IN",
+      "code": "MM"
+    },
+    {
+      "id": "MH-NP",
+      "name": "Nagpur",
+      "state": "MH",
+      "country": "IN",
+      "code": "NP"
+    },
+    {
+      "id": "KA-BG",
+      "name": "Bangalore",
+      "state": "KA",
+      "country": "IN",
+      "code": "BG"
+    },
+    {
+      "id": "DL-DL",
+      "name": "South Delhi",
+      "state": "DL",
+      "country": "IN",
+      "code": "DL"
+    },
+    {
+      "id": "DL-ND",
+      "name": "North Delhi",
+      "state": "DL",
+      "country": "IN",
+      "code": "ND"
+    },
+    {
+      "id": "TN-CH",
+      "name": "Chennai",
+      "state": "TN",
+      "country": "IN",
+      "code": "CH"
+    },
+    {
+      "id": "KL-KC",
+      "name": "Kochi",
+      "state": "KL",
+      "country": "IN",
+      "code": "KC"
+    },
+    {
+      "id": "GJ-AH",
+      "name": "Ahmedabad",
+      "state": "GJ",
+      "country": "IN",
+      "code": "AH"
+    },
+    {
+      "id": "WB-KL",
+      "name": "Kolkata",
+      "state": "WB",
+      "country": "IN",
+      "code": "KL"
+    }
+  ],
+  "sampleColleges": [
+    {
+      "id": "mit-pune-001",
+      "name": "MIT College",
+      "normalizedName": "mit college",
+      "city": "Pune",
+      "state": "MH",
+      "district": "MH-PN",
+      "country": "IN",
+      "address": "Paud Road, Pune",
+      "postalCode": "411038",
+      "approved": true
+    },
+    {
+      "id": "symbi-pune-001",
+      "name": "Symbiosis College of Arts and Science",
+      "normalizedName": "symbiosis college",
+      "city": "Pune",
+      "state": "MH",
+      "district": "MH-PN",
+      "country": "IN",
+      "address": "Senapati Bapat Road, Pune",
+      "postalCode": "411004",
+      "approved": true
+    },
+    {
+      "id": "fcpu-pune-001",
+      "name": "Fergusson College",
+      "normalizedName": "fergusson college",
+      "city": "Pune",
+      "state": "MH",
+      "district": "MH-PN",
+      "country": "IN",
+      "address": "Fergusson College Road, Pune",
+      "postalCode": "411004",
+      "approved": true
+    },
+    {
+      "id": "vesit-mumbai-001",
+      "name": "Vivekanand Education Society's Institute of Technology",
+      "normalizedName": "vesit",
+      "city": "Mumbai",
+      "state": "MH",
+      "district": "MH-MM",
+      "country": "IN",
+      "address": "Hasama, Charkop, Navi Mumbai",
+      "postalCode": "400706",
+      "approved": true
+    },
+    {
+      "id": "jce-mumbai-001",
+      "name": "Jamnalal Bajaj Institute of Management Studies",
+      "normalizedName": "jbimm",
+      "city": "Mumbai",
+      "state": "MH",
+      "district": "MH-MM",
+      "country": "IN",
+      "address": "Vile Parle, Mumbai",
+      "postalCode": "400056",
+      "approved": true
+    },
+    {
+      "id": "iiit-hyd-001",
+      "name": "IIIT Hyderabad",
+      "normalizedName": "iiit hyderabad",
+      "city": "Hyderabad",
+      "state": "TG",
+      "district": "TG-HY",
+      "country": "IN",
+      "address": "Gachibowli, Hyderabad",
+      "postalCode": "500032",
+      "approved": true
+    },
+    {
+      "id": "iim-bangalore-001",
+      "name": "IIM Bangalore",
+      "normalizedName": "iim bangalore",
+      "city": "Bangalore",
+      "state": "KA",
+      "district": "KA-BG",
+      "country": "IN",
+      "address": "Bannerghatta Road, Bangalore",
+      "postalCode": "560076",
+      "approved": true
+    },
+    {
+      "id": "iit-delhi-001",
+      "name": "IIT Delhi",
+      "normalizedName": "iit delhi",
+      "city": "Delhi",
+      "state": "DL",
+      "district": "DL-ND",
+      "country": "IN",
+      "address": "Hauz Khas, Delhi",
+      "postalCode": "110016",
+      "approved": true
+    },
+    {
+      "id": "nmims-mumbai-001",
+      "name": "NMIMS Mumbai",
+      "normalizedName": "nmims mumbai",
+      "city": "Mumbai",
+      "state": "MH",
+      "district": "MH-MM",
+      "country": "IN",
+      "address": "NMIMS Campus, Ghatkopar, Mumbai",
+      "postalCode": "400076",
+      "approved": true
+    },
+    {
+      "id": "christ-bangalore-001",
+      "name": "Christ University Bangalore",
+      "normalizedName": "christ bangalore",
+      "city": "Bangalore",
+      "state": "KA",
+      "district": "KA-BG",
+      "country": "IN",
+      "address": "Fern Hill, Bangalore",
+      "postalCode": "560029",
+      "approved": true
+    }
+  ]
+}
