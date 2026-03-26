@@ -338,7 +338,7 @@ export default function PublicProfilePage() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden flex-shrink-0 ring-4 ring-gray-50 dark:ring-[#0a0a12] relative z-20"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden flex-shrink-0 ring-4 ring-gray-50 dark:ring-[#0a0a12] relative z-20"
                 style={{
                   background: isDark ? 'rgba(30,30,50,0.9)' : 'rgba(255,255,255,0.9)',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
