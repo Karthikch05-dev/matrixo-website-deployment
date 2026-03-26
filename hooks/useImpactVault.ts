@@ -133,7 +133,7 @@ export function useImpactVault() {
     loading,
     error,
     role,
-    collegeId: institution,
+    institution, // Keep name for backward compatibility (now contains collegeId value)
     institutionMetrics,
     departmentMetrics,
     studentAnalytics,
