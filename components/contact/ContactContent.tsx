@@ -1,11 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaInstagram } from 'react-icons/fa'
 import { toast } from 'sonner'
+import { useSearchParams } from 'next/navigation'
+
+const serviceSubjectOptions = [
+  'Technical Workshops',
+  'Hackathons',
+  'Bootcamps',
+  'Career Programs',
+  'Campus Events',
+  'Corporate Collaboration',
+]
 
 export default function ContactContent() {
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +25,24 @@ export default function ContactContent() {
     message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const typeParam = searchParams.get('type')
+    if (!typeParam) {
+      return
+    }
+
+    let decodedType = typeParam
+    try {
+      decodedType = decodeURIComponent(typeParam)
+    } catch {
+      decodedType = typeParam
+    }
+
+    if (serviceSubjectOptions.includes(decodedType)) {
+      setFormData((prev) => ({ ...prev, subject: decodedType }))
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +61,18 @@ export default function ContactContent() {
 
       if (response.ok) {
         toast.success('Thank you for your message! We\'ll get back to you soon.')
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+        const typeParam = searchParams.get('type')
+        let decodedType = ''
+        if (typeParam) {
+          try {
+            decodedType = decodeURIComponent(typeParam)
+          } catch {
+            decodedType = typeParam
+          }
+        }
+
+        const preselectedSubject = serviceSubjectOptions.includes(decodedType) ? decodedType : ''
+        setFormData({ name: '', email: '', phone: '', subject: preselectedSubject, message: '' })
       } else {
         toast.error(data.error || 'Failed to send message. Please try again.')
       }
@@ -137,11 +177,11 @@ export default function ContactContent() {
                     className="w-full px-4 py-3 rounded-xl glass-input bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   >
                     <option value="" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Select a subject</option>
-                    <option value="general" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">General Inquiry</option>
-                    <option value="event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">List an Event</option>
-                    <option value="partnership" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Partnership Opportunity</option>
-                    <option value="support" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Technical Support</option>
-                    <option value="other" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Other</option>
+                    {serviceSubjectOptions.map((option) => (
+                      <option key={option} value={option} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
