@@ -35,7 +35,7 @@ export interface UserProfile {
   phone: string
   email: string
   college?: string // Deprecated - remove in migration
-  collegeId: string // New normalized college ID
+  collegeId?: string // New normalized college ID (optional during transition)
   year: string
   branch: string
   graduationYear?: string
