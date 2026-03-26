@@ -496,7 +496,7 @@ function TopNavbar({
                 <img
                   src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
                   alt={employee?.name}
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
+                  className="w-8 h-8 rounded-xl object-cover ring-2 ring-primary-500/50"
                   onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
                 />
                 <span className={`font-medium hidden md:block text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>{employee?.name?.split(' ')[0]}</span>
@@ -1120,7 +1120,7 @@ function ProfileTab() {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-blue-500/40 bg-gradient-to-br from-blue-500 to-purple-600">
+            <div className="w-28 h-28 rounded-xl overflow-hidden ring-4 ring-blue-500/40 bg-gradient-to-br from-blue-500 to-purple-600">
               {displayImage ? (
                 <img
                   src={displayImage}

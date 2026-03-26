@@ -681,7 +681,7 @@ export const Avatar = ({ src, name = 'User', employeeId, size = 'md', className 
   return (
     <div 
       className={`
-        ${sizes[size]} rounded-full overflow-hidden flex-shrink-0
+        ${sizes[size]} rounded-xl overflow-hidden flex-shrink-0
         ${showBorder ? 'ring-2 ring-primary-500 ring-offset-2 ring-offset-neutral-900' : ''}
         ${className}
       `}

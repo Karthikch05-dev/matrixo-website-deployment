@@ -370,11 +370,11 @@ export default function Navbar() {
                            rounded-full font-semibold hover:scale-[1.02] transition-all duration-300"
                 >
                   {profile?.profilePhoto ? (
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                    <div className="w-7 h-7 rounded-xl overflow-hidden flex-shrink-0">
                       <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full" unoptimized />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
                     </div>
                   )}
