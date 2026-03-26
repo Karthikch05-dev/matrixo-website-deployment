@@ -60,3 +60,4 @@ functions/node_modules/
 
 # ensure only example env is tracked
 !.env.example
+serviceAccountKey.json
