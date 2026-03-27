@@ -164,7 +164,7 @@ export default function ServicesContent() {
                   ))}
                 </ul>
                 <Link 
-                  href={`/contact?subject=${encodeURIComponent(service.title)}#contact-form`}
+                  href={`/contact?subject=${encodeURIComponent(service.title)}`}
                   className="mt-6"
                 >
                   <motion.button
