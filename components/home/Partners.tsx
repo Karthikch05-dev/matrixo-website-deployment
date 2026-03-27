@@ -1,20 +1,58 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTheme } from 'next-themes'
 
-const partners = [
-  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png', noBg: true },
-  { name: 'TEDxIARE', logo: '/logos/Tedxiare.png', darkBg: true },
-  { name: 'TEDxCMRIT Hyderabad', logo: '/logos/Tedxcmrit.png', darkBg: true },
-  { name: 'Kommuri Pratap Reddy Institute of Technology', logo: '/partners/kprit.png', darkBg: true },
-  { name: 'TEDxKPRIT', logo: '/events/tedxkprit-logo.png' },
-  { name: 'J B Institute of Engineering and Technology', logo: '/logos/jbiet.png' },
+type Partner = {
+  name: string
+  logoLight: string
+  logoDark: string
+  logoClassName?: string
+}
+
+const partners: Partner[] = [
+  {
+    name: 'Smartzy Edu Pvt. Ltd.',
+    logoLight: '/partners/smartzy.png',
+    logoDark: '/logos/smartzy.png',
+  },
+  {
+    name: 'TEDxIARE',
+    logoLight: '/logos/tedxiare-light.jpg',
+    logoDark: '/partners/tedx-iare.png',
+    logoClassName: 'h-10 w-full max-w-full object-contain origin-center scale-[2]',
+  },
+  {
+    name: 'TEDxCMRIT Hyderabad',
+    logoLight: '/logos/tedxcmrit-light.jpg',
+    logoDark: '/partners/tedx-cmrit.png',
+    logoClassName: 'h-10 w-full max-w-full object-contain origin-center scale-[2]',
+  },
+  {
+    name: 'Kommuri Pratap Reddy Institute of Technology',
+    logoLight: '/partners/kprit-light.png',
+    logoDark: '/partners/kprit.png',
+  },
+  {
+    name: 'TEDxKPRIT',
+    logoLight: '/partners/tedxkprit-light.png',
+    logoDark: '/logos/tedxkprit-dark.png',
+    logoClassName: 'h-10 w-full max-w-full object-contain origin-center scale-[2.5] dark:scale-100',
+  },
+  {
+    name: 'J B Institute of Engineering and Technology',
+    logoLight: '/logos/jbiet.png',
+    logoDark: '/logos/jbiet.png',
+  },
 ]
 
 export default function Partners() {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
   return (
-    <section className="section-padding bg-transparent">
+    <section className="section-padding bg-gradient-to-b from-transparent via-blue-50/20 to-white/5 dark:via-blue-950/5 dark:to-transparent transition-colors duration-500">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -30,30 +68,9 @@ export default function Partners() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {partners.map((partner, index) => (
-            <motion.div
-              key={partner.name}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ scale: 1.05 }}
-              className="group flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300 hover:border-blue-400 hover:shadow-xl h-full"
-            >
-              {partner.noBg ? (
-                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                  <PartnerLogo name={partner.name} logo={partner.logo} className="object-contain w-20 h-20" />
-                </div>
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center mb-4 overflow-hidden transition-colors duration-300 group-hover:bg-blue-500/20">
-                  <PartnerLogo name={partner.name} logo={partner.logo} className="object-contain w-16 h-16" />
-                </div>
-              )}
-              <p className="text-sm text-gray-300 text-center">
-                {partner.name}
-              </p>
-            </motion.div>
+            <PartnerCard key={partner.name} partner={partner} index={index} isDark={isDark} />
           ))}
         </div>
 
@@ -82,27 +99,76 @@ export default function Partners() {
   )
 }
 
-function PartnerLogo({
-  name,
-  logo,
-  className,
+function PartnerCard({
+  partner,
+  index,
+  isDark,
 }: {
-  name: string
-  logo: string
-  className: string
+  partner: Partner
+  index: number
+  isDark: boolean
 }) {
-  const [failed, setFailed] = useState(false)
-  if (failed) {
-    return <span className="text-2xl font-bold text-gray-400">{name.charAt(0)}</span>
+  return (
+    <motion.article
+      initial={{ opacity: 0, scale: 0.92, y: 16 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08, duration: 0.45 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="group h-full rounded-xl border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-gray-900 p-5 md:p-6 shadow-md hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-500/60 transition-all duration-300"
+    >
+      <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
+        <div className="w-full h-12 flex items-center justify-center overflow-hidden">
+          <PartnerLogo partner={partner} isDark={isDark} />
+        </div>
+
+        <h3 className="text-sm md:text-[15px] font-semibold leading-snug text-gray-800 dark:text-gray-200 min-h-[2.75rem] flex items-center justify-center px-1">
+          {partner.name}
+        </h3>
+      </div>
+    </motion.article>
+  )
+}
+
+function PartnerLogo({
+  partner,
+  isDark,
+}: {
+  partner: Partner
+  isDark: boolean
+}) {
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  const logoSources = useMemo(() => {
+    const preferred = isDark
+      ? [partner.logoDark, partner.logoLight]
+      : [partner.logoLight, partner.logoDark]
+
+    return preferred.filter((item): item is string => Boolean(item))
+  }, [isDark, partner.logoDark, partner.logoLight])
+
+  const logo = logoSources[sourceIndex]
+
+  useEffect(() => {
+    setSourceIndex(0)
+  }, [isDark, partner.logoDark, partner.logoLight])
+
+  if (!logo) return null
+
+  const handleError = () => {
+    if (sourceIndex < logoSources.length - 1) {
+      setSourceIndex((prev) => prev + 1)
+    }
   }
+
   return (
     <img
       src={logo}
-      alt={name}
-      width={80}
-      height={80}
-      onError={() => setFailed(true)}
-      className={className}
+      alt={partner.name}
+      width={120}
+      height={40}
+      onError={handleError}
+      className={partner.logoClassName || 'h-10 w-auto max-w-full object-contain'}
     />
   )
 }
