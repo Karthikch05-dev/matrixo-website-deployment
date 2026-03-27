@@ -734,7 +734,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Check if a date is a working day (not weekend, not holiday)
-  const isWorkingDay = (dateString: string): boolean => {
+  const isWorkingDay = useCallback((dateString: string): boolean => {
     // Check for working day override (weekend marked as working day)
     const hasWorkingDayOverride = holidays.some(h => h.date === dateString && h.name === '__WORKING_DAY__')
     
@@ -752,7 +752,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (dayOfWeek === 0) return false // Only Sunday is off
 
     return true
-  }
+  }, [holidays])
 
   // ============================================
   // WORK MODE FUNCTIONS
@@ -1045,7 +1045,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       current.setDate(current.getDate() + 1)
     }
     return workingDays
-  }, [holidays])
+  }, [holidays, isWorkingDay])
 
   const getMonthlyStartDate = useCallback((): Date => {
     const now = new Date()
