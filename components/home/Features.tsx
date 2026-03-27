@@ -103,7 +103,7 @@ export default function Features() {
               {feature.hasContactButton && (
                 <Link 
                   href={`/contact?subject=${encodeURIComponent(feature.title)}`}
-                  className="mt-6 btn-primary text-center py-2"
+                  className="mt-6 btn-primary text-center"
                 >
                   Contact Us
                 </Link>
