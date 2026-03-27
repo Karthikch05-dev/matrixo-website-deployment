@@ -89,6 +89,71 @@ export async function getInstitutionStudents(
 }
 
 /**
+ * Get all students for an institution by legacy college name field
+ * This is a fallback for users who haven't migrated to collegeId
+ */
+export async function getInstitutionStudentsByCollegeName(
+  collegeName: string
+): Promise<UserProfile[]> {
+  if (!collegeName) return [];
+  
+  try {
+    const profilesRef = collection(db, USER_PROFILES_COLLECTION);
+    // Query by the legacy 'college' field (string name)
+    const q = query(profilesRef, where('college', '==', collegeName));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => doc.data() as UserProfile);
+  } catch (error) {
+    console.error('Error fetching institution students by college name:', error);
+    return [];
+  }
+}
+
+/**
+ * Get students for an institution - tries collegeId first, falls back to college name
+ * Handles both new (collegeId) and legacy (college) data structures
+ */
+export async function getInstitutionStudentsFlexible(
+  collegeId?: string,
+  collegeName?: string
+): Promise<UserProfile[]> {
+  const allStudents: UserProfile[] = [];
+  const seenUids = new Set<string>();
+
+  // Try collegeId first (new normalized approach)
+  if (collegeId) {
+    console.log(`[ImpactVault] Querying by collegeId: "${collegeId}"`);
+    const byCollegeId = await getInstitutionStudents(collegeId);
+    console.log(`[ImpactVault] Found ${byCollegeId.length} students by collegeId`);
+    
+    byCollegeId.forEach(student => {
+      if (!seenUids.has(student.uid)) {
+        seenUids.add(student.uid);
+        allStudents.push(student);
+      }
+    });
+  }
+
+  // Also try legacy college name field (may find additional users)
+  if (collegeName) {
+    console.log(`[ImpactVault] Querying by college name: "${collegeName}"`);
+    const byCollegeName = await getInstitutionStudentsByCollegeName(collegeName);
+    console.log(`[ImpactVault] Found ${byCollegeName.length} students by college name`);
+    
+    byCollegeName.forEach(student => {
+      if (!seenUids.has(student.uid)) {
+        seenUids.add(student.uid);
+        allStudents.push(student);
+      }
+    });
+  }
+
+  console.log(`[ImpactVault] Total unique students: ${allStudents.length}`);
+  return allStudents;
+}
+
+/**
  * Get all students across all institutions (for super_admin)
  */
 export async function getAllStudents(): Promise<UserProfile[]> {
@@ -111,7 +176,12 @@ export async function getSkillDNAProfilesBatch(
 ): Promise<Map<string, SkillDNAProfile>> {
   const profileMap = new Map<string, SkillDNAProfile>();
 
-  if (userIds.length === 0) return profileMap;
+  if (userIds.length === 0) {
+    console.log('[ImpactVault] No user IDs to fetch SkillDNA for');
+    return profileMap;
+  }
+
+  console.log(`[ImpactVault] Fetching SkillDNA for ${userIds.length} users`);
 
   try {
     // Firestore 'in' query supports up to 30 items
@@ -134,6 +204,8 @@ export async function getSkillDNAProfilesBatch(
         }
       });
     }
+    
+    console.log(`[ImpactVault] Found ${profileMap.size} users with SkillDNA profiles`);
   } catch (error) {
     console.error('Error fetching SkillDNA profiles:', error);
   }
@@ -143,11 +215,14 @@ export async function getSkillDNAProfilesBatch(
 
 /**
  * Get combined student + SkillDNA data for an institution
+ * Supports both collegeId (new) and collegeName (legacy) identifiers
  */
 export async function getInstitutionStudentsWithSkillDNA(
-  collegeId: string
+  collegeId?: string,
+  collegeName?: string
 ): Promise<StudentWithSkillDNA[]> {
-  const students = await getInstitutionStudents(collegeId);
+  // Use flexible query that handles both new and legacy data
+  const students = await getInstitutionStudentsFlexible(collegeId, collegeName);
 
   if (students.length === 0) return [];
 
