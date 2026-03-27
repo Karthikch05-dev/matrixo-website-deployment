@@ -4,9 +4,9 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 
 const partners = [
-  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png' },
-  { name: 'TEDxIARE', logo: '/partners/tedx-iare.png' },
-  { name: 'TEDxCMRIT Hyderabad', logo: '/partners/tedx-cmrit.png' },
+  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png', noBg: true },
+  { name: 'TEDxIARE', logo: '/logos/Tedxiare.png', darkBg: true },
+  { name: 'TEDxCMRIT Hyderabad', logo: '/logos/Tedxcmrit.png', darkBg: true },
   { name: 'Kommuri Pratap Reddy Institute of Technology', logo: '/partners/kprit.png', darkBg: true },
   { name: 'TEDxKPRIT', logo: '/events/tedxkprit-logo.png' },
   { name: 'J B Institute of Engineering and Technology', logo: '/logos/jbiet.png' },
@@ -41,13 +41,15 @@ export default function Partners() {
               whileHover={{ scale: 1.05 }}
               className="group flex flex-col items-center justify-center p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300 hover:border-blue-400 hover:shadow-xl h-full"
             >
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 overflow-hidden p-1 transition-colors duration-300 ${
-                partner.darkBg
-                  ? 'bg-gray-800 dark:bg-gray-700'
-                  : 'bg-white dark:bg-white/90 group-hover:bg-blue-500/20'
-              }`}>
-                <PartnerLogo name={partner.name} logo={partner.logo} />
-              </div>
+              {partner.noBg ? (
+                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                  <PartnerLogo name={partner.name} logo={partner.logo} className="object-contain w-20 h-20" />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center mb-4 overflow-hidden transition-colors duration-300 group-hover:bg-blue-500/20">
+                  <PartnerLogo name={partner.name} logo={partner.logo} className="object-contain w-16 h-16" />
+                </div>
+              )}
               <p className="text-sm text-gray-300 text-center">
                 {partner.name}
               </p>
@@ -80,7 +82,15 @@ export default function Partners() {
   )
 }
 
-function PartnerLogo({ name, logo }: { name: string; logo: string }) {
+function PartnerLogo({
+  name,
+  logo,
+  className,
+}: {
+  name: string
+  logo: string
+  className: string
+}) {
   const [failed, setFailed] = useState(false)
   if (failed) {
     return <span className="text-2xl font-bold text-gray-400">{name.charAt(0)}</span>
@@ -89,8 +99,10 @@ function PartnerLogo({ name, logo }: { name: string; logo: string }) {
     <img
       src={logo}
       alt={name}
+      width={80}
+      height={80}
       onError={() => setFailed(true)}
-      className="w-full h-full object-contain"
+      className={className}
     />
   )
 }
