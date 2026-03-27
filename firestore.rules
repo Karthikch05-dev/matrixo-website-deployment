@@ -279,5 +279,40 @@ service cloud.firestore {
         allow update, delete: if false;
       }
     }
+    // ================================================
+    // LOCATION DATA COLLECTIONS (countries, states, districts)
+    // ================================================
+    match /countries/{countryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /states/{stateId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /districts/{districtId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ================================================
+    // COLLEGES COLLECTION
+    // ================================================
+    match /colleges/{collegeId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // COLLEGE REQUESTS COLLECTION
+    // ================================================
+    match /collegeRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
   }
 }
