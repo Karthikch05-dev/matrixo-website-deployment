@@ -11,6 +11,7 @@ const features = [
     description: 'Hands-on coding workshops on cutting-edge technologies taught by industry experts. Web development, AI/ML, cloud, and more.',
     href: '/services',
     gradient: 'from-purple-500 to-fuchsia-500',
+    hasContactButton: true,
   },
   {
     icon: FaTrophy,
@@ -18,6 +19,7 @@ const features = [
     description: 'Competitive coding events where students build real projects and solve industry challenges with prizes and recognition.',
     href: '/events',
     gradient: 'from-blue-500 to-cyan-500',
+    hasContactButton: true,
   },
   {
     icon: FaLaptopCode,
@@ -25,6 +27,7 @@ const features = [
     description: 'Intensive multi-week training programs covering full-stack development, data science, cybersecurity, and more.',
     href: '/services',
     gradient: 'from-amber-500 to-orange-500',
+    hasContactButton: true,
   },
   {
     icon: FaBriefcase,
@@ -32,6 +35,7 @@ const features = [
     description: 'Placement preparation, resume building, mock interviews, and DSA training to help you land your dream job.',
     href: '/services',
     gradient: 'from-green-500 to-emerald-500',
+    hasContactButton: false,
   },
   {
     icon: FaRocket,
@@ -39,6 +43,7 @@ const features = [
     description: 'Large-scale technical events, seminars, and conferences hosted at educational institutions across India.',
     href: '/events',
     gradient: 'from-red-500 to-rose-500',
+    hasContactButton: false,
   },
   {
     icon: FaUsers,
@@ -46,6 +51,7 @@ const features = [
     description: 'Partner with us to train students, host events, run internship drives, and build a talent pipeline for your organization.',
     href: '/contact',
     gradient: 'from-indigo-500 to-violet-500',
+    hasContactButton: false,
   },
 ]
 
@@ -70,15 +76,16 @@ export default function Features() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Link key={feature.title} href={feature.href}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                whileHover={{ y: -10 }}
-                className="glass-card p-8 hover-lift hover-glow cursor-pointer h-full"
-              >
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              whileHover={{ y: -10 }}
+              className="glass-card p-8 hover-lift hover-glow h-full flex flex-col"
+            >
+              <Link href={feature.href} className="flex-1">
                 <motion.div
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
@@ -92,8 +99,16 @@ export default function Features() {
                 <p className="text-gray-600 dark:text-gray-400">
                   {feature.description}
                 </p>
-              </motion.div>
-            </Link>
+              </Link>
+              {feature.hasContactButton && (
+                <Link 
+                  href={`/contact?subject=${encodeURIComponent(feature.title)}`}
+                  className="mt-6 btn-primary text-center"
+                >
+                  Contact Us
+                </Link>
+              )}
+            </motion.div>
           ))}
         </div>
       </div>
