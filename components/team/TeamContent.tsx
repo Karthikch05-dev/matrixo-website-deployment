@@ -179,7 +179,7 @@ export default function TeamContent() {
                   className="glass-card p-8 hover-lift hover-glow text-center"
                 >
                   {/* Avatar - Image with fallback to initials */}
-                  <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden 
+                  <div className="relative w-32 h-32 mx-auto mb-6 rounded-xl overflow-hidden 
                                 bg-gradient-to-br from-blue-500 to-purple-600">
                     {member.profileImage ? (
                       <img 

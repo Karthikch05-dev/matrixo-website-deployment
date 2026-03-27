@@ -36,6 +36,7 @@ const roleLabels: Record<string, string> = {
 
 export default function ImpactVault() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [showDebug, setShowDebug] = useState(false);
 
   const {
     loading,
@@ -46,6 +47,8 @@ export default function ImpactVault() {
     departmentMetrics,
     studentAnalytics,
     placementMetrics,
+    currentUserUid,
+    debugInfo,
   } = useImpactVault();
 
   const handleExport = () => {
@@ -92,6 +95,15 @@ export default function ImpactVault() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* Debug Toggle (dev only) */}
+                {process.env.NODE_ENV === 'development' && (
+                  <button
+                    onClick={() => setShowDebug(!showDebug)}
+                    className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showDebug ? 'Hide Debug' : 'Debug'}
+                  </button>
+                )}
                 {/* Export Button */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -103,6 +115,13 @@ export default function ImpactVault() {
                 </motion.button>
               </div>
             </div>
+
+            {/* Debug Panel */}
+            {showDebug && debugInfo && (
+              <div className="mb-4 p-4 bg-gray-900 text-green-400 rounded-lg text-xs font-mono overflow-x-auto">
+                <pre>{debugInfo}</pre>
+              </div>
+            )}
 
             {/* Tab Navigation */}
             <div className="flex bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-xl shadow-lg p-1 border border-gray-200/30 dark:border-white/[0.06] overflow-x-auto">
@@ -137,7 +156,7 @@ export default function ImpactVault() {
               <OverviewPanel metrics={institutionMetrics} />
             )}
             {activeTab === 'students' && (
-              <StudentIntelligence students={studentAnalytics} />
+              <StudentIntelligence students={studentAnalytics} currentUserUid={currentUserUid} />
             )}
             {activeTab === 'departments' && (
               <DepartmentAnalytics departments={departmentMetrics} />

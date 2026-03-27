@@ -49,7 +49,7 @@ const EMPTY_PLACEMENT_METRICS: PlacementMetrics = {
 
 export function useImpactVault() {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,52 +60,90 @@ export function useImpactVault() {
   const [departmentMetrics, setDepartmentMetrics] = useState<DepartmentMetrics[]>([]);
   const [studentAnalytics, setStudentAnalytics] = useState<StudentAnalytics[]>([]);
   const [placementMetrics, setPlacementMetrics] = useState<PlacementMetrics>(EMPTY_PLACEMENT_METRICS);
+  const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   const fetchData = useCallback(async () => {
+    // Wait for auth
     if (!user) {
       setLoading(false);
       setError('Authentication required');
       return;
     }
 
+    // Don't fetch if profile is still loading (prevents race condition)
+    if (profileLoading) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
+      setCurrentUserUid(user.uid);
+
+      // Debug logging
+      const debugData: string[] = [];
+      debugData.push(`User UID: ${user.uid}`);
+      debugData.push(`Profile collegeId: ${profile?.collegeId || 'NOT SET'}`);
+      debugData.push(`Profile college (legacy): ${profile?.college || 'NOT SET'}`);
 
       // 1. Check RBAC access
       const access = await getUserImpactVaultAccess(user.uid);
       let userRole: ImpactVaultRole = 'student';
-      let userInstitution = '';
+      let userCollegeId = '';
+      let userCollegeName = '';
 
       if (access) {
         userRole = access.role;
-        userInstitution = access.collegeId || access.institution || '';
-      } else if (profile?.collegeId) {
-        // Default: student sees own institution by collegeId
+        userCollegeId = access.collegeId || '';
+        userCollegeName = access.institution || '';
+        debugData.push(`RBAC: role=${userRole}, collegeId=${userCollegeId}`);
+      } else {
+        debugData.push('No RBAC access, using profile data');
         userRole = 'student';
-        userInstitution = profile.collegeId;
+        
+        if (profile?.collegeId) {
+          userCollegeId = profile.collegeId;
+          debugData.push(`Using profile.collegeId: ${userCollegeId}`);
+        }
+        
+        if (profile?.college) {
+          userCollegeName = profile.college;
+          debugData.push(`Using profile.college (legacy): ${userCollegeName}`);
+        }
       }
 
       setRole(userRole);
-      setInstitution(userInstitution);
+      setInstitution(userCollegeName || userCollegeId);
 
       // 2. Fetch student data based on role
       let fetchedStudents: StudentWithSkillDNA[] = [];
 
       if (userRole === 'super_admin') {
+        debugData.push('Fetching ALL students (super_admin)');
         fetchedStudents = await getAllStudentsWithSkillDNA();
-      } else if (userInstitution) {
-        fetchedStudents = await getInstitutionStudentsWithSkillDNA(userInstitution);
+      } else if (userCollegeId || userCollegeName) {
+        debugData.push(`Fetching: collegeId="${userCollegeId}", collegeName="${userCollegeName}"`);
+        fetchedStudents = await getInstitutionStudentsWithSkillDNA(userCollegeId, userCollegeName);
+      } else {
+        debugData.push('WARNING: No college identifier available');
       }
+
+      debugData.push(`Total students: ${fetchedStudents.length}`);
+      debugData.push(`With SkillDNA: ${fetchedStudents.filter(s => s.hasSkillDNA).length}`);
 
       // Faculty: filter to department only
       if (userRole === 'faculty' && access?.department) {
+        const before = fetchedStudents.length;
         fetchedStudents = fetchedStudents.filter(
           (s) => s.profile.branch === access.department
         );
+        debugData.push(`Faculty filter: ${before} → ${fetchedStudents.length}`);
       }
 
       setStudents(fetchedStudents);
+      setDebugInfo(debugData.join('\n'));
+      console.log('[ImpactVault]', debugData.join(' | '));
 
       // 3. Compute all metrics
       const instMetrics = computeInstitutionMetrics(fetchedStudents);
@@ -123,22 +161,24 @@ export function useImpactVault() {
     } finally {
       setLoading(false);
     }
-  }, [user, profile?.collegeId]);
+  }, [user, profile?.collegeId, profile?.college, profileLoading]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   return {
-    loading,
+    loading: loading || profileLoading,
     error,
     role,
-    institution, // Keep name for backward compatibility (now contains collegeId value)
+    institution,
     institutionMetrics,
     departmentMetrics,
     studentAnalytics,
     placementMetrics,
     students,
+    currentUserUid,
+    debugInfo,
     refetch: fetchData,
   };
 }
