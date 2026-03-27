@@ -1,11 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaInstagram } from 'react-icons/fa'
 import { toast } from 'sonner'
 
+// Maps URL subject parameter to dropdown value
+const SUBJECT_MAPPING: Record<string, string> = {
+  'Technical Workshops': 'workshops',
+  'Hackathons': 'hackathons',
+  'Bootcamps': 'bootcamps',
+  'Career Programs': 'career',
+  'Campus Events': 'campus',
+  'Corporate Collaboration': 'partnership',
+}
+
+// Pre-fill messages based on service type
+const MESSAGE_TEMPLATES: Record<string, string> = {
+  'workshops': 'Hi, I am interested in learning more about your Technical Workshops. Please share details about upcoming sessions, topics covered, and pricing.',
+  'hackathons': 'Hi, I would like to know more about participating in or hosting a hackathon with matriXO. Please share the details.',
+  'bootcamps': 'Hi, I am interested in enrolling in one of your Bootcamp programs. Please share information about curriculum, duration, and fees.',
+  'career': 'Hi, I am interested in your Career Programs for placement preparation. Please provide more details.',
+  'campus': 'Hi, I would like to host a Campus Event at our institution. Please share the available options and pricing.',
+}
+
 export default function ContactContent() {
+  const searchParams = useSearchParams()
+  const formRef = useRef<HTMLFormElement>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +36,26 @@ export default function ContactContent() {
     message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const subjectParam = searchParams.get('subject')
+    if (subjectParam) {
+      const mappedSubject = SUBJECT_MAPPING[subjectParam]
+      if (mappedSubject) {
+        const messageTemplate = MESSAGE_TEMPLATES[mappedSubject] || ''
+        setFormData(prev => ({ 
+          ...prev, 
+          subject: mappedSubject,
+          message: messageTemplate,
+        }))
+        
+        // Scroll to form after a small delay for smooth UX
+        setTimeout(() => {
+          formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 300)
+      }
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,7 +122,7 @@ export default function ContactContent() {
               animate={{ opacity: 1, x: 0 }}
             >
               <h2 className="text-3xl font-bold mb-8 gradient-text">Send Us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form id="contact-form" ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Full Name *
@@ -138,9 +180,14 @@ export default function ContactContent() {
                     style={{ colorScheme: 'dark' }}
                   >
                     <option value="" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Select a subject</option>
+                    <option value="workshops" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Technical Workshops</option>
+                    <option value="hackathons" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Hackathons</option>
+                    <option value="bootcamps" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Bootcamps</option>
+                    <option value="career" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Career Programs</option>
+                    <option value="campus" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Campus Events</option>
                     <option value="general" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">General Inquiry</option>
                     <option value="event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">List an Event</option>
-                    <option value="partnership" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Partnership Opportunity</option>
+                    <option value="partnership" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Partnership / Corporate</option>
                     <option value="support" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Technical Support</option>
                     <option value="other" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Other</option>
                   </select>

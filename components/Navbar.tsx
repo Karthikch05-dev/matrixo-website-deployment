@@ -10,6 +10,7 @@ import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import config from '@/lib/config'
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { useTheme } from 'next-themes'
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -56,7 +57,6 @@ const betaLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
   const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false)
@@ -67,6 +67,8 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { profile } = useProfile()
   const pathname = usePathname()
+  const { resolvedTheme, setTheme } = useTheme()
+  const darkMode = resolvedTheme === 'dark'
 
   useEffect(() => {
     setMounted(true)
@@ -102,26 +104,8 @@ export default function Navbar() {
     checkIfEmployee()
   }, [user])
 
-  useEffect(() => {
-    if (!mounted) return
-
-    // Check current state from DOM
-    const isDark = document.documentElement.classList.contains('dark')
-    setDarkMode(isDark)
-  }, [mounted])
-
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-
-    setDarkMode(newDarkMode)
+    setTheme(darkMode ? 'light' : 'dark')
   }
 
   const handleLogout = async () => {

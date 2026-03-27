@@ -144,7 +144,7 @@ export default function ServicesContent() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="glass-card p-8 hover-lift hover-glow"
+                className="glass-card p-8 hover-lift hover-glow flex flex-col h-full"
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 text-white">
                   <service.icon size={28} />
@@ -155,7 +155,7 @@ export default function ServicesContent() {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {service.description}
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-2 flex-1">
                   {service.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="text-blue-500 mr-2">✓</span>
@@ -163,6 +163,18 @@ export default function ServicesContent() {
                     </li>
                   ))}
                 </ul>
+                <Link 
+                  href={`/contact?subject=${encodeURIComponent(service.title)}`}
+                  className="mt-6"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="btn-primary w-full py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Register Now
+                  </motion.button>
+                </Link>
               </motion.div>
             ))}
           </div>
