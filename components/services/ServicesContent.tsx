@@ -170,8 +170,7 @@ export default function ServicesContent() {
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="w-full py-3 rounded-full font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white 
-                             hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="btn-primary w-full py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     Register Now
                   </motion.button>
