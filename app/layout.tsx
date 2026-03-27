@@ -10,6 +10,7 @@ import { Toaster } from 'sonner'
 import Script from 'next/script'
 import config from '@/lib/config'
 import { headers } from 'next/headers'
+import ThemeProvider from '@/components/ThemeProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -143,15 +144,17 @@ export default async function RootLayout({
           `}
         </Script>
 
-        <AuthProvider>
-          <ProfileProvider>
-            {!isEmployeePortal && <Navbar />}
-            <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
-              {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
-            </main>
-            {!isEmployeePortal && <Footer />}
-          </ProfileProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              {!isEmployeePortal && <Navbar />}
+              <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
+                {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
+              </main>
+              {!isEmployeePortal && <Footer />}
+            </ProfileProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <Toaster position="top-right" richColors />
       </body>
     </html>
