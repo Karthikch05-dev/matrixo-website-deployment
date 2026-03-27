@@ -4,11 +4,12 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 
 const partners = [
-  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/partners/smartzy.png' },
-  { name: 'TEDxIARE', logo: '/partners/tedx-iare.png' },
-  { name: 'TEDxCMRIT Hyderabad', logo: '/partners/tedx-cmrit.png' },
+  { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png' },
+  { name: 'TEDxIARE', logo: '/partners/iare.png' },
+  { name: 'TEDxCMRIT Hyderabad', logo: '/partners/cmrit.png' },
   { name: 'Kommuri Pratap Reddy Institute of Technology', logo: '/partners/kprit.png' },
-  { name: 'TEDxKPRIT', logo: '/events/tedxkprit-logo.png' },
+  { name: 'TEDxKPRIT', logo: '/partners/tedxkprit.png' },
+  { name: 'J B Institute of Engineering and Technology', logo: '/partners/jbiet.png' },
 ]
 
 export default function Partners() {
@@ -29,7 +30,7 @@ export default function Partners() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-stretch">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 items-stretch">
           {partners.map((partner, index) => (
             <motion.div
               key={partner.name}
@@ -37,9 +38,18 @@ export default function Partners() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-              className="flex items-center justify-center px-5 py-8 glass-card hover-lift transition-shadow duration-300"
+              className="flex flex-col items-center justify-center px-5 py-8 glass-card hover-lift transition-shadow duration-300"
             >
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug">
+              <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white mx-auto">
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  width={60}
+                  height={60}
+                  className="w-[60px] h-[60px] object-contain"
+                />
+              </div>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug mt-2">
                 {partner.name}
               </p>
             </motion.div>
