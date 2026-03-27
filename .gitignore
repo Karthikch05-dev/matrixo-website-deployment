@@ -61,3 +61,6 @@ functions/node_modules/
 # ensure only example env is tracked
 !.env.example
 serviceAccountKey.json
+
+# Ignore nested repository folder
+/matrixo-website-deployment-beta/
