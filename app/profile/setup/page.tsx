@@ -173,7 +173,6 @@ export default function ProfileSetupPage() {
         rollNumber: formData.rollNumber.trim().toUpperCase(),
         phone: formData.phone.trim(),
         collegeId: location.collegeId,
-        college: location.collegeName, // Keep for backward compatibility
         year: formData.year,
         branch: formData.branch,
         graduationYear: formData.year === 'Graduate' ? formData.graduationYear.trim() : '',

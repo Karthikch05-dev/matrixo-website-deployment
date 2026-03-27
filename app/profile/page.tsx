@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -17,6 +17,8 @@ import { storage } from '@/lib/firebaseConfig'
 import Link from 'next/link'
 import Image from 'next/image'
 import ImageCropModal from '@/components/shared/ImageCropModal'
+import { getCollegeName } from '@/lib/colleges'
+import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -62,8 +64,15 @@ export default function ProfilePage() {
   const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null)
   const [tempCoverUrl, setTempCoverUrl] = useState<string | null>(null)
   const [editData, setEditData] = useState({
-    fullName: '', phone: '', college: '', year: '', branch: '',
+    fullName: '', phone: '', year: '', branch: '',
     graduationYear: '', bio: '', linkedin: '', github: '', portfolio: '',
+  })
+  const [location, setLocation] = useState<LocationSelectionState>({
+    country: '',
+    state: '',
+    district: '',
+    collegeId: '',
+    collegeName: '',
   })
   const [privacyData, setPrivacyData] = useState<PrivacySettings>(DEFAULT_PRIVACY)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -86,13 +95,34 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setEditData({
-        fullName: profile.fullName, phone: profile.phone, college: profile.college || '',
+        fullName: profile.fullName, phone: profile.phone,
         year: profile.year, branch: profile.branch,
         graduationYear: profile.graduationYear || '', bio: profile.bio || '',
         linkedin: profile.linkedin || '', github: profile.github || '', portfolio: profile.portfolio || '',
       })
       setPrivacyData(profile.privacy || DEFAULT_PRIVACY)
       setNewUsername(profile.username || '')
+
+      // Reverse-resolve college location for the LocationSelection component
+      if (profile.collegeId) {
+        fetch(`/api/locations/college-lookup?id=${profile.collegeId}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data) {
+              setLocation({
+                country: data.country || '',
+                state: data.state || '',
+                district: data.district || '',
+                collegeId: data.id || profile.collegeId || '',
+                collegeName: data.name || '',
+              })
+            }
+          })
+          .catch(() => {
+            // Fallback: just set the collegeId without location hierarchy
+            setLocation(prev => ({ ...prev, collegeId: profile.collegeId || '' }))
+          })
+      }
     }
   }, [profile])
 
@@ -143,7 +173,7 @@ export default function ProfilePage() {
     if (!editData.fullName.trim()) e.fullName = 'Required'
     if (!editData.phone.trim()) e.phone = 'Required'
     else if (!/^[6-9]\d{9}$/.test(editData.phone.trim())) e.phone = 'Enter valid 10-digit number'
-    if (!editData.college.trim()) e.college = 'Required'
+    if (!location.collegeId) e.college = 'Please select your college'
     if (!editData.year) e.year = 'Required'
     if (!editData.branch) e.branch = 'Required'
     if (editData.year === 'Graduate' && !editData.graduationYear.trim()) e.graduationYear = 'Required'
@@ -157,7 +187,7 @@ export default function ProfilePage() {
     try {
       await updateProfile({
         fullName: editData.fullName.trim(), phone: editData.phone.trim(),
-        college: editData.college.trim(), year: editData.year, branch: editData.branch,
+        collegeId: location.collegeId, year: editData.year, branch: editData.branch,
         graduationYear: editData.year === 'Graduate' ? editData.graduationYear.trim() : '',
         bio: editData.bio.trim(), linkedin: editData.linkedin.trim(),
         github: editData.github.trim(), portfolio: editData.portfolio.trim(),
@@ -178,11 +208,28 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (profile) {
       setEditData({
-        fullName: profile.fullName, phone: profile.phone, college: profile.college || '',
+        fullName: profile.fullName, phone: profile.phone,
         year: profile.year, branch: profile.branch, graduationYear: profile.graduationYear || '',
         bio: profile.bio || '', linkedin: profile.linkedin || '',
         github: profile.github || '', portfolio: profile.portfolio || '',
       })
+      // Re-resolve location from profile
+      if (profile.collegeId) {
+        fetch(`/api/locations/college-lookup?id=${profile.collegeId}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data) {
+              setLocation({
+                country: data.country || '',
+                state: data.state || '',
+                district: data.district || '',
+                collegeId: data.id || profile.collegeId || '',
+                collegeName: data.name || '',
+              })
+            }
+          })
+          .catch(() => {})
+      }
     }
     setErrors({})
     setIsEditing(false)
@@ -471,8 +518,11 @@ export default function ProfilePage() {
                       <input type="email" value={profile?.email || ''} readOnly className="w-full py-3 px-4 bg-white/[0.02] border border-white/[0.06] rounded-xl text-gray-500 cursor-not-allowed" />
                     </div>
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"><FaUniversity className="text-blue-400 text-xs" /> College</label>
-                      <input type="text" name="college" value={editData.college} onChange={handleChange} className={inputCls('college')} />
+                      <LocationSelection
+                        value={location}
+                        onChange={setLocation}
+                        disabled={saving}
+                      />
                       {errors.college && <p className="text-red-400 text-xs mt-1">{errors.college}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -521,7 +571,7 @@ export default function ProfilePage() {
                     <InfoRow icon={FaIdCard} label="Roll Number" value={profile?.rollNumber || ''} />
                     <InfoRow icon={FaPhone} label="Phone" value={profile?.phone ? `+91 ${profile.phone}` : ''} />
                     <InfoRow icon={FaEnvelope} label="Email" value={profile?.email || ''} />
-                    <InfoRow icon={FaUniversity} label="College" value={profile?.college || ''} />
+                    <InfoRow icon={FaUniversity} label="College" value={profile?.collegeId ? getCollegeName(profile.collegeId) : ''} />
                     <InfoRow icon={FaGraduationCap} label="Year" value={profile?.year || ''} />
                     <InfoRow icon={FaCodeBranch} label="Branch" value={profile?.branch || ''} />
                     <button onClick={() => setIsEditing(true)} className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"><FaEdit /> Edit Profile</button>
@@ -625,7 +675,7 @@ export default function ProfilePage() {
                     </div>
                     {(privacyData.showCollege || privacyData.showBranch || privacyData.showYear) && (
                       <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap gap-2">
-                        {privacyData.showCollege && profile?.college && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile.college}</span>}
+                        {privacyData.showCollege && profile?.collegeId && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{getCollegeName(profile.collegeId)}</span>}
                         {privacyData.showBranch && profile?.branch && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile.branch}</span>}
                         {privacyData.showYear && profile?.year && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile.year}</span>}
                       </div>

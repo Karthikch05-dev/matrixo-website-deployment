@@ -46,6 +46,60 @@ interface NotificationBellProps {
   darkMode?: boolean
 }
 
+const MOJIBAKE_MARKERS = /ðŸ|â€™|â€œ|â€|â€“|â€”|â€¦|Ã|Â/
+
+function decodePotentialMojibake(value: string): string {
+  if (!value || !MOJIBAKE_MARKERS.test(value)) {
+    return value
+  }
+
+  try {
+    const bytes = Uint8Array.from(value, (char) => char.charCodeAt(0))
+    const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+    if (decoded && decoded !== value) {
+      return decoded
+    }
+  } catch {
+    // Ignore decode errors and use fallback cleanup.
+  }
+
+  return value
+}
+
+function sanitizeNotificationText(value: string): string {
+  if (!value) {
+    return value
+  }
+
+  let cleaned = decodePotentialMojibake(value).trim()
+
+  // Remove leading emoji/mojibake prefixes; icons are rendered separately in UI.
+  cleaned = cleaned
+    .replace(/^\s*[\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF\uFE0F\u200D]+(?:\s|[-:])*/, '')
+    .replace(/^\s*(?:ðŸ[^\s]*|â[^\s]*)(?:\s|[-:])*/, '')
+
+  // Fallback: strip common stray mojibake fragments that may remain after decode.
+  cleaned = cleaned
+    .replace(/ðŸ[\u0080-\u00BF]*/g, '')
+    .replace(/â[\u0080-\u00FF]?/g, '')
+    .replace(/[ÂÃ]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+
+  return cleaned
+}
+
+function sanitizeNotification(notification: Notification): Notification {
+  return {
+    ...notification,
+    title: sanitizeNotificationText(notification.title),
+    message: sanitizeNotificationText(notification.message),
+    createdByName: notification.createdByName
+      ? sanitizeNotificationText(notification.createdByName)
+      : notification.createdByName,
+  }
+}
+
 export default function NotificationBell({ onNavigate, darkMode = true }: NotificationBellProps) {
   const { employee } = useEmployeeAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -85,10 +139,12 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
           id: docSnap.id,
           ...docSnap.data()
         })) as Notification[]
+
+        const sanitizedData = data.map(sanitizeNotification)
         
-        setNotifications(data)
+        setNotifications(sanitizedData)
         setLoading(false)
-        console.log('📬 NotificationBell: Notifications set:', data)
+        console.log('📬 NotificationBell: Notifications set:', sanitizedData)
       },
       (error) => {
         console.error('❌ NotificationBell: Error fetching notifications:', error)

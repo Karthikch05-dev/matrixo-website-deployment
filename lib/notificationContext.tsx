@@ -52,6 +52,54 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
+const MOJIBAKE_MARKERS = /ðŸ|â€™|â€œ|â€|â€“|â€”|â€¦|Ã|Â/
+
+function decodePotentialMojibake(value: string): string {
+  if (!value || !MOJIBAKE_MARKERS.test(value)) {
+    return value
+  }
+
+  try {
+    const bytes = Uint8Array.from(value, (char) => char.charCodeAt(0))
+    const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+    if (decoded && decoded !== value) {
+      return decoded
+    }
+  } catch {
+    // Ignore decode errors and use fallback cleanup.
+  }
+
+  return value
+}
+
+function sanitizeNotificationText(value: string): string {
+  if (!value) {
+    return value
+  }
+
+  let cleaned = decodePotentialMojibake(value).trim()
+
+  cleaned = cleaned
+    .replace(/^\s*[\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF\uFE0F\u200D]+(?:\s|[-:])*/, '')
+    .replace(/^\s*(?:ðŸ[^\s]*|â[^\s]*)(?:\s|[-:])*/, '')
+    .replace(/ðŸ[\u0080-\u00BF]*/g, '')
+    .replace(/â[\u0080-\u00FF]?/g, '')
+    .replace(/[ÂÃ]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+
+  return cleaned
+}
+
+function sanitizeNotification(notification: Notification): Notification {
+  return {
+    ...notification,
+    title: sanitizeNotificationText(notification.title),
+    message: sanitizeNotificationText(notification.message),
+    createdByName: sanitizeNotificationText(notification.createdByName),
+  }
+}
+
 // ============================================
 // NOTIFICATION PROVIDER
 // ============================================
@@ -105,14 +153,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           id: doc.id,
           ...doc.data()
         })) as Notification[]
+
+        const sanitizedNotificationsData = notificationsData.map(sanitizeNotification)
         
-        console.log('📬 User notifications:', notificationsData.length)
-        setNotifications(notificationsData)
+        console.log('📬 User notifications:', sanitizedNotificationsData.length)
+        setNotifications(sanitizedNotificationsData)
 
         // Show browser push notification for new notifications
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
-            const notification = { id: change.doc.id, ...change.doc.data() } as Notification
+            const notification = sanitizeNotification({ id: change.doc.id, ...change.doc.data() } as Notification)
             
             // Show push for new unread notifications
             if (!notification.read && permissionState === 'granted') {

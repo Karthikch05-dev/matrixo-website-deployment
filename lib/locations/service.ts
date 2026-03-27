@@ -15,6 +15,9 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
+// Import seed data as fallback when Firestore collections are empty
+import seedData from '@/data/location-seed-data.json';
+
 // Keep location data in memory for fast access
 interface CachedLocations {
   countries: Country[];
@@ -62,36 +65,55 @@ export interface College {
   createdBy?: string;
 }
 
-// Initialize location data from Firestore on demand
+// Initialize location data from Firestore on demand, with seed data fallback
 async function initializeLocations() {
   if (cachedLocations) return cachedLocations;
 
   try {
     // Load countries
     const countriesSnap = await getDocs(collection(db, 'countries'));
-    const countries = countriesSnap.docs.map(d => d.data()) as Country[];
+    let countries = countriesSnap.docs.map(d => d.data()) as Country[];
 
     // Load states
     const statesSnap = await getDocs(collection(db, 'states'));
-    const states = statesSnap.docs.map(d => d.data()) as State[];
+    let states = statesSnap.docs.map(d => d.data()) as State[];
 
     // Load districts
     const districtsSnap = await getDocs(collection(db, 'districts'));
-    const districts = districtsSnap.docs.map(d => d.data()) as District[];
+    let districts = districtsSnap.docs.map(d => d.data()) as District[];
 
     // Load colleges
     const collegesSnap = await getDocs(collection(db, 'colleges'));
-    const colleges = collegesSnap.docs.map(d => ({
+    let colleges = collegesSnap.docs.map(d => ({
       id: d.id,
       ...d.data(),
     })) as College[];
 
+    // Fallback to seed data if Firestore collections are empty
+    if (countries.length === 0) {
+      countries = seedData.countries as Country[];
+    }
+    if (states.length === 0) {
+      states = seedData.states as State[];
+    }
+    if (districts.length === 0) {
+      districts = (seedData.majorDistricts as any[]).map(d => ({ ...d, code: d.id })) as District[];
+    }
+    if (colleges.length === 0) {
+      colleges = seedData.sampleColleges as College[];
+    }
+
     cachedLocations = { countries, states, districts, colleges };
     return cachedLocations;
   } catch (error) {
-    console.error('Error initializing locations:', error);
-    // Fallback to empty data
-    return { countries: [], states: [], districts: [], colleges: [] };
+    console.error('Error initializing locations from Firestore, using seed data:', error);
+    // Full fallback to seed data
+    const countries = seedData.countries as Country[];
+    const states = seedData.states as State[];
+    const districts = (seedData.majorDistricts as any[]).map(d => ({ ...d, code: d.id })) as District[];
+    const colleges = seedData.sampleColleges as College[];
+    cachedLocations = { countries, states, districts, colleges };
+    return cachedLocations;
   }
 }
 
