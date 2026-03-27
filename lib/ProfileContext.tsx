@@ -35,6 +35,7 @@ export interface UserProfile {
   phone: string
   email: string
   college: string
+  collegeId?: string
   year: string
   branch: string
   graduationYear?: string
