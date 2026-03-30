@@ -2123,7 +2123,18 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const submitLeaveRequest = async (request: { date: string; subject: string; letter: string; reason: string }) => {
-    if (!employee) throw new Error('Not authenticated')
+    console.log('🚀 submitLeaveRequest called with:', request)
+    
+    // Enhanced validation
+    if (!employee) {
+      console.error('❌ No employee in context')
+      throw new Error('You are not authenticated. Please log in again.')
+    }
+    
+    if (!employee.employeeId || !employee.name) {
+      console.error('❌ Invalid employee profile:', employee)
+      throw new Error('Your employee profile is incomplete. Please contact admin.')
+    }
     
     const leaveRequestData = {
       employeeId: employee.employeeId,
@@ -2139,49 +2150,73 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       reviewedAt: null
     }
     
-    const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
+    console.log('📝 Attempting to save to Firestore:', leaveRequestData)
     
-    // Auto-create discussion post tagging Lahari and Yasasvi
-    const allEmps = await getAllEmployees()
-    const lahari = allEmps.find(e => e.name.toLowerCase().includes('lahari'))
-    const yasasvi = allEmps.find(e => e.name.toLowerCase().includes('yasasvi'))
-    
-    const mentions: string[] = []
-    let mentionText = ''
-    if (lahari) {
-      mentions.push(lahari.employeeId)
-      mentionText += `@${lahari.name} `
+    try {
+      const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
+      console.log('✅ Leave request saved with ID:', docRef.id)
+      
+      // Auto-create discussion post and notifications (non-critical)
+      try {
+        const allEmps = await getAllEmployees()
+        const lahari = allEmps.find(e => e.name.toLowerCase().includes('lahari'))
+        const yasasvi = allEmps.find(e => e.name.toLowerCase().includes('yasasvi'))
+        
+        const mentions: string[] = []
+        let mentionText = ''
+        if (lahari) {
+          mentions.push(lahari.employeeId)
+          mentionText += `@${lahari.name} `
+        }
+        if (yasasvi) {
+          mentions.push(yasasvi.employeeId)
+          mentionText += `@${yasasvi.name} `
+        }
+        
+        const discussionContent = `${mentionText}\nI have submitted a leave request for ${request.date}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
+        
+        await addDiscussion(discussionContent, mentions, [])
+        console.log('✅ Discussion post created')
+        
+        // Send notifications to management team only
+        if (mentions.length > 0) {
+          await createGlobalNotification({
+            type: 'calendar',
+            action: 'created',
+            title: 'Leave Request Submitted',
+            message: `${employee.name} has submitted a leave request for ${request.date}. Subject: ${request.subject}`,
+            relatedEntityId: docRef.id,
+            targetUrl: '/employee-portal#attendance',
+            createdBy: employee.employeeId,
+            createdByName: employee.name,
+            createdByRole: employee.role,
+            recipientRoles: ['admin']
+          })
+          console.log('✅ Notification sent')
+        }
+        
+        await logActivity({
+          type: 'attendance',
+          action: 'leave-request',
+          description: `Submitted leave request for ${request.date}: ${request.subject}`,
+        })
+        console.log('✅ Activity logged')
+      } catch (postError) {
+        console.warn('⚠️ Post-submission tasks failed (non-critical):', postError)
+        // Don't throw - leave request was already saved successfully
+      }
+    } catch (firestoreError: any) {
+      console.error('❌ Firestore error:', firestoreError)
+      
+      // Provide specific error messages
+      if (firestoreError.code === 'permission-denied') {
+        throw new Error('Permission denied. Please check your authentication status.')
+      } else if (firestoreError.code === 'unavailable') {
+        throw new Error('Service unavailable. Please check your internet connection.')
+      } else {
+        throw new Error(firestoreError.message || 'Failed to save leave request to database')
+      }
     }
-    if (yasasvi) {
-      mentions.push(yasasvi.employeeId)
-      mentionText += `@${yasasvi.name} `
-    }
-    
-    const discussionContent = `${mentionText}\nI have submitted a leave request for ${request.date}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
-    
-    await addDiscussion(discussionContent, mentions, [])
-    
-    // Send notifications to management team only
-    if (mentions.length > 0) {
-      await createGlobalNotification({
-        type: 'calendar',
-        action: 'created',
-        title: 'Leave Request Submitted',
-        message: `${employee.name} has submitted a leave request for ${request.date}. Subject: ${request.subject}`,
-        relatedEntityId: docRef.id,
-        targetUrl: '/employee-portal#attendance',
-        createdBy: employee.employeeId,
-        createdByName: employee.name,
-        createdByRole: employee.role,
-        recipientRoles: ['admin'] // Only notify management team
-      })
-    }
-    
-    await logActivity({
-      type: 'attendance',
-      action: 'leave-request',
-      description: `Submitted leave request for ${request.date}: ${request.subject}`,
-    })
   }
 
   const approveLeaveRequest = async (requestId: string) => {
