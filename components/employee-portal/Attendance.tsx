@@ -1130,17 +1130,51 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                   disabled={!leaveRequestForm.subject.trim() || !leaveRequestForm.letter.trim() || !leaveRequestForm.reason.trim()}
                   icon={<FaEnvelope />}
                   onClick={async () => {
+                    console.log('=== LEAVE REQUEST SUBMISSION START ===')
+                    console.log('1. Employee state:', employee)
+                    console.log('2. Form data:', leaveRequestForm)
+                    console.log('3. Validation check:', {
+                      hasSubject: !!leaveRequestForm.subject.trim(),
+                      hasLetter: !!leaveRequestForm.letter.trim(),
+                      hasReason: !!leaveRequestForm.reason.trim(),
+                      hasDate: !!leaveRequestForm.date
+                    })
+                    
                     setSubmittingLeaveRequest(true)
                     try {
+                      // Pre-validation
+                      if (!employee) {
+                        toast.error('You must be logged in to submit leave requests')
+                        console.error('❌ No employee in context')
+                        return
+                      }
+                      
                       await submitLeaveRequest(leaveRequestForm)
-                      toast.success('Leave request submitted successfully! Admins have been notified.')
+                      console.log('✅ Leave request submitted successfully!')
+                      toast.success('Leave request submitted successfully.')
                       setShowLeaveRequestModal(false)
                       setLeaveRequestForm({ date: todayString, subject: '', letter: '', reason: '' })
-                    } catch (error) {
-                      console.error('Error submitting leave request:', error)
-                      toast.error('Failed to submit leave request')
+                    } catch (error: any) {
+                      console.error('❌ Error submitting leave request:', error)
+                      console.error('Error code:', error?.code)
+                      console.error('Error message:', error?.message)
+                      console.error('Full error object:', error)
+                      
+                      // Enhanced error messages
+                      let errorMessage = 'Failed to submit leave request'
+                      
+                      if (error?.code === 'permission-denied') {
+                        errorMessage = 'Permission denied. Please ensure you are logged in correctly.'
+                      } else if (error?.code === 'unavailable') {
+                        errorMessage = 'Service unavailable. Please check your internet connection and try again.'
+                      } else if (error?.message) {
+                        errorMessage = error.message
+                      }
+                      
+                      toast.error(errorMessage)
                     } finally {
                       setSubmittingLeaveRequest(false)
+                      console.log('=== LEAVE REQUEST SUBMISSION END ===')
                     }
                   }}
                 >
