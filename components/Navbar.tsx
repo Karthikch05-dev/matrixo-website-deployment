@@ -371,7 +371,7 @@ export default function Navbar() {
                 >
                   {profile?.profilePhoto ? (
                     <div className="w-7 h-7 rounded-xl overflow-hidden flex-shrink-0">
-                      <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full" unoptimized />
+                      <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full rounded-xl" unoptimized />
                     </div>
                   ) : (
                     <div className="w-7 h-7 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
