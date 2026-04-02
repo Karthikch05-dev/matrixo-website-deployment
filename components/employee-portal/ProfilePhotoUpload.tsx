@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaCamera, FaTimes, FaUpload, FaTrash, FaCheck, FaExclamationTriangle, FaSpinner } from 'react-icons/fa'
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { storage, db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
 
@@ -119,8 +120,22 @@ export default function ProfilePhotoUpload({
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Ensure we're client-side before using createPortal ──────────────────
+  useEffect(() => setMounted(true), [])
+
+  // ── Lock body scroll while modal is open ────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   // ── Close & reset modal ─────────────────────────────────────────────────
   const closeModal = useCallback(() => {
@@ -200,9 +215,16 @@ export default function ProfilePhotoUpload({
             try {
               const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref)
 
-              // 4. Update Firestore
-              const employeeRef = doc(db, 'Employees', employeeId)
-              await updateDoc(employeeRef, {
+              // 4. Update Firestore – query by employeeId field to find the actual document
+              const employeesRef = collection(db, 'Employees')
+              const q = query(employeesRef, where('employeeId', '==', employeeId))
+              const querySnapshot = await getDocs(q)
+
+              if (querySnapshot.empty) {
+                throw new Error('Employee record not found')
+              }
+
+              await updateDoc(querySnapshot.docs[0].ref, {
                 profileImage: downloadUrl,
                 imageUpdatedAt: serverTimestamp(),
               })
@@ -233,9 +255,17 @@ export default function ProfilePhotoUpload({
 
     setUploading(true)
     try {
+      // Query for the actual Firestore document by employeeId field
+      const employeesRef = collection(db, 'Employees')
+      const q = query(employeesRef, where('employeeId', '==', employeeId))
+      const querySnapshot = await getDocs(q)
+
+      if (querySnapshot.empty) {
+        throw new Error('Employee record not found')
+      }
+
       // Remove from Firestore first so the UI updates immediately
-      const employeeRef = doc(db, 'Employees', employeeId)
-      await updateDoc(employeeRef, {
+      await updateDoc(querySnapshot.docs[0].ref, {
         profileImage: '',
         imageUpdatedAt: serverTimestamp(),
       })
@@ -278,21 +308,37 @@ export default function ProfilePhotoUpload({
         Change Photo
       </button>
 
-      {/* Modal */}
-      <AnimatePresence>
-        {isOpen && (
+      {/* Modal – rendered in a portal so parent transforms can't break fixed centering */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
           <div
-            className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
-            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Update Profile Photo"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
           >
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-2xl"
               onClick={closeModal}
-              style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.80)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+              }}
             />
 
             {/* Modal card */}
@@ -499,8 +545,10 @@ export default function ProfilePhotoUpload({
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   )
 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -32,9 +32,12 @@ import {
   FaVideo,
   FaSun,
   FaMoon,
-  FaUserCircle
+  FaUserCircle,
+  FaEye,
+  FaEyeSlash
 } from 'react-icons/fa'
-import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { HiCalendarDays } from "react-icons/hi2"
+import { EmployeeAuthProvider, useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import ProfilePhotoUpload from '@/components/employee-portal/ProfilePhotoUpload'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
@@ -54,7 +57,7 @@ import AdminPanel from '@/components/employee-portal/AdminPanel'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
 import JobPostings from '@/components/employee-portal/JobPostings'
-import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
+import { ProfileInfo, employeeToProfileData, getLocalProfileImage } from '@/components/employee-portal/ui'
 
 // ============================================
 // THEME CONTEXT
@@ -69,22 +72,10 @@ const useTheme = usePortalTheme
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
 
-// Local profile image mapping (fallback when Firestore profileImage is empty)
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-}
-
-// Simple helper to get profile image
+// Simple helper to get profile image (uses centralized getLocalProfileImage)
 const getProfileImageUrl = (url: string | undefined, name?: string, employeeId?: string): string => {
-  if (url) return url
-  // Check local intern images fallback
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -190,7 +181,7 @@ function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               <p className="text-xs text-neutral-500 mt-2 flex items-start gap-1">
@@ -244,14 +235,14 @@ function LoginForm() {
 // ============================================
 
 const navigationItems = [
-  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck },
+  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck, adminHidden: true },
   { id: 'dashboard', label: 'Dashboard', icon: FaChartLine },
   { id: 'history', label: 'History', icon: FaHistory },
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
   { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
-  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode, mobileOnly: true },
+  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
   { id: 'profile', label: 'My Profile', icon: FaUserCircle },
   { id: 'job-postings', label: 'Careers', icon: FaBriefcase, adminOnly: true },
 ]
@@ -275,7 +266,7 @@ function TopNavbar({
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   // Track pending application count for Careers badge (admin only)
   const [pendingAppCount, setPendingAppCount] = useState(0)
@@ -387,7 +378,7 @@ function TopNavbar({
           {/* Desktop Navigation - Centered */}
           <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-0.5">
-              {navigationItems.filter(item => !item.mobileOnly && !item.adminOnly).map((item) => (
+              {navigationItems.filter(item => !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
@@ -600,7 +591,7 @@ function TopNavbar({
               style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}
             >
               <div className="grid grid-cols-2 gap-2">
-                {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => (
+                {navigationItems.filter(item => (!item.adminOnly || isAdmin) && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
@@ -655,7 +646,7 @@ function TopNavbar({
 // ============================================
 
 function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void }) {
-  const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
+  const { employee, getAttendanceRecords, getMonthlyAttendanceStats, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
   const { darkMode } = useTheme()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -666,9 +657,13 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     const fetchAttendance = async () => {
       setLoading(true)
       try {
-        const startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        const records = await getAttendanceRecords(startDate, new Date())
+        // Fetch current month's attendance records
+        const now = new Date()
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date()
+
+        const records = await getAttendanceRecords(startDate, endDate)
         setAttendanceRecords(records || [])
       } catch (error) {
         console.error('Error fetching attendance:', error)
@@ -679,15 +674,12 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     }
     fetchAttendance()
   }, [getAttendanceRecords])
-  
-  const presentDays = attendanceRecords.filter(r => r.status === 'P').length
-  const absentDays = attendanceRecords.filter(r => r.status === 'A').length
-  const onDutyDays = attendanceRecords.filter(r => r.status === 'O').length
-  const totalDays = attendanceRecords.length
-  // FIXED: Match Admin formula - (present + onDuty) / total
-  const attendancePercentage = totalDays > 0 
-    ? Math.round(((presentDays + onDutyDays) / totalDays) * 100) 
-    : 0
+
+  // Monthly attendance calculation
+  const monthlyStats = getMonthlyAttendanceStats(attendanceRecords)
+  const attendancePercentage = monthlyStats.attendanceRate
+  const presentDays = monthlyStats.presentDays
+  const absentDays = monthlyStats.absentDays
 
   // Safely filter tasks - handle both array and string for assignedTo
   const myTasks = (tasks || []).filter(t => {
@@ -802,11 +794,10 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           color="bg-red-500"
         />
         <StatCard
-          title="Pending Tasks"
-          value={myTasks.length}
+          title="Working Days"
+          value={monthlyStats.totalWorkingDays}
           icon={FaTasks}
-          color="bg-primary-500"
-          onClick={onShowMyTasks}
+          color="bg-indigo-500"
         />
       </div>
 
@@ -1107,7 +1098,7 @@ function ProfileTab() {
 
   if (!employee) return null
 
-  const displayImage = localImageUrl || employee.profileImage
+  const displayImage = localImageUrl || getLocalProfileImage(employee.profileImage, employee.employeeId)
 
   const infoRows = [
     { label: 'Employee ID', value: employee.employeeId },
@@ -1222,7 +1213,7 @@ function ProfileTab() {
         <ul className={`space-y-0.5 list-disc list-inside text-xs ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
           <li>Accepted formats: JPEG, PNG, WebP</li>
           <li>Maximum file size: 3MB</li>
-          <li>Photos are automatically cropped to a square (512×512) and optimized</li>
+          <li>Photos are automatically cropped to a square (512Ã—512) and optimized</li>
           <li>Your photo appears on the public Team page and in the employee portal</li>
         </ul>
       </div>
@@ -1285,7 +1276,7 @@ function Dashboard() {
     }
     return true
   })
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const toggleTheme = () => {
     setDarkMode(prev => {
@@ -1321,7 +1312,7 @@ function Dashboard() {
     }
   }, [activeTab])
 
-  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION + REGISTER PUSH ON FIRST LOAD
+  // ðŸ”” AUTO-REQUEST NOTIFICATION PERMISSION + REGISTER PUSH ON FIRST LOAD
   useEffect(() => {
     const setupPushNotifications = async () => {
       if (typeof window === 'undefined' || !('Notification' in window)) return
@@ -1337,7 +1328,7 @@ function Dashboard() {
         if (Notification.permission === 'granted') {
           await registerServiceWorker()
           await subscribeToPush(employee.employeeId)
-          console.log('🔔 Push notifications set up successfully')
+          console.log('ðŸ”” Push notifications set up successfully')
         }
       } catch (error) {
         console.error('Failed to set up push notifications:', error)
@@ -1346,7 +1337,7 @@ function Dashboard() {
     setupPushNotifications()
   }, [employee?.employeeId])
 
-  // 🔄 BACKGROUND SYNC: Meeting tasks → Main Tasks collection
+  // ðŸ”„ BACKGROUND SYNC: Meeting tasks â†’ Main Tasks collection
   // Runs once on portal load so meeting tasks appear on Tasks page regardless of which tab is active
   const meetingSyncRef = useRef(false)
   useEffect(() => {
@@ -1538,7 +1529,7 @@ function Dashboard() {
             title: 'Meeting Tasks Synced',
             message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings added to Tasks.`,
             relatedEntityId: 'meeting-sync',
-            targetUrl: '#tasks',
+            targetUrl: '/employee-portal#tasks',
             createdBy: employee.employeeId,
             createdByName: employee.name,
             createdByRole: employee.role
@@ -1583,7 +1574,7 @@ function Dashboard() {
             transition={{ duration: 0.2 }}
             className="w-full"
           >
-            {activeTab === 'attendance' && <Attendance />}
+            {activeTab === 'attendance' && employee?.role !== 'admin' && <Attendance />}
             {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} onShowMyTasks={handleShowMyTasks} />}
             {activeTab === 'history' && <HistoryTab />}
             {activeTab === 'calendar' && <Calendar />}
@@ -1604,7 +1595,7 @@ function Dashboard() {
         style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)' }}
       >
         <p className={`text-center text-sm ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
-          © {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
+          Â© {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
         </p>
       </footer>
     </div>

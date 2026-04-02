@@ -30,31 +30,18 @@ import {
   FaFileCsv,
   FaEnvelope,
   FaCheck,
-  FaHome
+  FaHome,
+  FaListAlt
 } from 'react-icons/fa'
-import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
+import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest, isAdminOrSubAdmin, formatDate, Holiday } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
 // ============================================
-// LOCAL PROFILE IMAGE FALLBACKS
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
 // ============================================
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-}
-
-const getEmpProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
-  if (profileImage) return profileImage
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
-  return undefined
-}
+const getEmpProfileImage = getLocalProfileImage
 
 // ============================================
 // TYPES
@@ -108,14 +95,13 @@ function EmployeeProfileModal({
         .then((history) => {
           setAttendanceHistory(history)
           // Calculate stats from history
-          const present = history.filter(r => r.status === 'P').length
-          const wfh = history.filter(r => r.status === 'W').length
+          const present = history.filter(r => r.status === 'P' || r.status === 'W').length
           const absent = history.filter(r => r.status === 'A').length
           const leave = history.filter(r => r.status === 'L').length
           const onDuty = history.filter(r => r.status === 'O').length
           const unauthLeave = history.filter(r => r.status === 'U').length
           const total = history.length
-          const percentage = total > 0 ? ((present + wfh + onDuty) / total) * 100 : 0
+          const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
           
           setStats({
             presentDays: present,
@@ -192,8 +178,8 @@ function EmployeeProfileModal({
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
             <Badge variant="primary">{employee.employeeId}</Badge>
             {employee.department && employee.department !== employee.role && <Badge variant="info">{employee.department}</Badge>}
-            <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
-              {employee.role === 'admin' ? '👑 Admin' : employee.role}
+            <Badge variant={isAdminOrSubAdmin(employee.role) ? 'warning' : 'default'}>
+              {employee.role === 'admin' ? '👑 Admin' : employee.role === 'sub-admin' ? '⭐ Sub-Admin' : employee.role}
             </Badge>
           </div>
           {employee.email && (
@@ -218,6 +204,7 @@ function EmployeeProfileModal({
       <Tabs
         tabs={[
           { id: 'overview', label: 'Overview' },
+          { id: 'notes', label: `Daily Reports (${attendanceHistory.filter(r => r.notes).length})` },
           { id: 'history', label: `Attendance History (${attendanceHistory.length})` }
         ]}
         activeTab={activeTab}
@@ -294,7 +281,7 @@ function EmployeeProfileModal({
               )}
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'history' ? (
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
@@ -384,7 +371,49 @@ function EmployeeProfileModal({
               </table>
             )}
           </div>
-        )}
+        ) : activeTab === 'notes' ? (
+          <div className="max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="lg" />
+              </div>
+            ) : attendanceHistory.filter(r => r.notes).length === 0 ? (
+              <EmptyState
+                icon={<FaListAlt className="text-2xl" />}
+                title="No daily reports"
+                description="This employee has not submitted any daily reports yet"
+              />
+            ) : (
+              <div className="space-y-3">
+                {attendanceHistory
+                  .filter(r => r.notes)
+                  .map((record, i) => (
+                    <div key={i} className="p-4 bg-neutral-800/30 rounded-xl border border-neutral-700/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-neutral-300">{formatDateString(record.date)}</span>
+                          <Badge size="sm" variant={
+                            record.status === 'P' ? 'success' :
+                            record.status === 'W' ? 'info' :
+                            record.status === 'A' ? 'error' :
+                            record.status === 'L' ? 'warning' : 'default'
+                          }>
+                            {record.status === 'P' ? 'Present' :
+                             record.status === 'W' ? 'WFH' :
+                             record.status === 'A' ? 'Absent' :
+                             record.status === 'L' ? 'Leave' :
+                             record.status === 'O' ? 'On Duty' : record.status}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-neutral-500">{formatTime(record.timestamp)}</span>
+                      </div>
+                      <p className="text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed">{record.notes}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
       
       {/* Modify Attendance Modal */}
@@ -826,9 +855,9 @@ function ExportReportModal({
     if (!employeeSearch.trim()) return employees
     const query = employeeSearch.toLowerCase()
     return employees.filter(e => 
-      e.name.toLowerCase().includes(query) ||
-      e.employeeId.toLowerCase().includes(query) ||
-      e.department?.toLowerCase().includes(query)
+      (e.name || '').toLowerCase().includes(query) ||
+      (e.employeeId || '').toLowerCase().includes(query) ||
+      (e.department || '').toLowerCase().includes(query)
     )
   }, [employees, employeeSearch])
 
@@ -1657,14 +1686,16 @@ function LeaveRequestsPanel() {
 // ============================================
 
 export function AdminPanel() {
-  const { 
-    employee, 
-    getAllEmployees, 
+  const {
+    employee,
+    getAllEmployees,
     getAllEmployeesAttendance,
     getEmployeeAttendanceHistory,
     runAutoAbsentJob,
     workMode,
-    setGlobalWorkMode
+    setGlobalWorkMode,
+    holidays,
+    isHoliday: checkIsHoliday,
   } = useEmployeeAuth()
   
   const [activeTab, setActiveTab] = useState('employees')
@@ -1787,16 +1818,47 @@ export function AdminPanel() {
       const empsWithStats: EmployeeWithStats[] = await Promise.all(
         uniqueEmps.map(async (emp) => {
           const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
-          const presentDays = history.filter(r => r.status === 'P').length
-          const absentDays = history.filter(r => r.status === 'A').length
-          const lateDays = history.filter(r => r.status === 'L').length
-          const onDutyDays = history.filter(r => r.status === 'O').length
-          const unauthLeaveDays = history.filter(r => r.status === 'U').length
-          const wfhDays = history.filter(r => r.status === 'W').length
-          const totalDays = history.length
-          // Match profile modal formula: (present + onDuty + wfh) / total
-          const attendancePercentage = totalDays > 0 
-            ? ((presentDays + onDutyDays + wfhDays) / totalDays) * 100 
+
+          // Monthly attendance: filter to current month, use working days as denominator
+          const now = new Date()
+          const year = now.getFullYear()
+          const month = now.getMonth()
+          const monthEnd = new Date(year, month + 1, 0)
+
+          // Determine effective start date (joining date or 1st of month)
+          const joiningDate = emp.joiningDate ? new Date(emp.joiningDate) : null
+          let startDate = new Date(year, month, 1)
+          if (joiningDate && joiningDate.getFullYear() === year && joiningDate.getMonth() === month) {
+            startDate = joiningDate
+          }
+
+          // Calculate working days (exclude Sundays + holidays)
+          let totalWorkingDays = 0
+          const cursor = new Date(startDate)
+          cursor.setHours(0, 0, 0, 0)
+          while (cursor <= monthEnd) {
+            const dateStr = formatDate(cursor)
+            const isSunday = cursor.getDay() === 0
+            const isHol = checkIsHoliday(dateStr)
+            if (!isSunday && !isHol) {
+              totalWorkingDays++
+            }
+            cursor.setDate(cursor.getDate() + 1)
+          }
+
+          const startStr = formatDate(startDate)
+          const endStr = formatDate(monthEnd)
+          const monthlyHistory = history.filter(r => r.date >= startStr && r.date <= endStr)
+
+          const presentDays = monthlyHistory.filter(r => r.status === 'P' || r.status === 'W').length
+          const absentDays = monthlyHistory.filter(r => r.status === 'A').length
+          const lateDays = monthlyHistory.filter(r => r.status === 'L').length
+          const onDutyDays = monthlyHistory.filter(r => r.status === 'O').length
+          const unauthLeaveDays = monthlyHistory.filter(r => r.status === 'U').length
+          const totalDays = monthlyHistory.length
+          // HR formula: (present+wfh + onDuty) / totalWorkingDays
+          const attendancePercentage = totalWorkingDays > 0
+            ? parseFloat(((presentDays + onDutyDays) / totalWorkingDays * 100).toFixed(2))
             : 0
 
           return {
@@ -1807,7 +1869,7 @@ export function AdminPanel() {
             lateDays,
             onDutyDays,
             unauthLeaveDays,
-            wfhDays,
+            wfhDays: 0,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
@@ -1844,8 +1906,8 @@ export function AdminPanel() {
         const emp = employees.find(e => e.employeeId === record.employeeId)
         const query = searchQuery.toLowerCase()
         const matchesSearch = 
-          emp?.name.toLowerCase().includes(query) ||
-          record.employeeId.toLowerCase().includes(query)
+          (emp?.name || '').toLowerCase().includes(query) ||
+          (record.employeeId || '').toLowerCase().includes(query)
         if (!matchesSearch) return false
       }
       
@@ -1875,11 +1937,14 @@ export function AdminPanel() {
   // Filter employees
   const filteredEmployees = useMemo(() => {
     return employeesWithStats.filter(emp => {
+      // Exclude admins from the employee grid
+      if (emp.role === 'admin') return false
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matches = 
-          emp.name.toLowerCase().includes(query) ||
-          emp.employeeId.toLowerCase().includes(query)
+          (emp.name || '').toLowerCase().includes(query) ||
+          (emp.employeeId || '').toLowerCase().includes(query)
         if (!matches) return false
       }
       
@@ -1899,7 +1964,7 @@ export function AdminPanel() {
 
   const hasFilters = searchQuery || filterDepartment || filterStatus || filterDateFrom || filterDateTo
 
-  if (employee?.role !== 'admin') {
+  if (!isAdminOrSubAdmin(employee?.role)) {
     return (
       <EmptyState
         icon={<FaExclamationTriangle className="text-2xl text-red-400" />}

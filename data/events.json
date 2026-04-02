@@ -39,17 +39,43 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "agenda": [
-      { "time": "Feb 12 - 10:00 AM - 1:00 PM", "title": "Session 1: Workshop + Quiz Competition" },
-      { "time": "Feb 12 - 1:00 PM - 2:00 PM", "title": "Lunch Break" },
-      { "time": "Feb 12 - 2:00 PM - 4:00 PM", "title": "Session 1: Coding Competition & Certificates" },
-      { "time": "Feb 13 - 10:00 AM - 1:00 PM", "title": "Session 2: Workshop + Quiz Competition" },
-      { "time": "Feb 13 - 1:00 PM - 2:00 PM", "title": "Lunch Break" },
-      { "time": "Feb 13 - 2:00 PM - 4:00 PM", "title": "Session 2: Coding Competition & Certificates" }
+      {
+        "time": "Feb 12 - 10:00 AM - 1:00 PM",
+        "title": "Session 1: Workshop + Quiz Competition"
+      },
+      {
+        "time": "Feb 12 - 1:00 PM - 2:00 PM",
+        "title": "Lunch Break"
+      },
+      {
+        "time": "Feb 12 - 2:00 PM - 4:00 PM",
+        "title": "Session 1: Coding Competition & Certificates"
+      },
+      {
+        "time": "Feb 13 - 10:00 AM - 1:00 PM",
+        "title": "Session 2: Workshop + Quiz Competition"
+      },
+      {
+        "time": "Feb 13 - 1:00 PM - 2:00 PM",
+        "title": "Lunch Break"
+      },
+      {
+        "time": "Feb 13 - 2:00 PM - 4:00 PM",
+        "title": "Session 2: Coding Competition & Certificates"
+      }
     ],
-    "tags": ["Workshop", "AI Coding", "Learning", "Individual Event", "matriXO"],
+    "tags": [
+      "Workshop",
+      "AI Coding",
+      "Learning",
+      "Individual Event",
+      "matriXO"
+    ],
     "organizer": "matriXO",
     "ticketingPartner": "matriXO",
     "contactEmail": "events@matrixo.in",
@@ -102,7 +128,6 @@
         "answer": "Bring your laptop and charger. We'll provide internet access and workspace."
       },
       {
-
         "question": "Is this a team event?",
         "answer": "No, this is an individual workshop. Each person registers and participates on their own."
       },
@@ -125,6 +150,123 @@
       "currency": "INR",
       "note": "Payment is mandatory to confirm registration. After form submission, you'll be redirected to your UPI app to complete payment."
     }
+  },
+  {
+    "id": "vibecoding-irl-march-2026",
+    "slug": "vibecoding-irl-march-2026",
+    "title": "VibeCode IRL",
+    "tagline": "Where Coding Meets the Vibe",
+    "description": "VibeCode IRL is back — a 2-day interactive event on AI-assisted coding organized by matriXO at KPRIT, exclusively for 1st Year students. Two sessions across March 24 & 25, 2026. Participate in hands-on workshops, team-based coding challenges, win exciting prizes and walk away with participation certificates.",
+    "date": "2026-03-24T10:00:00",
+    "endDate": "2026-03-25T17:00:00",
+    "venue": "Auditorium, D-Block, KPRIT",
+    "location": "Kommuri Pratap Reddy Institute of Technology, Hyderabad",
+    "totalCapacity": 288,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "Workshop",
+    "isVibeCodeEvent": true,
+    "firstYearOnly": true,
+    "googleFormLink": "PASTE_GOOGLE_FORM_LINK_HERE",
+    "images": {
+      "banner": "/events/vibecoding cover page.jpeg",
+      "thumbnail": "/events/vibecoding cover page.jpeg",
+      "gallery": []
+    },
+    "tickets": [
+      {
+        "id": "google-form-pass",
+        "name": "Register Now",
+        "price": 0,
+        "available": 288,
+        "description": "Register via Google Form",
+        "perks": [
+          "Interactive Vibe Coding Workshop",
+          "Team-Based Coding Challenge",
+          "Participation Certificate",
+          "Swags & Prizes"
+        ]
+      }
+    ],
+    "partners": ["matriXO"],
+    "sponsors": [],
+    "agenda": [
+      {
+        "time": "Mar 24 - 10:00 AM - 1:00 PM",
+        "title": "Session 1: Interactive Vibe Coding Workshop"
+      },
+      {
+        "time": "Mar 24 - 1:00 PM - 2:00 PM",
+        "title": "Lunch Break"
+      },
+      {
+        "time": "Mar 24 - 2:00 PM - 5:00 PM",
+        "title": "Session 1: Team-Based Coding Challenge & Certificates"
+      },
+      {
+        "time": "Mar 25 - 10:00 AM - 1:00 PM",
+        "title": "Session 2: Interactive Vibe Coding Workshop"
+      },
+      {
+        "time": "Mar 25 - 1:00 PM - 2:00 PM",
+        "title": "Lunch Break"
+      },
+      {
+        "time": "Mar 25 - 2:00 PM - 5:00 PM",
+        "title": "Session 2: Team-Based Coding Challenge & Certificates"
+      }
+    ],
+    "tags": ["Workshop", "AI Coding", "1st Year", "matriXO"],
+    "organizer": "matriXO",
+    "ticketingPartner": "matriXO",
+    "contactEmail": "events@matrixo.in",
+    "socialLinks": {
+      "website": "https://matrixo.in",
+      "instagram": "https://www.instagram.com/matrixo.in/",
+      "linkedin": "https://www.linkedin.com/company/matrixo/"
+    },
+    "highlights": [
+      "Interactive Vibe Coding Workshop",
+      "Team-Based Coding Challenge",
+      "Participation Certificates",
+      "Swags & Prizes"
+    ],
+    "benefits": [
+      {
+        "title": "Participation Certificate",
+        "description": "Physical certificate for everyone who participated (distributed at the venue)",
+        "icon": "certificate"
+      },
+      {
+        "title": "Swags & Prizes",
+        "description": "Exciting swags and prizes for top performers",
+        "icon": "gift"
+      },
+      {
+        "title": "Team Challenge",
+        "description": "Compete in teams and showcase your coding skills",
+        "icon": "trophy"
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Who can attend VibeCode IRL – March 2026?",
+        "answer": "This event is exclusively for 1st Year students at KPRIT."
+      },
+      {
+        "question": "How do I register?",
+        "answer": "Click the Register Now button to fill out the Google Form. Registration is free."
+      },
+      {
+        "question": "What will I need to bring?",
+        "answer": "Bring your laptop and charger. We will provide internet access and workspace."
+      },
+      {
+        "question": "Is this a team event?",
+        "answer": "There will be team-based coding challenges. Details will be shared at the venue."
+      }
+    ]
   },
   {
     "id": "tedxkprit-2025",
@@ -171,7 +313,9 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "speakers": [
       {
@@ -336,30 +480,115 @@
       }
     ],
     "agenda": [
-      { "time": "9:30 AM", "title": "Lamp Lighting, Classical Dance, and Address by Organizers" },
-      { "time": "10:00 AM", "title": "Talk 1: Hema Thakur (Author)", "speaker": "Hema Thakur" },
-      { "time": "10:20 AM", "title": "Talk 2: Dr. A M Reddy (Founder, Dr. Care Homeopathy)", "speaker": "Dr. A M Reddy" },
-      { "time": "10:40 AM", "title": "Talk 3: Rohit Tiwari (Sr. Director, Dexian India)", "speaker": "Rohit Tiwari" },
-      { "time": "11:00 AM", "title": "Talk 4: Dr. Sairam Atluri (Founder & CEO, Tulsi Therapeutics)", "speaker": "Dr. SaiRam Atluri" },
-      { "time": "11:20 AM", "title": "Short Break (20 min)" },
-      { "time": "11:40 AM", "title": "Talk 5: Ramya Parashar (COO, MiQ's Bangalore Center of Excellence)", "speaker": "Ramya Parashar" },
-      { "time": "12:00 PM", "title": "Talk 6: Sreekanth Erepalli (Managing Director, Giosun Healthcare)", "speaker": "Sreekanth Erepalli" },
-      { "time": "12:20 PM", "title": "Talk 7: Dr. Divya Raj (MD, Neo Institute of Medical Sciences)", "speaker": "Dr. Divya Raj" },
-      { "time": "12:40 PM", "title": "Talk 8: Dr. Deepak J. Mashru (Asst. Professor, NFSU)", "speaker": "Dr. Deepak J. Mashru" },
-      { "time": "1:00 PM", "title": "Ravi Prakash (Indian Actor)" },
-      { "time": "1:20 PM", "title": "Lunch Break (1 hr)" },
-      { "time": "2:20 PM", "title": "Western Dance Performance" },
-      { "time": "2:40 PM", "title": "Talk 10: Swetaa Varma (Indian Actor & Storyteller)", "speaker": "Swetaa Varma" },
-      { "time": "3:00 PM", "title": "Talk 11: Vishal Raj (Founder & Chairman, E.C.O)", "speaker": "Vishal Raj" },
-      { "time": "3:20 PM", "title": "Talk 12: Dr. Ravi Dasari (President, Jasper Industries)", "speaker": "Dr. Ravi Dasari" },
-      { "time": "3:40 PM", "title": "Talk 13: Nithya Rajendran (Indian Classical Vocalist)", "speaker": "Nithya Rajendran" },
-      { "time": "4:00 PM", "title": "Talk 14: Rakesh Kurapati (Founder, Fast Tracks Car Care)", "speaker": "Rakesh Kurapati" },
-      { "time": "4:20 PM", "title": "Talk 15: Ravi Prakash (Indian Actor)" },
-      { "time": "4:40 PM", "title": "Address by Mr. Anish Srivastava, Faculty Coordinator, TEDxKPRIT" },
-      { "time": "4:45 PM", "title": "Valedictory Ceremony" },
-      { "time": "4:55 PM", "title": "Closing" }
+      {
+        "time": "9:30 AM",
+        "title": "Lamp Lighting, Classical Dance, and Address by Organizers"
+      },
+      {
+        "time": "10:00 AM",
+        "title": "Talk 1: Hema Thakur (Author)",
+        "speaker": "Hema Thakur"
+      },
+      {
+        "time": "10:20 AM",
+        "title": "Talk 2: Dr. A M Reddy (Founder, Dr. Care Homeopathy)",
+        "speaker": "Dr. A M Reddy"
+      },
+      {
+        "time": "10:40 AM",
+        "title": "Talk 3: Rohit Tiwari (Sr. Director, Dexian India)",
+        "speaker": "Rohit Tiwari"
+      },
+      {
+        "time": "11:00 AM",
+        "title": "Talk 4: Dr. Sairam Atluri (Founder & CEO, Tulsi Therapeutics)",
+        "speaker": "Dr. SaiRam Atluri"
+      },
+      {
+        "time": "11:20 AM",
+        "title": "Short Break (20 min)"
+      },
+      {
+        "time": "11:40 AM",
+        "title": "Talk 5: Ramya Parashar (COO, MiQ's Bangalore Center of Excellence)",
+        "speaker": "Ramya Parashar"
+      },
+      {
+        "time": "12:00 PM",
+        "title": "Talk 6: Sreekanth Erepalli (Managing Director, Giosun Healthcare)",
+        "speaker": "Sreekanth Erepalli"
+      },
+      {
+        "time": "12:20 PM",
+        "title": "Talk 7: Dr. Divya Raj (MD, Neo Institute of Medical Sciences)",
+        "speaker": "Dr. Divya Raj"
+      },
+      {
+        "time": "12:40 PM",
+        "title": "Talk 8: Dr. Deepak J. Mashru (Asst. Professor, NFSU)",
+        "speaker": "Dr. Deepak J. Mashru"
+      },
+      {
+        "time": "1:00 PM",
+        "title": "Ravi Prakash (Indian Actor)"
+      },
+      {
+        "time": "1:20 PM",
+        "title": "Lunch Break (1 hr)"
+      },
+      {
+        "time": "2:20 PM",
+        "title": "Western Dance Performance"
+      },
+      {
+        "time": "2:40 PM",
+        "title": "Talk 10: Swetaa Varma (Indian Actor & Storyteller)",
+        "speaker": "Swetaa Varma"
+      },
+      {
+        "time": "3:00 PM",
+        "title": "Talk 11: Vishal Raj (Founder & Chairman, E.C.O)",
+        "speaker": "Vishal Raj"
+      },
+      {
+        "time": "3:20 PM",
+        "title": "Talk 12: Dr. Ravi Dasari (President, Jasper Industries)",
+        "speaker": "Dr. Ravi Dasari"
+      },
+      {
+        "time": "3:40 PM",
+        "title": "Talk 13: Nithya Rajendran (Indian Classical Vocalist)",
+        "speaker": "Nithya Rajendran"
+      },
+      {
+        "time": "4:00 PM",
+        "title": "Talk 14: Rakesh Kurapati (Founder, Fast Tracks Car Care)",
+        "speaker": "Rakesh Kurapati"
+      },
+      {
+        "time": "4:20 PM",
+        "title": "Talk 15: Ravi Prakash (Indian Actor)"
+      },
+      {
+        "time": "4:40 PM",
+        "title": "Address by Mr. Anish Srivastava, Faculty Coordinator, TEDxKPRIT"
+      },
+      {
+        "time": "4:45 PM",
+        "title": "Valedictory Ceremony"
+      },
+      {
+        "time": "4:55 PM",
+        "title": "Closing"
+      }
     ],
-    "tags": ["TEDx", "Ideas Worth Spreading", "Innovation", "Leadership", "Inspiration"],
+    "tags": [
+      "TEDx",
+      "Ideas Worth Spreading",
+      "Innovation",
+      "Leadership",
+      "Inspiration"
+    ],
     "organizer": "TEDxKPRIT Team",
     "ticketingPartner": "matriXO",
     "contactPerson": "Bhuvaneshwari Pothuraju",
@@ -398,5 +627,151 @@
       "includesMUN": true,
       "munDescription": "Special Model United Nations experience curated alongside TEDxKPRIT. Build policy, exchange perspectives, and practice consensus-building."
     }
+  },
+  {
+    "id": "wranglex-infoquest-2026",
+    "slug": "wranglex-infoquest-2026",
+    "title": "WRANGLEX INFOQUEST 2026",
+    "tagline": "Compete. Create. Conquer.",
+    "description": "WRANGLEX INFOQUEST 2026 is a national-level tech fest organized by the Departments of AI&DS and CSE(DS) at J.B. Institute of Engineering & Technology (JBIET). Featuring 10 electrifying events across Tech Competitions, Esports, and Non-Tech Competitions — this is the ultimate arena for tech enthusiasts, gamers, and creators to showcase their skills and win exciting prizes.",
+    "date": "2026-03-11T09:00:00",
+    "endDate": "2026-03-13T17:00:00",
+    "venue": "JBIET Campus",
+    "location": "J.B. Institute of Engineering & Technology, Hyderabad",
+    "totalCapacity": 1000,
+    "ticketsSold": 0,
+    "featured": true,
+    "status": "upcoming",
+    "category": "event",
+    "isWrangleXEvent": true,
+    "images": {
+      "banner": "/events/wranglex/POSTER.png",
+      "thumbnail": "/events/wranglex/POSTER.png",
+      "gallery": [
+        "/events/wranglex/1.png",
+        "/events/wranglex/2.png",
+        "/events/wranglex/3.png",
+        "/events/wranglex/4.png",
+        "/events/wranglex/5.png",
+        "/events/wranglex/6.png",
+        "/events/wranglex/7.png",
+        "/events/wranglex/8.png",
+        "/events/wranglex/9.png",
+        "/events/wranglex/10.png"
+      ]
+    },
+    "tickets": [
+      {
+        "id": "wranglex-general",
+        "name": "General Registration",
+        "price": 0,
+        "available": 1000,
+        "description": "Register via individual event registration links",
+        "perks": [
+          "Access to competitions",
+          "Certificates for participants",
+          "Exciting prizes for winners"
+        ]
+      }
+    ],
+    "partners": [],
+    "sponsors": [],
+    "agenda": [
+      {
+        "time": "Day 1 - March 11",
+        "title": "PromptOff Championship & Tech Presenta"
+      },
+      {
+        "time": "Day 2 - March 12",
+        "title": "BGMI Tournament, Free Fire & Asphalt"
+      },
+      {
+        "time": "Day 3 - March 13",
+        "title": "Stranger Things, Pottery Workshop & Prize Distribution"
+      }
+    ],
+    "tags": [
+      "Tech Fest",
+      "Gaming",
+      "AI",
+      "PromptOff",
+      "BGMI",
+      "Free Fire",
+      "Workshop",
+      "Competition",
+      "Esports"
+    ],
+    "organizer": "Departments of AI&DS and CSE(DS), JBIET",
+    "contactEmail": "",
+    "socialLinks": {
+      "website": "https://datawranglers-jbiet.in/wranglex/"
+    },
+    "highlights": [
+      "PromptOff Championship — AI prompt engineering with Microsoft certificates",
+      "Tech Presenta — Technical presentation competition",
+      "BGMI Tournament — Battlegrounds Mobile India esports",
+      "Free Fire Tournament — Free Fire esports battle",
+      "Asphalt Racing — High-speed racing challenge",
+      "Stranger Things — Non-tech mystery competition",
+      "Pottery Workshop — Hands-on creative experience",
+      "National-level participation with exciting prizes"
+    ],
+    "subEvents": [
+      {
+        "name": "PromptOff Championship",
+        "description": "AI Prompt Engineering Competition — 3 rounds testing creativity, logic & technical thinking. Microsoft Participation Certificates for all. Win an exclusive campus tour at Microsoft Hyderabad! Fee: ₹149 (Individual)",
+        "images": [
+          "/events/wranglex/1.png",
+          "/events/wranglex/2.png"
+        ],
+        "image": "/events/wranglex/1.png",
+        "registrationLink": "https://datawranglers-jbiet.in/promptoff/",
+        "category": "Tech Competition"
+      },
+      {
+        "name": "Tech Presenta",
+        "description": "Technical Presentation Competition — Present innovative ideas through Idea Screening & Final Presentation rounds. Individual: ₹99 | Team of 2: ₹169. Win exciting prize money & certificates!",
+        "images": [
+          "/events/wranglex/3.png",
+          "/events/wranglex/4.png"
+        ],
+        "image": "/events/wranglex/3.png",
+        "registrationLink": "https://datawranglers-jbiet.in/tech-presenta/",
+        "category": "Tech Competition"
+      },
+      {
+        "name": "Pottery Workshop",
+        "description": "Hands-on clay modelling session — design and build unique pottery with guidance from instructors. Machines & tools provided. Refreshments included. Take home your creation! Team of 3: ₹449 | Team of 4: ₹549",
+        "images": [
+          "/events/wranglex/5.png",
+          "/events/wranglex/6.png"
+        ],
+        "image": "/events/wranglex/5.png",
+        "registrationLink": "https://datawranglers-jbiet.in/pottery/",
+        "category": "Non-Tech"
+      },
+      {
+        "name": "BGMI Tournament",
+        "description": "Battlegrounds Mobile India esports tournament — Squad Format (4 players). Classic Mode on Erangel, Sanhok & Miramar. Standard competitive rules apply. Prize pool: ₹7500!",
+        "images": [
+          "/events/wranglex/7.png",
+          "/events/wranglex/8.png"
+        ],
+        "image": "/events/wranglex/7.png",
+        "registrationLink": "https://datawranglers-jbiet.in/bgmi/",
+        "category": "Esports"
+      },
+      {
+        "name": "Free Fire Tournament",
+        "description": "Free Fire battle royale esports tournament — last team standing wins. Form your squad and compete for the prize pool!",
+        "images": [
+          "/events/wranglex/9.png",
+          "/events/wranglex/10.png"
+        ],
+        "image": "/events/wranglex/9.png",
+        "registrationLink": "https://datawranglers-jbiet.in/freefire/",
+        "category": "Esports"
+      }
+    ]
   }
 ]

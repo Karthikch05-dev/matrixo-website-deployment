@@ -75,6 +75,8 @@ const localProfileImages: Record<string, string> = {
   'M-A009': '/intern-images/M-A009.webp',
   'M-A010': '/intern-images/M-A010.webp',
   'M-A011': '/intern-images/M-A011.webp',
+  'M-A012': '/intern-images/M-A012.webp',
+  'M-A013': '/intern-images/M-A013.webp',
 }
 
 function getProfileImage(employeeId: string, firestoreImage: string): string {
@@ -98,6 +100,8 @@ export default function TeamContent() {
           const data = doc.data()
           // Skip the Admin account from the team page
           if (data.name === 'Admin' || data.employeeId === 'Admin' || data.role === 'admin' && !data.designation) return
+          // Skip generic employees/interns without a specific designation (prevents "Team Member" cards on public page)
+          if ((data.role === 'employee' || data.role === 'Intern') && !data.designation) return
           const name = data.name || ''
           members.push({
             employeeId: data.employeeId || doc.id,

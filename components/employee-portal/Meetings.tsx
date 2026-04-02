@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,8 +29,9 @@ import {
 } from 'react-icons/fa'
 import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import type { EmployeeProfile } from '@/lib/employeePortalContext'
+import { isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { createGlobalNotification } from '@/lib/notificationUtils'
-import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal } from './ui'
+import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal, getLocalProfileImage, Avatar } from './ui'
 import { toast } from 'sonner'
 import { db } from '@/lib/firebaseConfig'
 import {
@@ -46,6 +47,10 @@ import {
   where,
   Timestamp
 } from 'firebase/firestore'
+
+// ============================================
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
+// ============================================
 
 // ============================================
 // TYPES
@@ -133,9 +138,10 @@ function formatDuration(start?: string, end?: string): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
-function getProfileImageUrl(url?: string, name?: string): string {
+function getProfileImageUrl(url?: string, name?: string, employeeId?: string): string {
   if (name && isMatriXOAccount(name)) return MATRIXO_LOGO_URL
-  if (url) return url
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -145,13 +151,18 @@ function getProfileImageUrl(url?: string, name?: string): string {
 
 function renderMarkdownClean(md: string): string {
   let html = md
+    // Normalize bullet characters (•, ‣, ◦, ⁃, ∙)
+    .replace(/^[\u2022\u2023\u25E6\u2043\u2219]\s+/gm, '- ')
+    // Handle corrupted UTF-8 bullet (mojibake for •)
+    .replace(/^[\u00e2\u0080\u00a2]+\s+/gm, '- ')
+    .replace(/^\u00e2\u20ac\u00a2\s+/gm, '- ')
     // Strip markdown links: [text](url) → text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     // Strip bare URLs in parentheses: (https://...)
     .replace(/\(https?:\/\/[^)]+\)/g, '')
-    // Strip any remaining standalone URLs
+    // Strip remaining URLs
     .replace(/https?:\/\/\S+/g, '')
-    // Clean up double spaces
+    // Clean double spaces
     .replace(/ {2,}/g, ' ')
     .trim()
 
@@ -182,7 +193,7 @@ function renderMarkdownClean(md: string): string {
       let content = match![1]
       // Bold
       content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-      result.push(`<li class="text-sm text-neutral-300 leading-relaxed pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-blue-400 before:font-bold">${content}</li>`)
+      result.push(`<li class="text-sm text-neutral-300 leading-relaxed flex gap-2 items-start"><span class="text-blue-400 font-bold flex-shrink-0 select-none">&#x2022;</span><span>${content}</span></li>`)
     }
     // Empty line
     else if (trimmed === '') {
@@ -225,19 +236,19 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
   
   // 1. Exact email match (highest priority)
   if (personEmail) {
-    const byEmail = employees.find(emp => emp.email.toLowerCase() === personEmail.toLowerCase())
+    const byEmail = employees.find(emp => emp.email?.toLowerCase() === personEmail.toLowerCase())
     if (byEmail) return byEmail
   }
 
   // 2. Exact name match
-  const exactMatch = employees.find(emp => emp.name.toLowerCase() === personName.toLowerCase())
+  const exactMatch = employees.find(emp => emp.name?.toLowerCase() === personName.toLowerCase())
   if (exactMatch) return exactMatch
 
   // 3. Normalized name match (strips "Matrixo", "Official" suffixes)
   const normalized = normalizeForMatch(personName)
   if (normalized) {
     const normalizedMatch = employees.find(emp => {
-      const empNorm = normalizeForMatch(emp.name)
+      const empNorm = normalizeForMatch(emp.name || '')
       return empNorm === normalized ||
              empNorm.includes(normalized) ||
              normalized.includes(empNorm)
@@ -249,7 +260,7 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
   const firstName = personName.split(' ')[0].toLowerCase()
   if (firstName.length >= 3) {
     const firstNameMatches = employees.filter(emp => {
-      const empFirst = emp.name.split(' ')[0].toLowerCase()
+      const empFirst = (emp.name || '').split(' ')[0].toLowerCase()
       return empFirst === firstName
     })
     if (firstNameMatches.length === 1) return firstNameMatches[0]
@@ -257,8 +268,8 @@ function fuzzyMatchEmployee(personName: string, personEmail: string | undefined,
 
   // 5. Partial name containment
   const partialMatch = employees.find(emp =>
-    emp.name.toLowerCase().includes(personName.toLowerCase()) ||
-    personName.toLowerCase().includes(emp.name.toLowerCase())
+    (emp.name || '').toLowerCase().includes(personName.toLowerCase()) ||
+    personName.toLowerCase().includes((emp.name || '').toLowerCase())
   )
   if (partialMatch) return partialMatch
 
@@ -274,7 +285,7 @@ function getAllAttendees(meeting: FathomMeeting): { name: string; email?: string
     if (!key) return
     // Check if already exists by email or name
     if (attendees.has(key)) return
-    const existsByName = Array.from(attendees.values()).some(a => a.name.toLowerCase() === name.toLowerCase())
+    const existsByName = Array.from(attendees.values()).some(a => (a.name || '').toLowerCase() === (name || '').toLowerCase())
     if (existsByName) return
     attendees.set(key, { name: name || email?.split('@')[0] || 'Unknown', email, isExternal })
   }
@@ -358,11 +369,13 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
           >
             <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-3 shadow-2xl shadow-black/50">
               <div className="flex items-center gap-3">
-                <img
-                  src={getProfileImageUrl(matched.profileImage, matched.name)}
-                  alt={matched.name}
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/30"
-                  onError={(e) => { (e.target as HTMLImageElement).src = getProfileImageUrl(undefined, matched.name) }}
+                <Avatar
+                  src={matched.profileImage}
+                  name={matched.name}
+                  employeeId={matched.employeeId}
+                  size="md"
+                  showBorder={false}
+                  className="ring-2 ring-blue-500/30"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-white truncate">{matched.name}</p>
@@ -377,13 +390,13 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
               {matched.role && (
                 <div className="mt-2 flex items-center gap-1.5">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    matched.role === 'admin'
+                    isAdminOrSubAdmin(matched.role)
                       ? 'bg-amber-500/15 text-amber-400'
-                      : matched.role === 'Intern'
+                      : (matched.role || '').toLowerCase().includes('intern')
                         ? 'bg-purple-500/15 text-purple-400'
                         : 'bg-blue-500/15 text-blue-400'
                   }`}>
-                    {matched.role}
+                    {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                   </span>
                   {matched.email && (
                     <span className="text-[10px] text-neutral-600 truncate">{matched.email}</span>
@@ -579,7 +592,7 @@ function MeetingDetailModal({
   onDeleteCustomTask: (meetingId: number, taskIndex: number) => void
 }) {
   const [activeSection, setActiveSection] = useState<'summary' | 'actions' | 'attendees'>('summary')
-  const isAdmin = employeeData?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employeeData?.role)
   
   // Admin edit state
   const [showAddTask, setShowAddTask] = useState(false)
@@ -959,30 +972,32 @@ function MeetingDetailModal({
                     key={i}
                     className="flex items-center gap-3 p-3 bg-neutral-800/40 rounded-xl border border-neutral-700/50 hover:border-neutral-600/50 transition-all"
                   >
-                    <img
-                      src={getProfileImageUrl(matched?.profileImage, att.name)}
-                      alt={att.name}
-                      className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/20"
-                      onError={(e) => { (e.target as HTMLImageElement).src = getProfileImageUrl(undefined, att.name) }}
+                    <Avatar
+                      src={matched?.profileImage}
+                      name={att.name}
+                      employeeId={matched?.employeeId}
+                      size="sm"
+                      showBorder={false}
+                      className="!w-9 !h-9 ring-2 ring-blue-500/20"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-neutral-200 font-medium truncate">{att.name}</p>
                       <div className="flex items-center gap-2">
                         {att.email && <p className="text-xs text-neutral-500 truncate">{att.email}</p>}
                         {matched?.designation && (
-                          <span className="text-[10px] text-neutral-600">• {matched.designation}</span>
+                          <span className="text-[10px] text-neutral-600">&#x2022; {matched.designation}</span>
                         )}
                       </div>
                     </div>
                     {matched?.role && (
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        matched.role === 'admin'
+                        isAdminOrSubAdmin(matched.role)
                           ? 'bg-amber-500/15 text-amber-400'
-                          : matched.role === 'Intern'
+                          : (matched.role || '').toLowerCase().includes('intern')
                             ? 'bg-purple-500/15 text-purple-400'
                             : 'bg-blue-500/15 text-blue-400'
                       }`}>
-                        {matched.role}
+                        {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                       </span>
                     )}
                     {att.isExternal && (
@@ -1009,7 +1024,7 @@ function MeetingDetailModal({
 
 export function Meetings() {
   const { employee, getAllEmployees } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const [meetings, setMeetings] = useState<FathomMeeting[]>([])
   const [loading, setLoading] = useState(true)
@@ -1236,7 +1251,7 @@ export function Meetings() {
 
       if (newMeetings.length === 0) return
 
-      console.log(`🔔 Found ${newMeetings.length} new meetings to notify about`)
+      console.log(`ðŸ”” Found ${newMeetings.length} new meetings to notify about`)
 
       for (const meeting of newMeetings) {
         // Mark as notified immediately to prevent duplicates
@@ -1262,10 +1277,10 @@ export function Meetings() {
         await createGlobalNotification({
           type: 'meeting',
           action: 'created',
-          title: `📋 Meeting Summary Ready: ${meetingTitle}`,
+          title: `Meeting Summary Ready: ${meetingTitle}`,
           message: `The MoM for "${meetingTitle}" is ready with ${taskCount} action item${taskCount !== 1 ? 's' : ''}. Check your tasks!`,
           relatedEntityId: String(meeting.recording_id),
-          targetUrl: '#meetings',
+          targetUrl: '/employee-portal#meetings',
           createdBy: employee.employeeId,
           createdByName: employee.name,
           createdByRole: employee.role
@@ -1280,7 +1295,7 @@ export function Meetings() {
           recipientCount: matchedEmployeeIds.length
         })
 
-        console.log(`✅ Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
+        console.log(`âœ… Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
       }
     } catch (err) {
       console.error('Error auto-notifying meetings:', err)
@@ -1328,8 +1343,8 @@ export function Meetings() {
             const assigneeNames: string[] = []
             if (item.assignee) {
               const matched = employees.find(
-                emp => (item.assignee!.email && emp.email.toLowerCase() === item.assignee!.email.toLowerCase()) ||
-                       (item.assignee!.name && emp.name.toLowerCase() === item.assignee!.name.toLowerCase())
+                emp => (item.assignee!.email && emp.email?.toLowerCase() === item.assignee!.email.toLowerCase()) ||
+                       (item.assignee!.name && emp.name?.toLowerCase() === item.assignee!.name.toLowerCase())
               )
               if (matched) {
                 assigneeIds.push(matched.employeeId)
@@ -1340,8 +1355,8 @@ export function Meetings() {
               // Fall back to the recorder or current user
               if (meeting.recorded_by) {
                 const recorder = employees.find(
-                  emp => emp.email.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
-                         emp.name.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
+                  emp => emp.email?.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
+                         emp.name?.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
                 )
                 if (recorder) {
                   assigneeIds.push(recorder.employeeId)
@@ -1387,7 +1402,7 @@ export function Meetings() {
             title: 'Meeting Tasks Synced',
             message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings have been added to Tasks.`,
             relatedEntityId: 'meeting-sync',
-            targetUrl: '#tasks',
+            targetUrl: '/employee-portal#tasks',
             createdBy: employee.employeeId,
             createdByName: employee.name,
             createdByRole: employee.role
@@ -1532,7 +1547,7 @@ export function Meetings() {
         title: `Meeting Task: ${meeting.meeting_title || meeting.title}`,
         message: `${employee.name} assigned you a task: ${actionItem.description || 'Task assigned'}`,
         relatedEntityId: String(meeting.recording_id),
-        targetUrl: '#meetings',
+        targetUrl: '/employee-portal#meetings',
         createdBy: employee.employeeId,
         createdByName: employee.name,
         createdByRole: employee.role
@@ -1608,7 +1623,7 @@ export function Meetings() {
           <p className="text-neutral-500 text-xs mt-0.5">
             {filteredMeetings.length} meeting{filteredMeetings.length !== 1 ? 's' : ''}
             {isAdmin && hiddenMeetingIds.size > 0 && (
-              <span className="text-red-400 ml-1.5">• {hiddenMeetingIds.size} hidden</span>
+              <span className="text-red-400 ml-1.5">&#x2022; {hiddenMeetingIds.size} hidden</span>
             )}
           </p>
         </div>

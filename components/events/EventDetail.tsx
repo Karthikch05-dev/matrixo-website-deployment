@@ -9,11 +9,17 @@ import { FaCalendar, FaMapMarkerAlt, FaClock, FaUsers, FaTag } from 'react-icons
 import EventRegistrationForm from './EventRegistrationForm'
 import Confetti from '../Confetti'
 import VibeCodeEventDetail from './VibeCodeEventDetail'
+import WrangleXEventDetail from './WrangleXEventDetail'
 
 export default function EventDetail({ event }: { event: any }) {
   // Check if this is a VibeCode event - render dedicated component
   if (event.isVibeCodeEvent) {
     return <VibeCodeEventDetail event={event} />
+  }
+
+  // Check if this is a WrangleX event - render dedicated component
+  if (event.isWrangleXEvent) {
+    return <WrangleXEventDetail event={event} />
   }
 
   return <DefaultEventDetail event={event} />
@@ -266,7 +272,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                   </h3>
                 )}
                 
-                <p className={`${isTEDxEvent ? 'text-gray-800 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'} text-lg leading-relaxed mb-6`}>
+                <p className={`${isTEDxEvent ? 'text-gray-800 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'} text-lg leading-relaxed mb-6 whitespace-pre-line`}>
                   {event.description}
                 </p>
               </motion.div>

@@ -37,6 +37,10 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
   const scheduleSectionRef = useRef<HTMLDivElement>(null)
 
   const handleRegisterNow = (ticket: any) => {
+    if (event.googleFormLink) {
+      window.open(event.googleFormLink, '_blank', 'noopener,noreferrer')
+      return
+    }
     if (!user) {
       const currentUrl = window.location.pathname
       window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
@@ -125,6 +129,21 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <span className="text-cyan-400 text-sm font-medium">Organized by matriXO</span>
             </motion.div>
 
+            {/* 1st Year Only Badge */}
+            {event.firstYearOnly && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex justify-center mb-6"
+              >
+                <div className="inline-flex items-center gap-2 bg-orange-500/15 border border-orange-500/40 rounded-full px-5 py-2">
+                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                  <span className="text-orange-300 text-sm font-semibold">Only for 1st Year Students</span>
+                </div>
+              </motion.div>
+            )}
+
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
               <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(0,200,255,0.5)]">
@@ -169,7 +188,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                          overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Register Now – ₹69 Only
+                  {event.googleFormLink ? 'Register Now' : 'Register Now – ₹69 Only'}
                   <FaBolt className="group-hover:animate-pulse" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -335,7 +354,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Event <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. Feb 12 & 13. Choose your day!</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. {format(new Date(event.date), 'MMM d')} & {format(new Date(event.endDate), 'MMM d')}. Choose your day!</p>
           </motion.div>
 
           {/* Single Session Schedule */}
@@ -388,75 +407,135 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          {/* Pricing Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
-          >
-            {/* Price Display */}
-            <div className="mb-8">
-              <div className="flex items-center justify-center gap-4 mb-2">
-                <span className="text-2xl text-gray-500 line-through">₹99</span>
-                <span className="text-5xl md:text-6xl font-black text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">
-                  ₹69
-                </span>
-              </div>
-              <p className="text-gray-400">Per person</p>
-              <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
-                <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
-              </div>
-            </div>
-
-            {/* Rules */}
-            <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">Individual Registration</h4>
-                  <p className="text-gray-400 text-sm">Each person registers individually. No team required.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">Full-Day Event Access</h4>
-                  <p className="text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">Physical Certificate Included</h4>
-                  <p className="text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">Limited Seats</h4>
-                  <p className="text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Register Button */}
-            <motion.button
-              onClick={() => handleRegisterNow(event.tickets[0])}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full 
-                       font-bold text-lg text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 
-                       transition-all duration-300"
+          {event.googleFormLink ? (
+            /* Google Form Registration Card */
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
             >
-              Register Now
-            </motion.button>
-          </motion.div>
+              {event.firstYearOnly && (
+                <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
+                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                  <span className="text-orange-300 font-semibold text-sm">Only for 1st Year Students</span>
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Interactive Workshop</h4>
+                    <p className="text-gray-400 text-sm">Hands-on AI-assisted coding session for 1st year students.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Team-Based Challenge</h4>
+                    <p className="text-gray-400 text-sm">Compete in teams and win exciting prizes.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Participation Certificate</h4>
+                    <p className="text-gray-400 text-sm">Every participant receives a certificate from matriXO.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Swags & Prizes</h4>
+                    <p className="text-gray-400 text-sm">Win exciting swags and prizes for top performers.</p>
+                  </div>
+                </div>
+              </div>
+              <motion.button
+                onClick={() => handleRegisterNow(null)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full
+                         font-bold text-lg text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50
+                         transition-all duration-300"
+              >
+                Register Now
+              </motion.button>
+              <p className="text-gray-500 text-sm mt-4">Opens Google Form in a new tab</p>
+            </motion.div>
+          ) : (
+            /* Default Pricing Card */
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
+            >
+              {/* Price Display */}
+              <div className="mb-8">
+                <div className="flex items-center justify-center gap-4 mb-2">
+                  <span className="text-2xl text-gray-500 line-through">₹99</span>
+                  <span className="text-5xl md:text-6xl font-black text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">
+                    ₹69
+                  </span>
+                </div>
+                <p className="text-gray-400">Per person</p>
+                <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
+                  <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
+                </div>
+              </div>
+
+              {/* Rules */}
+              <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Individual Registration</h4>
+                    <p className="text-gray-400 text-sm">Each person registers individually. No team required.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Full-Day Event Access</h4>
+                    <p className="text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Physical Certificate Included</h4>
+                    <p className="text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold">Limited Seats</h4>
+                    <p className="text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Register Button */}
+              <motion.button
+                onClick={() => handleRegisterNow(event.tickets[0])}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full
+                         font-bold text-lg text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50
+                         transition-all duration-300"
+              >
+                Register Now
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </section>
 
-      {/* REGISTRATION FORM INFO */}
+      {/* REGISTRATION FORM INFO & PAYMENT — hidden when using Google Form */}
+      {!event.googleFormLink && (
+        <>
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <motion.div
@@ -539,6 +618,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
           </motion.div>
         </div>
       </section>
+        </>
+      )}
 
       {/* CERTIFICATES & DELIVERABLES */}
       <section className="py-20 px-6">
@@ -742,7 +823,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                          transition-all duration-300 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-3">
-                  Register Now – ₹69 Only
+                  {event.googleFormLink ? 'Register Now' : 'Register Now – ₹69 Only'}
                   <FaLaptopCode className="group-hover:rotate-12 transition-transform" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />

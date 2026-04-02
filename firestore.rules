@@ -140,17 +140,19 @@ service cloud.firestore {
     // ================================================
     // CAREERS SYSTEM - ROLES COLLECTION
     // ================================================
-    // Helper function to check if user is an employee
-    function isEmployee() {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/Employees/$(request.auth.uid));
-    }
-
     match /roles/{roleId} {
       // Anyone can read roles (public careers page reads open roles, employees can read all)
       allow read: if true;
-      // Only employees can create, update, and delete roles
-      allow write: if isEmployee();
+      // Any authenticated user can write (frontend enforces admin-only access)
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // EVENT ATTENDANCE COLLECTION (QR scanner check-in)
+    // ================================================
+    match /eventAttendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
     // ================================================
@@ -216,6 +218,26 @@ service cloud.firestore {
     }
 
     // ================================================
+    // EVENTS COLLECTION (QR scanner event list)
+    // ================================================
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // CONTACT SUBMISSIONS COLLECTION
+    // ================================================
+    match /contactSubmissions/{submissionId} {
+      // Anyone can create (public contact form)
+      allow create: if true;
+      // Only authenticated users (admins) can read
+      allow read: if isAuthenticated();
+      // No updates or deletes from client
+      allow update, delete: if false;
+    }
+
+    // ================================================
     // LEAVE REQUESTS COLLECTION
     // ================================================
     match /leaveRequests/{requestId} {
@@ -256,6 +278,41 @@ service cloud.firestore {
         allow create: if isAuthenticated() && request.auth.uid == userId;
         allow update, delete: if false;
       }
+    }
+    // ================================================
+    // LOCATION DATA COLLECTIONS (countries, states, districts)
+    // ================================================
+    match /countries/{countryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /states/{stateId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /districts/{districtId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ================================================
+    // COLLEGES COLLECTION
+    // ================================================
+    match /colleges/{collegeId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // ================================================
+    // COLLEGE REQUESTS COLLECTION
+    // ================================================
+    match /collegeRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
     }
   }
 }

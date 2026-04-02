@@ -23,11 +23,17 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaSearch,
-  FaSmile
+  FaSmile,
+  FaCalendar
 } from 'react-icons/fa'
-import { useEmployeeAuth, Task, TaskComment, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData } from './ui'
+import { useEmployeeAuth, Task, TaskComment, EmployeeProfile, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Textarea, Select, Modal, Badge, Avatar, EmptyState, Spinner, ProfileInfo, employeeToProfileData, getLocalProfileImage } from './ui'
 import { RichTextRenderer } from './RichTextEditor'
+
+// ============================================
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
+// ============================================
+const getEmpProfileImage = getLocalProfileImage
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 
@@ -88,8 +94,8 @@ function MentionInput({
         const name = (e.name || '').toLowerCase().trim()
         if (name === 'admin') return false
         if (!query) return true
-        return e.name.toLowerCase().includes(query) ||
-               e.employeeId.toLowerCase().includes(query) ||
+        return (e.name || '').toLowerCase().includes(query) ||
+               (e.employeeId || '').toLowerCase().includes(query) ||
                (e.department || '').toLowerCase().includes(query)
       })
     } else {
@@ -216,9 +222,9 @@ function MentionInput({
     
     const mentionIds = userMentions.map(name => {
       const emp = employees.find(e => 
-        e.name.toLowerCase() === name.toLowerCase() ||
-        e.name.toLowerCase().replace(/\s/g, '').includes(name.toLowerCase().replace(/\s/g, '')) ||
-        e.employeeId.toLowerCase() === name.toLowerCase()
+        (e.name || '').toLowerCase() === name.toLowerCase() ||
+        (e.name || '').toLowerCase().replace(/\s/g, '').includes(name.toLowerCase().replace(/\s/g, '')) ||
+        (e.employeeId || '').toLowerCase() === name.toLowerCase()
       )
       return emp?.employeeId
     }).filter(Boolean) as string[]
@@ -269,7 +275,7 @@ function MentionInput({
               index === selectedIndex ? 'bg-primary-500/30 border-l-2 border-primary-500' : 'hover:bg-neutral-700'
             }`}
           >
-            <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+            <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white font-medium truncate">{emp.name}</p>
               <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
@@ -354,11 +360,25 @@ const statusConfig = {
 
 const INTERN_SPECIALIZATIONS = [
   'Web Development',
-  'Content and Curriculum Development',
+  'Content & Curriculum Development',
   'Product Research & Innovation',
   'Operations & Project Management',
   'Marketing & Brand Strategy'
 ]
+
+// Normalize text for flexible intern specialization matching
+// Handles: "&" vs "and", trailing "Intern" suffix, extra whitespace
+const normalizeSpecText = (text: string) =>
+  text.toLowerCase().replace(/&/g, 'and').replace(/\bintern\b/gi, '').replace(/\s+/g, ' ').trim()
+
+// Universal intern detector — checks ALL possible ways an employee can be an intern in Firebase
+// Uses .trim() to handle trailing/leading spaces in Firebase string values
+const isIntern = (emp: EmployeeProfile): boolean => {
+  const dept = (emp.department || '').trim().toLowerCase()
+  const desig = (emp.designation || '').trim().toLowerCase()
+  const role = (emp.role || '').trim().toLowerCase()
+  return dept === 'intern' || desig.includes('intern') || role === 'intern'
+}
 
 // ============================================
 // CREATE/EDIT TASK MODAL
@@ -410,7 +430,7 @@ function TaskModal({
     }
 
     // Validate assignees belong to selected department (if department is selected)
-    if (form.department && form.assignedTo.length > 0) {
+    if (form.department && form.department !== 'Intern' && form.assignedTo.length > 0) {
       const validAssignees = form.assignedTo.filter(id => {
         const emp = employees.find(e => e.employeeId === id)
         return emp && emp.department === form.department
@@ -488,21 +508,10 @@ function TaskModal({
     }))
   }
 
-  // Get unique departments (excluding Admin)
-  // Also add 'Intern' if there are any employees with role 'Intern'
-  // Always include core departments even if no employees exist yet
+  // Fixed department list — only show the three required options
   const departments = useMemo(() => {
-    const deptSet = new Set(employees.map(e => e.department).filter(Boolean))
-    // Check if there are any interns by role
-    const hasInterns = employees.some(e => e.role === 'Intern')
-    if (hasInterns) {
-      deptSet.add('Intern')
-    }
-    // Always include core departments
-    const coreDepartments = ['Operations', 'Marketing', 'Management']
-    coreDepartments.forEach(dept => deptSet.add(dept))
-    return Array.from(deptSet).filter(d => d !== 'Admin').sort()
-  }, [employees])
+    return ['Management', 'Intern']
+  }, [])
   
   // Filter employees by selected department and specialization (for Interns)
   const filteredEmployees = useMemo(() => {
@@ -511,15 +520,17 @@ function TaskModal({
     // Filter by department if selected
     if (form.department) {
       if (form.department === 'Intern') {
-        // For Intern department, filter by role = 'Intern'
-        result = result.filter(emp => emp.role === 'Intern')
+        // For Intern department, use universal intern detection (handles trailing spaces in Firebase)
+        result = result.filter(emp => isIntern(emp))
         
-        // If specialization is selected, further filter by designation (contains match)
+        // If specialization is selected, filter by designation (normalized match)
         if (form.specialization) {
-          result = result.filter(emp => 
-            emp.designation?.toLowerCase().includes(form.specialization.toLowerCase()) ||
-            emp.designation?.toLowerCase() === form.specialization.toLowerCase()
-          )
+          const normalizedSpec = normalizeSpecText(form.specialization)
+          result = result.filter(emp => {
+            if (!emp.designation) return false
+            const normalizedDesig = normalizeSpecText(emp.designation)
+            return normalizedDesig.includes(normalizedSpec) || normalizedSpec.includes(normalizedDesig)
+          })
         }
       } else {
         // For other departments, filter by department
@@ -646,10 +657,10 @@ function TaskModal({
                     }
                   `}
                 >
-                  <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+                  <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate">{emp.name}</p>
-                    <p className="text-xs text-neutral-500">{emp.department}</p>
+                    <p className="text-xs text-neutral-500">{isIntern(emp) ? 'Intern' : emp.department}</p>
                   </div>
                   {form.assignedTo.includes(emp.employeeId) && (
                     <FaCheckCircle className="text-primary-500" />
@@ -703,7 +714,7 @@ function TaskDetailModal({
 
   if (!task) return null
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
   const isOwner = task.createdBy === employee?.employeeId
   const isAssignee = task.assignedTo?.includes(employee?.employeeId || '')
   const canEdit = isAdmin
@@ -797,8 +808,8 @@ function TaskDetailModal({
       if (part.startsWith('@')) {
         const mentionName = part.slice(1)
         const emp = employees.find(e => 
-          e.name.toLowerCase().replace(/\s/g, '') === mentionName.toLowerCase() ||
-          e.employeeId.toLowerCase() === mentionName.toLowerCase()
+          (e.name || '').toLowerCase().replace(/\s/g, '') === mentionName.toLowerCase() ||
+          (e.employeeId || '').toLowerCase() === mentionName.toLowerCase()
         )
         if (emp) {
           const displayName = emp.name
@@ -980,7 +991,7 @@ function TaskDetailModal({
                     }}
                     isAdmin={false}
                   >
-                    <Avatar src={comment.authorImage} name={comment.authorName} size="sm" showBorder={false} />
+                    <Avatar src={getEmpProfileImage(comment.authorImage, comment.authorId)} name={comment.authorName} size="sm" showBorder={false} employeeId={comment.authorId} />
                   </ProfileInfo>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -1058,7 +1069,7 @@ function TaskDetailModal({
                                       {reactedUsers.map((user) => (
                                         <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-neutral-700/50">
                                           <img
-                                            src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=24`}
+                                            src={getEmpProfileImage(user!.profileImage, user!.employeeId) || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=24`}
                                             alt={user!.name}
                                             className="w-5 h-5 rounded-full object-cover flex-shrink-0"
                                           />
@@ -1204,6 +1215,12 @@ function TaskCard({
         </div>
       )}
 
+      {task.createdAt?.toDate && (
+        <p className="text-xs text-neutral-500 mb-2">
+          Created: {task.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </p>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Badge size="sm" className={(statusConfig[task.status || 'todo'] || statusConfig.todo).color}>
@@ -1282,6 +1299,8 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
   const [filterSource, setFilterSource] = useState<string>('')
   const [filterInternSpecialization, setFilterInternSpecialization] = useState<string>('')
   const [showMyTasks, setShowMyTasks] = useState(showOnlyMyTasks)
+  const [filterDate, setFilterDate] = useState<string>('')
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Fetch employees on mount
   useEffect(() => {
@@ -1356,6 +1375,9 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
         const assignedTo = task?.assignedTo || []
         return assignedTo.some(empId => {
           const emp = employees.find(e => e.employeeId === empId)
+          if (filterRole === 'Intern') {
+            return emp ? isIntern(emp) : false
+          }
           return emp?.role === filterRole
         })
       })
@@ -1368,6 +1390,16 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
       } else if (filterSource === 'manual') {
         result = result.filter(task => !task?.createdFrom || task?.createdFrom === 'portal')
       }
+    }
+
+    // Date filter — match tasks created on selected date (ignores time)
+    if (filterDate) {
+      result = result.filter(task => {
+        if (!task?.createdAt?.toDate) return false
+        const taskDate = task.createdAt.toDate()
+        const taskDateStr = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`
+        return taskDateStr === filterDate
+      })
     }
 
     // Intern Specialization filter (filters by task specialization field)
@@ -1396,7 +1428,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
 
     return result
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees])
+  }, [tasks, searchQuery, filterPriority, filterStatus, filterAssignee, filterRole, filterSource, showMyTasks, employee, employees, filterDate])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -1407,9 +1439,11 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
     setFilterSource('')
     setFilterInternSpecialization('')
     setShowMyTasks(false)
+    setFilterDate('')
+    setShowDatePicker(false)
   }
 
-  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterSource || filterInternSpecialization || showMyTasks
+  const hasActiveFilters = searchQuery || filterPriority || filterStatus || filterAssignee || filterRole || filterSource || filterInternSpecialization || showMyTasks || filterDate
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -1505,6 +1539,35 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
             >
               My Tasks
             </Button>
+
+            <div className="relative">
+              <Button
+                variant={filterDate ? 'primary' : 'secondary'}
+                size="sm"
+                icon={<FaCalendar />}
+                onClick={() => setShowDatePicker(v => !v)}
+              >
+                {filterDate ? new Date(filterDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date'}
+              </Button>
+              {showDatePicker && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-neutral-800 border border-neutral-700 rounded-lg p-2 shadow-xl">
+                  <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => { setFilterDate(e.target.value); setShowDatePicker(false) }}
+                    className="bg-neutral-900 text-white text-sm border border-neutral-600 rounded px-2 py-1 focus:outline-none focus:border-primary-500"
+                  />
+                  {filterDate && (
+                    <button
+                      onClick={() => { setFilterDate(''); setShowDatePicker(false) }}
+                      className="mt-1 w-full text-xs text-neutral-400 hover:text-white py-1"
+                    >
+                      Clear date
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>

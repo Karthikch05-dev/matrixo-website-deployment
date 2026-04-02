@@ -19,7 +19,7 @@ import {
   FaTrash,
   FaBriefcase
 } from 'react-icons/fa'
-import { useEmployeeAuth, Holiday, CalendarEvent } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, Holiday, CalendarEvent, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Alert } from './ui'
 import { toast } from 'sonner'
 
@@ -328,7 +328,7 @@ export function Calendar() {
   // State for the day details panel (right side)
   const [panelSelectedDay, setPanelSelectedDay] = useState<CalendarDay | null>(null)
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   // Helper to get local date string without UTC conversion
   const getLocalDateString = (date: Date) => {

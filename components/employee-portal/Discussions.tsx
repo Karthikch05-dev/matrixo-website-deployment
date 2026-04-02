@@ -16,10 +16,15 @@ import {
   FaTimes,
   FaSmile
 } from 'react-icons/fa'
-import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile } from '@/lib/employeePortalContext'
-import { Card, Button, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo } from './ui'
+import { useEmployeeAuth, Discussion, DiscussionReply, EmployeeProfile, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
+import { Card, Button, Badge, Avatar, EmptyState, Spinner, Modal, ProfileInfo, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
+
+// ============================================
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
+// ============================================
+const getEmpProfileImage = getLocalProfileImage
 
 // ============================================
 // MENTION INPUT COMPONENT (PORTAL-BASED)
@@ -74,8 +79,8 @@ function MentionInput({
         // Include everyone else
         if (!query) return true
         // Apply search filter
-        const matchesName = e.name.toLowerCase().includes(query)
-        const matchesId = e.employeeId.toLowerCase().includes(query)
+        const matchesName = (e.name || '').toLowerCase().includes(query)
+        const matchesId = (e.employeeId || '').toLowerCase().includes(query)
         const matchesDept = (e.department || '').toLowerCase().includes(query)
         return matchesName || matchesId || matchesDept
       })
@@ -213,13 +218,13 @@ function MentionInput({
     const mentionIds = userMentions.map(name => {
       const nameLower = name.toLowerCase().replace(/\s/g, '')
       const emp = employees.find(e => 
-        e.name.toLowerCase().replace(/\s/g, '') === nameLower
+        (e.name || '').toLowerCase().replace(/\s/g, '') === nameLower
       ) || employees.find(e =>
-        e.employeeId.toLowerCase() === nameLower
+        (e.employeeId || '').toLowerCase() === nameLower
       ) || employees.find(e =>
-        e.name.split(' ')[0].toLowerCase() === nameLower
+        (e.name || '').split(' ')[0].toLowerCase() === nameLower
       ) || employees.find(e =>
-        e.name.toLowerCase().replace(/\s/g, '').startsWith(nameLower) && nameLower.length >= 3
+        (e.name || '').toLowerCase().replace(/\s/g, '').startsWith(nameLower) && nameLower.length >= 3
       )
       return emp?.employeeId
     }).filter(Boolean) as string[]
@@ -272,7 +277,7 @@ function MentionInput({
                 index === selectedIndex ? 'bg-primary-500/30 border-l-2 border-primary-500' : 'hover:bg-neutral-700'
               }`}
             >
-              <Avatar src={emp.profileImage} name={emp.name} size="sm" showBorder={false} />
+              <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-white font-medium truncate">{emp.name}</p>
                 <p className="text-xs text-neutral-500 truncate">{emp.department}</p>
@@ -398,7 +403,7 @@ function ReplyItem({
           }}
           isAdmin={false}
         >
-          <Avatar src={reply.authorImage} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} />
+          <Avatar src={getEmpProfileImage(reply.authorImage, reply.authorId)} name={reply.authorName || 'Anonymous'} size="sm" showBorder={false} employeeId={reply.authorId} />
         </ProfileInfo>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -527,7 +532,7 @@ function DiscussionPost({
   const [editContent, setEditContent] = useState(discussion.content || '')
   const [editSubmitting, setEditSubmitting] = useState(false)
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
   const isAuthor = discussion.authorId === employee?.employeeId
   const canDelete = isAdmin || isAuthor
   const canEdit = isAuthor // Only author can edit their own message
@@ -683,16 +688,16 @@ function DiscussionPost({
           // Find employee matching the mention - use strict matching order
           const mentionedEmployee = employees.find(e => 
             // Exact match: full name without spaces
-            e.name.toLowerCase().replace(/\s/g, '') === mentionName
+            (e.name || '').toLowerCase().replace(/\s/g, '') === mentionName
           ) || employees.find(e =>
             // Exact match: employee ID
-            e.employeeId.toLowerCase() === mentionName
+            (e.employeeId || '').toLowerCase() === mentionName
           ) || employees.find(e =>
             // Exact match: first name only
-            e.name.split(' ')[0].toLowerCase() === mentionName
+            (e.name || '').split(' ')[0].toLowerCase() === mentionName
           ) || employees.find(e =>
             // Partial match: full name (without spaces) starts with mentionName
-            e.name.toLowerCase().replace(/\s/g, '').startsWith(mentionName) && mentionName.length >= 3
+            (e.name || '').toLowerCase().replace(/\s/g, '').startsWith(mentionName) && mentionName.length >= 3
           )
           
           if (mentionedEmployee) {
@@ -763,10 +768,11 @@ function DiscussionPost({
             isAdmin={false}
           >
             <Avatar 
-              src={discussion.authorImage} 
+              src={getEmpProfileImage(discussion.authorImage, discussion.authorId)} 
               name={discussion.authorName || 'Anonymous'} 
               size="md" 
-              showBorder={false} 
+              showBorder={false}
+              employeeId={discussion.authorId}
             />
           </ProfileInfo>
           
@@ -933,7 +939,7 @@ function DiscussionPost({
                           {reactedUsers.map((user) => (
                             <div key={user!.employeeId} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-neutral-700/50">
                               <img
-                                src={user!.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=32`}
+                                src={getEmpProfileImage(user!.profileImage, user!.employeeId) || `https://ui-avatars.com/api/?name=${encodeURIComponent(user!.name)}&background=7c3aed&color=fff&size=32`}
                                 alt={user!.name}
                                 className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                               />
@@ -1168,7 +1174,7 @@ export function Discussions() {
       {/* Create New Post */}
       <Card padding="md">
         <div className="flex items-start gap-3">
-          <Avatar src={employee?.profileImage} name={employee?.name} size="md" showBorder={false} />
+          <Avatar src={getEmpProfileImage(employee?.profileImage, employee?.employeeId)} name={employee?.name} size="md" showBorder={false} employeeId={employee?.employeeId} />
           <div className="flex-1">
             <MentionInput
               value={newPostContent}

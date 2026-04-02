@@ -666,6 +666,27 @@ export const Alert = ({ children, variant = 'info', icon, className = '' }: Aler
 }
 
 // ============================================
+// LOCAL PROFILE IMAGE FALLBACKS
+// ============================================
+const localProfileImages: Record<string, string> = {
+  'M-A001': '/intern-images/M-A001.webp',
+  'M-A005': '/intern-images/M-A005.webp',
+  'M-A006': '/intern-images/M-A006.webp',
+  'M-A008': '/intern-images/M-A008.webp',
+  'M-A009': '/intern-images/M-A009.webp',
+  'M-A010': '/intern-images/M-A010.webp',
+  'M-A011': '/intern-images/M-A011.webp',
+  'M-A012': '/intern-images/M-A012.webp',
+  'M-A013': '/intern-images/M-A013.webp',
+}
+
+export const getLocalProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
+  if (profileImage) return profileImage
+  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
+  return undefined
+}
+
+// ============================================
 // AVATAR COMPONENT
 // ============================================
 interface AvatarProps {
@@ -674,9 +695,10 @@ interface AvatarProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   showBorder?: boolean
+  employeeId?: string
 }
 
-export const Avatar = ({ src, name = 'User', size = 'md', className = '', showBorder = true }: AvatarProps) => {
+export const Avatar = ({ src, name = 'User', size = 'md', className = '', showBorder = true, employeeId }: AvatarProps) => {
   const sizes = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
@@ -687,6 +709,7 @@ export const Avatar = ({ src, name = 'User', size = 'md', className = '', showBo
   const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&size=200`
+  const resolvedSrc = getLocalProfileImage(src, employeeId) || fallbackUrl
   
   return (
     <div 
@@ -697,7 +720,7 @@ export const Avatar = ({ src, name = 'User', size = 'md', className = '', showBo
       `}
     >
       <img
-        src={src || fallbackUrl}
+        src={resolvedSrc}
         alt={name}
         className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
@@ -1014,11 +1037,12 @@ export const ProfileInfo = ({
     return () => document.removeEventListener('keydown', handleEsc)
   }, [])
 
+  const resolvedProfileImage = getLocalProfileImage(data.profileImage, data.employeeId)
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name?.split(' ').map(n => n[0]).join('') || 'U')}&background=4f46e5&color=fff&size=200`
   
   const getRoleBadgeVariant = (role: string) => {
-    if (role === 'admin') return 'warning'
-    if (role === 'Intern') return 'info'
+    if (role === 'admin' || role === 'sub-admin') return 'warning'
+    if ((role || '').toLowerCase().includes('intern')) return 'info'
     return 'primary'
   }
 
@@ -1087,7 +1111,7 @@ export const ProfileInfo = ({
           <div className="flex items-center gap-3 relative">
             <div className="relative">
               <img
-                src={data.profileImage || fallbackUrl}
+                src={resolvedProfileImage || fallbackUrl}
                 alt={data.name}
                 className="w-12 h-12 rounded-full object-cover"
                 onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
@@ -1103,7 +1127,7 @@ export const ProfileInfo = ({
 
           <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
             <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
-              {data.role === 'admin' ? '👑 Admin' : data.role}
+              {data.role === 'admin' ? '👑 Admin' : data.role === 'sub-admin' ? '⭐ Sub-Admin' : data.role}
             </Badge>
             {!inline && data.attendancePercentage !== undefined && (
               <span className="text-neutral-400 flex items-center gap-1">
@@ -1159,7 +1183,7 @@ export const ProfileInfo = ({
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <img
-                    src={data.profileImage || fallbackUrl}
+                    src={resolvedProfileImage || fallbackUrl}
                     alt={data.name}
                     className="relative w-16 h-16 rounded-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
@@ -1172,7 +1196,7 @@ export const ProfileInfo = ({
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
                     <Badge variant="primary" size="sm">{data.employeeId}</Badge>
                     <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
-                      {data.role === 'admin' ? '👑 Admin' : data.role}
+                      {data.role === 'admin' ? '👑 Admin' : data.role === 'sub-admin' ? '⭐ Sub-Admin' : data.role}
                     </Badge>
                   </div>
                 </div>
@@ -1318,7 +1342,7 @@ export const employeeToProfileData = (
 ): ProfileInfoData => ({
   employeeId: employee.employeeId,
   name: employee.name,
-  profileImage: employee.profileImage,
+  profileImage: getLocalProfileImage(employee.profileImage, employee.employeeId),
   role: employee.role || 'employee',
   department: employee.department,
   designation: employee.designation,

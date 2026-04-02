@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
+import { FaBars, FaTimes, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge, FaSun, FaMoon } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import config from '@/lib/config'
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { useTheme } from 'next-themes'
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -56,7 +57,6 @@ const betaLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
   const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false)
@@ -67,6 +67,8 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { profile } = useProfile()
   const pathname = usePathname()
+  const { resolvedTheme, setTheme } = useTheme()
+  const darkMode = resolvedTheme === 'dark'
 
   useEffect(() => {
     setMounted(true)
@@ -102,26 +104,8 @@ export default function Navbar() {
     checkIfEmployee()
   }, [user])
 
-  useEffect(() => {
-    if (!mounted) return
-
-    // Check current state from DOM
-    const isDark = document.documentElement.classList.contains('dark')
-    setDarkMode(isDark)
-  }, [mounted])
-
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-
-    setDarkMode(newDarkMode)
+    setTheme(darkMode ? 'light' : 'dark')
   }
 
   const handleLogout = async () => {
@@ -280,7 +264,7 @@ export default function Navbar() {
                       exit={{ rotate: 45, opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
-                      <FaSun className="w-5 h-5" />
+                      <FaSun className="w-5 h-5 text-yellow-400" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -290,7 +274,7 @@ export default function Navbar() {
                       exit={{ rotate: -45, opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                     >
-                      <FaMoon className="w-5 h-5" />
+                      <FaMoon className="w-5 h-5 text-blue-400" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -399,7 +383,7 @@ export default function Navbar() {
                 className="p-2 rounded-2xl glass-card-thin text-gray-700 dark:text-gray-300"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? <FaSun className="w-5 h-5" /> : <FaMoon className="w-5 h-5" />}
+                {darkMode ? <FaSun className="w-5 h-5 text-yellow-400" /> : <FaMoon className="w-5 h-5 text-blue-400" />}
               </button>
             )}
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaCode, FaLaptopCode, FaRocket, FaTrophy, FaBriefcase, FaUsers } from 'react-icons/fa'
 import Link from 'next/link'
@@ -93,6 +94,8 @@ const pricingPlans = [
 ]
 
 export default function ServicesContent() {
+  const [hoveredPlan, setHoveredPlan] = useState<number | null>(null)
+
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
@@ -141,7 +144,7 @@ export default function ServicesContent() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="glass-card p-8 hover-lift hover-glow"
+                className="glass-card p-8 hover-lift hover-glow flex flex-col h-full"
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 text-white">
                   <service.icon size={28} />
@@ -152,7 +155,7 @@ export default function ServicesContent() {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {service.description}
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-2 flex-1">
                   {service.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="text-blue-500 mr-2">✓</span>
@@ -160,6 +163,18 @@ export default function ServicesContent() {
                     </li>
                   ))}
                 </ul>
+                <Link 
+                  href={`/contact?subject=${encodeURIComponent(service.title)}`}
+                  className="mt-6"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="btn-primary w-full py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Register Now
+                  </motion.button>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -303,46 +318,98 @@ export default function ServicesContent() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <motion.div
+              <div
                 key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={`rounded-[var(--glass-radius)] p-8 ${
-                  plan.highlighted
-                    ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white scale-105 shadow-2xl'
-                    : 'glass-card'
-                }`}
+                className={`relative ${plan.highlighted ? 'scale-105 z-10' : 'z-0'}`}
+                style={{
+                  opacity: hoveredPlan !== null && hoveredPlan !== index ? 0.72 : 1,
+                  transition: 'opacity 0.35s ease',
+                }}
               >
-                <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                  {plan.name}
-                </h3>
-                <p className={`mb-6 ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
-                  {plan.description}
-                </p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  {plan.period && <span className={`${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>{plan.period}</span>}
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className={`flex items-center ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
-                      <span className={`mr-2 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}>✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/contact">
-                  <button className={`w-full py-3 rounded-full font-semibold transition-all duration-300 ${
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{
+                    y: plan.highlighted ? -14 : -8,
+                    scale: 1.03,
+                    transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] },
+                  }}
+                  onHoverStart={() => setHoveredPlan(index)}
+                  onHoverEnd={() => setHoveredPlan(null)}
+                  style={{
+                    cursor: 'pointer',
+                    height: '100%',
+                    boxShadow:
+                      hoveredPlan === index
+                        ? plan.highlighted
+                          ? '0 0 0 2px rgba(167,139,250,0.9), 0 0 55px rgba(124,58,237,0.65), 0 0 110px rgba(124,58,237,0.25), 0 32px 64px rgba(0,0,0,0.55)'
+                          : '0 0 0 1.5px rgba(96,165,250,0.6), 0 0 35px rgba(37,99,235,0.35), 0 0 60px rgba(37,99,235,0.12), 0 22px 44px rgba(0,0,0,0.35)'
+                        : undefined,
+                    transition: 'box-shadow 0.35s ease',
+                  }}
+                  className={`rounded-[var(--glass-radius)] p-8 ${
                     plan.highlighted
-                      ? 'bg-white text-neon-blue hover:shadow-xl'
-                      : 'btn-primary'
-                  }`}>
-                    {plan.cta}
-                  </button>
-                </Link>
-              </motion.div>
+                      ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white shadow-2xl'
+                      : 'glass-card'
+                  }`}
+                >
+                  <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                    {plan.name}
+                  </h3>
+                  <p className={`mb-6 ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
+                    {plan.description}
+                  </p>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    {plan.period && (
+                      <span className={`ml-1 ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
+                        {plan.period}
+                      </span>
+                    )}
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature, i) => (
+                      <motion.li
+                        key={i}
+                        className={`flex items-center text-sm ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}
+                        whileHover={{ x: 5, transition: { duration: 0.2 } }}
+                      >
+                        <motion.span
+                          className={`mr-2 font-bold text-base leading-none flex-shrink-0 ${plan.highlighted ? 'text-white' : 'text-neon-blue'}`}
+                          whileHover={{ scale: 1.5, transition: { duration: 0.15 } }}
+                        >
+                          ✓
+                        </motion.span>
+                        {feature}
+                      </motion.li>
+                    ))}
+                  </ul>
+                  <Link href="/contact">
+                    <motion.button
+                      whileHover={{ scale: 1.04, transition: { duration: 0.2 } }}
+                      whileTap={{ scale: 0.97 }}
+                      style={{
+                        boxShadow:
+                          hoveredPlan === index
+                            ? plan.highlighted
+                              ? '0 0 28px rgba(255,255,255,0.4), 0 0 55px rgba(167,139,250,0.35), 0 8px 25px rgba(0,0,0,0.35)'
+                              : '0 0 22px rgba(37,99,235,0.55), 0 0 45px rgba(37,99,235,0.2), 0 8px 20px rgba(0,0,0,0.25)'
+                            : undefined,
+                        transition: 'box-shadow 0.35s ease',
+                      }}
+                      className={`w-full py-3 rounded-full font-semibold transition-colors duration-300 ${
+                        plan.highlighted
+                          ? 'bg-white text-neon-blue'
+                          : 'btn-primary'
+                      }`}
+                    >
+                      {plan.cta}
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              </div>
             ))}
           </div>
         </div>
