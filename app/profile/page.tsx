@@ -399,14 +399,14 @@ export default function ProfilePage() {
               <div className="relative group flex-shrink-0">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
                   {profile?.profilePhoto ? (
-                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover" unoptimized />
+                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover rounded-xl" unoptimized />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl">
                       {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
-                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
                   {uploadingPhoto ? <FaSpinner className="animate-spin text-white" /> : <FaCamera className="text-white" />}
                 </label>
                 <input id="photo-change" type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
@@ -662,9 +662,9 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
                         {profile?.profilePhoto ? (
-                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full" unoptimized />
+                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full rounded-lg" unoptimized />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
+                          <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400 rounded-lg">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
                         )}
                       </div>
                       <div className="min-w-0">
