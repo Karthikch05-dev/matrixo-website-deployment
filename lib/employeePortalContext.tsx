@@ -2208,13 +2208,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     } catch (firestoreError: any) {
       console.error('❌ Firestore error:', firestoreError)
       
-      // Provide specific error messages
+      // Provide specific error messages while preserving original error.code
       if (firestoreError.code === 'permission-denied') {
-        throw new Error('Permission denied. Please check your authentication status.')
+        const error: any = new Error('Permission denied. Please check your authentication status.')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
       } else if (firestoreError.code === 'unavailable') {
-        throw new Error('Service unavailable. Please check your internet connection.')
+        const error: any = new Error('Service unavailable. Please check your internet connection.')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
       } else {
-        throw new Error(firestoreError.message || 'Failed to save leave request to database')
+        const error: any = new Error(firestoreError?.message || 'Failed to save leave request to database')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
       }
     }
   }

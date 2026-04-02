@@ -1151,7 +1151,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                       
                       await submitLeaveRequest(leaveRequestForm)
                       console.log('✅ Leave request submitted successfully!')
-                      toast.success('Leave request submitted successfully! Admins have been notified.')
+                      toast.success('Leave request submitted successfully.')
                       setShowLeaveRequestModal(false)
                       setLeaveRequestForm({ date: todayString, subject: '', letter: '', reason: '' })
                     } catch (error: any) {
