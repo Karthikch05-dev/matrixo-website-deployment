@@ -52,7 +52,7 @@ export default function Partners() {
   const isDark = resolvedTheme === 'dark'
 
   return (
-    <section className="section-padding bg-gradient-to-b from-transparent via-blue-50/20 to-white/5 dark:via-blue-950/5 dark:to-transparent transition-colors duration-500">
+    <section className="section-padding py-16 transition-colors duration-500">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
