@@ -46,14 +46,14 @@ export default function About() {
           ].map((item, index) => (
             <motion.div
               key={item.title}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.2, duration: 0.6 }}
-              className="glass-card p-8 hover-lift hover-glow"
+              transition={{ delay: index * 0.15, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              className="glass-card p-8 hover-lift hover-glow transition-shadow duration-300"
             >
-              <div className={`w-16 h-16 bg-gradient-to-br ${item.gradient} rounded-[var(--glass-radius-sm)] flex items-center justify-center mb-6 text-white shadow-lg`}>
-                <item.icon size={28} />
+              <div className={`w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center mb-6 text-white shadow-md`}>
+                <item.icon size={22} />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
                 {item.title}

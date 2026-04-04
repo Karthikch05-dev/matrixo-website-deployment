@@ -76,6 +76,19 @@ export default function Features() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
+<<<<<<< HEAD
+            <Link key={feature.title} href={feature.href}>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                whileHover={{ y: -6 }}
+                className="glass-card p-8 hover-lift hover-glow cursor-pointer h-full transition-shadow duration-300"
+              >
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-6 text-white shadow-md`}
+=======
             <motion.div
               key={feature.title}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -90,9 +103,10 @@ export default function Features() {
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                   className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-6 text-white shadow-lg`}
+>>>>>>> ab0eb67a188d9dcd594e229f739fab61eea51ed7
                 >
-                  <feature.icon size={24} />
-                </motion.div>
+                  <feature.icon size={22} />
+                </div>
                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
                   {feature.title}
                 </h3>

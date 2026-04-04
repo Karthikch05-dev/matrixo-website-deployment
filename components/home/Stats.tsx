@@ -18,18 +18,17 @@ export default function Stats() {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
+              transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
               className="text-center group"
             >
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className={`inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br ${stat.gradient} rounded-[var(--glass-radius-sm)] text-white shadow-lg`}
+              <div
+                className={`inline-flex items-center justify-center w-14 h-14 mb-4 bg-gradient-to-br ${stat.gradient} rounded-xl text-white shadow-md`}
               >
-                <stat.icon size={28} />
-              </motion.div>
+                <stat.icon size={24} />
+              </div>
               <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                 {stat.value}
               </h3>
