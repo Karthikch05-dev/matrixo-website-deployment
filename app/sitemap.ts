@@ -15,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/privacy',
     '/terms',
     '/refund',
-    '/shipping',
+    '/data-protection',
   ]
 
   // Generate sitemap entries for static pages

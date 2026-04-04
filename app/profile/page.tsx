@@ -54,6 +54,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const [editData, setEditData] = useState({
     fullName: '', phone: '', year: '', branch: '',
@@ -259,6 +260,31 @@ export default function ProfilePage() {
     } finally { setUploadingPhoto(false) }
   }
 
+  // Handle cover image upload with compression
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be less than 10MB'); return }
+    setUploadingCover(true)
+    try {
+      // Compress cover image (wider aspect, max 1200x400)
+      const compressedBlob = await compressImage(file, { maxWidth: 1200, maxHeight: 400, quality: 0.8, maxSizeKB: 100 })
+      const coverRef = ref(storage, `cover-photos/${user.uid}`)
+      await uploadBytes(coverRef, compressedBlob, { contentType: 'image/jpeg' })
+      const url = await getDownloadURL(coverRef)
+      await updateProfile({ coverPhoto: url })
+      toast.success('Cover image updated!')
+    } catch (err: any) {
+      console.error('Cover upload error:', err)
+      if (err?.code === 'storage/unauthorized') {
+        toast.error('Upload permission denied. Please try signing out and back in.')
+      } else {
+        toast.error('Failed to upload cover image. Please try again.')
+      }
+    } finally { setUploadingCover(false) }
+  }
+
   const handleCopyLink = () => {
     if (!profile?.username) { toast.error('Set a username first'); return }
     navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)
@@ -320,72 +346,98 @@ export default function ProfilePage() {
           <FaArrowLeft className="text-sm" /><span>Back</span>
         </Link>
 
-        {/* Header Card */}
+        {/* Header Card with Cover Image */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl overflow-hidden mb-4" style={cardStyle}>
-          <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
-          <div className="p-6 sm:p-8">
-            <div className="flex items-center gap-5">
-              {/* Photo */}
+          {/* Cover Image Section */}
+          <div className="relative">
+            {/* Cover Image */}
+            <div className="relative w-full aspect-[3/1] bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 overflow-hidden group">
+              {profile?.coverPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.coverPhoto} alt="Cover" className="object-cover w-full h-full" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" />
+              )}
+              
+              {/* Cover Edit Button */}
+              <label htmlFor="cover-change" className="absolute top-3 right-3 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-xl cursor-pointer transition-all opacity-0 group-hover:opacity-100">
+                {uploadingCover ? <FaSpinner className="animate-spin text-white text-sm" /> : <FaCamera className="text-white text-sm" />}
+              </label>
+              <input id="cover-change" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+            </div>
+
+            {/* Profile Photo - Overlapping Cover */}
+            <div className="absolute -bottom-12 left-6 sm:left-8">
               <div className="relative group">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-gray-800 border-4 border-white dark:border-gray-900 shadow-xl">
                   {profile?.profilePhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={profile.profilePhoto} alt={profile.fullName} className="object-cover w-full h-full" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                    <div className="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600">
                       {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
-                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  {uploadingPhoto ? <FaSpinner className="animate-spin text-white" /> : <FaCamera className="text-white" />}
+                {/* Profile Photo Edit Button */}
+                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  {uploadingPhoto ? <FaSpinner className="animate-spin text-white text-xl" /> : <FaCamera className="text-white text-xl" />}
                 </label>
                 <input id="photo-change" type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-              </div>
-
-              {/* Name + Username */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profile?.fullName}</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {editingUsername ? (
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">@</span>
-                          <input type="text" value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                            className="w-full py-1.5 pl-7 pr-8 bg-white/10 dark:bg-white/[0.08] border border-white/20 dark:border-white/[0.15] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                            placeholder="username" autoFocus />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                            {usernameStatus === 'checking' && <FaSpinner className="animate-spin text-gray-400 text-xs" />}
-                            {usernameStatus === 'available' && <FaCheck className="text-green-400 text-xs" />}
-                            {usernameStatus === 'taken' && <FaTimes className="text-red-400 text-xs" />}
-                          </div>
-                        </div>
-                        <button onClick={handleSaveUsername} disabled={savingUsername || usernameStatus !== 'available'}
-                          className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50">
-                          {savingUsername ? <FaSpinner className="animate-spin text-xs" /> : <FaCheck className="text-xs" />}
-                        </button>
-                        <button onClick={() => { setEditingUsername(false); setNewUsername(profile?.username || '') }}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
-                          <FaTimes className="text-xs" />
-                        </button>
-                      </div>
-                      {usernameStatus === 'taken' && <p className="text-red-400 text-xs mt-1">Username taken</p>}
-                      {usernameStatus === 'available' && newUsername !== profile?.username && <p className="text-green-400 text-xs mt-1">Available!</p>}
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-gray-500 text-sm">{profile?.username ? `@${profile.username}` : 'No username set'}</p>
-                      <button onClick={() => { setEditingUsername(true); setNewUsername(profile?.username || '') }}
-                        className="p-1 rounded-md hover:bg-white/10 transition-colors" title={profile?.username ? 'Change username' : 'Set username'}>
-                        <FaEdit className="text-gray-500 hover:text-blue-400 text-xs transition-colors" />
-                      </button>
-                    </>
-                  )}
+                {/* Edit Badge */}
+                <div className="absolute bottom-0 right-0 p-1.5 bg-blue-600 rounded-full border-2 border-white dark:border-gray-900 shadow-lg cursor-pointer hover:bg-blue-700 transition-colors">
+                  <label htmlFor="photo-change" className="cursor-pointer">
+                    <FaCamera className="text-white text-xs" />
+                  </label>
                 </div>
-                {profile?.bio && <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 line-clamp-2">{profile.bio}</p>}
               </div>
+            </div>
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="pt-16 px-6 sm:px-8 pb-6">
+            {/* Name + Username */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profile?.fullName}</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                {editingUsername ? (
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1 max-w-xs">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">@</span>
+                        <input type="text" value={newUsername}
+                          onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          className="w-full py-1.5 pl-7 pr-8 bg-white/10 dark:bg-white/[0.08] border border-white/20 dark:border-white/[0.15] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                          placeholder="username" autoFocus />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          {usernameStatus === 'checking' && <FaSpinner className="animate-spin text-gray-400 text-xs" />}
+                          {usernameStatus === 'available' && <FaCheck className="text-green-400 text-xs" />}
+                          {usernameStatus === 'taken' && <FaTimes className="text-red-400 text-xs" />}
+                        </div>
+                      </div>
+                      <button onClick={handleSaveUsername} disabled={savingUsername || usernameStatus !== 'available'}
+                        className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50">
+                        {savingUsername ? <FaSpinner className="animate-spin text-xs" /> : <FaCheck className="text-xs" />}
+                      </button>
+                      <button onClick={() => { setEditingUsername(false); setNewUsername(profile?.username || '') }}
+                        className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                        <FaTimes className="text-xs" />
+                      </button>
+                    </div>
+                    {usernameStatus === 'taken' && <p className="text-red-400 text-xs mt-1">Username taken</p>}
+                    {usernameStatus === 'available' && newUsername !== profile?.username && <p className="text-green-400 text-xs mt-1">Available!</p>}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-500 text-sm">{profile?.username ? `@${profile.username}` : 'No username set'}</p>
+                    <button onClick={() => { setEditingUsername(true); setNewUsername(profile?.username || '') }}
+                      className="p-1 rounded-md hover:bg-white/10 transition-colors" title={profile?.username ? 'Change username' : 'Set username'}>
+                      <FaEdit className="text-gray-500 hover:text-blue-400 text-xs transition-colors" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {profile?.bio && <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 line-clamp-2">{profile.bio}</p>}
             </div>
 
             {/* Social Links */}

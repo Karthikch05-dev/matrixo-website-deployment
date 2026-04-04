@@ -40,6 +40,7 @@ export interface UserProfile {
   branch: string
   graduationYear?: string
   profilePhoto?: string
+  coverPhoto?: string
   bio?: string
   linkedin?: string
   github?: string

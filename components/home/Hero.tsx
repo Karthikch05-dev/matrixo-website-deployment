@@ -97,8 +97,8 @@ export default function Hero() {
           >
             <Link href="/events">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="btn-primary flex items-center space-x-2"
               >
                 <FaRocket />
@@ -108,8 +108,8 @@ export default function Hero() {
 
             <Link href="/services">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="btn-secondary flex items-center space-x-2"
               >
                 <FaRocket />
@@ -119,8 +119,8 @@ export default function Hero() {
 
             <Link href="/contact">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="btn-secondary flex items-center space-x-2"
               >
                 <FaUniversity />

@@ -68,16 +68,34 @@ export default function Partners() {
           </p>
         </motion.div>
 
+<<<<<<< HEAD
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-stretch">
+          {partners.map((partner, index) => (
+            <motion.div
+              key={partner.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
+              className="flex items-center justify-center px-5 py-8 glass-card hover-lift transition-shadow duration-300"
+            >
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug">
+                {partner.name}
+              </p>
+            </motion.div>
+=======
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {partners.map((partner, index) => (
             <PartnerCard key={partner.name} partner={partner} index={index} isDark={isDark} />
+>>>>>>> ab0eb67a188d9dcd594e229f739fab61eea51ed7
           ))}
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-16 text-center glass-card p-8"
         >
           <h3 className="text-2xl font-bold mb-4 gradient-text">
@@ -88,7 +106,7 @@ export default function Partners() {
           </p>
           <a
             href="/contact"
-            className="btn-primary inline-flex items-center transform hover:scale-[1.03]"
+            className="btn-primary inline-flex items-center"
           >
             Contact Us
           </a>
