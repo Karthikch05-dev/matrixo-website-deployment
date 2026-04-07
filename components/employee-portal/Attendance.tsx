@@ -41,7 +41,7 @@ const isInStandaloneMode = () => {
 }
 
 const isIOSPWA = () => isIOSDevice() && isInStandaloneMode()
-import { useEmployeeAuth, AttendanceRecord } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, AttendanceRecord, LeaveType } from '@/lib/employeePortalContext'
 import { Card, Button, Textarea, Input, Badge, Alert, Spinner, Modal } from './ui'
 import { toast } from 'sonner'
 
@@ -176,15 +176,33 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
   const [showIOSInstructions, setShowIOSInstructions] = useState(false)
   const [isIOSPWAMode, setIsIOSPWAMode] = useState(false)
 
-  // Leave request modal state
+  // Leave request modal state - Updated for multi-day leave
   const [showLeaveRequestModal, setShowLeaveRequestModal] = useState(false)
   const [leaveRequestForm, setLeaveRequestForm] = useState({
-    date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+    leaveType: 'Casual' as LeaveType,
     subject: '',
     letter: '',
     reason: ''
   })
   const [submittingLeaveRequest, setSubmittingLeaveRequest] = useState(false)
+
+  // Leave type options
+  const leaveTypeOptions: LeaveType[] = ['Sick', 'Casual', 'Paid', 'Unpaid', 'Personal', 'Medical', 'Emergency', 'Other']
+
+  // Calculate total leave days
+  const calculateTotalDays = (startDate: string, endDate: string): number => {
+    if (!startDate || !endDate) return 0
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (end < start) return 0
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays + 1 // +1 because both dates are inclusive
+  }
+
+  const totalLeaveDays = calculateTotalDays(leaveRequestForm.startDate, leaveRequestForm.endDate)
 
   const todayString = new Date().toISOString().split('T')[0]
   const isTodayHoliday = isHoliday(todayString)
@@ -1069,25 +1087,75 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             </div>
           </div>
 
-          {/* Leave Request Modal */}
+          {/* Multi-Day Leave Request Modal */}
           <Modal
             isOpen={showLeaveRequestModal}
             onClose={() => setShowLeaveRequestModal(false)}
-            title="Request Leave"
-            size="md"
+            title="Apply for Leave"
+            size="lg"
           >
-            <div className="space-y-4">
-              <Input
-                label="Leave Date"
-                type="date"
-                value={leaveRequestForm.date}
-                onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, date: e.target.value }))}
-                min={todayString}
-              />
+            <div className="space-y-5">
+              {/* Date Range Selection */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Start Date"
+                  type="date"
+                  value={leaveRequestForm.startDate}
+                  onChange={(e) => {
+                    const newStartDate = e.target.value
+                    setLeaveRequestForm(prev => ({
+                      ...prev,
+                      startDate: newStartDate,
+                      // Auto-update end date if it's before start date
+                      endDate: prev.endDate < newStartDate ? newStartDate : prev.endDate
+                    }))
+                  }}
+                  min={todayString}
+                />
+                <Input
+                  label="End Date"
+                  type="date"
+                  value={leaveRequestForm.endDate}
+                  onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  min={leaveRequestForm.startDate || todayString}
+                />
+              </div>
+
+              {/* Total Days Display */}
+              {totalLeaveDays > 0 && (
+                <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3">
+                  <span className="text-amber-400 text-sm font-medium">Total Leave Days</span>
+                  <span className="text-amber-400 text-lg font-bold">{totalLeaveDays} day{totalLeaveDays > 1 ? 's' : ''}</span>
+                </div>
+              )}
+
+              {/* Validation Warning */}
+              {leaveRequestForm.endDate && leaveRequestForm.startDate > leaveRequestForm.endDate && (
+                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+                  <FaExclamationTriangle />
+                  <span>End date cannot be before start date</span>
+                </div>
+              )}
+
+              {/* Leave Type Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Leave Type
+                </label>
+                <select
+                  value={leaveRequestForm.leaveType}
+                  onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, leaveType: e.target.value as LeaveType }))}
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                >
+                  {leaveTypeOptions.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
               
               <Input
                 label="Subject"
-                placeholder="e.g., Personal Leave, Medical Leave..."
+                placeholder="e.g., Family function, Doctor's appointment..."
                 value={leaveRequestForm.subject}
                 onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, subject: e.target.value }))}
                 required
@@ -1100,23 +1168,23 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 <textarea
                   value={leaveRequestForm.letter}
                   onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, letter: e.target.value }))}
-                  placeholder="Write your formal leave letter here..."
+                  placeholder="Write your formal leave application here..."
                   rows={5}
-                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-sm"
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none text-sm"
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Reason
+                  Brief Reason
                 </label>
                 <textarea
                   value={leaveRequestForm.reason}
                   onChange={(e) => setLeaveRequestForm(prev => ({ ...prev, reason: e.target.value }))}
                   placeholder="Brief reason for leave..."
-                  rows={3}
-                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-sm"
+                  rows={2}
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none text-sm"
                   required
                 />
               </div>
@@ -1127,17 +1195,29 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 </Button>
                 <Button
                   loading={submittingLeaveRequest}
-                  disabled={!leaveRequestForm.subject.trim() || !leaveRequestForm.letter.trim() || !leaveRequestForm.reason.trim()}
+                  disabled={
+                    !leaveRequestForm.subject.trim() || 
+                    !leaveRequestForm.letter.trim() || 
+                    !leaveRequestForm.reason.trim() ||
+                    !leaveRequestForm.startDate ||
+                    !leaveRequestForm.endDate ||
+                    leaveRequestForm.startDate > leaveRequestForm.endDate ||
+                    totalLeaveDays === 0
+                  }
                   icon={<FaEnvelope />}
+                  className="bg-amber-500 hover:bg-amber-600"
                   onClick={async () => {
-                    console.log('=== LEAVE REQUEST SUBMISSION START ===')
+                    console.log('=== MULTI-DAY LEAVE REQUEST SUBMISSION START ===')
                     console.log('1. Employee state:', employee)
                     console.log('2. Form data:', leaveRequestForm)
-                    console.log('3. Validation check:', {
+                    console.log('3. Total days:', totalLeaveDays)
+                    console.log('4. Validation check:', {
                       hasSubject: !!leaveRequestForm.subject.trim(),
                       hasLetter: !!leaveRequestForm.letter.trim(),
                       hasReason: !!leaveRequestForm.reason.trim(),
-                      hasDate: !!leaveRequestForm.date
+                      hasStartDate: !!leaveRequestForm.startDate,
+                      hasEndDate: !!leaveRequestForm.endDate,
+                      validDateRange: leaveRequestForm.startDate <= leaveRequestForm.endDate
                     })
                     
                     setSubmittingLeaveRequest(true)
@@ -1148,12 +1228,29 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                         console.error('❌ No employee in context')
                         return
                       }
+
+                      if (leaveRequestForm.startDate > leaveRequestForm.endDate) {
+                        toast.error('End date cannot be before start date')
+                        return
+                      }
                       
                       await submitLeaveRequest(leaveRequestForm)
                       console.log('✅ Leave request submitted successfully!')
-                      toast.success('Leave request submitted successfully.')
+                      
+                      const dateRangeText = leaveRequestForm.startDate === leaveRequestForm.endDate 
+                        ? leaveRequestForm.startDate 
+                        : `${leaveRequestForm.startDate} to ${leaveRequestForm.endDate}`
+                      toast.success(`Leave request for ${dateRangeText} (${totalLeaveDays} day${totalLeaveDays > 1 ? 's' : ''}) submitted successfully!`)
+                      
                       setShowLeaveRequestModal(false)
-                      setLeaveRequestForm({ date: todayString, subject: '', letter: '', reason: '' })
+                      setLeaveRequestForm({ 
+                        startDate: todayString, 
+                        endDate: todayString, 
+                        leaveType: 'Casual',
+                        subject: '', 
+                        letter: '', 
+                        reason: '' 
+                      })
                     } catch (error: any) {
                       console.error('❌ Error submitting leave request:', error)
                       console.error('Error code:', error?.code)
@@ -1174,11 +1271,11 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                       toast.error(errorMessage)
                     } finally {
                       setSubmittingLeaveRequest(false)
-                      console.log('=== LEAVE REQUEST SUBMISSION END ===')
+                      console.log('=== MULTI-DAY LEAVE REQUEST SUBMISSION END ===')
                     }
                   }}
                 >
-                  Submit Request
+                  Submit Leave Request
                 </Button>
               </div>
             </div>

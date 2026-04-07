@@ -129,16 +129,26 @@ export interface Task {
   comments: TaskComment[]
 }
 
+// Leave type options for multi-day leave applications
+export type LeaveType = 'Sick' | 'Casual' | 'Paid' | 'Unpaid' | 'Personal' | 'Medical' | 'Emergency' | 'Other'
+
 export interface LeaveRequest {
   id?: string
   employeeId: string
   employeeName: string
+  // Multi-day leave support - startDate and endDate define the range (inclusive)
+  startDate: string
+  endDate: string
+  totalDays: number
+  leaveType: LeaveType
+  // Legacy field for backward compatibility (equals startDate)
   date: string
   subject: string
   letter: string
   reason: string
   status: 'Pending' | 'Approved' | 'Rejected'
   createdAt: Timestamp
+  appliedAt?: Timestamp
   reviewedBy: string | null
   reviewedByName?: string | null
   reviewedAt?: Timestamp | null
@@ -365,7 +375,14 @@ interface EmployeeAuthContextType {
   
   // Leave Requests
   leaveRequests: LeaveRequest[]
-  submitLeaveRequest: (request: { date: string; subject: string; letter: string; reason: string }) => Promise<void>
+  submitLeaveRequest: (request: { 
+    startDate: string
+    endDate: string
+    leaveType: LeaveType
+    subject: string
+    letter: string
+    reason: string 
+  }) => Promise<void>
   approveLeaveRequest: (requestId: string) => Promise<void>
   rejectLeaveRequest: (requestId: string) => Promise<void>
   getAllLeaveRequests: () => Promise<LeaveRequest[]>
@@ -2122,7 +2139,84 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // LEAVE REQUEST FUNCTIONS
   // ============================================
 
-  const submitLeaveRequest = async (request: { date: string; subject: string; letter: string; reason: string }) => {
+  // Utility function to calculate total days between two dates (inclusive)
+  const calculateLeaveDays = (startDate: string, endDate: string): number => {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays + 1 // +1 because both start and end dates are inclusive
+  }
+
+  // Utility function to get all dates in a range (inclusive)
+  const getDateRange = (startDate: string, endDate: string): string[] => {
+    const dates: string[] = []
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const current = new Date(start)
+    
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0])
+      current.setDate(current.getDate() + 1)
+    }
+    return dates
+  }
+
+  // Check if there's any overlap with existing leave requests
+  const checkLeaveOverlap = async (employeeId: string, startDate: string, endDate: string): Promise<boolean> => {
+    const leaveRequestsRef = collection(db, 'leaveRequests')
+    const q = query(
+      leaveRequestsRef,
+      where('employeeId', '==', employeeId),
+      where('status', 'in', ['Pending', 'Approved'])
+    )
+    const snapshot = await getDocs(q)
+    
+    const requestedStart = new Date(startDate)
+    const requestedEnd = new Date(endDate)
+    
+    for (const doc of snapshot.docs) {
+      const existing = doc.data()
+      // Handle both old single-date and new multi-day formats
+      const existingStart = new Date(existing.startDate || existing.date)
+      const existingEnd = new Date(existing.endDate || existing.date)
+      
+      // Check for overlap: requestedStart <= existingEnd && requestedEnd >= existingStart
+      if (requestedStart <= existingEnd && requestedEnd >= existingStart) {
+        return true // Overlap found
+      }
+    }
+    return false
+  }
+
+  // Check if any dates in range have existing attendance (except Absent)
+  const checkExistingAttendance = async (employeeId: string, startDate: string, endDate: string): Promise<string[]> => {
+    const conflictDates: string[] = []
+    const dates = getDateRange(startDate, endDate)
+    
+    for (const date of dates) {
+      const attendanceId = `${employeeId}_${date}`
+      const attendanceDoc = await getDoc(doc(db, 'attendance', attendanceId))
+      
+      if (attendanceDoc.exists()) {
+        const data = attendanceDoc.data()
+        // Only consider it a conflict if already marked as Present, On Duty, WFH, or Leave
+        if (['P', 'O', 'W', 'L'].includes(data.status)) {
+          conflictDates.push(date)
+        }
+      }
+    }
+    return conflictDates
+  }
+
+  const submitLeaveRequest = async (request: { 
+    startDate: string
+    endDate: string
+    leaveType: LeaveType
+    subject: string
+    letter: string
+    reason: string 
+  }) => {
     console.log('🚀 submitLeaveRequest called with:', request)
     
     // Enhanced validation
@@ -2135,16 +2229,47 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       console.error('❌ Invalid employee profile:', employee)
       throw new Error('Your employee profile is incomplete. Please contact admin.')
     }
+
+    // Validate date range
+    if (!request.startDate || !request.endDate) {
+      throw new Error('Please select both start and end dates.')
+    }
+
+    if (request.startDate > request.endDate) {
+      throw new Error('End date cannot be before start date.')
+    }
+
+    // Check for overlapping leave requests
+    const hasOverlap = await checkLeaveOverlap(employee.employeeId, request.startDate, request.endDate)
+    if (hasOverlap) {
+      throw new Error('You already have a pending or approved leave request that overlaps with these dates.')
+    }
+
+    // Check for existing attendance records
+    const conflictDates = await checkExistingAttendance(employee.employeeId, request.startDate, request.endDate)
+    if (conflictDates.length > 0) {
+      throw new Error(`Cannot apply leave for dates with existing attendance: ${conflictDates.join(', ')}`)
+    }
+
+    // Calculate total days
+    const totalDays = calculateLeaveDays(request.startDate, request.endDate)
     
     const leaveRequestData = {
       employeeId: employee.employeeId,
       employeeName: employee.name,
-      date: request.date,
+      // Multi-day leave fields
+      startDate: request.startDate,
+      endDate: request.endDate,
+      totalDays,
+      leaveType: request.leaveType,
+      // Legacy field for backward compatibility
+      date: request.startDate,
       subject: request.subject,
       letter: request.letter,
       reason: request.reason,
       status: 'Pending' as const,
       createdAt: Timestamp.now(),
+      appliedAt: Timestamp.now(),
       reviewedBy: null,
       reviewedByName: null,
       reviewedAt: null
@@ -2155,6 +2280,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     try {
       const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
       console.log('✅ Leave request saved with ID:', docRef.id)
+      
+      // Format date range for display
+      const dateRangeText = request.startDate === request.endDate 
+        ? request.startDate 
+        : `${request.startDate} to ${request.endDate} (${totalDays} days)`
       
       // Auto-create discussion post and notifications (non-critical)
       try {
@@ -2173,7 +2303,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           mentionText += `@${yasasvi.name} `
         }
         
-        const discussionContent = `${mentionText}\nI have submitted a leave request for ${request.date}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
+        const discussionContent = `${mentionText}\nI have submitted a ${request.leaveType} leave request for ${dateRangeText}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
         
         await addDiscussion(discussionContent, mentions, [])
         console.log('✅ Discussion post created')
@@ -2184,7 +2314,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             type: 'calendar',
             action: 'created',
             title: 'Leave Request Submitted',
-            message: `${employee.name} has submitted a leave request for ${request.date}. Subject: ${request.subject}`,
+            message: `${employee.name} has submitted a ${request.leaveType} leave request for ${dateRangeText}. Subject: ${request.subject}`,
             relatedEntityId: docRef.id,
             targetUrl: '/employee-portal#attendance',
             createdBy: employee.employeeId,
@@ -2198,7 +2328,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         await logActivity({
           type: 'attendance',
           action: 'leave-request',
-          description: `Submitted leave request for ${request.date}: ${request.subject}`,
+          description: `Submitted ${request.leaveType} leave request for ${dateRangeText}: ${request.subject}`,
         })
         console.log('✅ Activity logged')
       } catch (postError) {
@@ -2248,40 +2378,54 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       reviewedAt: Timestamp.now()
     })
     
-    // Clean up any existing attendance records for this employee+date
-    // (e.g., auto-absent may have already created an Absent record)
-    const existingAttendanceQuery = query(
-      collection(db, 'attendance'),
-      where('employeeId', '==', requestData.employeeId),
-      where('date', '==', requestData.date)
-    )
-    const existingDocs = await getDocs(existingAttendanceQuery)
-    const cleanupBatch = writeBatch(db)
-    existingDocs.docs.forEach(docSnapshot => {
-      cleanupBatch.delete(docSnapshot.ref)
-    })
+    // Get all dates in the leave range (supports both old single-date and new multi-day formats)
+    const startDate = requestData.startDate || requestData.date
+    const endDate = requestData.endDate || requestData.date
+    const leaveDates = getDateRange(startDate, endDate)
     
-    // Mark attendance as Leave (L) for the requested date
-    const attendanceId = `${requestData.employeeId}_${requestData.date}`
+    const cleanupBatch = writeBatch(db)
     const deviceInfo = 'System - Leave Approved'
     
-    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
-      employeeId: requestData.employeeId,
-      date: requestData.date,
-      timestamp: Timestamp.now(),
-      status: 'L',
-      notes: `Leave approved - ${requestData.subject}`,
-      deviceInfo
-    })
+    // Process each date in the leave range
+    for (const date of leaveDates) {
+      // Clean up any existing attendance records for this employee+date
+      const existingAttendanceQuery = query(
+        collection(db, 'attendance'),
+        where('employeeId', '==', requestData.employeeId),
+        where('date', '==', date)
+      )
+      const existingDocs = await getDocs(existingAttendanceQuery)
+      existingDocs.docs.forEach(docSnapshot => {
+        cleanupBatch.delete(docSnapshot.ref)
+      })
+      
+      // Mark attendance as Leave (L) for each date
+      const attendanceId = `${requestData.employeeId}_${date}`
+      cleanupBatch.set(doc(db, 'attendance', attendanceId), {
+        employeeId: requestData.employeeId,
+        date: date,
+        timestamp: Timestamp.now(),
+        status: 'L',
+        notes: `Leave approved - ${requestData.subject}`,
+        leaveStartDate: startDate,
+        leaveEndDate: endDate,
+        deviceInfo
+      })
+    }
     
     await cleanupBatch.commit()
+    
+    // Format date range for notification
+    const dateRangeText = startDate === endDate 
+      ? startDate 
+      : `${startDate} to ${endDate} (${leaveDates.length} days)`
     
     // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
       title: 'Leave Request Approved',
-      message: `Your leave request for ${requestData.date} has been approved by ${employee.name}.`,
+      message: `Your leave request for ${dateRangeText} has been approved by ${employee.name}.`,
       relatedEntityId: requestId,
       targetUrl: '/employee-portal#attendance',
       createdBy: employee.employeeId,
@@ -2308,39 +2452,54 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       reviewedAt: Timestamp.now()
     })
     
-    // Clean up any existing attendance records for this employee+date
-    const existingAttendanceQuery = query(
-      collection(db, 'attendance'),
-      where('employeeId', '==', requestData.employeeId),
-      where('date', '==', requestData.date)
-    )
-    const existingDocs = await getDocs(existingAttendanceQuery)
-    const cleanupBatch = writeBatch(db)
-    existingDocs.docs.forEach(docSnapshot => {
-      cleanupBatch.delete(docSnapshot.ref)
-    })
+    // Get all dates in the leave range (supports both old single-date and new multi-day formats)
+    const startDate = requestData.startDate || requestData.date
+    const endDate = requestData.endDate || requestData.date
+    const leaveDates = getDateRange(startDate, endDate)
     
-    // Mark attendance as Unauthorised Leave (U) for the requested date
-    const attendanceId = `${requestData.employeeId}_${requestData.date}`
+    const cleanupBatch = writeBatch(db)
     const deviceInfo = 'System - Leave Rejected'
     
-    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
-      employeeId: requestData.employeeId,
-      date: requestData.date,
-      timestamp: Timestamp.now(),
-      status: 'U',
-      notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
-      deviceInfo
-    })
+    // Process each date in the leave range
+    for (const date of leaveDates) {
+      // Clean up any existing attendance records for this employee+date
+      const existingAttendanceQuery = query(
+        collection(db, 'attendance'),
+        where('employeeId', '==', requestData.employeeId),
+        where('date', '==', date)
+      )
+      const existingDocs = await getDocs(existingAttendanceQuery)
+      existingDocs.docs.forEach(docSnapshot => {
+        cleanupBatch.delete(docSnapshot.ref)
+      })
+      
+      // Mark attendance as Unauthorised Leave (U) for each date
+      const attendanceId = `${requestData.employeeId}_${date}`
+      cleanupBatch.set(doc(db, 'attendance', attendanceId), {
+        employeeId: requestData.employeeId,
+        date: date,
+        timestamp: Timestamp.now(),
+        status: 'U',
+        notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
+        leaveStartDate: startDate,
+        leaveEndDate: endDate,
+        deviceInfo
+      })
+    }
     
     await cleanupBatch.commit()
+    
+    // Format date range for notification
+    const dateRangeText = startDate === endDate 
+      ? startDate 
+      : `${startDate} to ${endDate} (${leaveDates.length} days)`
     
     // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
       title: 'Leave Request Rejected',
-      message: `Your leave request for ${requestData.date} has been rejected by ${employee.name}. It has been marked as Unauthorised Leave.`,
+      message: `Your leave request for ${dateRangeText} has been rejected by ${employee.name}. It has been marked as Unauthorised Leave.`,
       relatedEntityId: requestId,
       targetUrl: '/employee-portal#attendance',
       createdBy: employee.employeeId,
