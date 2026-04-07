@@ -263,7 +263,7 @@ function MentionInput({
     >
       <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
         <p className="text-xs text-neutral-400 font-medium">
-          {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
+          {dropdownType === 'user' ? 'Select a person' : 'Select a department'}
         </p>
       </div>
       {dropdownType === 'user' ? (
@@ -371,7 +371,7 @@ const INTERN_SPECIALIZATIONS = [
 const normalizeSpecText = (text: string) =>
   text.toLowerCase().replace(/&/g, 'and').replace(/\bintern\b/gi, '').replace(/\s+/g, ' ').trim()
 
-// Universal intern detector — checks ALL possible ways an employee can be an intern in Firebase
+// Universal intern detector ??" checks ALL possible ways an employee can be an intern in Firebase
 // Uses .trim() to handle trailing/leading spaces in Firebase string values
 const isIntern = (emp: EmployeeProfile): boolean => {
   const dept = (emp.department || '').trim().toLowerCase()
@@ -508,7 +508,7 @@ function TaskModal({
     }))
   }
 
-  // Fixed department list — only show the three required options
+  // Fixed department list ??" only show the three required options
   const departments = useMemo(() => {
     return ['Management', 'Intern']
   }, [])
@@ -569,10 +569,10 @@ function TaskModal({
           <Select
             label="Priority"
             options={[
-              { value: 'low', label: '🔵 Low' },
-              { value: 'medium', label: '🟡 Medium' },
-              { value: 'high', label: '🟠 High' },
-              { value: 'urgent', label: '🔴 Urgent' }
+              { value: 'low', label: 'Low' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' }
             ]}
             value={form.priority}
             onChange={(value) => setForm({ ...form, priority: value as 'low' | 'medium' | 'high' | 'urgent' })}
@@ -898,7 +898,7 @@ function TaskDetailModal({
         <div className="grid grid-cols-2 gap-4 p-4 bg-neutral-800/50 rounded-lg">
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created by</p>
-            <p className="text-sm text-white">{task.createdFrom === 'meeting' ? '🤖 Fathom' : task.createdByName}</p>
+            <p className="text-sm text-white">{task.createdFrom === 'meeting' ? 'Fathom' : task.createdByName}</p>
           </div>
           <div>
             <p className="text-xs text-neutral-500 mb-1">Created</p>
@@ -1107,7 +1107,7 @@ function TaskDetailModal({
                             className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-50"
                           >
                             <div className="flex gap-1">
-                              {['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'].map((emoji) => (
+                              {['Like', 'Love', 'Laugh', 'Wow', 'Sad', 'Fire', 'Clap', 'Celebrate'].map((emoji) => (
                                 <button
                                   key={emoji}
                                   onClick={() => {
@@ -1230,7 +1230,7 @@ function TaskCard({
             <Badge size="sm" variant="warning">Mgmt</Badge>
           )}
           {task.createdFrom === 'meeting' && (
-            <Badge size="sm" variant="info">🤖 Fathom</Badge>
+            <Badge size="sm" variant="info">Fathom</Badge>
           )}
         </div>
         
@@ -1306,8 +1306,8 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
   useEffect(() => {
     getAllEmployees()
       .then(data => {
-        console.log('🔍 Tasks: Fetched employees:', data?.length || 0)
-        console.log('🔍 Tasks: All employees:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
+        console.log('Tasks: Fetched employees:', data?.length || 0)
+        console.log('Tasks: All employees:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
         setEmployees(data || [])
       })
       .catch(console.error)
@@ -1392,7 +1392,7 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
       }
     }
 
-    // Date filter — match tasks created on selected date (ignores time)
+    // Date filter ??" match tasks created on selected date (ignores time)
     if (filterDate) {
       result = result.filter(task => {
         if (!task?.createdAt?.toDate) return false
@@ -1483,10 +1483,10 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
             <Select
               options={[
                 { value: '', label: 'All Priorities' },
-                { value: 'urgent', label: '🔴 Urgent' },
-                { value: 'high', label: '🟠 High' },
-                { value: 'medium', label: '🟡 Medium' },
-                { value: 'low', label: '🔵 Low' }
+                { value: 'urgent', label: 'Urgent' },
+                { value: 'high', label: 'High' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'low', label: 'Low' }
               ]}
               value={filterPriority}
               onChange={setFilterPriority}
@@ -1524,8 +1524,8 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
               placeholder="Task Source"
               options={[
                 { value: '', label: 'All Tasks' },
-                { value: 'fathom', label: '🤖 Fathom' },
-                { value: 'manual', label: '✍️ Manual' }
+                { value: 'fathom', label: 'Fathom' },
+                { value: 'manual', label: 'Manual' }
               ]}
               value={filterSource}
               onChange={setFilterSource}
@@ -1658,3 +1658,4 @@ export function Tasks({ selectedTaskId, onTaskOpened, showOnlyMyTasks = false }:
 }
 
 export default Tasks
+

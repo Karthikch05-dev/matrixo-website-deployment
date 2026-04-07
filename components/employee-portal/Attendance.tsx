@@ -128,7 +128,7 @@ function LocationStatus({
       </span>
       {accuracy && (
         <span className="text-neutral-500 text-xs">
-          (±{Math.round(accuracy)}m)
+          (�{Math.round(accuracy)}m)
         </span>
       )}
     </div>
@@ -244,15 +244,15 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       return
     }
 
-    // ─── CRITICAL iOS PWA FIX ───────────────────────────────────────────────
+    // ?"??"??"? CRITICAL iOS PWA FIX ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
     // On iOS standalone/PWA mode, calling getCurrentPosition() from a useEffect
-    // (page load, not a user gesture) is silently ignored — iOS NEVER shows the
+    // (page load, not a user gesture) is silently ignored ??" iOS NEVER shows the
     // native "Allow Location" dialog unless the call comes directly from a tap.
     // So: for iOS PWA, just stay 'pending' and let the user tap "Enable Location".
-    // ──────────────────────────────────────────────────────────────────────────
+    // ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
     if (isPWA) {
       // Don't try auto-probe. The "Enable Location" button tap will trigger
-      // getCurrentPosition as a user gesture → iOS shows the permission dialog.
+      // getCurrentPosition as a user gesture ??' iOS shows the permission dialog.
       setLocationStatus('pending')
       return
     }
@@ -263,7 +263,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
       navigator.geolocation.getCurrentPosition(
         () => setLocationStatus('granted'),
         () => {
-          // iOS Safari denied or not granted yet — keep 'pending' so the button stays visible
+          // iOS Safari denied or not granted yet ??" keep 'pending' so the button stays visible
           setLocationStatus('pending')
         },
         { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
@@ -325,7 +325,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
 
     // Check if location is enabled - MANDATORY for Present and On Duty
     if ((selectedStatus === 'P' || selectedStatus === 'O') && locationStatus !== 'granted') {
-      // Always try to get location — this triggers the native iOS prompt
+      // Always try to get location ??" this triggers the native iOS prompt
       if (navigator.geolocation) {
         toast.loading('Requesting location...', { id: 'mark-location' })
         navigator.geolocation.getCurrentPosition(
@@ -391,9 +391,9 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
         
         if (result.success) {
           if (result.workFromHome) {
-            toast.success('Attendance marked as Work From Home! 🏠 Location verified')
+            toast.success('Attendance marked as Work From Home! Location verified')
           } else if (result.locationVerified) {
-            toast.success(`Attendance marked as ${statusConfig[selectedStatus].label}! ✅ Location verified`)
+            toast.success(`Attendance marked as ${statusConfig[selectedStatus].label}! ?o. Location verified`)
           } else if (result.error === 'Location permission denied') {
             toast.warning(`Attendance marked but location not verified. Please enable location for better tracking.`)
           } else {
@@ -460,7 +460,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     { status: 'O' as const, ...statusConfig.O }
   ]
 
-  // Request location permission — always tries getCurrentPosition to trigger native prompt
+  // Request location permission ??" always tries getCurrentPosition to trigger native prompt
   const requestLocationPermission = () => {
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by this device.')
@@ -469,7 +469,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
     
     toast.loading('Requesting location access...', { id: 'location-request' })
     
-    // ALWAYS call getCurrentPosition — this is the ONLY way to trigger
+    // ALWAYS call getCurrentPosition ??" this is the ONLY way to trigger
     // the native iOS "Allow Location" popup in a standalone/PWA web app.
     // Never skip this with an early bail-out.
     navigator.geolocation.getCurrentPosition(
@@ -478,7 +478,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
         setLocationStatus('granted')
         setShowIOSInstructions(false)
         setIosLocationAttempts(0)
-        toast.success('Location enabled successfully! ✅', { id: 'location-request' })
+        toast.success('Location enabled successfully! ?o.', { id: 'location-request' })
       },
       (error) => {
         console.log('[Location] Error:', error.code, error.message)
@@ -505,7 +505,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
             toast.error('Location permission denied. Please enable it in browser settings.', { id: 'location-request' })
           }
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          toast.error('Location unavailable. Please make sure Location Services is ON in Settings → Privacy & Security → Location Services.', { id: 'location-request' })
+          toast.error('Location unavailable. Please make sure Location Services is ON in Settings > Privacy & Security > Location Services.', { id: 'location-request' })
         } else if (error.code === error.TIMEOUT) {
           toast.error('Location request timed out. Please try again.', { id: 'location-request' })
         }
@@ -533,7 +533,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
           <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
             <FaPlane className="text-4xl text-purple-400" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">It's a Holiday! 🎉</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">It's a Holiday!</h2>
           <p className="text-neutral-400 mb-4">
             {todayHoliday?.name || 'Holiday'}
           </p>
@@ -580,17 +580,17 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
               <div className="space-y-4 mb-6">
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
                   <p className="text-xs text-amber-400">
-                    <strong>Why this happens:</strong> On iPhone, a Home Screen app has its own separate location permission. You need to grant it once — just tap the button below and tap <strong>"Allow"</strong> in the iOS popup.
+                    <strong>Why this happens:</strong> On iPhone, a Home Screen app has its own separate location permission. You need to grant it once ??" just tap the button below and tap <strong>"Allow"</strong> in the iOS popup.
                   </p>
                 </div>
 
                 {/* Method 1: Tap the button inside the PWA */}
                 <div>
-                  <p className="text-sm font-semibold text-emerald-400 mb-2">✅ Method 1: Grant Permission (Easiest)</p>
+                  <p className="text-sm font-semibold text-emerald-400 mb-2">?o. Method 1: Grant Permission (Easiest)</p>
                   <div className="bg-neutral-800/50 rounded-xl p-4 space-y-2">
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">1</div>
-                      <p className="text-sm text-neutral-300">Tap <strong className="text-white">"Try Again"</strong> below — this will trigger the iOS <strong className="text-white">location permission popup</strong></p>
+                      <p className="text-sm text-neutral-300">Tap <strong className="text-white">"Try Again"</strong> below ??" this will trigger the iOS <strong className="text-white">location permission popup</strong></p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">2</div>
@@ -598,14 +598,14 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">3</div>
-                      <p className="text-sm text-neutral-300">If no popup appeared, the permission may already be blocked — go to Method 2</p>
+                      <p className="text-sm text-neutral-300">If no popup appeared, the permission may already be blocked ??" go to Method 2</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Method 2: Fix via iPhone Settings */}
                 <div>
-                  <p className="text-sm font-semibold text-blue-400 mb-2">⚙️ Method 2: Enable in iPhone Settings</p>
+                  <p className="text-sm font-semibold text-blue-400 mb-2">?s&trade;? Method 2: Enable in iPhone Settings</p>
                   <div className="bg-neutral-800/50 rounded-xl p-4 space-y-2">
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">1</div>
@@ -613,11 +613,11 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">2</div>
-                      <p className="text-sm text-neutral-300">Go to <strong className="text-white">Privacy & Security → Location Services</strong></p>
+                      <p className="text-sm text-neutral-300">Go to <strong className="text-white">Privacy & Security ??' Location Services</strong></p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">3</div>
-                      <p className="text-sm text-neutral-300">Scroll down and find <strong className="text-white">Safari Websites</strong> — set it to <strong className="text-white">"While Using App"</strong></p>
+                      <p className="text-sm text-neutral-300">Scroll down and find <strong className="text-white">Safari Websites</strong> ??" set it to <strong className="text-white">"While Using App"</strong></p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">4</div>
@@ -628,7 +628,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
 
                 {/* Method 3: Reinstall */}
                 <div>
-                  <p className="text-sm font-semibold text-purple-400 mb-2">🔄 Method 3: Re-add to Home Screen</p>
+                  <p className="text-sm font-semibold text-purple-400 mb-2">Method 3: Re-add to Home Screen</p>
                   <div className="bg-neutral-800/50 rounded-xl p-4 space-y-2">
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold flex-shrink-0">1</div>
@@ -640,11 +640,11 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold flex-shrink-0">3</div>
-                      <p className="text-sm text-neutral-300">Tap <strong className="text-white">Share →</strong> <strong className="text-white">Add to Home Screen</strong></p>
+                      <p className="text-sm text-neutral-300">Tap <strong className="text-white">Share ??'</strong> <strong className="text-white">Add to Home Screen</strong></p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold flex-shrink-0">4</div>
-                      <p className="text-sm text-neutral-300">Open the app — tap <strong className="text-white">"Enable Location"</strong> and allow the popup</p>
+                      <p className="text-sm text-neutral-300">Open the app ??" tap <strong className="text-white">"Enable Location"</strong> and allow the popup</p>
                     </div>
                   </div>
                 </div>
@@ -666,7 +666,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 <button
                   onClick={() => {
                     setShowIOSInstructions(false)
-                    // Always try getCurrentPosition — this triggers the native prompt
+                    // Always try getCurrentPosition ??" this triggers the native prompt
                     setTimeout(() => {
                       if (navigator.geolocation) {
                         toast.loading('Requesting location...', { id: 'location-retry' })
@@ -674,7 +674,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                           () => {
                             setLocationStatus('granted')
                             setIosLocationAttempts(0)
-                            toast.success('Location enabled! ✅', { id: 'location-retry' })
+                            toast.success('Location enabled! ?o.', { id: 'location-retry' })
                           },
                           (err) => {
                             if (err.code === err.PERMISSION_DENIED) {
@@ -728,18 +728,18 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
               <h3 className="font-semibold text-amber-400">Location Access Required</h3>
               <p className="text-sm text-neutral-400 mt-1">
                 {isIOSPWAMode
-                  ? 'Tap "Enable Location" below — iOS will ask for permission in a popup. You must tap "Allow" to continue.'
+                  ? 'Tap "Enable Location" below ??" iOS will ask for permission in a popup. You must tap "Allow" to continue.'
                   : 'Location services are mandatory for marking attendance. Please enable location access to continue.'}
               </p>
               {isIOSPWAMode && (
                 <p className="text-xs text-amber-300/80 mt-1.5 flex items-start gap-1">
                   <FaApple className="flex-shrink-0 mt-0.5" />
-                  <span>This is a Home Screen app — <strong>each tap on "Enable Location" triggers the iOS dialog.</strong> Tap it now if you haven't seen the popup yet.</span>
+                  <span>This is a Home Screen app ??" <strong>each tap on "Enable Location" triggers the iOS dialog.</strong> Tap it now if you haven't seen the popup yet.</span>
                 </p>
               )}
               {isIOSPWAMode && iosLocationAttempts > 0 && (
                 <p className="text-xs text-red-400 mt-2">
-                  ⚠️ Popup didn't appear? Try tapping again. After 2 failed tries, see the "How to Fix" instructions below.
+                  ?s?? Popup didn't appear? Try tapping again. After 2 failed tries, see the "How to Fix" instructions below.
                 </p>
               )}
               <button
@@ -747,7 +747,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 className="mt-3 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-all flex items-center gap-2 text-sm"
               >
                 <FaLocationArrow />
-                {isIOSPWAMode ? '📍 Enable Location (iOS)' : 'Enable Location'}
+                {isIOSPWAMode ? 'Enable Location (iOS)' : 'Enable Location'}
               </button>
             </div>
           </div>
@@ -779,7 +779,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
           >
             <FaLocationArrow />
             <span>
-              {locationStatus === 'granted' ? '✓ Location On' : 
+              {locationStatus === 'granted' ? '?o" Location On' : 
                locationStatus === 'denied' ? 'Enable Location' : 
                'Enable Location'}
             </span>
@@ -815,7 +815,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 )}
                 {todayAttendance.onDutyLocation && (
                   <p className="text-blue-400 text-xs sm:text-sm mt-1 truncate">
-                    📍 {todayAttendance.onDutyLocation}
+                    Location: {todayAttendance.onDutyLocation}
                   </p>
                 )}
                 
@@ -937,7 +937,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                       const textarea = document.getElementById('edit-report-textarea') as HTMLTextAreaElement
                       if (textarea) {
                         const start = textarea.selectionStart
-                        const newText = updatedNotes.substring(0, start) + '\n• ' + updatedNotes.substring(start)
+                        const newText = updatedNotes.substring(0, start) + '\n??? ' + updatedNotes.substring(start)
                         setUpdatedNotes(newText)
                         setTimeout(() => {
                           textarea.focus()
@@ -948,7 +948,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                     className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
                     title="Bullet Point"
                   >
-                    <span className="text-lg leading-none">•</span>
+                    <span className="text-lg leading-none">???</span>
                     <span className="text-xs">List</span>
                   </button>
                   <button
@@ -1385,7 +1385,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                   const textarea = document.getElementById('daily-report-textarea') as HTMLTextAreaElement
                   if (textarea) {
                     const start = textarea.selectionStart
-                    const newText = notes.substring(0, start) + '\n• ' + notes.substring(start)
+                    const newText = notes.substring(0, start) + '\n??? ' + notes.substring(start)
                     setNotes(newText)
                     setTimeout(() => {
                       textarea.focus()
@@ -1396,7 +1396,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
                 className="p-2 hover:bg-neutral-700 rounded text-neutral-300 hover:text-white transition-colors flex items-center gap-1"
                 title="Bullet Point"
               >
-                <span className="text-lg leading-none">•</span>
+                <span className="text-lg leading-none">???</span>
                 <span className="text-xs">List</span>
               </button>
               <button
@@ -1437,7 +1437,7 @@ export function AttendanceMarker({ onAttendanceMarked }: { onAttendanceMarked?: 
               id="daily-report-textarea"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Describe your tasks, meetings attended, accomplishments, etc.&#10;&#10;Example:&#10;• Completed UI design for dashboard&#10;• Attended sprint planning meeting&#10;• Fixed bug in user authentication"
+              placeholder="Describe your tasks, meetings attended, accomplishments, etc.&#10;&#10;Example:&#10;??? Completed UI design for dashboard&#10;??? Attended sprint planning meeting&#10;??? Fixed bug in user authentication"
               rows={5}
               className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 border-t-0 rounded-b-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none font-mono text-sm"
               required
@@ -1734,3 +1734,4 @@ export function AttendanceHistory({ refreshKey }: { refreshKey?: number }) {
 }
 
 export default AttendanceMarker
+

@@ -160,7 +160,7 @@ function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               <p className="text-xs text-neutral-500 mt-2 flex items-start gap-1">
@@ -194,7 +194,7 @@ function LoginForm() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-neutral-400 hover:text-primary-400 transition-colors">
-              ← Back to matriXO Website
+              Back to matriXO Website
             </Link>
           </div>
         </div>
@@ -204,7 +204,7 @@ function LoginForm() {
           <span className="flex items-center gap-1">
             <FaLock className="text-green-500" /> Secure Login
           </span>
-          <span>•</span>
+          <span>|</span>
           <span>256-bit Encryption</span>
         </div>
       </motion.div>
@@ -498,7 +498,7 @@ function DashboardOverview() {
               Welcome back, {employee?.name?.split(' ')[0]}!
             </h2>
             <p className="text-neutral-400">
-              {employee?.department} • {employee?.designation}
+              {employee?.department} | {employee?.designation}
             </p>
           </div>
         </div>
@@ -695,7 +695,7 @@ function Dashboard() {
 
         <footer className="border-t border-neutral-800 py-4 px-6">
           <p className="text-center text-neutral-500 text-sm">
-            © {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
+            &copy; {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
           </p>
         </footer>
       </div>
@@ -736,3 +736,4 @@ export default function EmployeePortalPage() {
     </EmployeeAuthProvider>
   )
 }
+
