@@ -401,7 +401,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [authReady, setAuthReady] = useState(false) // ðŸ”¥ NEW: Track if auth is initialized
+  const [authReady, setAuthReady] = useState(false) // NEW: Track if auth is initialized
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
@@ -428,7 +428,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
       // User is authenticated - wait for token to propagate
       try {
-        // ðŸ”¥ CRITICAL: Wait for token to be ready before Firestore access
+        // CRITICAL: Wait for token to be ready before Firestore access
         await firebaseUser.getIdToken(true) // Force refresh to ensure token is valid
         
         // Small delay to ensure token reaches Firestore servers
@@ -497,7 +497,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   
   // Subscribe to holidays - ONLY when authReady AND user authenticated
   useEffect(() => {
-    // ðŸ”¥ CRITICAL: Don't subscribe until BOTH authReady AND user exist
+    // CRITICAL: Don't subscribe until BOTH authReady AND user exist
     if (!authReady || !user) {
       setHolidays([])
       return
@@ -515,7 +515,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching holidays:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // ðŸ”¥ Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to calendar events - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -541,7 +541,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching calendar events:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // ðŸ”¥ Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to tasks - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -569,7 +569,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching tasks:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // ðŸ”¥ Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to discussions - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -595,7 +595,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching discussions:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // ðŸ”¥ Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to personal todos - private per user
   useEffect(() => {
@@ -1043,7 +1043,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }, [employee])
 
   // ============================================
-  // ATTENDANCE ENGINE — HR-grade monthly calculation
+  // ATTENDANCE ENGINE - HR-grade monthly calculation
   // Excludes Sundays + holidays, respects joining date
   // ============================================
 
@@ -1297,15 +1297,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const getAllEmployees = async (): Promise<EmployeeProfile[]> => {
-    console.log('ðŸ” getAllEmployees: Fetching from Firestore...')
+    console.log('getAllEmployees: Fetching from Firestore...')
     const employeesRef = collection(db, 'Employees')
     const querySnapshot = await getDocs(employeesRef)
     const allEmployees = querySnapshot.docs
       .map(doc => doc.data() as EmployeeProfile)
       .filter(emp => emp.employeeId && emp.name && emp.email)
-    console.log('ðŸ” getAllEmployees: Found', allEmployees.length, 'employees')
+    console.log('getAllEmployees: Found', allEmployees.length, 'employees')
     allEmployees.forEach(e => {
-      console.log(`   ðŸ“Œ ${e.name} - Role: "${e.role}" - Dept: "${e.department}"`)
+      console.log(`   ${e.name} - Role: "${e.role}" - Dept: "${e.department}"`)
     })
     return allEmployees
   }
@@ -1391,7 +1391,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       description: `Added holiday: ${holiday.name} on ${holiday.date}`,
     })
 
-    // ðŸ”” GLOBAL NOTIFICATION: Holiday added
+    // GLOBAL NOTIFICATION: Holiday added
     await createGlobalNotification({
       type: 'calendar',
       action: 'created',
@@ -1442,7 +1442,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdAt: Timestamp.now()
     })
 
-    // ðŸ”” GLOBAL NOTIFICATION: Calendar event created
+    // GLOBAL NOTIFICATION: Calendar event created
     await createGlobalNotification({
       type: 'calendar',
       action: 'created',
@@ -1501,7 +1501,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       description: `Created task: ${task.title}`,
     })
 
-    // ðŸ”” GLOBAL NOTIFICATION: Task created
+    // GLOBAL NOTIFICATION: Task created
     await createGlobalNotification({
       type: 'task',
       action: 'created',
@@ -1556,11 +1556,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     await updateDoc(taskRef, updatePayload)
     
-    // ðŸ”” GLOBAL NOTIFICATION: Status change
+    // GLOBAL NOTIFICATION: Status change
     if (updates.status && updates.status !== oldTask.status) {
       const actualStatus = updatePayload.status || updates.status
       const notifMessage = actualStatus === 'review' && updatePayload.approvalStatus === 'pending'
-        ? `${employee.name} marked "${oldTask.title}" as completed â€” awaiting admin approval`
+        ? `${employee.name} marked "${oldTask.title}" as completed - awaiting admin approval`
         : `${employee.name} changed "${oldTask.title}" to ${actualStatus}`
       
       await createGlobalNotification({
@@ -1576,7 +1576,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       })
     }
     
-    // ðŸ”” GLOBAL NOTIFICATION: Assignment change
+    // GLOBAL NOTIFICATION: Assignment change
     if (updates.assignedTo && JSON.stringify(updates.assignedTo) !== JSON.stringify(oldTask.assignedTo)) {
       await createGlobalNotification({
         type: 'task',
@@ -1610,33 +1610,33 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     
     // Delete associated notifications from userNotifications collection
     try {
-      console.log('ðŸ—‘ï¸ Deleting notifications for task ID:', id)
+      console.log('Deleting notifications for task ID:', id)
       const notificationsRef = collection(db, 'userNotifications')
       const q = query(notificationsRef, where('relatedEntityId', '==', id))
       
-      console.log('ðŸ—‘ï¸ Querying userNotifications with relatedEntityId:', id)
+      console.log('Querying userNotifications with relatedEntityId:', id)
       const snapshot = await getDocs(q)
       
-      console.log('ðŸ—‘ï¸ Found', snapshot.docs.length, 'notifications to delete')
+      console.log('Found', snapshot.docs.length, 'notifications to delete')
       
       // Log all found notifications for debugging
       snapshot.docs.forEach(docSnapshot => {
-        console.log('ðŸ—‘ï¸ Found notification:', docSnapshot.id, 'data:', JSON.stringify(docSnapshot.data()))
+        console.log('Found notification:', docSnapshot.id, 'data:', JSON.stringify(docSnapshot.data()))
       })
       
       if (snapshot.docs.length > 0) {
         const deletePromises = snapshot.docs.map(docSnapshot => {
-          console.log('ðŸ—‘ï¸ Deleting notification:', docSnapshot.id)
+          console.log('Deleting notification:', docSnapshot.id)
           return deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
         })
         
         await Promise.all(deletePromises)
-        console.log('ðŸ—‘ï¸ All notifications deleted successfully')
+        console.log('All notifications deleted successfully')
       } else {
-        console.log('âš ï¸ No notifications found for this task ID')
+        console.log('Warning: No notifications found for this task ID')
       }
     } catch (notifError) {
-      console.error('âŒ Error deleting notifications:', notifError)
+      console.error('Error deleting notifications:', notifError)
       // Don't throw - task is already deleted, just log the notification error
     }
   }
@@ -1663,7 +1663,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       updatedAt: Timestamp.now()
     })
     
-    // ðŸ”” GLOBAL NOTIFICATION: Task approved
+    // GLOBAL NOTIFICATION: Task approved
     await createGlobalNotification({
       type: 'task',
       action: 'status_changed',
@@ -1796,7 +1796,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const addDiscussion = async (content: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
     
-    console.log('ðŸ“ Adding discussion...')
+    console.log('Adding discussion...')
     const discussionDoc = await addDoc(collection(db, 'discussions'), {
       content,
       authorId: employee.employeeId,
@@ -1809,10 +1809,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [],
       isPinned: false
     })
-    console.log('ðŸ“ Discussion created with ID:', discussionDoc.id)
+    console.log('Discussion created with ID:', discussionDoc.id)
 
-    // ðŸ”” GLOBAL NOTIFICATION: New discussion
-    console.log('ðŸ”” Calling createGlobalNotification...')
+    // GLOBAL NOTIFICATION: New discussion
+    console.log('Calling createGlobalNotification...')
     await createGlobalNotification({
       type: 'discussion',
       action: 'created',
@@ -1824,7 +1824,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdByName: employee.name,
       createdByRole: employee.role
     })
-    console.log('ðŸ”” createGlobalNotification completed')
+    console.log('createGlobalNotification completed')
   }
 
   const updateDiscussion = async (id: string, content: string) => {
@@ -1930,7 +1930,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [...(discussion.replies || []), newReply]
     })
 
-    // ðŸ”” GLOBAL NOTIFICATION: New reply
+    // GLOBAL NOTIFICATION: New reply
     await createGlobalNotification({
       type: 'discussion',
       action: 'replied',
@@ -2556,13 +2556,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       let markedCount = 0
       let cleanedCount = 0
       
-      // Create timestamp for 6:00 PM (18:00) of the absent day â€” the cutoff time
+      // Create timestamp for 6:00 PM (18:00) of the absent day - the cutoff time
       const absentDayCutoff = new Date(checkDate)
       absentDayCutoff.setHours(18, 0, 0, 0)
       const absentTimestamp = Timestamp.fromDate(absentDayCutoff)
       
       for (const emp of allEmployees) {
-        // Skip admins â€” they don't participate in attendance tracking
+        // Skip admins - they don't participate in attendance tracking
         if (emp.role === 'admin') continue
         // Skip corrupt/incomplete employee records
         if (!emp.employeeId) continue
@@ -2587,7 +2587,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         // If there's an approved leave for this date, ensure only the Leave record exists
         if (approvedLeaveKeys.has(leaveKey)) {
           if (existingDocs.empty) {
-            // Approved leave but no attendance record â€” create Leave record
+            // Approved leave but no attendance record - create Leave record
             batch.set(doc(db, 'attendance', attendanceId), {
               employeeId: emp.employeeId,
               date: dateString,

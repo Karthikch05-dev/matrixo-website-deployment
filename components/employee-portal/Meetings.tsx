@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -151,12 +151,12 @@ function getProfileImageUrl(url?: string, name?: string, employeeId?: string): s
 
 function renderMarkdownClean(md: string): string {
   let html = md
-    // Normalize bullet characters (•, ‣, ◦, ⁃, ∙)
+    // Normalize bullet characters (., ?, ?, ?, ?)
     .replace(/^[\u2022\u2023\u25E6\u2043\u2219]\s+/gm, '- ')
-    // Handle corrupted UTF-8 bullet (mojibake for •)
+    // Handle corrupted UTF-8 bullet (mojibake for .)
     .replace(/^[\u00e2\u0080\u00a2]+\s+/gm, '- ')
     .replace(/^\u00e2\u20ac\u00a2\s+/gm, '- ')
-    // Strip markdown links: [text](url) → text
+    // Strip markdown links: [text](url) ? text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     // Strip bare URLs in parentheses: (https://...)
     .replace(/\(https?:\/\/[^)]+\)/g, '')
@@ -1251,7 +1251,7 @@ export function Meetings() {
 
       if (newMeetings.length === 0) return
 
-      console.log(`ðŸ”” Found ${newMeetings.length} new meetings to notify about`)
+      console.log(`Found ${newMeetings.length} new meetings to notify about`)
 
       for (const meeting of newMeetings) {
         // Mark as notified immediately to prevent duplicates
@@ -1295,7 +1295,7 @@ export function Meetings() {
           recipientCount: matchedEmployeeIds.length
         })
 
-        console.log(`âœ… Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
+        console.log(`?o. Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
       }
     } catch (err) {
       console.error('Error auto-notifying meetings:', err)
