@@ -47,6 +47,8 @@ const partners: Partner[] = [
   },
 ]
 
+const SHOW_COLLAB_LOGOS = false
+
 export default function Partners() {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -70,7 +72,13 @@ export default function Partners() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {partners.map((partner, index) => (
-            <PartnerCard key={partner.name} partner={partner} index={index} isDark={isDark} />
+            <PartnerCard
+              key={partner.name}
+              partner={partner}
+              index={index}
+              isDark={isDark}
+              showLogo={SHOW_COLLAB_LOGOS}
+            />
           ))}
         </div>
 
@@ -103,10 +111,12 @@ function PartnerCard({
   partner,
   index,
   isDark,
+  showLogo,
 }: {
   partner: Partner
   index: number
   isDark: boolean
+  showLogo: boolean
 }) {
   return (
     <motion.article
@@ -117,10 +127,12 @@ function PartnerCard({
       whileHover={{ y: -4, scale: 1.01 }}
       className="group h-full rounded-xl border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-gray-900 p-5 md:p-6 shadow-md hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-500/60 transition-all duration-300"
     >
-      <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
-        <div className="w-full h-12 flex items-center justify-center overflow-hidden">
-          <PartnerLogo partner={partner} isDark={isDark} />
-        </div>
+      <div className={`h-full flex flex-col items-center justify-center text-center ${showLogo ? 'gap-4' : 'gap-0'}`}>
+        {showLogo ? (
+          <div className="w-full h-12 flex items-center justify-center overflow-hidden">
+            <PartnerLogo partner={partner} isDark={isDark} />
+          </div>
+        ) : null}
 
         <h3 className="text-sm md:text-[15px] font-semibold leading-snug text-gray-800 dark:text-gray-200 min-h-[2.75rem] flex items-center justify-center px-1">
           {partner.name}
