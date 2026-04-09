@@ -11,8 +11,9 @@ import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'fire
 import { auth } from '@/lib/firebaseConfig'
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
   const searchParams = useSearchParams()
+  const mode = searchParams.get('mode')
+  const [isLogin, setIsLogin] = useState(mode !== 'register')
   const returnUrl = searchParams.get('returnUrl') || '/'
   const [formData, setFormData] = useState({
     name: '',
@@ -27,6 +28,11 @@ export default function AuthPage() {
   
   const router = useRouter()
   const { user, signIn, signUp, signInWithGoogle, logout } = useAuth()
+
+  // Keep login/register mode in sync with URL aliases (/login, /register)
+  useEffect(() => {
+    setIsLogin(mode !== 'register')
+  }, [mode])
 
   // If user is already logged in and came from a returnUrl, redirect them
   useEffect(() => {

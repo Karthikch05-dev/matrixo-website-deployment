@@ -263,7 +263,7 @@ function MentionInput({
     >
       <div className="px-2 py-1.5 bg-neutral-900 border-b border-neutral-700">
         <p className="text-xs text-neutral-400 font-medium">
-          {dropdownType === 'user' ? '👤 Select a person' : '🏢 Select a department'}
+          {dropdownType === 'user' ? 'Select a person' : 'Select a department'}
         </p>
       </div>
       <div className="max-h-64 overflow-y-auto">
@@ -983,7 +983,7 @@ function DiscussionPost({
                   className="absolute bottom-full left-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl z-50"
                 >
                   <div className="flex gap-1">
-                    {['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'].map((emoji) => (
+                    {['Like', 'Love', 'Laugh', 'Wow', 'Sad', 'Fire', 'Clap', 'Celebrate'].map((emoji) => (
                       <button
                         key={emoji}
                         onClick={() => {
@@ -1095,13 +1095,13 @@ export function Discussions() {
   useEffect(() => {
     getAllEmployees()
       .then(data => {
-        console.log('🔍 Fetched employees for mentions:', data?.length || 0)
-        console.log('🔍 All employees data:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
+        console.log('Fetched employees for mentions:', data?.length || 0)
+        console.log('All employees data:', data?.map(e => ({ name: e.name, role: e.role, department: e.department })))
         // Deduplicate employees by employeeId to prevent duplicates
         const uniqueEmployees = (data || []).filter((emp, index, self) => 
           index === self.findIndex(e => e.employeeId === emp.employeeId)
         )
-        console.log('🔍 After deduplication:', uniqueEmployees.length)
+        console.log('After deduplication:', uniqueEmployees.length)
         setEmployees(uniqueEmployees)
       })
       .catch(err => {
@@ -1255,3 +1255,4 @@ export function Discussions() {
 }
 
 export default Discussions
+

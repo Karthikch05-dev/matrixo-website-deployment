@@ -283,10 +283,10 @@ function AddEventModal({
         <Select
           label="Event Type"
           options={[
-            { value: 'event', label: '⭐ Event' },
-            { value: 'deadline', label: '🚩 Deadline' },
-            { value: 'meeting', label: '👥 Meeting' },
-            { value: 'announcement', label: '📢 Announcement' }
+            { value: 'event', label: '? Event' },
+            { value: 'deadline', label: 'Deadline' },
+            { value: 'meeting', label: 'Meeting' },
+            { value: 'announcement', label: 'Announcement' }
           ]}
           value={form.type}
           onChange={(value) => setForm({ ...form, type: value as 'event' | 'deadline' | 'meeting' | 'announcement' })}
@@ -640,7 +640,7 @@ export function Calendar() {
                       style={{ backgroundColor: event.color || '#6366f1' }}
                     >
                       <span className="hidden sm:inline">{event.title}</span>
-                      <span className="sm:hidden">•</span>
+                      <span className="sm:hidden">???</span>
                     </div>
                   ))}
                   
@@ -942,3 +942,4 @@ export function Calendar() {
 }
 
 export default Calendar
+
