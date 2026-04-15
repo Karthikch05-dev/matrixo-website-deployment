@@ -23,6 +23,7 @@ import {
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/AuthContext'
+import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 
 interface VibeCodeRegistrationFormProps {
   event: any
@@ -371,8 +372,8 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
               </p>
               <button
                 onClick={() => {
-                  const currentUrl = window.location.pathname
-                  window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
+                  storeRedirectAfterLogin()
+                  window.location.href = '/auth'
                 }}
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
               >

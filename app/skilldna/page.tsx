@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/AuthContext'
+import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useSkillDNA } from '@/hooks/useSkillDNA'
 import OnboardingFlow from '@/components/skilldna/OnboardingFlow'
 import SkillDNADashboard from '@/components/skilldna/SkillDNADashboard'
@@ -229,6 +230,7 @@ export default function SkillDNAPage() {
           </p>
           <Link
             href="/auth"
+            onClick={() => storeRedirectAfterLogin()}
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold rounded-full hover:shadow-xl hover:shadow-purple-500/30 transition-all"
           >
             <FaSignInAlt />
