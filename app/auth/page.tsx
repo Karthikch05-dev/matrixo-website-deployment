@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaGoogle, FaArrowRight, FaShieldAlt, FaBolt, FaLock, FaCheckCircle, FaSignOutAlt, FaArrowLeft, FaEnvelope } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
+import { consumeRedirectAfterLogin, syncLegacyReturnUrl } from '@/lib/authRedirect'
 import { toast } from 'sonner'
 
 type AuthStep = 'form' | 'otp'
@@ -13,7 +14,7 @@ type AuthStep = 'form' | 'otp'
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const searchParams = useSearchParams()
-  const returnUrl = searchParams.get('returnUrl') || '/'
+  const returnUrl = searchParams.get('returnUrl')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,16 +27,30 @@ export default function AuthPage() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [resendTimer, setResendTimer] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+  const hasRedirectedRef = useRef(false)
   
   const router = useRouter()
   const { user, signIn, signUp, signInWithGoogle, logout } = useAuth()
 
-  // If user is already logged in and came from a returnUrl, redirect them
   useEffect(() => {
-    if (user && returnUrl !== '/') {
-      router.push(returnUrl)
+    syncLegacyReturnUrl(returnUrl)
+  }, [returnUrl])
+
+  const redirectToStoredDestination = useCallback(() => {
+    if (hasRedirectedRef.current) {
+      return
     }
-  }, [user, returnUrl, router])
+
+    hasRedirectedRef.current = true
+    router.replace(consumeRedirectAfterLogin() || '/')
+  }, [router])
+
+  // If user is already logged in, continue to their stored destination
+  useEffect(() => {
+    if (user) {
+      redirectToStoredDestination()
+    }
+  }, [user, redirectToStoredDestination])
 
   // Resend timer countdown
   useEffect(() => {
@@ -85,7 +100,7 @@ export default function AuthPage() {
       if (isLogin) {
         await signIn(formData.email, formData.password)
         toast.success('Welcome back!')
-        router.push(returnUrl)
+        redirectToStoredDestination()
       } else {
         // Signup flow - validate first
         if (formData.password !== formData.confirmPassword) {
@@ -139,7 +154,7 @@ export default function AuthPage() {
         // OTP verified - now create the account
         await signUp(formData.email, formData.password, formData.name)
         toast.success('Account created successfully!')
-        router.push(returnUrl)
+        redirectToStoredDestination()
       }
     } catch (error: any) {
       console.error('OTP/Signup error:', error)
@@ -207,7 +222,7 @@ export default function AuthPage() {
     try {
       await signInWithGoogle()
       toast.success('Signed in successfully!')
-      router.push(returnUrl)
+      redirectToStoredDestination()
     } catch (error: any) {
       console.error('Google sign-in error:', error)
       setLoading(false)

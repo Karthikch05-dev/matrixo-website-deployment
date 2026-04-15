@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
+import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import config from '@/lib/config'
@@ -137,6 +138,11 @@ export default function Navbar() {
     } catch (error) {
       toast.error('Failed to logout')
     }
+  }
+
+  const handleLoginClick = () => {
+    storeRedirectAfterLogin()
+    setIsOpen(false)
   }
 
   return (
@@ -473,6 +479,7 @@ export default function Navbar() {
               >
                 <Link
                   href="/auth"
+                  onClick={handleLoginClick}
                   className="inline-flex items-center gap-2 px-4 py-2 glass-card-thin text-gray-700 dark:text-gray-300 
                            rounded-full font-semibold hover:scale-[1.02] transition-all duration-300"
                 >
@@ -691,7 +698,7 @@ export default function Navbar() {
                   ) : (
                     <Link
                       href="/auth"
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleLoginClick}
                       className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
                                rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
                     >

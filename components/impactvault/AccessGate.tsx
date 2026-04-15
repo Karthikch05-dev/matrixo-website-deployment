@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/AuthContext';
+import { storeRedirectAfterLogin } from '@/lib/authRedirect';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaLock, FaChartLine, FaSignInAlt } from 'react-icons/fa';
@@ -63,6 +64,7 @@ export default function AccessGate({
           </p>
           <Link
             href="/auth"
+            onClick={() => storeRedirectAfterLogin()}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             <FaSignInAlt /> Sign In
