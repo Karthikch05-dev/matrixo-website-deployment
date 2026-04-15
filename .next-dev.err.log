@@ -1,11 +1,13 @@
- ⚠ Found lockfile missing swc dependencies, patching...
- ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
-TypeError: Cannot read properties of undefined (reading 'os')
-    at fetchPkgInfo (E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\lib\patch-incorrect-lockfile.js:73:25)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async Promise.all (index 0)
-    at async patchIncorrectLockfile (E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\lib\patch-incorrect-lockfile.js:162:26)
-[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
-Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
-  npx update-browserslist-db@latest
-  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Error: spawn EPERM
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at spawn (node:child_process:796:9)
+    at fork (node:child_process:174:10)
+    at E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\cli\next-dev.js:213:45
+    at new Promise (<anonymous>)
+    at startServer (E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\cli\next-dev.js:199:16)
+    at runDevServer (E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\cli\next-dev.js:280:23)
+    at Module.nextDev (E:\matriXO\matrixo-website-deployment-beta\node_modules\next\dist\cli\next-dev.js:288:11) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'spawn'
+}
