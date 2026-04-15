@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaSearch, FaTrophy, FaTimes, FaDna, FaBrain, FaRocket } from 'react-icons/fa';
+import { FaSearch, FaTrophy, FaTimes, FaDna, FaBrain, FaRocket, FaUser } from 'react-icons/fa';
 import { StudentAnalytics } from '@/lib/impactvault/types';
 
 interface Props {
   students: StudentAnalytics[];
+  currentUserUid?: string | null;
 }
 
-export default function StudentIntelligence({ students }: Props) {
+export default function StudentIntelligence({ students, currentUserUid }: Props) {
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<StudentAnalytics | null>(null);
 
@@ -23,6 +24,11 @@ export default function StudentIntelligence({ students }: Props) {
     : students;
 
   const studentsWithDNA = filtered.filter((s) => s.hasSkillDNA);
+
+  // Find current user's rank for quick display
+  const currentUserRank = currentUserUid
+    ? studentsWithDNA.findIndex((s) => s.uid === currentUserUid) + 1
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -38,8 +44,16 @@ export default function StudentIntelligence({ students }: Props) {
             className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-white/[0.03] border border-gray-200/30 dark:border-white/[0.06] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50"
           />
         </div>
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          {studentsWithDNA.length} students with SkillDNA profiles • {filtered.length} total
+        <div className="mt-2 flex items-center justify-between flex-wrap gap-2">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {studentsWithDNA.length} students with SkillDNA profiles • {filtered.length} total
+          </span>
+          {currentUserRank > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-sm font-medium">
+              <FaUser className="text-xs" />
+              Your Rank: #{currentUserRank}
+            </span>
+          )}
         </div>
       </div>
 
@@ -81,75 +95,100 @@ export default function StudentIntelligence({ students }: Props) {
               </tr>
             </thead>
             <tbody>
-              {studentsWithDNA.slice(0, 50).map((student, index) => (
-                <tr
-                  key={student.uid}
-                  className="border-b border-gray-100/50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="py-3 px-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                        index === 0
-                          ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                          : index === 1
-                          ? 'bg-gradient-to-br from-gray-300 to-gray-400'
-                          : index === 2
-                          ? 'bg-gradient-to-br from-orange-400 to-orange-600'
-                          : 'bg-gradient-to-br from-gray-500 to-gray-600'
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-                  </td>
-                  <td className="py-3 px-3">
-                    <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                      {student.name}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+              {studentsWithDNA.slice(0, 50).map((student, index) => {
+                const isCurrentUser = currentUserUid && student.uid === currentUserUid;
+                return (
+                  <tr
+                    key={student.uid}
+                    className={`border-b transition-colors ${
+                      isCurrentUser
+                        ? 'bg-emerald-50/70 dark:bg-emerald-900/20 border-emerald-200/50 dark:border-emerald-700/30'
+                        : 'border-gray-100/50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <td className="py-3 px-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                          index === 0
+                            ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                            : index === 1
+                            ? 'bg-gradient-to-br from-gray-300 to-gray-400'
+                            : index === 2
+                            ? 'bg-gradient-to-br from-orange-400 to-orange-600'
+                            : 'bg-gradient-to-br from-gray-500 to-gray-600'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                          {student.name}
+                          {isCurrentUser && (
+                            <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400 font-normal">
+                              (You)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                        {student.branch}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-center text-sm text-gray-600 dark:text-gray-400 hidden sm:table-cell">
                       {student.branch}
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-center text-sm text-gray-600 dark:text-gray-400 hidden sm:table-cell">
-                    {student.branch}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                      {student.dynamicSkillScore}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center hidden md:table-cell">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        student.hiringReadiness >= 70
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                          : student.hiringReadiness >= 40
-                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      }`}
-                    >
-                      {student.hiringReadiness}%
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">
-                    {student.skillCount}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <button
-                      onClick={() => setSelectedStudent(student)}
-                      className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-sm font-medium"
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {student.dynamicSkillScore}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center hidden md:table-cell">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          student.hiringReadiness >= 70
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : student.hiringReadiness >= 40
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        }`}
+                      >
+                        {student.hiringReadiness}%
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">
+                      {student.skillCount}
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setSelectedStudent(student)}
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-sm font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {studentsWithDNA.length === 0 && (
-          <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-            No students with SkillDNA profiles found
+          <div className="text-center py-12">
+            <div className="text-gray-400 dark:text-gray-500 mb-2">
+              No students with SkillDNA profiles found
+            </div>
+            <p className="text-sm text-gray-400 dark:text-gray-600">
+              Students need to complete their SkillDNA assessment to appear on the leaderboard
+            </p>
+          </div>
+        )}
+
+        {studentsWithDNA.length > 50 && (
+          <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+            Showing top 50 students • {studentsWithDNA.length - 50} more students in this institution
           </div>
         )}
       </motion.div>

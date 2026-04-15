@@ -56,11 +56,6 @@ const betaLinks = [
     href: '/impactvault',
     description: 'Real-time analytics and skill gap insights'
   },
-  {
-    name: 'Profile & Username',
-    href: '/profile',
-    description: 'Public profiles with usernames, privacy controls & sharing'
-  },
 ]
 
 export default function Navbar() {
@@ -242,44 +237,84 @@ export default function Navbar() {
                 <AnimatePresence>
                   {showFeaturesDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl"
+                      transition={{ 
+                        duration: 0.25, 
+                        ease: [0.16, 1, 0.3, 1],
+                        opacity: { duration: 0.2 }
+                      }}
+                      className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl features-dropdown-glass"
                       style={{
                         background: darkMode
-                          ? 'rgba(10, 15, 30, 0.88)'
-                          : 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
+                          ? 'rgba(12, 17, 35, 0.92)'
+                          : 'rgba(255, 255, 255, 0.88)',
+                        backdropFilter: 'blur(30px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(30px) saturate(200%)',
                         border: darkMode
-                          ? '1px solid rgba(255,255,255,0.08)'
-                          : '1px solid rgba(0,0,0,0.08)',
+                          ? '1px solid rgba(255, 255, 255, 0.15)'
+                          : '1px solid rgba(255, 255, 255, 0.7)',
                         boxShadow: darkMode
-                          ? '0 24px 64px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)'
-                          : '0 24px 64px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(0,0,0,0.04)',
+                          ? '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                          : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                       }}
                     >
-                      {betaLinks.map((link, index) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          onClick={() => setShowFeaturesDropdown(false)}
-                          className={`block px-6 py-4 transition-colors border-b ${
-                            darkMode
-                              ? 'hover:bg-white/[0.08] border-white/[0.06] last:border-b-0'
-                              : 'hover:bg-gray-50 border-gray-100 last:border-b-0'
-                          }`}
-                        >
-                          <div className={`font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {link.name}
-                          </div>
-                          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {link.description}
-                          </div>
-                        </Link>
-                      ))}
+                      {/* Subtle noise texture overlay for premium feel */}
+                      <div 
+                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                        }}
+                      />
+                      {/* Gradient border highlight at top */}
+                      <div 
+                        className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none"
+                        style={{
+                          background: darkMode
+                            ? 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5), transparent)'
+                            : 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent)',
+                        }}
+                      />
+                      <div className="relative z-10">
+                        {betaLinks.map((link, index) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            onClick={() => setShowFeaturesDropdown(false)}
+                            className={`group block px-6 py-4 transition-all duration-200 border-b relative overflow-hidden ${
+                              darkMode
+                                ? 'border-white/[0.06] last:border-b-0'
+                                : 'border-gray-200/50 last:border-b-0'
+                            }`}
+                          >
+                            {/* Hover glow effect */}
+                            <div 
+                              className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                darkMode 
+                                  ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
+                                  : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
+                              }`}
+                            />
+                            <div className="relative z-10">
+                              <div className={`font-bold mb-1 transition-colors duration-200 ${
+                                darkMode 
+                                  ? 'text-white group-hover:text-indigo-300' 
+                                  : 'text-gray-900 group-hover:text-indigo-600'
+                              }`}>
+                                {link.name}
+                              </div>
+                              <div className={`text-sm transition-colors duration-200 ${
+                                darkMode 
+                                  ? 'text-gray-400 group-hover:text-gray-300' 
+                                  : 'text-gray-600 group-hover:text-gray-700'
+                              }`}>
+                                {link.description}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -370,11 +405,11 @@ export default function Navbar() {
                            rounded-full font-semibold hover:scale-[1.02] transition-all duration-300"
                 >
                   {profile?.profilePhoto ? (
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
-                      <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full" unoptimized />
+                    <div className="w-7 h-7 rounded-xl overflow-hidden flex-shrink-0">
+                      <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full rounded-xl" unoptimized />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
                     </div>
                   )}
@@ -523,6 +558,7 @@ export default function Navbar() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                           className="overflow-hidden"
                         >
                           <div className="mt-2 space-y-2 pl-4">
@@ -534,14 +570,38 @@ export default function Navbar() {
                                   setIsOpen(false)
                                   setShowMobileFeaturesDropdown(false)
                                 }}
-                                className="block px-4 py-3 bg-gray-500/10 dark:bg-white/[0.04] hover:bg-gray-500/15 dark:hover:bg-white/[0.08] 
-                                         rounded-2xl transition-colors backdrop-blur-sm"
+                                className="group relative block px-4 py-3 rounded-2xl transition-all duration-200 overflow-hidden"
+                                style={{
+                                  background: darkMode 
+                                    ? 'rgba(255, 255, 255, 0.04)' 
+                                    : 'rgba(0, 0, 0, 0.04)',
+                                  backdropFilter: 'blur(8px)',
+                                  WebkitBackdropFilter: 'blur(8px)',
+                                }}
                               >
-                                <div className="font-bold text-gray-900 dark:text-white text-sm mb-1">
-                                  {link.name}
-                                </div>
-                                <div className="text-xs text-gray-600 dark:text-gray-400">
-                                  {link.description}
+                                {/* Hover glow effect */}
+                                <div 
+                                  className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                    darkMode 
+                                      ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
+                                      : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
+                                  }`}
+                                />
+                                <div className="relative z-10">
+                                  <div className={`font-bold text-sm mb-1 transition-colors duration-200 ${
+                                    darkMode 
+                                      ? 'text-white group-hover:text-indigo-300' 
+                                      : 'text-gray-900 group-hover:text-indigo-600'
+                                  }`}>
+                                    {link.name}
+                                  </div>
+                                  <div className={`text-xs transition-colors duration-200 ${
+                                    darkMode 
+                                      ? 'text-gray-400 group-hover:text-gray-300' 
+                                      : 'text-gray-600 group-hover:text-gray-700'
+                                  }`}>
+                                    {link.description}
+                                  </div>
                                 </div>
                               </Link>
                             ))}
