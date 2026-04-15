@@ -79,11 +79,11 @@ export function useImpactVault() {
 
       if (access) {
         userRole = access.role;
-        userInstitution = access.institution;
-      } else if (profile?.college) {
-        // Default: student sees own institution
+        userInstitution = access.collegeId || access.institution || '';
+      } else if (profile?.collegeId) {
+        // Default: student sees own institution by collegeId
         userRole = 'student';
-        userInstitution = profile.college;
+        userInstitution = profile.collegeId;
       }
 
       setRole(userRole);
@@ -123,7 +123,7 @@ export function useImpactVault() {
     } finally {
       setLoading(false);
     }
-  }, [user, profile?.college]);
+  }, [user, profile?.collegeId]);
 
   useEffect(() => {
     fetchData();
@@ -133,7 +133,7 @@ export function useImpactVault() {
     loading,
     error,
     role,
-    institution,
+    institution, // Keep name for backward compatibility (now contains collegeId value)
     institutionMetrics,
     departmentMetrics,
     studentAnalytics,

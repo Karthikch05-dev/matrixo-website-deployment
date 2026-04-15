@@ -51,7 +51,7 @@ export async function getUserImpactVaultAccess(
 export async function grantImpactVaultAccess(
   targetUserId: string,
   role: ImpactVaultRole,
-  institution: string,
+  collegeId: string,
   grantedByUserId: string,
   department?: string
 ): Promise<void> {
@@ -59,7 +59,7 @@ export async function grantImpactVaultAccess(
 
   const accessData: Omit<ImpactVaultAccess, 'userId'> = {
     role,
-    institution,
+    collegeId,
     department: department || '',
     grantedBy: grantedByUserId,
     grantedAt: new Date().toISOString(),
@@ -71,14 +71,14 @@ export async function grantImpactVaultAccess(
 // ---- Institution Data Operations ----
 
 /**
- * Get all students for an institution (by college name)
+ * Get all students for an institution (by college ID)
  */
 export async function getInstitutionStudents(
-  college: string
+  collegeId: string
 ): Promise<UserProfile[]> {
   try {
     const profilesRef = collection(db, USER_PROFILES_COLLECTION);
-    const q = query(profilesRef, where('college', '==', college));
+    const q = query(profilesRef, where('collegeId', '==', collegeId));
     const snapshot = await getDocs(q);
 
     return snapshot.docs.map((doc) => doc.data() as UserProfile);
@@ -145,9 +145,9 @@ export async function getSkillDNAProfilesBatch(
  * Get combined student + SkillDNA data for an institution
  */
 export async function getInstitutionStudentsWithSkillDNA(
-  college: string
+  collegeId: string
 ): Promise<StudentWithSkillDNA[]> {
-  const students = await getInstitutionStudents(college);
+  const students = await getInstitutionStudents(collegeId);
 
   if (students.length === 0) return [];
 
@@ -180,22 +180,22 @@ export async function getAllStudentsWithSkillDNA(): Promise<StudentWithSkillDNA[
 }
 
 /**
- * Get distinct institution (college) names from all user profiles
+ * Get distinct institution (college IDs) from all user profiles
  */
 export async function getInstitutionList(): Promise<string[]> {
   try {
     const profilesRef = collection(db, USER_PROFILES_COLLECTION);
     const snapshot = await getDocs(profilesRef);
 
-    const colleges = new Set<string>();
+    const collegeIds = new Set<string>();
     snapshot.docs.forEach((doc) => {
       const profile = doc.data() as UserProfile;
-      if (profile.college) {
-        colleges.add(profile.college);
+      if (profile.collegeId) {
+        collegeIds.add(profile.collegeId);
       }
     });
 
-    return Array.from(colleges).sort();
+    return Array.from(collegeIds).sort();
   } catch (error) {
     console.error('Error fetching institution list:', error);
     return [];

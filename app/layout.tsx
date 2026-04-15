@@ -113,14 +113,16 @@ export default async function RootLayout({
         {/* Theme color for PWA */}
         <meta name="theme-color" content="#0a0a0a" />
 
-        {/* Dark Mode Script */}
+        {/* Dark Mode Script - Default to LIGHT mode */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                // Only apply dark mode if explicitly saved
+                if (localStorage.getItem('theme') === 'dark') {
                   document.documentElement.classList.add('dark')
                 } else {
+                  // Default to light mode
                   document.documentElement.classList.remove('dark')
                 }
               } catch (_) {}

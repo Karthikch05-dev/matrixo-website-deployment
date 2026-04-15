@@ -21,7 +21,6 @@ const navLinksBeforeFeatures = [
 
 const navLinksAfterFeatures = [
   { name: 'Events', href: '/events' },
-  { name: 'Career', href: '/careers' },
   { name: 'Contact', href: '/contact' },
 ]
 
@@ -249,11 +248,17 @@ export default function Navbar() {
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                       className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl"
                       style={{
-                        background: 'rgba(10, 15, 30, 0.88)',
+                        background: darkMode
+                          ? 'rgba(10, 15, 30, 0.88)'
+                          : 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+                        border: darkMode
+                          ? '1px solid rgba(255,255,255,0.08)'
+                          : '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: darkMode
+                          ? '0 24px 64px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)'
+                          : '0 24px 64px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(0,0,0,0.04)',
                       }}
                     >
                       {betaLinks.map((link, index) => (
@@ -261,12 +266,16 @@ export default function Navbar() {
                           key={link.name}
                           href={link.href}
                           onClick={() => setShowFeaturesDropdown(false)}
-                          className="block px-6 py-4 hover:bg-white/[0.08] transition-colors border-b border-white/[0.06] last:border-b-0"
+                          className={`block px-6 py-4 transition-colors border-b ${
+                            darkMode
+                              ? 'hover:bg-white/[0.08] border-white/[0.06] last:border-b-0'
+                              : 'hover:bg-gray-50 border-gray-100 last:border-b-0'
+                          }`}
                         >
-                          <div className="font-bold text-white mb-1">
+                          <div className={`font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                             {link.name}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             {link.description}
                           </div>
                         </Link>

@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       email,
       studentId,
       collegeName,
+      collegeId, // New normalized college ID
       department,
       year,
       emergencyContact,
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     } = body
 
     // Validate required fields
-    if (!fullName || !email || !contactNumber || !studentId || !collegeName || !department || !year) {
+    if (!fullName || !email || !contactNumber || !studentId || !collegeId || !department || !year) {
       return NextResponse.json(
         { error: 'Please fill in all required fields' },
         { status: 400 }
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
               <p style="color: #4b5563; margin: 5px 0;"><strong>Email:</strong> ${email}</p>
               <p style="color: #4b5563; margin: 5px 0;"><strong>Contact:</strong> ${contactNumber}</p>
               <p style="color: #4b5563; margin: 5px 0;"><strong>Student ID:</strong> ${studentId}</p>
-              <p style="color: #4b5563; margin: 5px 0;"><strong>College:</strong> ${collegeName}</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>College:</strong> ${collegeName || 'N/A'}</p>
               <p style="color: #4b5563; margin: 5px 0;"><strong>Department:</strong> ${department}</p>
               <p style="color: #4b5563; margin: 5px 0;"><strong>Year:</strong> ${year}</p>
               ${wantCertificate === 'yes' ? '<p style="color: #4b5563; margin: 5px 0;">✅ Certificate requested (₹50)</p>' : ''}
