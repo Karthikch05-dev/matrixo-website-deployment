@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 const betaFeatures = [
   {
@@ -65,6 +65,7 @@ export default function BetaFeaturesShowcase() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isBeta, setIsBeta] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
   const featureRefs = useRef<Array<HTMLDivElement | null>>([])
   const mobilePillRefs = useRef<Array<HTMLButtonElement | null>>([])
 
@@ -104,15 +105,15 @@ export default function BetaFeaturesShowcase() {
 
   useEffect(() => {
     mobilePillRefs.current[activeIndex]?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
       inline: 'center',
       block: 'nearest',
     })
-  }, [activeIndex])
+  }, [activeIndex, prefersReducedMotion])
 
   const scrollToFeature = (index: number) => {
     const target = document.getElementById(`beta-feature-${index}`)
-    target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    target?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' })
   }
 
   if (!mounted || !isBeta) return null
