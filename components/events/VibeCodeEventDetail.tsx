@@ -24,7 +24,7 @@ import {
   FaBolt
 } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
-import { toast } from 'sonner'
+import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 // @ts-ignore - Import error is a VS Code cache issue, file exists
 import VibeCodeRegistrationForm from './VibeCodeRegistrationForm'
 
@@ -38,8 +38,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
   const handleRegisterNow = (ticket: any) => {
     if (!user) {
-      const currentUrl = window.location.pathname
-      window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
+      storeRedirectAfterLogin()
+      window.location.href = '/auth'
       return
     }
     setSelectedTicket(ticket)

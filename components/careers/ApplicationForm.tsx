@@ -11,10 +11,11 @@ import { doc, getDoc, collection, addDoc, Timestamp, updateDoc } from 'firebase/
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
+import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import PositionClosed from './PositionClosed'
 
 // ============================================
@@ -348,7 +349,6 @@ function CustomDropdown({ value, options, onChange }: { value: any; options: str
 
 export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const { user } = useAuth()
   const { profile } = useProfile()
   const formRef = useRef<HTMLDivElement>(null)
@@ -454,7 +454,8 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const handleApplyClick = () => {
     if (!user) {
       toast.info('Please sign in to apply for this role')
-      router.push(`/auth?returnUrl=${encodeURIComponent(pathname)}`)
+      storeRedirectAfterLogin()
+      router.push('/auth')
       return
     }
     setShowForm(true)
