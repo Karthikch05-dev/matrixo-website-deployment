@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Hero from '@/components/home/Hero'
 import About from '@/components/home/About'
 import Features from '@/components/home/Features'
+import BetaFeaturesShowcase from '@/components/home/BetaFeaturesShowcase'
 import Partners from '@/components/home/Partners'
 import CTA from '@/components/home/CTA'
 import Stats from '@/components/home/Stats'
@@ -56,6 +57,7 @@ export default function Home() {
       <Stats />
       <About />
       <Features />
+      <BetaFeaturesShowcase />
       <Partners />
       <CTA />
     </>
