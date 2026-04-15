@@ -2,10 +2,13 @@
 
 import { motion } from 'framer-motion'
 import { FaCode, FaGraduationCap, FaRocket } from 'react-icons/fa'
+import Features from '@/components/home/Features'
+import Partners from '@/components/home/Partners'
 
 export default function About() {
   return (
-    <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
+    <>
+      <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -66,5 +69,9 @@ export default function About() {
         </div>
       </div>
     </section>
+
+    <Features />
+    <Partners />
+    </>
   )
 }
