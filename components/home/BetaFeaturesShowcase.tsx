@@ -65,7 +65,7 @@ const betaFeatures = [
     gradient: 'from-pink-500 to-rose-500',
     icon: '👤',
   },
-]
+] as const
 
 type BetaFeature = (typeof betaFeatures)[number]
 type FeatureId = BetaFeature['id']
