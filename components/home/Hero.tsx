@@ -23,13 +23,13 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: 'easeOut' }}
         >
           {/* Badge */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="inline-block mb-6 px-6 py-2 glass-chip"
           >
             <span className="text-gray-700 dark:text-gray-300 font-medium text-sm md:text-base">
@@ -42,7 +42,7 @@ export default function Hero() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
             className="relative inline-block mb-6"
           >
             <img
@@ -61,7 +61,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl md:text-3xl lg:text-4xl font-light text-gray-700 dark:text-gray-300 mb-4 max-w-4xl mx-auto"
           >
             Where AI Meets Your Career Journey
@@ -71,7 +71,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
             className="text-2xl md:text-3xl font-display font-bold text-gray-900 dark:text-white mb-12"
           >
             Map Your Skills. Grow Smarter. Prove Your Worth.
@@ -81,7 +81,7 @@ export default function Hero() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
             className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto"
           >
             AI-driven skill analysis, personalized learning paths, blockchain-verified credentials,
@@ -92,7 +92,7 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.75 }}
             className="flex flex-col sm:flex-row gap-6 justify-center items-center"
           >
             <Link href="/events">
