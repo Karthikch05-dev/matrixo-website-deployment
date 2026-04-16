@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -36,7 +36,7 @@ const betaFeatures = [
     icon: '🏅',
   },
   {
-    id: 'mentormatrix',
+    id: 'mentor',
     name: 'MentorMatrix™',
     href: '/mentormatrix',
     description: 'AI-matched mentorship connections',
@@ -46,7 +46,7 @@ const betaFeatures = [
     icon: '🤝',
   },
   {
-    id: 'impactvault',
+    id: 'impact',
     name: 'ImpactVault™',
     href: '/impactvault',
     description: 'Real-time analytics and skill gap insights',
@@ -135,15 +135,66 @@ export default function BetaFeaturesShowcase() {
   const [activeFeature, setActiveFeature] = useState<FeatureId>('skilldna')
   const [isBeta, setIsBeta] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const featureSectionRefs = useRef<Partial<Record<FeatureId, HTMLDivElement | null>>>({})
 
   useEffect(() => {
     setMounted(true)
     setIsBeta(window.location.hostname === 'beta.matrixo.in' || window.location.hostname === 'localhost')
   }, [])
 
-  if (!mounted || !isBeta) return null
+  const scrollToFeature = useCallback((featureId: FeatureId) => {
+    setActiveFeature(featureId)
+    const scrollContainer = scrollContainerRef.current
+    const targetSection = featureSectionRefs.current[featureId]
 
-  const feature = betaFeatures.find((item) => item.id === activeFeature) ?? betaFeatures[0]
+    if (!scrollContainer || !targetSection) return
+
+    scrollContainer.scrollTo({
+      top: Math.max(0, targetSection.offsetTop - 20),
+      behavior: 'smooth',
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || !isBeta) return
+
+    const scrollContainer = scrollContainerRef.current
+    if (!scrollContainer) return
+
+    const sections = Object.values(featureSectionRefs.current).filter(
+      (section): section is HTMLDivElement => Boolean(section),
+    )
+
+    if (!sections.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+
+        const activeEntry = visibleEntries[0]
+        const featureId = activeEntry?.target instanceof HTMLElement
+          ? (activeEntry.target.dataset.featureId as FeatureId | undefined)
+          : undefined
+
+        if (featureId) {
+          setActiveFeature(featureId)
+        }
+      },
+      {
+        root: scrollContainer,
+        threshold: 0.6,
+      },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [isBeta, mounted])
+
+  if (!mounted || !isBeta) return null
 
   return (
     <section className="section-padding bg-transparent">
@@ -162,15 +213,15 @@ export default function BetaFeaturesShowcase() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:h-[600px]">
-          <aside className="hidden lg:col-span-4 lg:block lg:h-full">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:h-[75vh]">
+          <aside className="hidden lg:col-span-4 lg:block lg:h-full lg:sticky lg:top-24">
             <div className="space-y-2">
               {betaFeatures.map((item) => (
                 <FeatureNavButton
                   key={item.id}
                   feature={item}
                   isActive={activeFeature === item.id}
-                  onSelect={setActiveFeature}
+                  onSelect={scrollToFeature}
                 />
               ))}
             </div>
@@ -183,12 +234,13 @@ export default function BetaFeaturesShowcase() {
                   key={item.id}
                   feature={item}
                   isActive={activeFeature === item.id}
-                  onSelect={setActiveFeature}
+                  onSelect={scrollToFeature}
                 />
               ))}
             </div>
           </div>
 
+<<<<<<< HEAD
           <div className="h-[500px] w-full lg:col-span-8 lg:h-full">
             <AnimatePresence mode="wait">
               <motion.div
@@ -202,26 +254,45 @@ export default function BetaFeaturesShowcase() {
                 <div className="h-full w-full overflow-y-auto scroll-smooth">
                   <div className="min-h-full flex flex-col justify-start p-8 md:p-10">
                     <div className="mb-6 text-4xl">{feature.icon}</div>
+=======
+          <div className="w-full lg:col-span-8">
+            <div
+              ref={scrollContainerRef}
+              className="h-[75vh] w-full overflow-y-auto overflow-x-hidden scroll-smooth snap-y snap-mandatory overscroll-contain pr-2 custom-scrollbar"
+            >
+              <div className="space-y-6">
+                {betaFeatures.map((item) => (
+                  <div
+                    key={item.id}
+                    id={`feature-${item.id}`}
+                    data-feature-id={item.id}
+                    ref={(element) => {
+                      featureSectionRefs.current[item.id] = element
+                    }}
+                    className="glass-card min-h-full snap-start snap-always p-8 md:p-10"
+                  >
+                    <div className="mb-6 text-4xl">{item.icon}</div>
+>>>>>>> 4489345 (Updated the scroll pane in new features section)
                     <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                      <span className={`bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
-                        {feature.name}
+                      <span className={`bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}>
+                        {item.name}
                       </span>
                     </h3>
                     <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
-                      {feature.description}
+                      {item.description}
                     </p>
                     <p className="mb-8 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
-                      {feature.details}
+                      {item.details}
                     </p>
                     <div>
-                      <Link href={feature.href} className="btn-primary inline-flex items-center">
+                      <Link href={item.href} className="btn-primary inline-flex items-center">
                         Try it now →
                       </Link>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
