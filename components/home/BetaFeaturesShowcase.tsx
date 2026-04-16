@@ -240,24 +240,6 @@ export default function BetaFeaturesShowcase() {
             </div>
           </div>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-          <div className="h-[500px] w-full lg:col-span-8 lg:h-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={feature.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="glass-card h-full w-full overflow-hidden flex"
-              >
-                <div className="h-full w-full overflow-y-auto scroll-smooth">
-                  <div className="min-h-full flex flex-col justify-start p-8 md:p-10">
-                    <div className="mb-6 text-4xl">{feature.icon}</div>
-=======
-=======
->>>>>>> dd67714 (Updated the scroll pane in new features section)
           <div className="w-full lg:col-span-8">
             <div
               ref={scrollContainerRef}
@@ -275,10 +257,6 @@ export default function BetaFeaturesShowcase() {
                     className="glass-card min-h-full snap-start snap-always p-8 md:p-10"
                   >
                     <div className="mb-6 text-4xl">{item.icon}</div>
-<<<<<<< HEAD
->>>>>>> 4489345 (Updated the scroll pane in new features section)
-=======
->>>>>>> dd67714 (Updated the scroll pane in new features section)
                     <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
                       <span className={`bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}>
                         {item.name}
