@@ -13,19 +13,47 @@ type FeatureStat = {
   icon: IconType
   title: string
   subtitle: string
+  iconClassName: string
+  iconContainerClassName: string
 }
 
 const stats: FeatureStat[] = [
-  { icon: HiOutlineCpuChip, title: 'AI-Powered', subtitle: 'Skill Analysis' },
-  { icon: HiOutlineSquares2X2, title: '5 Products', subtitle: 'One Platform' },
-  { icon: HiOutlineAdjustmentsHorizontal, title: 'Personalized', subtitle: 'Learning Paths' },
-  { icon: HiOutlineShieldCheck, title: 'Verifiable', subtitle: 'Credentials' },
+  {
+    icon: HiOutlineCpuChip,
+    title: 'AI-Powered',
+    subtitle: 'Skill Analysis',
+    iconClassName: 'text-indigo-600 dark:text-violet-400',
+    iconContainerClassName: 'bg-indigo-500/10 text-indigo-600 dark:bg-violet-500/10 dark:text-violet-400',
+  },
+  {
+    icon: HiOutlineSquares2X2,
+    title: '5 Products',
+    subtitle: 'One Platform',
+    iconClassName: 'text-sky-600 dark:text-sky-400',
+    iconContainerClassName: 'bg-sky-500/10 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400',
+  },
+  {
+    icon: HiOutlineAdjustmentsHorizontal,
+    title: 'Personalized',
+    subtitle: 'Learning Paths',
+    iconClassName: 'text-emerald-600 dark:text-emerald-400',
+    iconContainerClassName: 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+  },
+  {
+    icon: HiOutlineShieldCheck,
+    title: 'Verifiable',
+    subtitle: 'Credentials',
+    iconClassName: 'text-amber-600 dark:text-amber-400',
+    iconContainerClassName: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
+  },
 ]
 
 function FeatureCard({
   icon: Icon,
   title,
   subtitle,
+  iconClassName,
+  iconContainerClassName,
   index,
 }: FeatureStat & { index: number }) {
   return (
@@ -35,16 +63,18 @@ function FeatureCard({
       viewport={{ once: true, amount: 0.3 }}
       transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
       whileHover={{ scale: 1.03, y: -2 }}
-      className="group relative flex h-full flex-col items-center rounded-[28px] border border-white/[0.07] bg-[#111318]/80 px-6 py-8 text-center shadow-[0_18px_40px_rgba(0,0,0,0.18)] backdrop-blur-sm transition-all duration-300 hover:border-white/[0.14] sm:px-8 sm:py-10"
+      className="group relative flex h-full flex-col items-center overflow-hidden rounded-[28px] border border-zinc-200 bg-white px-6 py-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-md transition-all duration-300 ease-in-out hover:border-zinc-300 hover:shadow-lg dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-[0_18px_40px_rgba(0,0,0,0.18)] dark:hover:border-white/20 sm:px-8 sm:py-10"
     >
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03] text-slate-100 transition-colors duration-300 group-hover:border-slate-200/[0.16] group-hover:bg-white/[0.05]">
-        <Icon className="h-7 w-7" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-16 bg-gradient-to-b from-white/5 to-transparent dark:block" />
+
+      <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-xl p-3 ring-1 ring-inset ring-black/5 dark:ring-white/10 ${iconContainerClassName}`}>
+        <Icon className={`h-7 w-7 ${iconClassName}`} />
       </div>
 
-      <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+      <h3 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
         {title}
       </h3>
-      <p className="mt-2 text-sm font-medium text-gray-400 sm:text-base">
+      <p className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400 sm:text-base">
         {subtitle}
       </p>
     </motion.div>
