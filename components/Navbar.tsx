@@ -147,9 +147,11 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-40 transition-all duration-500 glass-nav ${scrolled ? 'shadow-sm' : ''}`}
+      className="fixed top-0 w-full z-40 transition-all duration-300 ease-in-out"
     >
-      <div className="container-custom px-4 sm:px-6 py-3">
+      <div
+        className={`container-custom mx-auto mt-4 sm:mt-5 px-6 sm:px-7 lg:px-8 py-2.5 sm:py-3 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-xl transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
+      >
         <div className="flex items-center justify-between">
           {/* Logo with BETA Badge */}
           <button
@@ -192,7 +194,7 @@ export default function Navbar() {
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {navLinksBeforeFeatures.map((link, index) => {
               // Check if active: exact match for home, startsWith for other routes
               const isActive = link.href === '/'
@@ -366,7 +368,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleDarkMode}
-                className="relative p-2.5 rounded-2xl glass-card-thin text-gray-700 dark:text-gray-300 
+                className="relative p-2.5 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 
                          hover:scale-105 transition-all duration-300 ease-out"
                 aria-label="Toggle dark mode"
               >
@@ -495,7 +497,7 @@ export default function Navbar() {
             {mounted && (
               <button
                 onClick={toggleDarkMode}
-                className="p-2 rounded-2xl glass-card-thin text-gray-700 dark:text-gray-300"
+                className="p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300"
                 aria-label="Toggle dark mode"
               >
                 {darkMode ? <FaSun className="w-5 h-5" /> : <FaMoon className="w-5 h-5" />}
@@ -504,7 +506,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-2xl hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors"
+              className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors"
               aria-label="Toggle menu"
             >
               {isOpen ? (
