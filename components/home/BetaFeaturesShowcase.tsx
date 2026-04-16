@@ -168,19 +168,42 @@ export default function BetaFeaturesShowcase() {
 
     if (!sections.length) return
 
+    const intersectionRatios = new Map<FeatureId, number>()
+
+    sections.forEach((section) => {
+      const featureId = section.dataset.featureId as FeatureId | undefined
+
+      if (featureId) {
+        intersectionRatios.set(featureId, 0)
+      }
+    })
+
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        entries.forEach((entry) => {
+          if (!(entry.target instanceof HTMLElement)) return
 
-        const activeEntry = visibleEntries[0]
-        const featureId = activeEntry?.target instanceof HTMLElement
-          ? (activeEntry.target.dataset.featureId as FeatureId | undefined)
-          : undefined
+          const featureId = entry.target.dataset.featureId as FeatureId | undefined
+          if (!featureId) return
 
-        if (featureId) {
-          setActiveFeature(featureId)
+          intersectionRatios.set(
+            featureId,
+            entry.isIntersecting ? entry.intersectionRatio : 0,
+          )
+        })
+
+        let nextActiveFeature: FeatureId | undefined
+        let maxIntersectionRatio = 0
+
+        intersectionRatios.forEach((ratio, featureId) => {
+          if (ratio > maxIntersectionRatio) {
+            maxIntersectionRatio = ratio
+            nextActiveFeature = featureId
+          }
+        })
+
+        if (nextActiveFeature && maxIntersectionRatio > 0) {
+          setActiveFeature(nextActiveFeature)
         }
       },
       {
