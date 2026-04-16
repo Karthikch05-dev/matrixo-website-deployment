@@ -138,9 +138,9 @@ export default function BetaFeaturesShowcase() {
           </p>
         </motion.div>
 
-        <div className="lg:grid lg:grid-cols-3 lg:gap-8 xl:gap-10">
-          <aside className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-28 space-y-2">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8 xl:gap-10 lg:items-start">
+          <aside className="hidden lg:block lg:col-span-1 lg:sticky lg:top-0 lg:h-screen">
+            <div className="h-full pt-24 pb-6 space-y-2">
               {betaFeatures.map((feature, index) => {
                 const isActive = activeIndex === index
 
@@ -203,7 +203,7 @@ export default function BetaFeaturesShowcase() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 lg:h-screen lg:overflow-y-auto lg:pr-2">
             {betaFeatures.map((feature, index) => (
               <motion.div
                 key={feature.name}
