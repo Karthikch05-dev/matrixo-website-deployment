@@ -151,7 +151,7 @@ export default function Navbar() {
     >
       <div className="container-custom px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo with BETA Badge */}
           <button
             type="button"
             onClick={(e) => {
@@ -178,6 +178,17 @@ export default function Navbar() {
                 className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
               />
             </motion.div>
+
+            {/* BETA Badge */}
+            {isBeta && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full animate-pulse"
+              >
+                BETA
+              </motion.span>
+            )}
           </button>
 
           {/* Desktop Navigation */}
