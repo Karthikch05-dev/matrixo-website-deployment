@@ -277,7 +277,7 @@ export default function BetaFeaturesShowcase() {
                     ref={(element) => {
                       featureSectionRefs.current[item.id] = element
                     }}
-                    className="glass-card min-h-full snap-start snap-always p-8 md:p-10"
+                    className="glass-card min-h-[75vh] snap-start snap-always p-8 md:p-10"
                   >
                     <div className="mb-6 text-4xl">{item.icon}</div>
                     <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
