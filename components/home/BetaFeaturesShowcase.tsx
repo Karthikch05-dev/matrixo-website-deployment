@@ -127,14 +127,11 @@ export default function BetaFeaturesShowcase() {
           viewport={{ once: true }}
           className="text-center mb-12 lg:mb-16"
         >
-          <div className="inline-flex items-center px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full mb-4">
-            BETA
-          </div>
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            Explore <span className="gradient-text">Beta Features</span>
+            Explore <span className="gradient-text">Beta</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            These cutting-edge features are available exclusively on beta.matrixo.in. Explore each one and try them out.
+            Explore our latest features and discover powerful tools designed to enhance your experience.
           </p>
         </motion.div>
 
