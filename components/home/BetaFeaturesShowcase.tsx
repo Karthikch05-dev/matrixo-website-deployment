@@ -199,7 +199,7 @@ export default function BetaFeaturesShowcase() {
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 className="glass-card h-full w-full overflow-hidden flex"
               >
-                <div className="h-full w-full overflow-y-auto scroll-smooth custom-scrollbar">
+                <div className="h-full w-full overflow-y-auto scroll-smooth">
                   <div className="min-h-full flex flex-col justify-start p-8 md:p-10">
                     <div className="mb-6 text-4xl">{feature.icon}</div>
                     <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
