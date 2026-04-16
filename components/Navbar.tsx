@@ -124,7 +124,7 @@ export default function Navbar() {
     >
       <div className="container-custom px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo with BETA Badge */}
           <button
             type="button"
             onClick={(e) => {
@@ -151,6 +151,17 @@ export default function Navbar() {
                 className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
               />
             </motion.div>
+
+            {/* BETA Badge */}
+            {isBeta && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full animate-pulse"
+              >
+                BETA
+              </motion.span>
+            )}
           </button>
 
           {/* Desktop Navigation */}
@@ -198,7 +209,7 @@ export default function Navbar() {
                   className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
                            font-bold transition-all duration-300 ease-out relative group px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Explore Features
+                  Features
                   <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -429,7 +440,7 @@ export default function Navbar() {
                       className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 dark:text-gray-300 
                                font-bold hover:bg-white/40 dark:hover:bg-white/[0.06] rounded-2xl transition-colors"
                     >
-                      <span>Explore Features</span>
+                      <span>Features</span>
                       <FaChevronDown className={`text-xs transition-transform duration-200 ${showMobileFeaturesDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
