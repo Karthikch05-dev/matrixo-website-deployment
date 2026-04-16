@@ -128,7 +128,7 @@ export default function BetaFeaturesShowcase() {
           className="text-center mb-12 lg:mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            Explore <span className="gradient-text">Beta</span>
+            Explore <span className="gradient-text">New Features</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Explore our latest features and discover powerful tools designed to enhance your experience.
