@@ -19,6 +19,7 @@ import Image from 'next/image'
 import ImageCropModal from '@/components/shared/ImageCropModal'
 import { getCollegeName } from '@/lib/colleges'
 import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
+import FeatureSidebar from '@/components/features/FeatureSidebar'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -82,6 +83,9 @@ export default function ProfilePage() {
   const [newUsername, setNewUsername] = useState('')
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const [savingUsername, setSavingUsername] = useState(false)
+  const wrapWithSidebar = (content: JSX.Element) => (
+    <FeatureSidebar>{content}</FeatureSidebar>
+  )
 
   // Detect dark mode
   useEffect(() => {
@@ -159,7 +163,7 @@ export default function ProfilePage() {
   if (!user) { router.replace('/auth'); return null }
 
   if (profileLoading) {
-    return (
+    return wrapWithSidebar(
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black flex items-center justify-center">
         <FaSpinner className="animate-spin text-4xl text-blue-400" />
       </div>
@@ -358,7 +362,7 @@ export default function ProfilePage() {
     </div>
   )
 
-  return (
+  return wrapWithSidebar(
     <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black px-4 py-24">
       {/* BG decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
