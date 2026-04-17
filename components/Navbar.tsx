@@ -10,7 +10,6 @@ import { useAuth } from '@/lib/AuthContext'
 import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
-import config from '@/lib/config'
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 
 const navLinksBeforeFeatures = [
@@ -36,44 +35,13 @@ const talkWithUsClassName =
 // Employee Portal URL - external domain
 const EMPLOYEE_PORTAL_URL = 'https://team-auth.matrixo.in/employee-portal'
 
-// Beta-only links - matriXO Vision Platform with descriptions
-const betaLinks = [
-  {
-    name: 'SkillDNA™',
-    href: '/skilldna',
-    description: 'AI-powered skill assessment and genome visualization'
-  },
-  {
-    name: 'GrowGrid™',
-    href: '/growgrid',
-    description: 'Adaptive learning paths with gamification'
-  },
-  {
-    name: 'PlayCred™',
-    href: '/playcred',
-    description: 'Blockchain-verified achievement badges'
-  },
-  {
-    name: 'MentorMatrix™',
-    href: '/mentormatrix',
-    description: 'AI-matched mentorship connections'
-  },
-  {
-    name: 'ImpactVault™',
-    href: '/impactvault',
-    description: 'Real-time analytics and skill gap insights'
-  },
-]
-
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
-  const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false)
   const [showMoreDropdown, setShowMoreDropdown] = useState(false)
-  const [showMobileFeaturesDropdown, setShowMobileFeaturesDropdown] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [isEmployee, setIsEmployee] = useState(false)
 
@@ -160,10 +128,10 @@ export default function Navbar() {
       className="fixed top-0 w-full z-50 transition-all duration-300 ease-in-out"
     >
       <div
-        className={`container-custom mx-auto mt-3 sm:mt-4 px-5 sm:px-6 lg:px-7 py-1.5 sm:py-2 h-16 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-black/70 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-md transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
+        className={`container-custom mx-auto mt-3 sm:mt-4 px-6 lg:px-10 py-1.5 sm:py-2 h-16 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-black/70 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-md transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
       >
         <div className="flex items-center justify-between w-full min-w-0">
-          <div className="flex items-center gap-x-4 lg:gap-x-6 min-w-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Logo with BETA Badge */}
             <button
               type="button"
@@ -204,160 +172,27 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Desktop / Tablet Navigation */}
-            <div className="hidden md:flex items-center gap-x-4 lg:gap-x-6 whitespace-nowrap min-w-0">
-              <div className="flex items-center gap-x-4 lg:gap-x-6 whitespace-nowrap min-w-0 overflow-hidden">
-                {navLinksBeforeFeatures.map((link, index) => {
-                  const isActive = link.href === '/'
-                    ? pathname === '/'
-                    : pathname === link.href || pathname.startsWith(link.href + '/')
-                  const isDesktopOnly = link.name === 'About' || link.name === 'Team'
-                  return (
-                    <motion.div
-                      key={link.name}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: index * 0.05,
-                        duration: 0.3,
-                        ease: [0.4, 0, 0.2, 1]
-                      }}
-                      className={isDesktopOnly ? 'hidden lg:block' : ''}
-                    >
-                      <Link
-                        href={link.href}
-                        className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
-                          ? 'text-gray-900 dark:text-white'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                          }`}
-                      >
-                        {link.name}
-                        <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                          }`} />
-                      </Link>
-                    </motion.div>
-                  )
-                })}
-              </div>
+          </div>
 
-              {/* Beta Features Dropdown */}
-              {isBeta && (
-                <div
-                  className="relative flex-shrink-0"
-                  onMouseEnter={() => setShowFeaturesDropdown(true)}
-                  onMouseLeave={() => setShowFeaturesDropdown(false)}
-                >
-                  <button
-                    className="flex items-center gap-1 text-sm lg:text-[15px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
-                           font-bold whitespace-nowrap transition-all duration-300 ease-out relative group px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
-                  >
-                    <span>Explore Features</span>
-                    <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {showFeaturesDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                        transition={{ 
-                          duration: 0.25, 
-                          ease: [0.16, 1, 0.3, 1],
-                          opacity: { duration: 0.2 }
-                        }}
-                        className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl features-dropdown-glass"
-                        style={{
-                          background: darkMode
-                            ? 'rgba(12, 17, 35, 0.92)'
-                            : 'rgba(255, 255, 255, 0.88)',
-                          backdropFilter: 'blur(30px) saturate(200%)',
-                          WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-                          border: darkMode
-                            ? '1px solid rgba(255, 255, 255, 0.15)'
-                            : '1px solid rgba(255, 255, 255, 0.7)',
-                          boxShadow: darkMode
-                            ? '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                            : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                        }}
-                      >
-                        {/* Subtle noise texture overlay for premium feel */}
-                        <div 
-                          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                          style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                          }}
-                        />
-                        {/* Gradient border highlight at top */}
-                        <div 
-                          className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none"
-                          style={{
-                            background: darkMode
-                              ? 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5), transparent)'
-                              : 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent)',
-                          }}
-                        />
-                        <div className="relative z-10">
-                          {betaLinks.map((link, index) => (
-                            <Link
-                              key={link.name}
-                              href={link.href}
-                              onClick={() => setShowFeaturesDropdown(false)}
-                              className={`group block px-6 py-4 transition-all duration-200 border-b relative overflow-hidden ${
-                                darkMode
-                                  ? 'border-white/[0.06] last:border-b-0'
-                                  : 'border-gray-200/50 last:border-b-0'
-                              }`}
-                            >
-                              {/* Hover glow effect */}
-                              <div 
-                                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                                  darkMode 
-                                    ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
-                                    : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
-                                }`}
-                              />
-                              <div className="relative z-10">
-                                <div className={`font-bold mb-1 transition-colors duration-200 ${
-                                  darkMode 
-                                    ? 'text-white group-hover:text-indigo-300' 
-                                    : 'text-gray-900 group-hover:text-indigo-600'
-                                }`}>
-                                  {link.name}
-                                </div>
-                                <div className={`text-sm transition-colors duration-200 ${
-                                  darkMode 
-                                    ? 'text-gray-400 group-hover:text-gray-300' 
-                                    : 'text-gray-600 group-hover:text-gray-700'
-                                }`}>
-                                  {link.description}
-                                </div>
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {navLinksAfterFeatures.map((link, index) => {
+          {/* Desktop / Tablet Navigation */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 whitespace-nowrap min-w-0 flex-1 justify-center">
+            <div className="flex items-center gap-6 lg:gap-8 whitespace-nowrap min-w-0 overflow-hidden">
+              {navLinksBeforeFeatures.map((link, index) => {
                 const isActive = link.href === '/'
                   ? pathname === '/'
                   : pathname === link.href || pathname.startsWith(link.href + '/')
+                const isDesktopOnly = link.name === 'About' || link.name === 'Team'
                 return (
                   <motion.div
                     key={link.name}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
-                      delay: (navLinksBeforeFeatures.length + index + 1) * 0.05,
+                      delay: index * 0.05,
                       duration: 0.3,
                       ease: [0.4, 0, 0.2, 1]
                     }}
-                    className="hidden lg:block"
+                    className={isDesktopOnly ? 'hidden lg:block' : ''}
                   >
                     <Link
                       href={link.href}
@@ -374,56 +209,88 @@ export default function Navbar() {
                   </motion.div>
                 )
               })}
+            </div>
 
-              <div
-                className="relative lg:hidden flex-shrink-0"
-                onMouseEnter={() => setShowMoreDropdown(true)}
-                onMouseLeave={() => setShowMoreDropdown(false)}
-              >
-                <button
-                  className="flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
-                           whitespace-nowrap transition-all duration-300 ease-out px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
+            {navLinksAfterFeatures.map((link, index) => {
+              const isActive = link.href === '/'
+                ? pathname === '/'
+                : pathname === link.href || pathname.startsWith(link.href + '/')
+              return (
+                <motion.div
+                  key={link.name}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: (navLinksBeforeFeatures.length + index) * 0.05,
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1]
+                  }}
+                  className="hidden lg:block"
                 >
-                  More
-                  <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showMoreDropdown ? 'rotate-180' : ''}`} />
-                </button>
+                  <Link
+                    href={link.href}
+                    className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
+                      ? 'text-gray-900 dark:text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      }`}
+                  >
+                    {link.name}
+                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
+                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`} />
+                  </Link>
+                </motion.div>
+              )
+            })}
 
-                <AnimatePresence>
-                  {showMoreDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="absolute top-full right-0 mt-2 w-44 glass-card-elevated overflow-hidden"
-                    >
-                      {tabletMoreLinks.map((link) => {
-                        const isActive = link.href === '/'
-                          ? pathname === '/'
-                          : pathname === link.href || pathname.startsWith(link.href + '/')
-                        return (
-                          <Link
-                            key={link.name}
-                            href={link.href}
-                            onClick={() => setShowMoreDropdown(false)}
-                            className={`block px-4 py-2.5 text-sm transition-colors ${isActive
-                              ? 'text-gray-900 dark:text-white bg-white/40 dark:bg-white/[0.06]'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
-                              }`}
-                          >
-                            {link.name}
-                          </Link>
-                        )
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+            <div
+              className="relative lg:hidden flex-shrink-0"
+              onMouseEnter={() => setShowMoreDropdown(true)}
+              onMouseLeave={() => setShowMoreDropdown(false)}
+            >
+              <button
+                className="flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
+                           whitespace-nowrap transition-all duration-300 ease-out px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
+              >
+                More
+                <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showMoreDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showMoreDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                    className="absolute top-full right-0 mt-2 w-44 glass-card-elevated overflow-hidden"
+                  >
+                    {tabletMoreLinks.map((link) => {
+                      const isActive = link.href === '/'
+                        ? pathname === '/'
+                        : pathname === link.href || pathname.startsWith(link.href + '/')
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          onClick={() => setShowMoreDropdown(false)}
+                          className={`block px-4 py-2.5 text-sm transition-colors ${isActive
+                            ? 'text-gray-900 dark:text-white bg-white/40 dark:bg-white/[0.06]'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
+                            }`}
+                        >
+                          {link.name}
+                        </Link>
+                      )
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
           {/* Desktop / Tablet Actions */}
-          <div className="hidden md:flex items-center gap-x-2 lg:gap-x-3 whitespace-nowrap flex-shrink-0">
+          <div className="hidden md:flex items-center gap-4 whitespace-nowrap flex-shrink-0">
             {mounted && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -654,78 +521,6 @@ export default function Navbar() {
                     </Link>
                   )
                 })}
-
-                {/* Mobile Beta Features Accordion */}
-                {isBeta && (
-                  <div className="flex flex-col gap-y-2">
-                    <button
-                      onClick={() => setShowMobileFeaturesDropdown(!showMobileFeaturesDropdown)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 dark:text-gray-300 
-                               font-bold hover:bg-white/40 dark:hover:bg-white/[0.06] rounded-2xl transition-colors"
-                    >
-                      <span>Explore Features</span>
-                      <FaChevronDown className={`text-xs transition-transform duration-200 ${showMobileFeaturesDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    <AnimatePresence>
-                      {showMobileFeaturesDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                          className="overflow-hidden"
-                        >
-                          <div className="mt-2 space-y-2 pl-4">
-                            {betaLinks.map((link) => (
-                              <Link
-                                key={link.name}
-                                href={link.href}
-                                onClick={() => {
-                                  setIsOpen(false)
-                                  setShowMobileFeaturesDropdown(false)
-                                }}
-                                className="group relative block px-4 py-3 rounded-2xl transition-all duration-200 overflow-hidden"
-                                style={{
-                                  background: darkMode 
-                                    ? 'rgba(255, 255, 255, 0.04)' 
-                                    : 'rgba(0, 0, 0, 0.04)',
-                                  backdropFilter: 'blur(8px)',
-                                  WebkitBackdropFilter: 'blur(8px)',
-                                }}
-                              >
-                                {/* Hover glow effect */}
-                                <div 
-                                  className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                                    darkMode 
-                                      ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
-                                      : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
-                                  }`}
-                                />
-                                <div className="relative z-10">
-                                  <div className={`font-bold text-sm mb-1 transition-colors duration-200 ${
-                                    darkMode 
-                                      ? 'text-white group-hover:text-indigo-300' 
-                                      : 'text-gray-900 group-hover:text-indigo-600'
-                                  }`}>
-                                    {link.name}
-                                  </div>
-                                  <div className={`text-xs transition-colors duration-200 ${
-                                    darkMode 
-                                      ? 'text-gray-400 group-hover:text-gray-300' 
-                                      : 'text-gray-600 group-hover:text-gray-700'
-                                  }`}>
-                                    {link.description}
-                                  </div>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
 
                 {navLinksAfterFeatures.map((link) => {
                   const isActive = link.href === '/'

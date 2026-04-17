@@ -106,16 +106,21 @@ export default function Hero() {
               </motion.button>
             </Link>
 
-            <Link href="/services">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <FaRocket />
-                <span>Explore Platform</span>
-              </motion.button>
-            </Link>
+            <motion.button
+              type="button"
+              onClick={() => {
+                document.getElementById('feature-card')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                })
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <FaRocket />
+              <span>Explore Features</span>
+            </motion.button>
 
             <Link href="/contact">
               <motion.button
