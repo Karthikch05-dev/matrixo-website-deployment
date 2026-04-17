@@ -7,6 +7,7 @@ import { useSkillDNA } from '@/hooks/useSkillDNA'
 import OnboardingFlow from '@/components/skilldna/OnboardingFlow'
 import SkillDNADashboard from '@/components/skilldna/SkillDNADashboard'
 import AnalyzingScreen from '@/components/skilldna/AnalyzingScreen'
+import FeatureSidebar from '@/components/features/FeatureSidebar'
 import { OnboardingData, SkillLevel, TechnicalSkill, AcademicBackground, CareerGoal } from '@/lib/skilldna/types'
 import { updateSkillDNAProfile, updateAcademicBackground, updateInterests, updateCareerGoals, editSkill } from '@/lib/skilldna/firestore-service'
 import { getAllVerifications } from '@/lib/skilldna/verification/firestore-service'
@@ -32,6 +33,9 @@ export default function SkillDNAPage() {
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const pendingDataRef = useRef<OnboardingData | null>(null)
   const [authToken, setAuthToken] = useState<string>('')
+  const wrapWithSidebar = (content: JSX.Element) => (
+    <FeatureSidebar>{content}</FeatureSidebar>
+  )
 
   // Refresh auth token
   useEffect(() => {
@@ -197,7 +201,7 @@ export default function SkillDNAPage() {
 
   // Loading state
   if (authLoading || skillLoading) {
-    return (
+    return wrapWithSidebar(
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-blue-950/20 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
@@ -213,7 +217,7 @@ export default function SkillDNAPage() {
 
   // Not authenticated
   if (!user) {
-    return (
+    return wrapWithSidebar(
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-blue-950/20 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -243,12 +247,12 @@ export default function SkillDNAPage() {
 
   // AI is analyzing
   if (isAnalyzing) {
-    return <AnalyzingScreen />
+    return wrapWithSidebar(<AnalyzingScreen />)
   }
 
   // Analysis failed - show error with retry
   if (analysisError) {
-    return (
+    return wrapWithSidebar(
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-blue-950/20 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -287,7 +291,7 @@ export default function SkillDNAPage() {
 
   // Onboarding saved but profile missing (recovery from previous failed attempt)
   if (onboardingComplete && !profile) {
-    return (
+    return wrapWithSidebar(
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-blue-950/20 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -323,7 +327,7 @@ export default function SkillDNAPage() {
 
   // Show dashboard if onboarding is complete and profile exists
   if (onboardingComplete && profile) {
-    return (
+    return wrapWithSidebar(
       <SkillDNADashboard
         profile={profile}
         userName={user.displayName || undefined}
@@ -346,7 +350,7 @@ export default function SkillDNAPage() {
   }
 
   // Show onboarding flow
-  return (
+  return wrapWithSidebar(
     <OnboardingFlow
       onComplete={handleOnboardingComplete}
       userName={user.displayName || undefined}

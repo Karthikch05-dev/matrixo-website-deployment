@@ -22,10 +22,16 @@ const navLinksBeforeFeatures = [
 
 const navLinksAfterFeatures = [
   { name: 'Events', href: '/events' },
-  { name: 'Contact', href: '/contact' },
 ]
 
-const navLinks = [...navLinksBeforeFeatures, ...navLinksAfterFeatures]
+const tabletMoreLinks = [
+  { name: 'About', href: '/about' },
+  { name: 'Team', href: '/team' },
+  { name: 'Events', href: '/events' },
+]
+
+const talkWithUsClassName =
+  'inline-flex items-center justify-center px-4 py-1.5 rounded-full font-medium whitespace-nowrap bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all duration-300 hover:scale-105 flex-shrink-0'
 
 // Employee Portal URL - external domain
 const EMPLOYEE_PORTAL_URL = 'https://team-auth.matrixo.in/employee-portal'
@@ -66,6 +72,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
   const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false)
+  const [showMoreDropdown, setShowMoreDropdown] = useState(false)
   const [showMobileFeaturesDropdown, setShowMobileFeaturesDropdown] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [isEmployee, setIsEmployee] = useState(false)
@@ -73,6 +80,9 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { profile } = useProfile()
   const pathname = usePathname()
+
+  const displayName = (profile?.fullName || user?.displayName || user?.email?.split('@')[0] || 'User').trim()
+  const firstName = displayName ? displayName.split(' ')[0] : 'User'
 
   useEffect(() => {
     setMounted(true)
@@ -147,229 +157,280 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 w-full z-40 transition-all duration-300 ease-in-out"
+      className="fixed top-0 w-full z-50 transition-all duration-300 ease-in-out"
     >
       <div
-        className={`container-custom mx-auto mt-4 sm:mt-5 px-6 sm:px-7 lg:px-8 py-2.5 sm:py-3 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-xl transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
+        className={`container-custom mx-auto mt-3 sm:mt-4 px-5 sm:px-6 lg:px-7 py-1.5 sm:py-2 h-16 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-black/70 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-md transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
       >
-        <div className="flex items-center justify-between">
-          {/* Logo with BETA Badge */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              window.location.reload()
-            }}
-            className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
-          >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="relative h-10 w-auto"
+        <div className="flex items-center justify-between w-full min-w-0">
+          <div className="flex items-center gap-x-4 lg:gap-x-6 min-w-0">
+            {/* Logo with BETA Badge */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                window.location.reload()
+              }}
+              className="flex items-center gap-2 group hover:opacity-80 transition-opacity flex-shrink-0 whitespace-nowrap"
             >
-              {/* Light Mode Logo (Black) */}
-              <img
-                src="/logos/logo-light.png"
-                alt="matriXO Logo"
-                className="h-10 w-auto object-contain dark:hidden cursor-pointer"
-              />
-              {/* Dark Mode Logo (White) */}
-              <img
-                src="/logos/logo-dark.png"
-                alt="matriXO Logo"
-                className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
-              />
-            </motion.div>
-
-            {/* BETA Badge */}
-            {isBeta && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full animate-pulse"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative h-10 w-auto"
               >
-                BETA
-              </motion.span>
-            )}
-          </button>
+                {/* Light Mode Logo (Black) */}
+                <img
+                  src="/logos/logo-light.png"
+                  alt="matriXO Logo"
+                  className="h-10 w-auto object-contain dark:hidden cursor-pointer"
+                />
+                {/* Dark Mode Logo (White) */}
+                <img
+                  src="/logos/logo-dark.png"
+                  alt="matriXO Logo"
+                  className="h-10 w-auto object-contain hidden dark:block cursor-pointer"
+                />
+              </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            {navLinksBeforeFeatures.map((link, index) => {
-              // Check if active: exact match for home, startsWith for other routes
-              const isActive = link.href === '/'
-                ? pathname === '/'
-                : pathname === link.href || pathname.startsWith(link.href + '/')
-              return (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: index * 0.05,
-                    duration: 0.3,
-                    ease: [0.4, 0, 0.2, 1]
-                  }}
+              {/* BETA Badge */}
+              {isBeta && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full animate-pulse"
                 >
-                  <Link
-                    href={link.href}
-                    className={`font-medium transition-all duration-300 ease-out relative group ${isActive
-                      ? 'text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                  >
-                    {link.name}
-                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                      }`} />
-                  </Link>
-                </motion.div>
-              )
-            })}
+                  BETA
+                </motion.span>
+              )}
+            </button>
 
-            {/* Beta Features Dropdown */}
-            {isBeta && (
+            {/* Desktop / Tablet Navigation */}
+            <div className="hidden md:flex items-center gap-x-4 lg:gap-x-6 whitespace-nowrap min-w-0">
+              <div className="flex items-center gap-x-4 lg:gap-x-6 whitespace-nowrap min-w-0 overflow-hidden">
+                {navLinksBeforeFeatures.map((link, index) => {
+                  const isActive = link.href === '/'
+                    ? pathname === '/'
+                    : pathname === link.href || pathname.startsWith(link.href + '/')
+                  const isDesktopOnly = link.name === 'About' || link.name === 'Team'
+                  return (
+                    <motion.div
+                      key={link.name}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: index * 0.05,
+                        duration: 0.3,
+                        ease: [0.4, 0, 0.2, 1]
+                      }}
+                      className={isDesktopOnly ? 'hidden lg:block' : ''}
+                    >
+                      <Link
+                        href={link.href}
+                        className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
+                          ? 'text-gray-900 dark:text-white'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                      >
+                        {link.name}
+                        <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
+                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                          }`} />
+                      </Link>
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              {/* Beta Features Dropdown */}
+              {isBeta && (
+                <div
+                  className="relative flex-shrink-0"
+                  onMouseEnter={() => setShowFeaturesDropdown(true)}
+                  onMouseLeave={() => setShowFeaturesDropdown(false)}
+                >
+                  <button
+                    className="flex items-center gap-1 text-sm lg:text-[15px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
+                           font-bold whitespace-nowrap transition-all duration-300 ease-out relative group px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
+                    <span>Explore Features</span>
+                    <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showFeaturesDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ 
+                          duration: 0.25, 
+                          ease: [0.16, 1, 0.3, 1],
+                          opacity: { duration: 0.2 }
+                        }}
+                        className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl features-dropdown-glass"
+                        style={{
+                          background: darkMode
+                            ? 'rgba(12, 17, 35, 0.92)'
+                            : 'rgba(255, 255, 255, 0.88)',
+                          backdropFilter: 'blur(30px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                          border: darkMode
+                            ? '1px solid rgba(255, 255, 255, 0.15)'
+                            : '1px solid rgba(255, 255, 255, 0.7)',
+                          boxShadow: darkMode
+                            ? '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                            : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                        }}
+                      >
+                        {/* Subtle noise texture overlay for premium feel */}
+                        <div 
+                          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                          }}
+                        />
+                        {/* Gradient border highlight at top */}
+                        <div 
+                          className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none"
+                          style={{
+                            background: darkMode
+                              ? 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5), transparent)'
+                              : 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent)',
+                          }}
+                        />
+                        <div className="relative z-10">
+                          {betaLinks.map((link, index) => (
+                            <Link
+                              key={link.name}
+                              href={link.href}
+                              onClick={() => setShowFeaturesDropdown(false)}
+                              className={`group block px-6 py-4 transition-all duration-200 border-b relative overflow-hidden ${
+                                darkMode
+                                  ? 'border-white/[0.06] last:border-b-0'
+                                  : 'border-gray-200/50 last:border-b-0'
+                              }`}
+                            >
+                              {/* Hover glow effect */}
+                              <div 
+                                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                  darkMode 
+                                    ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
+                                    : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
+                                }`}
+                              />
+                              <div className="relative z-10">
+                                <div className={`font-bold mb-1 transition-colors duration-200 ${
+                                  darkMode 
+                                    ? 'text-white group-hover:text-indigo-300' 
+                                    : 'text-gray-900 group-hover:text-indigo-600'
+                                }`}>
+                                  {link.name}
+                                </div>
+                                <div className={`text-sm transition-colors duration-200 ${
+                                  darkMode 
+                                    ? 'text-gray-400 group-hover:text-gray-300' 
+                                    : 'text-gray-600 group-hover:text-gray-700'
+                                }`}>
+                                  {link.description}
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {navLinksAfterFeatures.map((link, index) => {
+                const isActive = link.href === '/'
+                  ? pathname === '/'
+                  : pathname === link.href || pathname.startsWith(link.href + '/')
+                return (
+                  <motion.div
+                    key={link.name}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: (navLinksBeforeFeatures.length + index + 1) * 0.05,
+                      duration: 0.3,
+                      ease: [0.4, 0, 0.2, 1]
+                    }}
+                    className="hidden lg:block"
+                  >
+                    <Link
+                      href={link.href}
+                      className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                    >
+                      {link.name}
+                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
+                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                        }`} />
+                    </Link>
+                  </motion.div>
+                )
+              })}
+
               <div
-                className="relative"
-                onMouseEnter={() => setShowFeaturesDropdown(true)}
-                onMouseLeave={() => setShowFeaturesDropdown(false)}
+                className="relative lg:hidden flex-shrink-0"
+                onMouseEnter={() => setShowMoreDropdown(true)}
+                onMouseLeave={() => setShowMoreDropdown(false)}
               >
                 <button
-                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
-                           font-bold transition-all duration-300 ease-out relative group px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
+                  className="flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white 
+                           whitespace-nowrap transition-all duration-300 ease-out px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Explore Features
-                  <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
+                  More
+                  <FaChevronDown className={`text-xs transition-transform duration-300 ease-out ${showMoreDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 <AnimatePresence>
-                  {showFeaturesDropdown && (
+                  {showMoreDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ 
-                        duration: 0.25, 
-                        ease: [0.16, 1, 0.3, 1],
-                        opacity: { duration: 0.2 }
-                      }}
-                      className="absolute top-full right-0 mt-2 w-80 overflow-hidden rounded-2xl features-dropdown-glass"
-                      style={{
-                        background: darkMode
-                          ? 'rgba(12, 17, 35, 0.92)'
-                          : 'rgba(255, 255, 255, 0.88)',
-                        backdropFilter: 'blur(30px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-                        border: darkMode
-                          ? '1px solid rgba(255, 255, 255, 0.15)'
-                          : '1px solid rgba(255, 255, 255, 0.7)',
-                        boxShadow: darkMode
-                          ? '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                          : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                      }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                      className="absolute top-full right-0 mt-2 w-44 glass-card-elevated overflow-hidden"
                     >
-                      {/* Subtle noise texture overlay for premium feel */}
-                      <div 
-                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                        }}
-                      />
-                      {/* Gradient border highlight at top */}
-                      <div 
-                        className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none"
-                        style={{
-                          background: darkMode
-                            ? 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.5), transparent)'
-                            : 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent)',
-                        }}
-                      />
-                      <div className="relative z-10">
-                        {betaLinks.map((link, index) => (
+                      {tabletMoreLinks.map((link) => {
+                        const isActive = link.href === '/'
+                          ? pathname === '/'
+                          : pathname === link.href || pathname.startsWith(link.href + '/')
+                        return (
                           <Link
                             key={link.name}
                             href={link.href}
-                            onClick={() => setShowFeaturesDropdown(false)}
-                            className={`group block px-6 py-4 transition-all duration-200 border-b relative overflow-hidden ${
-                              darkMode
-                                ? 'border-white/[0.06] last:border-b-0'
-                                : 'border-gray-200/50 last:border-b-0'
-                            }`}
-                          >
-                            {/* Hover glow effect */}
-                            <div 
-                              className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                                darkMode 
-                                  ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10' 
-                                  : 'bg-gradient-to-r from-indigo-100/50 via-purple-100/50 to-indigo-100/50'
+                            onClick={() => setShowMoreDropdown(false)}
+                            className={`block px-4 py-2.5 text-sm transition-colors ${isActive
+                              ? 'text-gray-900 dark:text-white bg-white/40 dark:bg-white/[0.06]'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
                               }`}
-                            />
-                            <div className="relative z-10">
-                              <div className={`font-bold mb-1 transition-colors duration-200 ${
-                                darkMode 
-                                  ? 'text-white group-hover:text-indigo-300' 
-                                  : 'text-gray-900 group-hover:text-indigo-600'
-                              }`}>
-                                {link.name}
-                              </div>
-                              <div className={`text-sm transition-colors duration-200 ${
-                                darkMode 
-                                  ? 'text-gray-400 group-hover:text-gray-300' 
-                                  : 'text-gray-600 group-hover:text-gray-700'
-                              }`}>
-                                {link.description}
-                              </div>
-                            </div>
+                          >
+                            {link.name}
                           </Link>
-                        ))}
-                      </div>
+                        )
+                      })}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            )}
-
-            {navLinksAfterFeatures.map((link, index) => {
-              const isActive = link.href === '/'
-                ? pathname === '/'
-                : pathname === link.href || pathname.startsWith(link.href + '/')
-              return (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: (navLinksBeforeFeatures.length + index + 1) * 0.05,
-                    duration: 0.3,
-                    ease: [0.4, 0, 0.2, 1]
-                  }}
-                >
-                  <Link
-                    href={link.href}
-                    className={`font-medium transition-all duration-300 ease-out relative group ${isActive
-                      ? 'text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                  >
-                    {link.name}
-                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                      }`} />
-                  </Link>
-                </motion.div>
-              )
-            })}
+            </div>
           </div>
 
-          {/* Dark Mode Toggle & CTA */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Desktop / Tablet Actions */}
+          <div className="hidden md:flex items-center gap-x-2 lg:gap-x-3 whitespace-nowrap flex-shrink-0">
             {mounted && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleDarkMode}
-                className="relative p-2.5 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 
-                         hover:scale-105 transition-all duration-300 ease-out"
+                className="relative p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 
+                         hover:scale-105 transition-all duration-300 ease-out flex-shrink-0"
                 aria-label="Toggle dark mode"
               >
                 <AnimatePresence mode="wait">
@@ -401,7 +462,7 @@ export default function Navbar() {
             {/* User Profile or Login Button */}
             {user ? (
               <div
-                className="relative"
+                className="relative flex items-center gap-x-2 flex-shrink-0"
                 onMouseEnter={() => setShowUserDropdown(true)}
                 onMouseLeave={() => setShowUserDropdown(false)}
               >
@@ -409,8 +470,8 @@ export default function Navbar() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 glass-card-thin text-gray-700 dark:text-gray-300 
-                           rounded-full font-semibold hover:scale-[1.02] transition-all duration-300"
+                  className="inline-flex items-center gap-x-2 px-2.5 py-1 glass-card-thin text-gray-700 dark:text-gray-300 
+                           rounded-full font-semibold text-sm min-w-0 max-w-[170px] whitespace-nowrap hover:scale-[1.02] transition-all duration-300"
                 >
                   {profile?.profilePhoto ? (
                     <div className="w-7 h-7 rounded-xl overflow-hidden flex-shrink-0">
@@ -421,7 +482,7 @@ export default function Navbar() {
                       <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
                     </div>
                   )}
-                  <span className="hidden sm:inline">{profile?.fullName || user.displayName || user.email?.split('@')[0]}</span>
+                  <span className="hidden sm:inline max-w-[110px] truncate">{firstName}</span>
                 </motion.button>
 
                 <AnimatePresence>
@@ -435,7 +496,7 @@ export default function Navbar() {
                     >
                       <div className="px-4 py-3 border-b border-gray-200/30 dark:border-white/[0.06]">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          {profile?.fullName || user.displayName || 'User'}
+                          {displayName}
                         </p>
                         {profile?.username && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>
@@ -478,35 +539,67 @@ export default function Navbar() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="flex-shrink-0"
               >
                 <Link
                   href="/auth"
                   onClick={handleLoginClick}
-                  className="inline-flex items-center gap-2 px-4 py-2 glass-card-thin text-gray-700 dark:text-gray-300 
-                           rounded-full font-semibold hover:scale-[1.02] transition-all duration-300"
+                  className="inline-flex items-center gap-x-2 px-3 py-1.5 glass-card-thin text-gray-700 dark:text-gray-300 
+                           rounded-full font-semibold text-sm whitespace-nowrap hover:scale-[1.02] transition-all duration-300 flex-shrink-0"
                 >
                   <FaUser className="text-sm" />
                   Login
                 </Link>
               </motion.div>
             )}
+
+            <Link href="/contact" className={talkWithUsClassName}>
+              Talk With Us
+            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-3">
+          {/* Mobile Controls */}
+          <div className="flex md:hidden items-center gap-x-3 flex-shrink-0">
             {mounted && (
               <button
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300"
+                className="p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 flex-shrink-0"
                 aria-label="Toggle dark mode"
               >
                 {darkMode ? <FaSun className="w-5 h-5" /> : <FaMoon className="w-5 h-5" />}
               </button>
             )}
 
+            {user ? (
+              <Link
+                href="/profile"
+                className="flex items-center gap-x-2 flex-shrink-0 p-1.5 rounded-full glass-card-thin text-gray-700 dark:text-gray-300"
+                aria-label="Profile"
+              >
+                {profile?.profilePhoto ? (
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src={profile.profilePhoto} alt="" width={28} height={28} className="object-cover w-full h-full" unoptimized />
+                  </div>
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+                  </div>
+                )}
+              </Link>
+            ) : (
+              <Link
+                href="/auth"
+                onClick={handleLoginClick}
+                className="flex items-center gap-x-2 flex-shrink-0 p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300"
+                aria-label="Login"
+              >
+                <FaUser className="w-4 h-4" />
+              </Link>
+            )}
+
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors"
+              className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors flex-shrink-0"
               aria-label="Toggle menu"
             >
               {isOpen ? (
@@ -518,19 +611,32 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden overflow-hidden"
-            >
-              <div className="py-4 space-y-3">
+        {/* Mobile Menu Drawer */}
+        <div
+          className={`md:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          aria-hidden={!isOpen}
+        >
+          <div
+            className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={() => setIsOpen(false)}
+          />
+          <div
+            className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white/70 dark:bg-black/70 backdrop-blur-md shadow-md transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          >
+            <div className="h-full overflow-y-auto flex flex-col gap-y-4 p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Menu</span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors"
+                  aria-label="Close menu"
+                >
+                  <FaTimes className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-y-4">
                 {navLinksBeforeFeatures.map((link) => {
-                  // Check if active: exact match for home, startsWith for other routes
                   const isActive = link.href === '/'
                     ? pathname === '/'
                     : pathname === link.href || pathname.startsWith(link.href + '/')
@@ -539,7 +645,7 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
+                      className={`px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
                         ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
                         }`}
@@ -551,7 +657,7 @@ export default function Navbar() {
 
                 {/* Mobile Beta Features Accordion */}
                 {isBeta && (
-                  <div className="border-t border-gray-200/30 dark:border-white/[0.06] pt-3 mt-3">
+                  <div className="flex flex-col gap-y-2">
                     <button
                       onClick={() => setShowMobileFeaturesDropdown(!showMobileFeaturesDropdown)}
                       className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 dark:text-gray-300 
@@ -630,7 +736,7 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
+                      className={`px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
                         ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
                         }`}
@@ -640,87 +746,86 @@ export default function Navbar() {
                   )
                 })}
 
-                {/* Mobile CTA Buttons */}
-                <div className="border-t border-gray-200/30 dark:border-white/[0.06] pt-3 mt-3 space-y-2">
-                  {user ? (
-                    <>
-                      <div className="px-4 py-3 bg-white/50 dark:bg-white/[0.04] rounded-2xl flex items-center gap-3 backdrop-blur-sm">
-                        {profile?.profilePhoto ? (
-                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-                            <Image src={profile.profilePhoto} alt="" width={40} height={40} className="object-cover w-full h-full" unoptimized />
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                            {profile?.fullName || user.displayName || 'User'}
-                          </p>
-                          {profile?.username && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>
-                          )}
+                <Link
+                  href="/contact"
+                  onClick={() => setIsOpen(false)}
+                  className={talkWithUsClassName}
+                >
+                  Talk With Us
+                </Link>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200/30 dark:border-white/[0.06] flex flex-col gap-y-3">
+                {user ? (
+                  <>
+                    <div className="px-4 py-3 bg-white/50 dark:bg-white/[0.04] rounded-2xl flex items-center gap-3 backdrop-blur-sm">
+                      {profile?.profilePhoto ? (
+                        <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+                          <Image src={profile.profilePhoto} alt="" width={40} height={40} className="object-cover w-full h-full" unoptimized />
                         </div>
-                      </div>
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 glass-card-thin text-gray-700 dark:text-gray-300
-                                 rounded-full font-semibold hover:scale-[1.02] transition-all duration-200"
-                      >
-                        <FaUser className="text-sm" />
-                        Profile
-                      </Link>
-                      {isEmployee && (
-                        <a
-                          href={EMPLOYEE_PORTAL_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                                   rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
-                        >
-                          <FaIdBadge className="text-sm" />
-                          Employee Portal
-                        </a>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+                        </div>
                       )}
-                      <button
-                        onClick={() => {
-                          handleLogout()
-                          setIsOpen(false)
-                        }}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-red-500 text-red-600 dark:text-red-400 
-                                 rounded-full font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
-                      >
-                        <FaSignOutAlt className="text-sm" />
-                        Logout
-                      </button>
-                    </>
-                  ) : (
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {firstName}
+                        </p>
+                        {profile?.username && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>
+                        )}
+                      </div>
+                    </div>
                     <Link
-                      href="/auth"
-                      onClick={handleLoginClick}
-                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
-                               rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                      href="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 glass-card-thin text-gray-700 dark:text-gray-300
+                               rounded-full font-semibold hover:scale-[1.02] transition-all duration-200"
                     >
                       <FaUser className="text-sm" />
-                      Login
+                      Profile
                     </Link>
-                  )}
+                    {isEmployee && (
+                      <a
+                        href={EMPLOYEE_PORTAL_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
+                                 rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                      >
+                        <FaIdBadge className="text-sm" />
+                        Employee Portal
+                      </a>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleLogout()
+                        setIsOpen(false)
+                      }}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-red-500 text-red-600 dark:text-red-400 
+                               rounded-full font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                    >
+                      <FaSignOutAlt className="text-sm" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
                   <Link
-                    href="/contact"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center w-full px-6 py-2.5 btn-primary
-                             rounded-full font-semibold hover:shadow-lg transition-all duration-200"
+                    href="/auth"
+                    onClick={handleLoginClick}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-purple-500 text-purple-600 dark:text-purple-400 
+                             rounded-full font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
                   >
-                    Get Started
+                    <FaUser className="text-sm" />
+                    Login
                   </Link>
-                </div>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   )

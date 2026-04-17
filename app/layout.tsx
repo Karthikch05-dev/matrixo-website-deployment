@@ -97,6 +97,7 @@ export default async function RootLayout({
   const pathname = headersList.get('x-pathname') || ''
   const host = headersList.get('host') || ''
   const isEmployeePortal = host.includes('team-auth') || pathname.includes('/employee-portal')
+  const isContactPage = pathname === '/contact' || pathname.startsWith('/contact/')
 
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
@@ -148,10 +149,18 @@ export default async function RootLayout({
         <AuthProvider>
           <ProfileProvider>
             {!isEmployeePortal && <Navbar />}
-            <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
+            <main
+              className={
+                isEmployeePortal
+                  ? 'min-h-screen overflow-x-hidden'
+                  : isContactPage
+                    ? 'min-h-screen pt-0 overflow-x-hidden'
+                    : 'min-h-screen pt-0 overflow-x-hidden'
+              }
+            >
               {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
             </main>
-            {!isEmployeePortal && <Footer />}
+            {!isEmployeePortal && !isContactPage && <Footer />}
           </ProfileProvider>
         </AuthProvider>
         <Toaster position="top-right" richColors />
