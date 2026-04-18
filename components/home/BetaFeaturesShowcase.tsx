@@ -1,95 +1,120 @@
 'use client'
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type WheelEvent,
+} from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 
-const betaFeatures = [
+const features = [
   {
     id: 'skilldna',
-    name: 'SkillDNA™',
-    href: '/skilldna',
+    title: 'SkillDNA™',
     description: 'AI-powered skill assessment and genome visualization',
-    details:
-      'Discover your unique skill genome through AI-powered assessment. Our advanced algorithms analyze your technical abilities, learning patterns, and growth trajectory to create a visual DNA map of your capabilities. Understand your strengths, identify gaps, and get personalized recommendations.',
-    gradient: 'from-purple-500 to-fuchsia-500',
-    icon: '🧬',
+    content: {
+      details:
+        'Discover your unique skill genome through AI-powered assessment. Our advanced algorithms analyze your technical abilities, learning patterns, and growth trajectory to create a visual DNA map of your capabilities. Understand your strengths, identify gaps, and get personalized recommendations.',
+      href: '/skilldna',
+      gradient: 'from-purple-500 to-fuchsia-500',
+      icon: '🧬',
+    },
   },
   {
     id: 'growgrid',
-    name: 'GrowGrid™',
-    href: '/growgrid',
+    title: 'GrowGrid™',
     description: 'Adaptive learning paths with gamification',
-    details:
-      'Navigate your learning journey with adaptive pathways that evolve with you. Earn XP, unlock achievements, and level up your skills through gamified challenges designed by industry experts. Your personalized grid adapts in real-time based on your progress.',
-    gradient: 'from-blue-500 to-cyan-500',
-    icon: '🧩',
+    content: {
+      details:
+        'Navigate your learning journey with adaptive pathways that evolve with you. Earn XP, unlock achievements, and level up your skills through gamified challenges designed by industry experts. Your personalized grid adapts in real-time based on your progress.',
+      href: '/growgrid',
+      gradient: 'from-blue-500 to-cyan-500',
+      icon: '🧩',
+    },
   },
   {
     id: 'playcred',
-    name: 'PlayCred™',
-    href: '/playcred',
+    title: 'PlayCred™',
     description: 'Blockchain-verified achievement badges',
-    details:
-      'Showcase your achievements with tamper-proof, blockchain-verified credentials. Every badge, certificate, and milestone is permanently recorded and instantly verifiable by employers and peers. Build a credential portfolio that speaks for itself.',
-    gradient: 'from-emerald-500 to-teal-500',
-    icon: '🏅',
+    content: {
+      details:
+        'Showcase your achievements with tamper-proof, blockchain-verified credentials. Every badge, certificate, and milestone is permanently recorded and instantly verifiable by employers and peers. Build a credential portfolio that speaks for itself.',
+      href: '/playcred',
+      gradient: 'from-emerald-500 to-teal-500',
+      icon: '🏅',
+    },
   },
   {
-    id: 'mentor',
-    name: 'MentorMatrix™',
-    href: '/mentormatrix',
+    id: 'mentormatrix',
+    title: 'MentorMatrix™',
     description: 'AI-matched mentorship connections',
-    details:
-      'Get matched with the perfect mentor using our AI-powered compatibility algorithm. Whether you need guidance on career transitions, technical skills, or industry insights, MentorMatrix connects you with experienced professionals who align with your goals.',
-    gradient: 'from-indigo-500 to-violet-500',
-    icon: '🤝',
+    content: {
+      details:
+        'Get matched with the perfect mentor using our AI-powered compatibility algorithm. Whether you need guidance on career transitions, technical skills, or industry insights, MentorMatrix connects you with experienced professionals who align with your goals.',
+      href: '/mentormatrix',
+      gradient: 'from-indigo-500 to-violet-500',
+      icon: '🤝',
+    },
   },
   {
-    id: 'impact',
-    name: 'ImpactVault™',
-    href: '/impactvault',
+    id: 'impactvault',
+    title: 'ImpactVault™',
     description: 'Real-time analytics and skill gap insights',
-    details:
-      'Track your growth with real-time analytics and comprehensive skill gap insights. Visualize your learning progress, benchmark against industry standards, and get actionable recommendations to accelerate your career development.',
-    gradient: 'from-amber-500 to-orange-500',
-    icon: '📊',
+    content: {
+      details:
+        'Track your growth with real-time analytics and comprehensive skill gap insights. Visualize your learning progress, benchmark against industry standards, and get actionable recommendations to accelerate your career development.',
+      href: '/impactvault',
+      gradient: 'from-amber-500 to-orange-500',
+      icon: '📊',
+    },
   },
   {
     id: 'profile',
-    name: 'Profile & Username',
-    href: '/profile',
+    title: 'Profile & Username',
     description: 'Public profiles with usernames, privacy controls & sharing',
-    details:
-      'Create your professional identity with customizable public profiles. Set your unique username, control your privacy settings, and share your achievements across platforms. Your matriXO profile becomes your digital career card.',
-    gradient: 'from-pink-500 to-rose-500',
-    icon: '👤',
+    content: {
+      details:
+        'Create your professional identity with customizable public profiles. Set your unique username, control your privacy settings, and share your achievements across platforms. Your matriXO profile becomes your digital career card.',
+      href: '/profile',
+      gradient: 'from-pink-500 to-rose-500',
+      icon: '👤',
+    },
   },
 ] as const
 
-type BetaFeature = (typeof betaFeatures)[number]
-type FeatureId = BetaFeature['id']
+type Feature = (typeof features)[number]
 
 type FeatureNavButtonProps = {
-  feature: BetaFeature
+  feature: Feature
+  index: number
   isActive: boolean
-  onSelect: (featureId: FeatureId) => void
+  onSelect: (index: number) => void
 }
 
-const FeatureNavButton = memo(function FeatureNavButton({ feature, isActive, onSelect }: FeatureNavButtonProps) {
+const FeatureNavButton = memo(function FeatureNavButton({
+  feature,
+  index,
+  isActive,
+  onSelect,
+}: FeatureNavButtonProps) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(feature.id)}
+      onClick={() => onSelect(index)}
       aria-pressed={isActive}
-      className={`w-full text-left px-4 py-3 rounded-2xl border-l-4 transition-all duration-300 ${
+      className={`w-full text-left px-4 py-3 rounded-xl border-l-4 transition-all duration-300 ${
         isActive
-          ? 'bg-white/70 dark:bg-white/[0.08] border-blue-500'
-          : 'bg-transparent border-transparent hover:bg-white/40 dark:hover:bg-white/[0.04]'
+          ? 'bg-white/70 dark:bg-white/[0.08] border-blue-500 opacity-100'
+          : 'border-transparent opacity-60 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
       }`}
     >
       <div className={`font-bold ${isActive ? 'gradient-text' : 'text-gray-500 dark:text-gray-400'}`}>
-        {feature.name}
+        {feature.title}
       </div>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
       <AnimatePresence>
@@ -112,13 +137,14 @@ type FeaturePillButtonProps = FeatureNavButtonProps
 
 const FeaturePillButton = memo(function FeaturePillButton({
   feature,
+  index,
   isActive,
   onSelect,
 }: FeaturePillButtonProps) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(feature.id)}
+      onClick={() => onSelect(index)}
       aria-pressed={isActive}
       className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all ${
         isActive
@@ -126,101 +152,89 @@ const FeaturePillButton = memo(function FeaturePillButton({
           : 'text-gray-700 dark:text-gray-300 bg-gray-200/70 dark:bg-white/[0.08]'
       }`}
     >
-      {feature.name}
+      {feature.title}
     </button>
   )
 })
 
 export default function BetaFeaturesShowcase() {
-  const [activeFeature, setActiveFeature] = useState<FeatureId>('skilldna')
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
-  const featureSectionRefs = useRef<Partial<Record<FeatureId, HTMLDivElement | null>>>({})
+  const animationTimeoutRef = useRef<number | null>(null)
+  const lastIndex = features.length - 1
 
   useEffect(() => {
     setMounted(true)
     setIsBeta(window.location.hostname === 'beta.matrixo.in' || window.location.hostname === 'localhost')
   }, [])
 
-  const scrollToFeature = useCallback((featureId: FeatureId) => {
-    setActiveFeature(featureId)
-    const scrollContainer = scrollContainerRef.current
-    const targetSection = featureSectionRefs.current[featureId]
-
-    if (!scrollContainer || !targetSection) return
-
-    scrollContainer.scrollTo({
-      top: Math.max(0, targetSection.offsetTop - 20),
-      behavior: 'smooth',
-    })
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current !== null) {
+        window.clearTimeout(animationTimeoutRef.current)
+      }
+    }
   }, [])
 
-  useEffect(() => {
-    if (!mounted || !isBeta) return
+  const startCooldown = useCallback(() => {
+    if (animationTimeoutRef.current !== null) {
+      window.clearTimeout(animationTimeoutRef.current)
+    }
 
-    const scrollContainer = scrollContainerRef.current
-    if (!scrollContainer) return
+    animationTimeoutRef.current = window.setTimeout(() => {
+      setIsAnimating(false)
+    }, 600)
+  }, [])
 
-    const sections = Object.values(featureSectionRefs.current).filter(
-      (section): section is HTMLDivElement => Boolean(section),
-    )
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (isAnimating) return
 
-    if (!sections.length) return
-
-    const intersectionRatios = new Map<FeatureId, number>()
-
-    sections.forEach((section) => {
-      const featureId = section.dataset.featureId as FeatureId | undefined
-
-      if (featureId) {
-        intersectionRatios.set(featureId, 0)
+      if (event.deltaY > 0 && activeIndex < lastIndex) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, lastIndex))
+        startCooldown()
+      } else if (event.deltaY < 0 && activeIndex > 0) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.max(prevIndex - 1, 0))
+        startCooldown()
       }
-    })
+    },
+    [activeIndex, isAnimating, lastIndex, startCooldown],
+  )
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!(entry.target instanceof HTMLElement)) return
+  const handleMouseMove = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (!isHovering || isAnimating) return
 
-          const featureId = entry.target.dataset.featureId as FeatureId | undefined
-          if (!featureId) return
+      const rect = event.currentTarget.getBoundingClientRect()
+      const y = event.clientY - rect.top
+      const height = rect.height
+      const topZone = height * 0.25
+      const bottomZone = height * 0.75
 
-          intersectionRatios.set(
-            featureId,
-            entry.isIntersecting ? entry.intersectionRatio : 0,
-          )
-        })
-
-        let nextActiveFeature: FeatureId | undefined
-        let maxIntersectionRatio = 0
-
-        intersectionRatios.forEach((ratio, featureId) => {
-          if (ratio > maxIntersectionRatio) {
-            maxIntersectionRatio = ratio
-            nextActiveFeature = featureId
-          }
-        })
-
-        if (nextActiveFeature && maxIntersectionRatio > 0) {
-          setActiveFeature(nextActiveFeature)
-        }
-      },
-      {
-        root: scrollContainer,
-        threshold: 0.6,
-      },
-    )
-
-    sections.forEach((section) => observer.observe(section))
-
-    return () => observer.disconnect()
-  }, [isBeta, mounted])
+      if (y > bottomZone && activeIndex < lastIndex) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, lastIndex))
+        startCooldown()
+      } else if (y < topZone && activeIndex > 0) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.max(prevIndex - 1, 0))
+        startCooldown()
+      }
+    },
+    [activeIndex, isAnimating, isHovering, lastIndex, startCooldown],
+  )
 
   if (!mounted || !isBeta) return null
 
+  const activeFeature = features[activeIndex]
+
   return (
-    <section id="explore-features" className="section-padding bg-transparent">
+    <section id="explore-features" className="section-padding bg-transparent carousel-section">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -239,12 +253,13 @@ export default function BetaFeaturesShowcase() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:h-[75vh]">
           <aside className="hidden lg:col-span-4 lg:block lg:h-full lg:sticky lg:top-24">
             <div className="space-y-2">
-              {betaFeatures.map((item) => (
+              {features.map((item, index) => (
                 <FeatureNavButton
                   key={item.id}
                   feature={item}
-                  isActive={activeFeature === item.id}
-                  onSelect={scrollToFeature}
+                  index={index}
+                  isActive={activeIndex === index}
+                  onSelect={setActiveIndex}
                 />
               ))}
             </div>
@@ -252,12 +267,13 @@ export default function BetaFeaturesShowcase() {
 
           <div className="sticky top-20 z-20 -mx-4 mb-6 border-y border-gray-200/70 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-white/[0.08] dark:bg-gray-950/80 lg:hidden">
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              {betaFeatures.map((item) => (
+              {features.map((item, index) => (
                 <FeaturePillButton
                   key={item.id}
                   feature={item}
-                  isActive={activeFeature === item.id}
-                  onSelect={scrollToFeature}
+                  index={index}
+                  isActive={activeIndex === index}
+                  onSelect={setActiveIndex}
                 />
               ))}
             </div>
@@ -265,40 +281,43 @@ export default function BetaFeaturesShowcase() {
 
           <div className="w-full lg:col-span-8">
             <div
-              ref={scrollContainerRef}
-              className="h-[75vh] w-full overflow-y-auto overflow-x-hidden scroll-smooth snap-y snap-mandatory overscroll-contain pr-2 custom-scrollbar"
+              className="right-panel h-[75vh] w-full"
+              onWheel={handleWheel}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+              onMouseMove={handleMouseMove}
             >
-              <div className="space-y-6">
-                {betaFeatures.map((item) => (
-                  <div
-                    key={item.id}
-                    id={item.id === 'skilldna' ? 'feature-card' : `feature-${item.id}`}
-                    data-feature-id={item.id}
-                    ref={(element) => {
-                      featureSectionRefs.current[item.id] = element
-                    }}
-                    className="glass-card min-h-[75vh] snap-start snap-always p-8 md:p-10"
-                  >
-                    <div className="mb-6 text-4xl">{item.icon}</div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeIndex}
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -60 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="glass-card min-h-[75vh] p-8 md:p-10">
+                    <div className="mb-6 text-4xl">{activeFeature.content.icon}</div>
                     <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                      <span className={`bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}>
-                        {item.name}
+                      <span
+                        className={`bg-gradient-to-r ${activeFeature.content.gradient} bg-clip-text text-transparent`}
+                      >
+                        {activeFeature.title}
                       </span>
                     </h3>
                     <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
-                      {item.description}
+                      {activeFeature.description}
                     </p>
                     <p className="mb-8 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
-                      {item.details}
+                      {activeFeature.content.details}
                     </p>
                     <div>
-                      <Link href={item.href} className="btn-primary inline-flex items-center">
+                      <Link href={activeFeature.content.href} className="btn-primary inline-flex items-center">
                         Try it now →
                       </Link>
                     </div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>
