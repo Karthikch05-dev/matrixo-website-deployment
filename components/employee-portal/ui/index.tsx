@@ -537,7 +537,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = 'auto'
     } else {
       document.body.style.overflow = 'unset'
     }

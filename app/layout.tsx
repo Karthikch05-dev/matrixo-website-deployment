@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import FooterVisibility from '@/components/FooterVisibility'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ProfileProvider } from '@/lib/ProfileContext'
 import ProfileGuard from '@/components/ProfileGuard'
@@ -148,10 +148,16 @@ export default async function RootLayout({
         <AuthProvider>
           <ProfileProvider>
             {!isEmployeePortal && <Navbar />}
-            <main className={isEmployeePortal ? "min-h-screen overflow-x-hidden" : "min-h-screen pt-0 overflow-x-hidden"}>
+            <main
+              className={
+                isEmployeePortal
+                  ? 'min-h-screen overflow-x-hidden'
+                  : 'min-h-screen pt-0 overflow-x-hidden'
+              }
+            >
               {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
             </main>
-            {!isEmployeePortal && <Footer />}
+            {!isEmployeePortal && <FooterVisibility />}
           </ProfileProvider>
         </AuthProvider>
         <Toaster position="top-right" richColors />

@@ -71,7 +71,7 @@ export default function About() {
       </section>
 
       <Features />
-      <Partners />
+      <Partners hideLogos />
     </>
   )
 }

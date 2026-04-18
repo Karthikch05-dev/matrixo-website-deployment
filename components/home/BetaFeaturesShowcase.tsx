@@ -36,7 +36,7 @@ const betaFeatures = [
     icon: '🏅',
   },
   {
-    id: 'mentormatrix',
+    id: 'mentor',
     name: 'MentorMatrix™',
     href: '/mentormatrix',
     description: 'AI-matched mentorship connections',
@@ -46,7 +46,7 @@ const betaFeatures = [
     icon: '🤝',
   },
   {
-    id: 'impactvault',
+    id: 'impact',
     name: 'ImpactVault™',
     href: '/impactvault',
     description: 'Real-time analytics and skill gap insights',
@@ -219,9 +219,10 @@ export default function BetaFeaturesShowcase() {
   }
 
   return (
-    <section className="section-padding bg-transparent">
+    <section id="explore-features" className="section-padding bg-transparent">
       <div className="container-custom">
         <motion.div
+          id="feature-card"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

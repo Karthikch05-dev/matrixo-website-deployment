@@ -12,7 +12,11 @@ const partners = [
   { name: 'J B Institute of Engineering and Technology', logo: '/partners/jbiet.png' },
 ]
 
-export default function Partners() {
+type PartnersProps = {
+  hideLogos?: boolean
+}
+
+export default function Partners({ hideLogos = false }: PartnersProps) {
   return (
     <section className="section-padding bg-transparent">
       <div className="container-custom">
@@ -40,16 +44,20 @@ export default function Partners() {
               transition={{ delay: index * 0.08, duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
               className="flex flex-col items-center justify-center px-5 py-8 glass-card hover-lift transition-shadow duration-300"
             >
-              <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white mx-auto">
-                <Image
-                  src={partner.logo}
-                  alt={partner.name}
-                  width={60}
-                  height={60}
-                  className="w-[60px] h-[60px] object-contain"
-                />
-              </div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug mt-2">
+              {!hideLogos && (
+                <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white mx-auto">
+                  <Image
+                    src={partner.logo}
+                    alt={partner.name}
+                    width={60}
+                    height={60}
+                    className="w-[60px] h-[60px] object-contain"
+                  />
+                </div>
+              )}
+              <p
+                className={`text-sm font-semibold text-gray-800 dark:text-gray-200 text-center leading-snug ${hideLogos ? '' : 'mt-2'}`}
+              >
                 {partner.name}
               </p>
             </motion.div>

@@ -89,29 +89,9 @@ export default function ContactContent() {
   }
 
   return (
-    <div className="min-h-screen pt-0">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
-        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="container-custom px-4 sm:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-4 sm:mb-6">
-              Get In <span className="gradient-text">Touch</span>
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300">
-              Have questions? We&apos;d love to hear from you.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
+    <div className="min-h-screen">
       {/* Contact Section */}
-      <section className="section-padding bg-transparent">
+      <section className="w-full bg-transparent pt-20 pb-12">
         <div className="container-custom px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
