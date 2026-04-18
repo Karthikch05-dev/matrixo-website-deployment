@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import FooterVisibility from '@/components/FooterVisibility'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ProfileProvider } from '@/lib/ProfileContext'
 import ProfileGuard from '@/components/ProfileGuard'
@@ -97,7 +97,6 @@ export default async function RootLayout({
   const pathname = headersList.get('x-pathname') || ''
   const host = headersList.get('host') || ''
   const isEmployeePortal = host.includes('team-auth') || pathname.includes('/employee-portal')
-  const isContactPage = pathname === '/contact' || pathname.startsWith('/contact/')
 
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
@@ -153,14 +152,12 @@ export default async function RootLayout({
               className={
                 isEmployeePortal
                   ? 'min-h-screen overflow-x-hidden'
-                  : isContactPage
-                    ? 'min-h-screen pt-0 overflow-x-hidden'
-                    : 'min-h-screen pt-0 overflow-x-hidden'
+                  : 'min-h-screen pt-0 overflow-x-hidden'
               }
             >
               {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
             </main>
-            {!isEmployeePortal && !isContactPage && <Footer />}
+            {!isEmployeePortal && <FooterVisibility />}
           </ProfileProvider>
         </AuthProvider>
         <Toaster position="top-right" richColors />

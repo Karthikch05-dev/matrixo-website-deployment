@@ -1,10 +1,22 @@
 'use client'
 
+import type { MouseEvent } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaRocket, FaUniversity } from 'react-icons/fa'
 
 export default function Hero() {
+  const getEntryDirection = (event: MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+
+    return x < rect.width / 2 ? 'left' : 'right'
+  }
+
+  const handleCtaMouseEnter = (event: MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.dataset.direction = getEntryDirection(event)
+  }
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent">
       {/* Subtle dot pattern */}
@@ -97,31 +109,36 @@ export default function Hero() {
           >
             <Link href="/events">
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                onMouseEnter={handleCtaMouseEnter}
                 whileTap={{ scale: 0.98 }}
-                className="btn-primary flex items-center space-x-2"
+                className="hero-cta"
               >
                 <FaRocket />
                 <span>Explore Events</span>
               </motion.button>
             </Link>
 
-            <Link href="/services">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <FaRocket />
-                <span>Explore Platform</span>
-              </motion.button>
-            </Link>
+            <motion.button
+              type="button"
+              onClick={() => {
+                document.getElementById('feature-card')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                })
+              }}
+              onMouseEnter={handleCtaMouseEnter}
+              whileTap={{ scale: 0.98 }}
+              className="hero-cta"
+            >
+              <FaRocket />
+              <span>Explore Features</span>
+            </motion.button>
 
             <Link href="/contact">
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                onMouseEnter={handleCtaMouseEnter}
                 whileTap={{ scale: 0.98 }}
-                className="btn-secondary flex items-center space-x-2"
+                className="hero-cta"
               >
                 <FaUniversity />
                 <span>For Colleges</span>

@@ -220,7 +220,7 @@ export default function BetaFeaturesShowcase() {
   if (!mounted || !isBeta) return null
 
   return (
-    <section className="section-padding bg-transparent">
+    <section id="explore-features" className="section-padding bg-transparent">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -272,7 +272,7 @@ export default function BetaFeaturesShowcase() {
                 {betaFeatures.map((item) => (
                   <div
                     key={item.id}
-                    id={`feature-${item.id}`}
+                    id={item.id === 'skilldna' ? 'feature-card' : `feature-${item.id}`}
                     data-feature-id={item.id}
                     ref={(element) => {
                       featureSectionRefs.current[item.id] = element

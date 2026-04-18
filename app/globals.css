@@ -66,6 +66,14 @@
     scroll-behavior: smooth;
   }
 
+  #explore-features {
+    scroll-margin-top: 140px;
+  }
+
+  #feature-card {
+    scroll-margin-top: 100px;
+  }
+
   body {
     @apply bg-gray-50 dark:bg-[#0a0a12] text-gray-900 dark:text-gray-100;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -177,6 +185,91 @@
     background: var(--glass-bg-thick);
     box-shadow: var(--glass-shadow-elevated);
     transform: translateY(-1px);
+  }
+
+  .nav-link {
+    @apply font-medium whitespace-nowrap relative inline-flex items-center pb-1 transition-colors duration-300 ease-out text-gray-500 dark:text-gray-400;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0%;
+    height: 2px;
+    background: linear-gradient(90deg, #5f84a2, #91aec4);
+    box-shadow: 0 0 8px rgba(145, 174, 196, 0.6);
+    transform: translateX(-50%);
+    transition: width 0.35s ease;
+  }
+
+  .nav-link:hover {
+    @apply text-gray-900 dark:text-white;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-link-active {
+    @apply text-gray-900 dark:text-white;
+  }
+
+  .nav-link-active::after {
+    width: 100%;
+  }
+
+  .hero-cta {
+    @apply px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 font-semibold text-sm sm:text-base;
+    --cta-translate-x: -100%;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 9999px;
+    box-shadow: var(--glass-shadow);
+    @apply text-gray-800 dark:text-gray-200;
+    transition: transform 0.6s ease, box-shadow 0.6s ease, color 0.45s ease, border-color 0.6s ease;
+  }
+
+  .hero-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(270deg, #194569, #5f84a2, #91aec4, #5f84a2, #194569);
+    background-size: 300% 300%;
+    animation: gradientFlow 12s ease infinite;
+    opacity: 0;
+    transform: translate3d(var(--cta-translate-x), 0, 0);
+    transition: opacity 0.4s ease, transform 0.6s ease;
+    z-index: 0;
+  }
+
+  .hero-cta[data-direction="right"] {
+    --cta-translate-x: 100%;
+  }
+
+  .hero-cta:hover::before {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .hero-cta:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 25px rgba(145, 174, 196, 0.5);
+    color: #f8fafc;
+  }
+
+  .hero-cta > * {
+    position: relative;
+    z-index: 1;
   }
 
   /* iOS 26 Liquid Glass Input fields */
@@ -351,6 +444,18 @@
   }
 
   /* Wave animation for gradient movement */
+  @keyframes gradientFlow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
   @keyframes wave {
     0% {
       transform: translateX(-100%);
@@ -1269,12 +1374,6 @@ html {
     color: #4b5563 !important;
   }
 
-  /* Keep gradient cover visible for print */
-  .rounded-t-\\[28px\\] {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
   /* Adjust page margins */
   @page {
     margin: 0.5in;
@@ -1282,9 +1381,15 @@ html {
   }
 
   /* Prevent page breaks inside profile sections */
-  .rounded-2xl, .rounded-3xl, .rounded-\\[24px\\], .rounded-\\[28px\\] {
+  .rounded-2xl,
+  .rounded-3xl,
+  .rounded-\[24px\],
+  .rounded-\[28px\],
+  .rounded-t-\[28px\] {
     break-inside: avoid;
     page-break-inside: avoid;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
   }
