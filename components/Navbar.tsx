@@ -196,15 +196,9 @@ export default function Navbar() {
                   >
                     <Link
                       href={link.href}
-                      className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
-                        ? 'text-gray-900 dark:text-white'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                        }`}
+                      className={`nav-link ${isActive ? 'nav-link-active' : ''}`}
                     >
                       {link.name}
-                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                        }`} />
                     </Link>
                   </motion.div>
                 )
@@ -229,15 +223,9 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className={`font-medium whitespace-nowrap transition-all duration-300 ease-out relative group ${isActive
-                      ? 'text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
+                    className={`nav-link ${isActive ? 'nav-link-active' : ''}`}
                   >
                     {link.name}
-                    <span className={`absolute -bottom-1 left-0 h-0.5 bg-gray-900 dark:bg-white 
-                                   transition-all duration-300 ease-out ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                      }`} />
                   </Link>
                 </motion.div>
               )
