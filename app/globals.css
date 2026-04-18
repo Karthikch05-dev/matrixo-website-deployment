@@ -573,6 +573,22 @@
   display: none;
 }
 
+/* Explore Features carousel layout */
+.carousel-section {
+  overflow: visible;
+}
+
+.right-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.right-panel::-webkit-scrollbar {
+  display: none;
+}
+
 /* Global scrollbar hide */
 html, body {
   scrollbar-width: none;

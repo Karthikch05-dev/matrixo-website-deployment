@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaInstagram } from 'react-icons/fa'
 import { toast } from 'sonner'
 import { useSearchParams } from 'next/navigation'
 
@@ -17,6 +16,8 @@ const serviceSubjectOptions = [
 
 export default function ContactContent() {
   const searchParams = useSearchParams()
+  const inputClassName =
+    'w-full bg-transparent border border-white/20 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-300/40 hover:shadow-[0_0_18px_rgba(96,165,250,0.18)]'
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +26,19 @@ export default function ContactContent() {
     message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+    }
+  }, [])
 
   useEffect(() => {
     const typeParam = searchParams.get('type')
@@ -89,200 +103,130 @@ export default function ContactContent() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Contact Section */}
-      <section className="w-full bg-transparent pt-20 pb-12">
-        <div className="container-custom px-4 sm:px-6">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Contact Form */}
+    <div className="relative isolate h-screen w-screen flex flex-col overflow-hidden">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-60 brightness-90 contrast-110 saturate-125 -z-10"
+        >
+          <source src="/backgrounds/mesh.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#020617]/80 via-[#0a1a3a]/60 to-[#1e3a8a]/40" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_40%,rgba(59,130,246,0.25),transparent_60%)]" />
+
+      <main className="relative z-10 min-h-screen flex items-start justify-end pt-20 pr-6 pl-6 md:pt-24 md:pr-10 md:pl-10">
+        <div className="relative z-10 w-full max-w-md ml-auto mt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="w-full"
+          >
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 22, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="w-full h-auto overflow-visible space-y-3 rounded-2xl border border-white/10 bg-[#0a0f2c]/50 p-5 backdrop-blur-xl"
             >
-              <h2 className="text-3xl font-bold mb-8 gradient-text">Send Us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 rounded-xl glass-input"
-                    placeholder="John Doe"
-                  />
-                </div>
+                <h2 className="mb-1 text-xl font-semibold text-white">Let's Connect</h2>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 rounded-xl glass-input"
-                    placeholder="john@example.com"
-                  />
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-gray-200">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className={inputClassName}
+                      placeholder="Abhishek Kumar"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl glass-input"
-                    placeholder="+91 98765 43210"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-gray-200">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className={inputClassName}
+                      placeholder="abhishek@example.com"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Subject *
-                  </label>
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 rounded-xl glass-input bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-gray-200">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className={inputClassName}
+                      placeholder="+91 99XXXXXXXX"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-gray-200">
+                      Subject *
+                    </label>
+                    <select
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      required
+                      className={`${inputClassName} appearance-none`}
+                    >
+                      <option value="" className="bg-[#0f1737] text-gray-200">Select a subject</option>
+                      {serviceSubjectOptions.map((option) => (
+                        <option key={option} value={option} className="bg-[#0f1737] text-gray-200">
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-gray-200">
+                      Message *
+                    </label>
+                    <textarea
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      rows={3}
+                      className={`${inputClassName} resize-none`}
+                      placeholder="Tell us more about your inquiry..."
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-2.5 rounded-2xl text-white font-medium border border-white/20 bg-[linear-gradient(90deg,#050C4F,#31387D,#A0A1B8)] bg-[length:200%_100%] bg-left hover:bg-right transition-all duration-500 ease-in-out"
                   >
-                    <option value="" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Select a subject</option>
-                    {serviceSubjectOptions.map((option) => (
-                      <option key={option} value={option} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Message *
-                  </label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    rows={6}
-                    className="w-full px-4 py-3 rounded-xl glass-input resize-none"
-                    placeholder="Tell us more about your inquiry..."
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
-                </button>
-              </form>
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
             </motion.div>
-
-            {/* Contact Info */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-8"
-            >
-              <div>
-                <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Contact Information</h2>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4 glass-card p-6">
-                    <FaEnvelope className="text-2xl text-neon-blue flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-bold mb-1 text-gray-900 dark:text-white">Email</h3>
-                      <a href="mailto:hello@matrixo.in" className="text-gray-600 dark:text-gray-400 hover:text-neon-blue">
-                        hello@matrixo.in
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4 glass-card p-6">
-                    <FaPhone className="text-2xl text-neon-purple flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-bold mb-1 text-gray-900 dark:text-white">Phone</h3>
-                      <a href="tel:+918297024365" className="text-gray-600 dark:text-gray-400 hover:text-neon-purple">
-                        +91 82970 24365
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4 glass-card p-6">
-                    <FaMapMarkerAlt className="text-2xl text-neon-pink flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-bold mb-1 text-gray-900 dark:text-white">Address</h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        25, Heaven Down Residency<br />
-                        RTC Colony, Nagaram<br />
-                        Hyderabad, Telangana - 501302
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Links */}
-              <div className="glass-card p-6">
-                <h3 className="font-bold mb-4 text-gray-900 dark:text-white">Follow Us</h3>
-                <div className="flex space-x-4">
-                  <a
-                    href="https://linkedin.com/company/matrixo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-12 h-12 glass-chip flex items-center justify-center 
-                             hover:bg-gradient-to-br hover:from-neon-blue hover:to-neon-purple hover:text-white 
-                             transition-all duration-300"
-                  >
-                    <FaLinkedin size={24} />
-                  </a>
-                  <a
-                    href="https://www.instagram.com/matrixo_in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-12 h-12 glass-chip flex items-center justify-center 
-                             hover:bg-gradient-to-br hover:from-neon-blue hover:to-neon-purple hover:text-white 
-                             transition-all duration-300"
-                  >
-                    <FaInstagram size={24} />
-                  </a>
-                </div>
-              </div>
-
-              {/* Business Hours */}
-              <div className="glass-card p-6">
-                <h3 className="font-bold mb-4 text-gray-900 dark:text-white">Business Hours</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <div className="flex justify-between">
-                    <span>Monday - Friday:</span>
-                    <span className="font-medium">9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday:</span>
-                    <span className="font-medium">10:00 AM - 4:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sunday:</span>
-                    <span className="font-medium">Closed</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </main>
     </div>
   )
 }
