@@ -1,6 +1,7 @@
 import './globals.css'
+import '@fontsource/inter/index.css'
+import '@fontsource/space-grotesk/index.css'
 import type { Metadata } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
 import FooterVisibility from '@/components/FooterVisibility'
 import { AuthProvider } from '@/lib/AuthContext'
@@ -10,16 +11,6 @@ import { Toaster } from 'sonner'
 import Script from 'next/script'
 import config from '@/lib/config'
 import { headers } from 'next/headers'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://matrixo.in'),
@@ -99,7 +90,7 @@ export default async function RootLayout({
   const isEmployeePortal = host.includes('team-auth') || pathname.includes('/employee-portal')
 
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />

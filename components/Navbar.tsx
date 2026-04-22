@@ -317,7 +317,7 @@ export default function Navbar() {
             {/* User Profile or Login Button */}
             {user ? (
               <div
-                className="relative flex items-center gap-x-2 flex-shrink-0"
+                className="relative"
                 onMouseEnter={() => setShowUserDropdown(true)}
                 onMouseLeave={() => setShowUserDropdown(false)}
               >
@@ -347,22 +347,19 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="absolute top-full right-0 mt-2 w-56 glass-card-elevated overflow-hidden"
+                      className="absolute right-0 mt-3 w-72 rounded-2xl bg-[#0A0F2C]/70 backdrop-blur-2xl backdrop-saturate-150 backdrop-brightness-75 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-4 z-[999] isolate"
                     >
-                      <div className="px-4 py-3 border-b border-gray-200/30 dark:border-white/[0.06]">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          {displayName}
-                        </p>
-                        {profile?.username && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>
-                        )}
-                        <p className="text-xs text-gray-400 truncate">
-                          {user.email}
-                        </p>
+                      <div className="absolute inset-0 rounded-2xl bg-[#0A0F2C]/40 -z-10" />
+
+                      <div className="text-white font-semibold truncate">{displayName}</div>
+                      <div className="text-gray-400 text-sm mb-3 truncate">
+                        @{profile?.username || 'username'}
                       </div>
+
+                      <div className="space-y-1.5">
                       <Link
                         href="/profile"
-                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors border-b border-gray-200/30 dark:border-white/[0.06]"
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-white transition"
                       >
                         <FaUser className="text-sm" />
                         <span>Profile</span>
@@ -372,7 +369,7 @@ export default function Navbar() {
                           href={EMPLOYEE_PORTAL_URL}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full px-4 py-3 text-left flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors border-b border-gray-200/30 dark:border-white/[0.06]"
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-purple-300 transition"
                         >
                           <FaIdBadge />
                           <span>Employee Portal</span>
@@ -380,11 +377,12 @@ export default function Navbar() {
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full px-4 py-3 text-left flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ease-out"
+                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition"
                       >
                         <FaSignOutAlt />
                         <span>Logout</span>
                       </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
