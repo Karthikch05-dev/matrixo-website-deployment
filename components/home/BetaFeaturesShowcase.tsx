@@ -81,7 +81,7 @@ const features = [
 
 type Feature = (typeof features)[number]
 
-type FeatureNavButtonProps = {
+type FeatureButtonProps = {
   feature: Feature
   index: number
   isActive: boolean
@@ -93,52 +93,38 @@ const FeatureNavButton = memo(function FeatureNavButton({
   index,
   isActive,
   onSelect,
-}: FeatureNavButtonProps) {
+}: FeatureButtonProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(index)}
       aria-pressed={isActive}
-      className={`w-full text-left px-4 py-3 rounded-xl border-l-4 transition-all duration-300 ${
+      className={`w-full text-left px-4 py-3 rounded-xl border-l-4 transition-all duration-300 ease-in-out hover:scale-[1.02] ${
         isActive
           ? 'bg-white/70 dark:bg-white/[0.08] border-blue-500 opacity-100'
-          : 'border-transparent opacity-60 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
+          : 'border-transparent opacity-70 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
       }`}
     >
       <div className={`font-bold ${isActive ? 'gradient-text' : 'text-gray-500 dark:text-gray-400'}`}>
         {feature.title}
       </div>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
-      <AnimatePresence>
-        {isActive && (
-          <motion.span
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            className="mt-2 block text-xs font-semibold text-blue-600 dark:text-blue-400"
-          >
-            Currently viewing
-          </motion.span>
-        )}
-      </AnimatePresence>
     </button>
   )
 })
-
-type FeaturePillButtonProps = FeatureNavButtonProps
 
 const FeaturePillButton = memo(function FeaturePillButton({
   feature,
   index,
   isActive,
   onSelect,
-}: FeaturePillButtonProps) {
+}: FeatureButtonProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(index)}
       aria-pressed={isActive}
-      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out hover:scale-[1.02] ${
         isActive
           ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600'
           : 'text-gray-700 dark:text-gray-300 bg-gray-200/70 dark:bg-white/[0.08]'
@@ -151,19 +137,86 @@ const FeaturePillButton = memo(function FeaturePillButton({
 
 export default function BetaFeaturesShowcase() {
   const [activeIndex, setActiveIndex] = useState(0)
+<<<<<<< HEAD
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
+=======
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const animationTimeoutRef = useRef<number | null>(null)
+  const lastIndex = features.length - 1
+>>>>>>> 8901111 (Updated the menu buttons, navbar and contact page)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
 
     const hostname = window.location.hostname
     setIsBeta(hostname === 'beta.matrixo.in' || hostname === 'localhost' || hostname === '127.0.0.1')
   }, [])
 
+<<<<<<< HEAD
   if (!mounted || !isBeta) return null
+=======
+  const handleFeatureSelect = (index: number) => {
+    setActiveIndex(index)
+  }
 
-  const activeFeature = features[activeIndex]
+  const startCooldown = useCallback(() => {
+    if (animationTimeoutRef.current !== null) {
+      window.clearTimeout(animationTimeoutRef.current)
+    }
+
+    animationTimeoutRef.current = window.setTimeout(() => {
+      setIsAnimating(false)
+    }, 600)
+  }, [])
+
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (isAnimating) return
+
+      if (event.deltaY > 0 && activeIndex < lastIndex) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, lastIndex))
+        startCooldown()
+      } else if (event.deltaY < 0 && activeIndex > 0) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.max(prevIndex - 1, 0))
+        startCooldown()
+      }
+    },
+    [activeIndex, isAnimating, lastIndex, startCooldown],
+  )
+
+  const handleMouseMove = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (!isHovering || isAnimating) return
+
+      const rect = event.currentTarget.getBoundingClientRect()
+      const y = event.clientY - rect.top
+      const height = rect.height
+      const topZone = height * 0.25
+      const bottomZone = height * 0.75
+
+      if (y > bottomZone && activeIndex < lastIndex) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, lastIndex))
+        startCooldown()
+      } else if (y < topZone && activeIndex > 0) {
+        setIsAnimating(true)
+        setActiveIndex((prevIndex) => Math.max(prevIndex - 1, 0))
+        startCooldown()
+      }
+    },
+    [activeIndex, isAnimating, isHovering, lastIndex, startCooldown],
+  )
+
+  if (!mounted) return null
+>>>>>>> 8901111 (Updated the menu buttons, navbar and contact page)
+
+  const activeFeature = features[activeIndex] || features[0]
 
   return (
     <section id="explore-features" className="section-padding bg-transparent carousel-section">
@@ -183,8 +236,13 @@ export default function BetaFeaturesShowcase() {
           </p>
         </motion.div>
 
+<<<<<<< HEAD
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
           <aside className="lg:col-span-4">
+=======
+        <div className="hidden lg:grid grid-cols-12 gap-6 h-[75vh]">
+          <aside className="col-span-4 h-full sticky top-24">
+>>>>>>> 8901111 (Updated the menu buttons, navbar and contact page)
             <div className="space-y-2">
               {features.map((item, index) => (
                 <FeatureNavButton
@@ -192,6 +250,7 @@ export default function BetaFeaturesShowcase() {
                   feature={item}
                   index={index}
                   isActive={activeIndex === index}
+<<<<<<< HEAD
                   onSelect={setActiveIndex}
                 />
               ))}
@@ -240,11 +299,15 @@ export default function BetaFeaturesShowcase() {
                   index={index}
                   isActive={activeIndex === index}
                   onSelect={setActiveIndex}
+=======
+                  onSelect={handleFeatureSelect}
+>>>>>>> 8901111 (Updated the menu buttons, navbar and contact page)
                 />
               ))}
             </div>
-          </div>
+          </aside>
 
+<<<<<<< HEAD
           <AnimatePresence mode="wait">
             <motion.div
               key={activeFeature.id}
@@ -271,6 +334,101 @@ export default function BetaFeaturesShowcase() {
               </Link>
             </motion.div>
           </AnimatePresence>
+=======
+          <div className="col-span-8 h-full w-full">
+            <div
+              className="h-full w-full"
+              onWheel={handleWheel}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+              onMouseMove={handleMouseMove}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeFeature.id}
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -60 }}
+                  transition={{ duration: 0.6 }}
+                  className="h-full"
+                >
+                  <div className="glass-card backdrop-blur-md bg-white/10 dark:bg-black/20 min-h-full p-8 md:p-10 transition-all duration-300 ease-in-out">
+                    <div className="mb-6 text-4xl">{activeFeature.content.icon}</div>
+                    <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
+                      <span
+                        className={`bg-gradient-to-r ${activeFeature.content.gradient} bg-clip-text text-transparent`}
+                      >
+                        {activeFeature.title}
+                      </span>
+                    </h3>
+                    <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
+                      {activeFeature.description}
+                    </p>
+                    <p className="mb-8 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                      {activeFeature.content.details}
+                    </p>
+                    <div>
+                      <Link href={activeFeature.content.href} className="btn-primary inline-flex items-center">
+                        Try it now →
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:hidden">
+          <div className="sticky top-20 z-20 -mx-4 mb-6 border-y border-gray-200/70 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-white/[0.08] dark:bg-gray-950/80">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              {features.map((item, index) => (
+                <FeaturePillButton
+                  key={item.id}
+                  feature={item}
+                  index={index}
+                  isActive={activeIndex === index}
+                  onSelect={handleFeatureSelect}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="w-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFeature.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="glass-card backdrop-blur-md bg-white/10 dark:bg-black/20 w-full overflow-hidden transition-all duration-300 ease-in-out"
+              >
+                <div className="p-8 md:p-10">
+                  <div className="mb-6 text-4xl">{activeFeature.content.icon}</div>
+                  <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
+                    <span
+                      className={`bg-gradient-to-r ${activeFeature.content.gradient} bg-clip-text text-transparent`}
+                    >
+                      {activeFeature.title}
+                    </span>
+                  </h3>
+                  <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
+                    {activeFeature.description}
+                  </p>
+                  <p className="mb-8 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                    {activeFeature.content.details}
+                  </p>
+                  <div>
+                    <Link href={activeFeature.content.href} className="btn-primary inline-flex items-center">
+                      Try it now →
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+>>>>>>> 8901111 (Updated the menu buttons, navbar and contact page)
         </div>
       </div>
     </section>
