@@ -2,12 +2,7 @@ import './globals.css'
 import '@fontsource/inter/index.css'
 import '@fontsource/space-grotesk/index.css'
 import type { Metadata } from 'next'
-<<<<<<< HEAD
-import Navbar from '@/components/Navbar'
-import FooterVisibility from '@/components/FooterVisibility'
-=======
 import RootChrome from '@/components/RootChrome'
->>>>>>> a9c1661 (Code updation)
 import { AuthProvider } from '@/lib/AuthContext'
 import { ProfileProvider } from '@/lib/ProfileContext'
 import { Toaster } from 'sonner'
