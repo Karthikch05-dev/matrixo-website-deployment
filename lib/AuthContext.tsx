@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   updateProfile,
@@ -21,7 +22,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName?: string) => Promise<User>
   logout: () => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: () => Promise<'popup' | 'redirect'>
   resetPassword: (email: string) => Promise<void>
   resendVerificationEmail: () => Promise<void>
 }
@@ -83,7 +84,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    provider.setCustomParameters({ prompt: 'select_account' })
+
+    try {
+      await signInWithPopup(auth, provider)
+      return 'popup' as const
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/popup-blocked' ||
+        error?.code === 'auth/web-storage-unsupported' ||
+        error?.code === 'auth/operation-not-supported-in-this-environment'
+      ) {
+        await signInWithRedirect(auth, provider)
+        return 'redirect' as const
+      }
+      throw error
+    }
   }
 
   const resetPassword = async (email: string) => {

@@ -14,7 +14,8 @@ export default function AuthPage() {
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode')
   const [isLogin, setIsLogin] = useState(mode !== 'register')
-  const returnUrl = searchParams.get('returnUrl') || '/'
+  const requestedReturnUrl = searchParams.get('returnUrl')
+  const returnUrl = requestedReturnUrl?.startsWith('/') ? requestedReturnUrl : '/'
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -118,28 +119,48 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
-      await signInWithGoogle()
+      const signInMethod = await signInWithGoogle()
+      if (signInMethod === 'redirect') {
+        return
+      }
       toast.success('Signed in successfully!')
       router.push(returnUrl)
     } catch (error: any) {
-      console.error('Google sign-in error:', error)
-      setLoading(false)
+      const code = error?.code || 'unknown'
+      const message = error?.message || 'Unknown Google auth error'
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'unknown-host'
+      const isBetaHost = currentHost === 'beta.matrixo.in'
+
+      console.error('Google Auth Error:', {
+        code,
+        message,
+        currentHost,
+        customData: error?.customData || null
+      })
       
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (code === 'auth/popup-closed-by-user') {
         toast.info('Sign-in cancelled')
         return
       }
       
-      if (error.code === 'auth/popup-blocked') {
+      if (code === 'auth/popup-blocked') {
         toast.error('Popup blocked! Please allow popups.')
-      } else if (error.code === 'auth/unauthorized-domain') {
-        toast.error('Domain not authorized in Firebase Console.')
+      } else if (code === 'auth/unauthorized-domain') {
+        toast.error(`Domain "${currentHost}" is not authorized for Google sign-in.`)
+      } else if (code === 'auth/operation-not-allowed') {
+        toast.error('Google sign-in is not enabled in Firebase Authentication.')
+      } else if (code === 'auth/invalid-api-key') {
+        toast.error('Invalid Firebase API key. Check beta environment variables.')
+      } else if (code === 'auth/network-request-failed') {
+        toast.error('Network error during Google sign-in. Check HTTPS/connection and retry.')
       } else {
-        toast.error('Google sign-in failed.')
+        const fallbackMessage = message.replace(/^Firebase:\s*/i, '').split(' (auth/')[0]
+        toast.error(isBetaHost ? `${fallbackMessage} (${code})` : fallbackMessage)
       }
       return
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
 
