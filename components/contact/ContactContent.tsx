@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useSearchParams } from 'next/navigation'
@@ -26,19 +27,6 @@ export default function ContactContent() {
     message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    const previousBodyOverflow = document.body.style.overflow
-
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.documentElement.style.overflow = previousHtmlOverflow
-      document.body.style.overflow = previousBodyOverflow
-    }
-  }, [])
 
   useEffect(() => {
     const typeParam = searchParams.get('type')
@@ -103,7 +91,16 @@ export default function ContactContent() {
   }
 
   return (
-    <div className="relative isolate h-screen w-screen flex flex-col overflow-hidden">
+    <div className="relative isolate min-h-screen w-full overflow-x-hidden">
+      <div className="absolute top-6 left-6 z-50">
+        <Link
+          href="/"
+          className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white text-sm hover:bg-white/20 transition"
+        >
+          ← Back to Home
+        </Link>
+      </div>
+
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <video
           autoPlay
@@ -119,8 +116,8 @@ export default function ContactContent() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#020617]/80 via-[#0a1a3a]/60 to-[#1e3a8a]/40" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_40%,rgba(59,130,246,0.25),transparent_60%)]" />
 
-      <main className="relative z-10 min-h-screen flex items-start justify-end pt-20 pr-6 pl-6 md:pt-24 md:pr-10 md:pl-10">
-        <div className="relative z-10 w-full max-w-md ml-auto mt-2">
+      <main className="relative z-10 min-h-screen flex items-start md:items-center justify-center md:justify-end px-6 py-16 pb-24 md:px-10">
+        <div className="relative z-10 w-full max-w-md md:ml-auto">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,7 +132,7 @@ export default function ContactContent() {
             >
                 <h2 className="mb-1 text-xl font-semibold text-white">Let's Connect</h2>
 
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5 text-gray-200">
                       Full Name *
@@ -218,7 +215,7 @@ export default function ContactContent() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-2.5 rounded-2xl text-white font-medium border border-white/20 bg-[linear-gradient(90deg,#050C4F,#31387D,#A0A1B8)] bg-[length:200%_100%] bg-left hover:bg-right transition-all duration-500 ease-in-out"
+                    className="w-full mt-4 py-3 rounded-xl text-white font-medium border border-white/20 bg-[linear-gradient(90deg,#050C4F,#31387D,#A0A1B8)] bg-[length:200%_100%] bg-left hover:bg-right transition-all duration-500 ease-in-out"
                   >
                     {isSubmitting ? 'Sending...' : 'Send Message'}
                   </button>

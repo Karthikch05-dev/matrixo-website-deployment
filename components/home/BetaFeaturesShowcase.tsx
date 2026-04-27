@@ -81,7 +81,7 @@ const features = [
 
 type Feature = (typeof features)[number]
 
-type FeatureNavButtonProps = {
+type FeatureButtonProps = {
   feature: Feature
   index: number
   isActive: boolean
@@ -93,52 +93,38 @@ const FeatureNavButton = memo(function FeatureNavButton({
   index,
   isActive,
   onSelect,
-}: FeatureNavButtonProps) {
+}: FeatureButtonProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(index)}
       aria-pressed={isActive}
-      className={`w-full text-left px-4 py-3 rounded-xl border-l-4 transition-all duration-300 ${
+      className={`w-full text-left px-4 py-3 rounded-xl border-l-4 transition-all duration-300 ease-in-out hover:scale-[1.02] ${
         isActive
           ? 'bg-white/70 dark:bg-white/[0.08] border-blue-500 opacity-100'
-          : 'border-transparent opacity-60 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
+          : 'border-transparent opacity-70 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
       }`}
     >
       <div className={`font-bold ${isActive ? 'gradient-text' : 'text-gray-500 dark:text-gray-400'}`}>
         {feature.title}
       </div>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
-      <AnimatePresence>
-        {isActive && (
-          <motion.span
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            className="mt-2 block text-xs font-semibold text-blue-600 dark:text-blue-400"
-          >
-            Currently viewing
-          </motion.span>
-        )}
-      </AnimatePresence>
     </button>
   )
 })
-
-type FeaturePillButtonProps = FeatureNavButtonProps
 
 const FeaturePillButton = memo(function FeaturePillButton({
   feature,
   index,
   isActive,
   onSelect,
-}: FeaturePillButtonProps) {
+}: FeatureButtonProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(index)}
       aria-pressed={isActive}
-      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out hover:scale-[1.02] ${
         isActive
           ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600'
           : 'text-gray-700 dark:text-gray-300 bg-gray-200/70 dark:bg-white/[0.08]'
@@ -156,14 +142,13 @@ export default function BetaFeaturesShowcase() {
 
   useEffect(() => {
     setMounted(true)
-
     const hostname = window.location.hostname
     setIsBeta(hostname === 'beta.matrixo.in' || hostname === 'localhost' || hostname === '127.0.0.1')
   }, [])
 
   if (!mounted || !isBeta) return null
 
-  const activeFeature = features[activeIndex]
+  const activeFeature = features[activeIndex] || features[0]
 
   return (
     <section id="explore-features" className="section-padding bg-transparent carousel-section">

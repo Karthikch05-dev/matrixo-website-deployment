@@ -2,14 +2,11 @@ import './globals.css'
 import '@fontsource/inter/index.css'
 import '@fontsource/space-grotesk/index.css'
 import type { Metadata } from 'next'
-import Navbar from '@/components/Navbar'
-import FooterVisibility from '@/components/FooterVisibility'
+import RootChrome from '@/components/RootChrome'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ProfileProvider } from '@/lib/ProfileContext'
-import ProfileGuard from '@/components/ProfileGuard'
 import { Toaster } from 'sonner'
 import Script from 'next/script'
-import config from '@/lib/config'
 import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
@@ -83,11 +80,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Check if we're on employee portal route
   const headersList = await headers()
-  const pathname = headersList.get('x-pathname') || ''
+  const initialPathname = headersList.get('x-pathname') || ''
   const host = headersList.get('host') || ''
-  const isEmployeePortal = host.includes('team-auth') || pathname.includes('/employee-portal')
+  const hostIsEmployeeSubdomain = host.includes('team-auth')
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -138,17 +134,9 @@ export default async function RootLayout({
 
         <AuthProvider>
           <ProfileProvider>
-            {!isEmployeePortal && <Navbar />}
-            <main
-              className={
-                isEmployeePortal
-                  ? 'min-h-screen overflow-x-hidden'
-                  : 'min-h-screen pt-0 overflow-x-hidden'
-              }
-            >
-              {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
-            </main>
-            {!isEmployeePortal && <FooterVisibility />}
+            <RootChrome hostIsEmployeeSubdomain={hostIsEmployeeSubdomain} initialPathname={initialPathname}>
+              {children}
+            </RootChrome>
           </ProfileProvider>
         </AuthProvider>
         <Toaster position="top-right" richColors />

@@ -125,7 +125,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 w-full z-50 transition-all duration-300 ease-in-out"
+      className="fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out"
     >
       <div
         className={`container-custom mx-auto mt-3 sm:mt-4 px-6 lg:px-10 py-1.5 sm:py-2 h-16 max-w-6xl w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] rounded-full border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-black/70 bg-gradient-to-r from-white/90 via-white/80 to-white/90 dark:from-[#0f111a]/75 dark:via-[#0f111a]/70 dark:to-[#0f111a]/75 backdrop-blur-md transition-all duration-300 ease-in-out relative isolate overflow-visible before:content-[''] before:absolute before:inset-0 before:rounded-full before:blur-2xl before:transition-all before:duration-300 before:opacity-40 dark:before:opacity-60 before:bg-black/10 dark:before:bg-blue-500/20 before:scale-110 before:transform before:pointer-events-none hover:before:opacity-60 dark:hover:before:opacity-70 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}
@@ -452,39 +452,39 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 dark:bg-black/20 hover:bg-white/20 dark:hover:bg-black/30 transition-all duration-200 flex-shrink-0"
               aria-label="Toggle menu"
             >
               {isOpen ? (
-                <FaTimes className="w-6 h-6 text-gray-800 dark:text-gray-200" />
+                <FaTimes className="w-4 h-4 text-gray-800 dark:text-gray-200" />
               ) : (
-                <FaBars className="w-6 h-6 text-gray-800 dark:text-gray-200" />
+                <FaBars className="w-4 h-4 text-gray-800 dark:text-gray-200" />
               )}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu Drawer */}
-        <div
-          className={`md:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-          aria-hidden={!isOpen}
-        >
-          <div
-            className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
-            onClick={() => setIsOpen(false)}
-          />
-          <div
-            className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white/70 dark:bg-black/70 backdrop-blur-md shadow-md transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-          >
-            <div className="h-full overflow-y-auto flex flex-col gap-y-4 p-6">
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              data-open={isOpen}
+              className="md:hidden absolute left-4 top-16 w-64 rounded-xl border border-white/10 bg-white/10 dark:bg-black/20 backdrop-blur-md shadow-xl z-50"
+              aria-hidden={!isOpen}
+            >
+              <div className="max-h-[70vh] overflow-y-auto flex flex-col gap-y-4 p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Menu</span>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/[0.06] transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 dark:bg-black/20 hover:bg-white/20 dark:hover:bg-black/30 transition-all duration-200"
                   aria-label="Close menu"
                 >
-                  <FaTimes className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                  <FaTimes className="w-4 h-4 text-gray-800 dark:text-gray-200" />
                 </button>
               </div>
 
@@ -498,9 +498,9 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
-                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${isActive
+                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/[0.06]'
                         }`}
                     >
                       {link.name}
@@ -517,9 +517,9 @@ export default function Navbar() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`px-4 py-2.5 rounded-2xl transition-all duration-200 ease-out ${isActive
-                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold backdrop-blur-sm'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/[0.06]'
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${isActive
+                        ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/[0.06]'
                         }`}
                     >
                       {link.name}
@@ -530,7 +530,7 @@ export default function Navbar() {
                 <Link
                   href="/contact"
                   onClick={() => setIsOpen(false)}
-                  className={talkWithUsClassName}
+                  className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
                 >
                   Talk With Us
                 </Link>
@@ -605,8 +605,9 @@ export default function Navbar() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   )
