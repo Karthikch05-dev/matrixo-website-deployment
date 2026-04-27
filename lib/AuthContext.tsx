@@ -85,6 +85,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
+    const isBetaHost = typeof window !== 'undefined' && window.location.hostname === 'beta.matrixo.in'
+
+    if (isBetaHost) {
+      await signInWithRedirect(auth, provider)
+      return 'redirect' as const
+    }
 
     try {
       await signInWithPopup(auth, provider)
