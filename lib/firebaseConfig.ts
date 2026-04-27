@@ -40,7 +40,7 @@ const normalizeFirebaseEnvKey = (key: FirebaseEnvKey): FirebaseBaseEnvKey => {
   if (key.endsWith('_BETA') || key.endsWith('_MAIN')) {
     return key.slice(0, -5) as FirebaseBaseEnvKey;
   }
-  return key;
+  return key as FirebaseBaseEnvKey;
 };
 
 const isValidFirebaseValue = (key: FirebaseBaseEnvKey, value: string) => {
