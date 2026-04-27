@@ -3,36 +3,35 @@ import { getAuth, Auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationRe
 import { getStorage } from 'firebase/storage';
 import { getFirestore } from 'firebase/firestore';
 
-const defaultFirebaseConfig = {
-  apiKey: "AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ",
-  authDomain: "matrixo-in-auth.firebaseapp.com",
-  projectId: "matrixo-in-auth",
-  storageBucket: "matrixo-in-auth.firebasestorage.app",
-  messagingSenderId: "431287252568",
-  appId: "1:431287252568:web:0bdc2975d8951203bf7c2d",
-  measurementId: "G-J18MTSRX3K"
-};
+const readEnv = (key: string) => process.env[key]?.trim() || '';
+
+const hostName = typeof window !== 'undefined' ? window.location.hostname : '';
 
 const isBetaDeployment =
+  hostName === 'beta.matrixo.in' ||
   process.env.NEXT_PUBLIC_SITE_MODE === 'beta' ||
   process.env.NEXT_PUBLIC_SITE_URL === 'https://beta.matrixo.in' ||
   process.env.NEXT_PUBLIC_VERCEL_URL?.includes('beta') === true;
 
-const pickFirebaseEnv = (betaKey: string, defaultKey: string, fallback: string) => {
-  if (isBetaDeployment && process.env[betaKey]) {
-    return process.env[betaKey] as string;
+const pickFirebaseEnv = (baseKey: string) => {
+  const betaKey = `${baseKey}_BETA`;
+  const mainKey = `${baseKey}_MAIN`;
+
+  if (isBetaDeployment) {
+    return readEnv(betaKey) || readEnv(baseKey) || readEnv(mainKey);
   }
-  return process.env[defaultKey] || fallback;
+
+  return readEnv(mainKey) || readEnv(baseKey) || readEnv(betaKey);
 };
 
 const firebaseConfig = {
-  apiKey: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_API_KEY_BETA', 'NEXT_PUBLIC_FIREBASE_API_KEY', defaultFirebaseConfig.apiKey),
-  authDomain: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN_BETA', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', defaultFirebaseConfig.authDomain),
-  projectId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID_BETA', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID', defaultFirebaseConfig.projectId),
-  storageBucket: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET_BETA', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', defaultFirebaseConfig.storageBucket),
-  messagingSenderId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID_BETA', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', defaultFirebaseConfig.messagingSenderId),
-  appId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_APP_ID_BETA', 'NEXT_PUBLIC_FIREBASE_APP_ID', defaultFirebaseConfig.appId),
-  measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID_BETA', 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', defaultFirebaseConfig.measurementId)
+  apiKey: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_API_KEY'),
+  authDomain: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+  projectId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+  storageBucket: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_APP_ID'),
+  measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID')
 };
 
 // Initialize Firebase (avoid re-initialization)
