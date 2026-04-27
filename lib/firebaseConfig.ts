@@ -14,16 +14,6 @@ type FirebaseBaseEnvKey =
 
 type FirebaseEnvKey = FirebaseBaseEnvKey | `${FirebaseBaseEnvKey}_BETA` | `${FirebaseBaseEnvKey}_MAIN`;
 
-const fallbackFirebaseConfig = {
-  apiKey: 'AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ',
-  authDomain: 'matrixo-in-auth.firebaseapp.com',
-  projectId: 'matrixo-in-auth',
-  storageBucket: 'matrixo-in-auth.firebasestorage.app',
-  messagingSenderId: '431287252568',
-  appId: '1:431287252568:web:0bdc2975d8951203bf7c2d',
-  measurementId: 'G-J18MTSRX3K'
-};
-
 const readEnv = (key: string) => process.env[key]?.trim() || '';
 
 const isPlaceholderValue = (value: string) => {
@@ -92,18 +82,17 @@ const pickFirebaseEnv = (baseKey: FirebaseBaseEnvKey) => {
     return betaValue || baseValue || mainValue;
   }
 
-  return baseValue || mainValue || betaValue;
+  return mainValue || baseValue || betaValue;
 };
 
 const firebaseConfig = {
-  apiKey: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_API_KEY') || fallbackFirebaseConfig.apiKey,
-  authDomain: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN') || fallbackFirebaseConfig.authDomain,
-  projectId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID') || fallbackFirebaseConfig.projectId,
-  storageBucket: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET') || fallbackFirebaseConfig.storageBucket,
-  messagingSenderId:
-    pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID') || fallbackFirebaseConfig.messagingSenderId,
-  appId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_APP_ID') || fallbackFirebaseConfig.appId,
-  measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID') || fallbackFirebaseConfig.measurementId
+  apiKey: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_API_KEY'),
+  authDomain: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+  projectId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+  storageBucket: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_APP_ID'),
+  measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID')
 };
 
 // Initialize Firebase (avoid re-initialization)
