@@ -14,7 +14,8 @@ export default function BlogPage() {
         <div className="container-custom px-6 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Blog & <span className="gradient-text">News</span>
+              <span className="heading-solid">Blog &</span>{' '}
+              <span className="gradient-text">News</span>
             </h1>
             <p className="text-2xl text-gray-600 dark:text-gray-300">
               Coming Soon

@@ -1212,7 +1212,7 @@ export const ProfileInfo = ({
                 {data.attendancePercentage !== undefined && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
                     <FaChartLine className="text-primary-400 text-sm" />
-                    <span className="text-lg font-bold bg-gradient-to-r from-primary-400 to-cyan-400 bg-clip-text text-transparent">
+                    <span className="text-lg font-bold gradient-text">
                       {data.attendancePercentage.toFixed(1)}%
                     </span>
                   </div>

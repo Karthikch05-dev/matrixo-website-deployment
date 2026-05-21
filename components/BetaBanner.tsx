@@ -22,11 +22,11 @@ export default function BetaBanner() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -100, opacity: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white shadow-lg"
+        className="fixed top-0 left-0 right-0 z-50 bg-slate-900 text-white shadow-lg"
       >
         <div className="container-custom px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="bg-white text-purple-600 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+            <span className="bg-white text-slate-900 px-3 py-1 rounded-full text-xs font-bold">
               BETA
             </span>
             <p className="text-sm md:text-base font-medium">

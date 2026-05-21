@@ -60,7 +60,7 @@ export default function Footer() {
               <li>
                 <a
                   href="mailto:hello@matrixo.in"
-                  className="flex items-center gap-2 hover:text-white transition-colors hover:drop-shadow-[0_0_8px_rgba(145,174,196,0.6)]"
+                  className="flex items-center gap-2 hover:text-white transition-colors"
                 >
                   <FaEnvelope className="text-gray-500 dark:text-gray-400" />
                   hello@matrixo.in
@@ -71,7 +71,7 @@ export default function Footer() {
                   href="https://www.instagram.com/matrixo_in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-white transition-colors hover:drop-shadow-[0_0_8px_rgba(145,174,196,0.6)]"
+                  className="flex items-center gap-2 hover:text-white transition-colors"
                 >
                   <FaInstagram className="text-gray-500 dark:text-gray-400" />
                   Instagram
@@ -82,7 +82,7 @@ export default function Footer() {
                   href="https://linkedin.com/company/matrixo"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-white transition-colors hover:drop-shadow-[0_0_8px_rgba(145,174,196,0.6)]"
+                  className="flex items-center gap-2 hover:text-white transition-colors"
                 >
                   <FaLinkedin className="text-gray-500 dark:text-gray-400" />
                   LinkedIn

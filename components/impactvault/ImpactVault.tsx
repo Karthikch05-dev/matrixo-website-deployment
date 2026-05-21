@@ -78,7 +78,7 @@ export default function ImpactVault() {
                   <FaChartLine className="animate-pulse" />
                   <span className="font-bold">ImpactVault™ Analytics</span>
                 </div>
-                <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl md:text-5xl font-bold gradient-text">
                   Institutional Dashboard
                 </h1>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">

@@ -82,7 +82,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
             <FaBrain className="animate-pulse" />
             <span className="font-bold">SkillDNA™ Assessment</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">
             Discover Your Learning Genome
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">

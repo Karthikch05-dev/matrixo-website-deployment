@@ -27,7 +27,7 @@ export default function PersonaSummary({ persona }: PersonaSummaryProps) {
 
       {/* Headline */}
       <div className="mb-6">
-        <h4 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+        <h4 className="text-2xl font-bold gradient-text mb-2">
           {persona.headline}
         </h4>
         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">

@@ -126,7 +126,7 @@ export default function PlayCred() {
             <FaTrophy className="animate-bounce" />
             <span className="font-bold">PlayCred™ Digital Credentials</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
             Your Verified Achievements
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
@@ -142,7 +142,7 @@ export default function PlayCred() {
             transition={{ delay: 0.1 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Total Badges</p>
@@ -154,7 +154,7 @@ export default function PlayCred() {
             transition={{ delay: 0.2 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.filter(b => b.rarity === 'legendary').length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Legendary</p>
@@ -166,7 +166,7 @@ export default function PlayCred() {
             transition={{ delay: 0.3 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.filter(b => b.verified).length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Verified</p>
@@ -178,7 +178,7 @@ export default function PlayCred() {
             transition={{ delay: 0.4 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {categories.length - 1}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Categories</p>

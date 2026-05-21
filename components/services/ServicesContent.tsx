@@ -107,6 +107,15 @@ const pricingPlans = [
 ]
 
 export default function ServicesContent() {
+  const splitHeading = (text: string) => {
+    const parts = text.trim().split(' ')
+    if (parts.length <= 1) {
+      return { lead: '', tail: text }
+    }
+    const tail = parts.pop() as string
+    return { lead: parts.join(' '), tail }
+  }
+
   return (
     <div className="min-h-screen pt-0">
       {/* Hero */}
@@ -120,8 +129,8 @@ export default function ServicesContent() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Programs That Build
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 block mt-2">Real Tech Careers</span>
+              <span className="heading-solid">Programs That Build</span>
+              <span className="gradient-text block mt-2">Real Tech Careers</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
               From beginner workshops to intensive bootcamps, we offer hands-on technical training that prepares students for industry success.
@@ -140,7 +149,8 @@ export default function ServicesContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Programs</span>
+              <span className="heading-solid">Our</span>{' '}
+              <span className="gradient-text">Programs</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Comprehensive technical training designed to build industry-ready skills
@@ -161,7 +171,15 @@ export default function ServicesContent() {
                   <service.icon className={`h-7 w-7 ${service.iconClassName}`} />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-                  {service.title}
+                  {(() => {
+                    const { lead, tail } = splitHeading(service.title)
+                    return (
+                      <>
+                        {lead && <span className="heading-solid">{lead} </span>}
+                        <span className="gradient-text">{tail}</span>
+                      </>
+                    )
+                  })()}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {service.description}
@@ -197,7 +215,8 @@ export default function ServicesContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              How It <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Works</span>
+              <span className="heading-solid">How It</span>{' '}
+              <span className="gradient-text">Works</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               From registration to certification - a seamless learning journey
@@ -222,7 +241,17 @@ export default function ServicesContent() {
                 <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   {item.step}
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{item.title}</h3>
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
+                  {(() => {
+                    const { lead, tail } = splitHeading(item.title)
+                    return (
+                      <>
+                        {lead && <span className="heading-solid">{lead} </span>}
+                        <span className="gradient-text">{tail}</span>
+                      </>
+                    )
+                  })()}
+                </h3>
                 <p className="text-gray-600 dark:text-gray-400">{item.desc}</p>
               </motion.div>
             ))}
@@ -258,7 +287,8 @@ export default function ServicesContent() {
                 </motion.div>
 
                 <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-                  Partner as Ticketing Partner
+                  <span className="text-white">Partner as Ticketing</span>{' '}
+                  <span className="gradient-text">Partner</span>
                 </h2>
                 <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
                   Are you organizing technical events, workshops, or hackathons? Partner with matriXO as your official ticketing platform and enjoy seamless registration management, secure payments, and powerful analytics.
@@ -279,7 +309,17 @@ export default function ServicesContent() {
                       className="bg-white/10 backdrop-blur-lg rounded-2xl p-6"
                     >
                       <div className="text-4xl mb-3">{benefit.icon}</div>
-                      <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
+                      <h3 className="text-lg font-bold mb-2">
+                        {(() => {
+                          const { lead, tail } = splitHeading(benefit.title)
+                          return (
+                            <>
+                              {lead && <span className="text-white">{lead} </span>}
+                              <span className="gradient-text">{tail}</span>
+                            </>
+                          )
+                        })()}
+                      </h3>
                       <p className="text-sm text-white/80">{benefit.desc}</p>
                     </motion.div>
                   ))}
@@ -315,7 +355,8 @@ export default function ServicesContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Simple, Transparent <span className="gradient-text">Pricing</span>
+              <span className="heading-solid">Simple, Transparent</span>{' '}
+              <span className="gradient-text">Pricing</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Choose a plan that fits your needs
@@ -337,7 +378,16 @@ export default function ServicesContent() {
                 }`}
               >
                 <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                  {plan.name}
+                  {(() => {
+                    const { lead, tail } = splitHeading(plan.name)
+                    const leadClass = plan.highlighted ? 'text-white' : 'heading-solid'
+                    return (
+                      <>
+                        {lead && <span className={leadClass}>{lead} </span>}
+                        <span className="gradient-text">{tail}</span>
+                      </>
+                    )
+                  })()}
                 </h3>
                 <p className={`mb-6 ${plan.highlighted ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
                   {plan.description}

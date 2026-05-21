@@ -154,6 +154,15 @@ export default function BetaFeaturesShowcase() {
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
 
+  const splitHeading = (text: string) => {
+    const parts = text.trim().split(' ')
+    if (parts.length <= 1) {
+      return { lead: '', tail: text }
+    }
+    const tail = parts.pop() as string
+    return { lead: parts.join(' '), tail }
+  }
+
   useEffect(() => {
     setMounted(true)
     const hostname = window.location.hostname
@@ -176,7 +185,8 @@ export default function BetaFeaturesShowcase() {
           className="text-center mb-12 lg:mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            Explore <span className="gradient-text">New Features</span>
+            <span className="heading-solid">Explore</span>{' '}
+            <span className="gradient-text">New Features</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Explore our latest features and discover powerful tools designed to enhance your experience.
@@ -212,11 +222,15 @@ export default function BetaFeaturesShowcase() {
                   <ActiveIcon className={`h-7 w-7 ${activeFeature.content.iconClassName}`} />
                 </div>
                 <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                  <span
-                    className={`bg-gradient-to-r ${activeFeature.content.gradient} bg-clip-text text-transparent`}
-                  >
-                    {activeFeature.title}
-                  </span>
+                  {(() => {
+                    const { lead, tail } = splitHeading(activeFeature.title)
+                    return (
+                      <>
+                        {lead && <span className="heading-solid">{lead} </span>}
+                        <span className="gradient-text">{tail}</span>
+                      </>
+                    )
+                  })()}
                 </h3>
                 <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
                   {activeFeature.description}
@@ -260,9 +274,15 @@ export default function BetaFeaturesShowcase() {
                 <ActiveIcon className={`h-7 w-7 ${activeFeature.content.iconClassName}`} />
               </div>
               <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                <span className={`bg-gradient-to-r ${activeFeature.content.gradient} bg-clip-text text-transparent`}>
-                  {activeFeature.title}
-                </span>
+                {(() => {
+                  const { lead, tail } = splitHeading(activeFeature.title)
+                  return (
+                    <>
+                      {lead && <span className="heading-solid">{lead} </span>}
+                      <span className="gradient-text">{tail}</span>
+                    </>
+                  )
+                })()}
               </h3>
               <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
                 {activeFeature.description}

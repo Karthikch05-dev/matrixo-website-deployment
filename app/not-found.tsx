@@ -20,7 +20,7 @@ export default function NotFound() {
           
           {/* 404 Text */}
           <h1 className="relative text-[150px] md:text-[250px] font-black leading-none">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="gradient-text">
               404
             </span>
           </h1>

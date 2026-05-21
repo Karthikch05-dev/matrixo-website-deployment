@@ -200,7 +200,7 @@ export default function MentorMatrix() {
             <FaUserTie className="animate-bounce" />
             <span className="font-bold">MentorMatrix™ Network</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
             Find Your Perfect Mentor
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">

@@ -71,7 +71,8 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl md:text-3xl lg:text-4xl font-light text-slate-700 dark:text-gray-300 mb-4 max-w-4xl mx-auto"
           >
-            Where AI Meets Your Career Journey
+            <span className="heading-solid">Where AI Meets Your Career</span>{' '}
+            <span className="gradient-text">Journey</span>
           </motion.p>
 
           {/* Bold tagline */}
@@ -81,7 +82,8 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-2xl md:text-3xl font-display font-bold text-slate-800 dark:text-white mb-12"
           >
-            Map Your Skills. Grow Smarter. Prove Your Worth.
+            <span className="heading-solid">Map Your Skills. Grow Smarter. Prove Your</span>{' '}
+            <span className="gradient-text">Worth.</span>
           </motion.p>
 
           {/* Description */}

@@ -55,7 +55,7 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
             <FaTrophy className="animate-bounce" />
             <span className="font-bold">Your SkillDNA™ Results</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
             Your Learning Genome Mapped
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
@@ -152,7 +152,7 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
                         {category.name}
                       </span>
                     </div>
-                    <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    <span className="text-lg font-bold gradient-text">
                       {Math.round(score)}%
                     </span>
                   </div>

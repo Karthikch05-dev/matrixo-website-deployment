@@ -56,6 +56,15 @@ function FeatureCard({
   iconContainerClassName,
   index,
 }: FeatureStat & { index: number }) {
+  const splitHeading = (text: string) => {
+    const parts = text.trim().split(' ')
+    if (parts.length <= 1) {
+      return { lead: '', tail: text }
+    }
+    const tail = parts.pop() as string
+    return { lead: parts.join(' '), tail }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -71,7 +80,15 @@ function FeatureCard({
       </div>
 
       <h3 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white sm:text-3xl">
-        {title}
+        {(() => {
+          const { lead, tail } = splitHeading(title)
+          return (
+            <>
+              {lead && <span className="heading-solid">{lead} </span>}
+              <span className="gradient-text">{tail}</span>
+            </>
+          )
+        })()}
       </h3>
       <p className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400 sm:text-base">
         {subtitle}

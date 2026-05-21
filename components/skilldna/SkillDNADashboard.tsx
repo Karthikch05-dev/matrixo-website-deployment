@@ -144,7 +144,7 @@ export default function SkillDNADashboard({
             {/* Dynamic Score Badge */}
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                <div className="text-4xl md:text-5xl font-black gradient-text">
                   {realisticScores.dynamicSkillScore}
                 </div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">

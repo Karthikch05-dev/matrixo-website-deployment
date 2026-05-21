@@ -30,6 +30,15 @@ interface LearningPath {
   xpReward: number
 }
 
+const splitHeading = (text: string) => {
+  const words = text.trim().split(' ')
+  if (words.length <= 1) {
+    return { lead: '', tail: text }
+  }
+  const tail = words.pop() || ''
+  return { lead: words.join(' '), tail }
+}
+
 const learningPaths: LearningPath[] = [
   {
     id: 'web-dev',
@@ -168,8 +177,9 @@ export default function GrowGrid() {
             <FaRocket className="animate-bounce" />
             <span className="font-bold">GrowGrid™ Learning Paths</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            Your Adaptive Learning Journey
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <span className="heading-solid">Your Adaptive Learning</span>{' '}
+            <span className="gradient-text">Journey</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Personalized micro-modules that adapt to your pace and style
@@ -237,10 +247,14 @@ export default function GrowGrid() {
 
         {/* Learning Paths Selection */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Choose Your Path</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <span className="heading-solid">Choose Your</span>{' '}
+            <span className="gradient-text">Path</span>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {learningPaths.map((path, index) => {
               const Icon = path.icon
+              const { lead: pathLead, tail: pathTail } = splitHeading(path.name)
               const progress = (path.completedModules / path.totalModules) * 100
               
               return (
@@ -259,7 +273,11 @@ export default function GrowGrid() {
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${path.color} flex items-center justify-center text-white text-2xl mb-4`}>
                     <Icon />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{path.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {pathLead && <span className="heading-solid">{pathLead}</span>}
+                    {pathLead && ' '}
+                    <span className="gradient-text">{pathTail}</span>
+                  </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{path.description}</p>
                   
                   <div className="space-y-2">
@@ -289,12 +307,22 @@ export default function GrowGrid() {
           className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            {currentPath.name} Modules
+            {(() => {
+              const { lead, tail } = splitHeading(`${currentPath.name} Modules`)
+              return (
+                <>
+                  {lead && <span className="heading-solid">{lead}</span>}
+                  {lead && ' '}
+                  <span className="gradient-text">{tail}</span>
+                </>
+              )
+            })()}
           </h2>
 
           <div className="space-y-4">
             {sampleModules.map((module, index) => {
               const Icon = module.icon
+              const { lead: moduleLead, tail: moduleTail } = splitHeading(module.title)
               
               return (
                 <motion.div
@@ -324,7 +352,11 @@ export default function GrowGrid() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{module.title}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                            {moduleLead && <span className="heading-solid">{moduleLead}</span>}
+                            {moduleLead && ' '}
+                            <span className="gradient-text">{moduleTail}</span>
+                          </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">{module.description}</p>
                         </div>
                         {!module.locked && !module.completed && (

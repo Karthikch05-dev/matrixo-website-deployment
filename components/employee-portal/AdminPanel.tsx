@@ -187,7 +187,7 @@ function EmployeeProfileModal({
             <Spinner size="sm" />
           ) : (
             <>
-              <div className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-cyan-400 bg-clip-text text-transparent">
+              <div className="text-3xl font-bold gradient-text">
                 {stats.attendancePercentage.toFixed(1)}%
               </div>
               <p className="text-xs text-neutral-400 mt-1">Attendance Rate</p>

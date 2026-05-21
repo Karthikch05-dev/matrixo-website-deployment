@@ -181,10 +181,10 @@ function DefaultEventDetail({ event }: { event: any }) {
                 </span>
               </div>
             )}
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-red-800 dark:text-white mb-4 drop-shadow-lg">
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-red-800 dark:text-white mb-4">
               {event.title}
             </h1>
-            <p className="text-2xl text-gray-800 dark:text-gray-200 font-medium mb-6 drop-shadow-md">
+            <p className="text-2xl text-gray-800 dark:text-gray-200 font-medium mb-6">
               {event.tagline}
             </p>
             <div className="flex flex-wrap gap-4 text-gray-900 dark:text-white">
@@ -627,7 +627,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                     <div className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/30 dark:via-orange-900/30 dark:to-yellow-900/30 border-2 border-red-500 rounded-xl p-6 text-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
                       <div className="text-5xl mb-3 animate-celebrate">🎉</div>
-                      <h3 className="text-3xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-3">
+                      <h3 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-3">
                         SOLD OUT!
                       </h3>
                       <p className="text-base text-gray-700 dark:text-gray-300 mb-2 font-semibold">

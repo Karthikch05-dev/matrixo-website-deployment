@@ -127,7 +127,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(0,200,255,0.5)]">
+              <span className="gradient-text">
                 VibeCode
               </span>
               <span className="text-white"> IRL</span>
@@ -399,7 +399,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <div className="mb-8">
               <div className="flex items-center justify-center gap-4 mb-2">
                 <span className="text-2xl text-gray-500 line-through">₹99</span>
-                <span className="text-5xl md:text-6xl font-black text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">
+                <span className="text-5xl md:text-6xl font-black gradient-text">
                   ₹69
                 </span>
               </div>

@@ -162,6 +162,15 @@ function getInitials(name: string): string {
 }
 
 export default function TeamContent() {
+  const splitHeading = (text: string) => {
+    const parts = text.trim().split(' ')
+    if (parts.length <= 1) {
+      return { lead: '', tail: text }
+    }
+    const tail = parts.pop() as string
+    return { lead: parts.join(' '), tail }
+  }
+
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [imageErrorMap, setImageErrorMap] = useState<Record<string, boolean>>({})
@@ -244,7 +253,8 @@ export default function TeamContent() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Meet Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Team</span>
+              <span className="heading-solid">Meet Our</span>{' '}
+              <span className="gradient-text">Team</span>
             </h1>
             <p className="text-2xl text-gray-600 dark:text-gray-300">
               The passionate individuals building the future of technical education
@@ -307,8 +317,16 @@ export default function TeamContent() {
                     <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
                       {member.name}
                     </h3>
-                    <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium mb-2">
-                      {getDisplayRole(member)}
+                    <p className="font-medium mb-2">
+                      {(() => {
+                        const { lead, tail } = splitHeading(getDisplayRole(member))
+                        return (
+                          <>
+                            {lead && <span className="heading-solid">{lead} </span>}
+                            <span className="gradient-text">{tail}</span>
+                          </>
+                        )
+                      })()}
                     </p>
                     {member.department && (
                       <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
@@ -371,8 +389,9 @@ export default function TeamContent() {
             viewport={{ once: true }}
             className="text-center glass-card p-12 max-w-3xl mx-auto"
           >
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6 gradient-text">
-              Want to Join Our Team?
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+              <span className="heading-solid">Want to Join Our</span>{' '}
+              <span className="gradient-text">Team?</span>
             </h2>
             <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
               We&apos;re always looking for talented individuals who share our passion for education and technology.

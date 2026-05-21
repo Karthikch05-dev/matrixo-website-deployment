@@ -5,7 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaMoon, FaSun, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
+import { FaBars, FaTimes, FaChevronDown, FaUser, FaSignOutAlt, FaIdBadge } from 'react-icons/fa'
+import { FaSun, FaMoon } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useProfile } from '@/lib/ProfileContext'
@@ -94,19 +95,17 @@ export default function Navbar() {
     setDarkMode(isDark)
   }, [mounted])
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
+  useEffect(() => {
+    if (!mounted) return
 
-    if (newDarkMode) {
+    if (darkMode) {
       document.documentElement.classList.add('dark')
       localStorage.setItem('theme', 'dark')
     } else {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('theme', 'light')
     }
-
-    setDarkMode(newDarkMode)
-  }
+  }, [darkMode, mounted])
 
   const handleLogout = async () => {
     try {
@@ -165,7 +164,7 @@ export default function Navbar() {
                 <motion.span
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full animate-pulse"
+                  className="px-2 py-0.5 text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-full"
                 >
                   BETA
                 </motion.span>
@@ -280,38 +279,20 @@ export default function Navbar() {
           {/* Desktop / Tablet Actions */}
           <div className="hidden md:flex items-center gap-4 whitespace-nowrap flex-shrink-0">
             {mounted && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={toggleDarkMode}
-                className="relative p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 
-                         hover:scale-105 transition-all duration-300 ease-out flex-shrink-0"
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white shadow-sm text-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-yellow-400 dark:hover:bg-white/10"
                 aria-label="Toggle dark mode"
               >
-                <AnimatePresence mode="wait">
-                  {darkMode ? (
-                    <motion.div
-                      key="sun"
-                      initial={{ rotate: -45, opacity: 0, scale: 0.8 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: 45, opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                    >
-                      <FaSun className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="moon"
-                      initial={{ rotate: 45, opacity: 0, scale: 0.8 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: -45, opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                    >
-                      <FaMoon className="w-5 h-5" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+                {darkMode ? (
+                  <FaSun
+                    size={18}
+                    className="text-yellow-400"
+                  />
+                ) : (
+                  <FaMoon size={18} className="text-gray-800" />
+                )}
+              </button>
             )}
 
             {/* User Profile or Login Button */}
@@ -415,11 +396,18 @@ export default function Navbar() {
           <div className="flex md:hidden items-center gap-x-3 flex-shrink-0">
             {mounted && (
               <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-full glass-card-thin text-gray-700 dark:text-gray-300 flex-shrink-0"
+                onClick={() => setDarkMode(!darkMode)}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white shadow-sm text-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-yellow-400 dark:hover:bg-white/10"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? <FaSun className="w-5 h-5" /> : <FaMoon className="w-5 h-5" />}
+                {darkMode ? (
+                  <FaSun
+                    size={18}
+                    className="text-yellow-400"
+                  />
+                ) : (
+                  <FaMoon size={18} className="text-gray-800" />
+                )}
               </button>
             )}
 

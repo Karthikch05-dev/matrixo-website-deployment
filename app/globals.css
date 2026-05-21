@@ -92,9 +92,25 @@
 }
 
 @layer components {
-  /* iOS 26 Liquid Glass gradient text */
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400;
+  /* Premium navy-to-royal gradient text */
+  .gradient-text,
+  .premium-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      90deg,
+      #0f172a 0%,
+      #1e3a8a 55%,
+      #2563eb 100%
+    );
+  }
+
+  .dark .gradient-text,
+  .dark .premium-gradient {
+    filter: brightness(1.12);
+  }
+
+  .heading-solid {
+    @apply text-slate-900 dark:text-white;
   }
 
   /* iOS 26 Liquid Glass Card — the core glass material */
@@ -169,7 +185,7 @@
   }
 
   .dark .feature-card-icon svg {
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.18));
+    filter: none;
   }
 
   .feature-card-icon svg {
@@ -278,7 +294,6 @@
     width: 0%;
     height: 2px;
     background: linear-gradient(90deg, #5f84a2, #91aec4);
-    box-shadow: 0 0 8px rgba(145, 174, 196, 0.6);
     transform: translateX(-50%);
     transition: width 0.35s ease;
   }
@@ -342,7 +357,7 @@
 
   .hero-cta:hover {
     transform: scale(1.03);
-    box-shadow: 0 0 25px rgba(145, 174, 196, 0.5);
+    box-shadow: var(--glass-shadow-elevated);
     color: #f8fafc;
   }
 
@@ -532,11 +547,11 @@
 
 @layer utilities {
   .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
   }
 
   .text-shadow-lg {
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-shadow: none;
   }
 
   .hover-lift {
@@ -551,7 +566,7 @@
     @apply transition-all duration-300;
   }
   .hover-glow:hover {
-    box-shadow: 0 8px 40px rgba(59, 130, 246, 0.08), 0 2px 12px rgba(139, 92, 246, 0.06), var(--glass-specular);
+    box-shadow: none;
   }
 
   .animate-pulse-slow {
