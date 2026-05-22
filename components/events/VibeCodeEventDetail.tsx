@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { storeRedirectAfterLogin } from '@/lib/authRedirect'
+import HeadingHighlight from '@/components/HeadingHighlight'
 // @ts-ignore - Import error is a VS Code cache issue, file exists
 import VibeCodeRegistrationForm from './VibeCodeRegistrationForm'
 
@@ -127,10 +128,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
-              <span className="gradient-text">
-                VibeCode
-              </span>
-              <span className="text-white"> IRL</span>
+              <HeadingHighlight text="VibeCode IRL" solidClassName="text-white" />
             </h1>
 
             {/* Tagline */}
@@ -209,7 +207,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              What is <span className="text-cyan-400">VibeCode IRL</span>?
+              <HeadingHighlight text="What is VibeCode IRL?" highlightWords={2} solidClassName="text-white" />
             </h2>
             
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
@@ -257,7 +255,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Why <span className="text-cyan-400">Join</span>?
+              <HeadingHighlight text="Why Join?" solidClassName="text-white" />
             </h2>
             <p className="text-gray-400 text-lg">More than just code. Real value.</p>
           </motion.div>
@@ -276,7 +274,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaCertificate className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Certificates</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                <HeadingHighlight text="Certificates" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400 text-sm">
                 All participants receive physical certificates of participation from matriXO (distributed at the venue).
               </p>
@@ -295,7 +295,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaTrophy className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Hands-On Learning</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                <HeadingHighlight text="Hands-On Learning" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400 text-sm">
                 Practical workshop with real coding exercises. Learn by doing, not just watching.
               </p>
@@ -314,7 +316,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaNetworkWired className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Industry Exposure</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                <HeadingHighlight text="Industry Exposure" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400 text-sm">
                 Connect with tech mentors, get feedback, and expand your network.
               </p>
@@ -333,7 +337,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Event <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
+              <HeadingHighlight text="Event Schedule" />
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. Feb 12 & 13. Choose your day!</p>
           </motion.div>
@@ -350,7 +354,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 <FaClock className="text-2xl text-cyan-500 dark:text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Full Day Event</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <HeadingHighlight text="Full Day Event" />
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400">Workshop, Quiz, Competition & Certificates</p>
               </div>
             </div>
@@ -384,7 +390,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Pricing & <span className="text-cyan-400">Registration</span>
+              <HeadingHighlight text="Pricing & Registration" solidClassName="text-white" />
             </h2>
           </motion.div>
 
@@ -414,28 +420,36 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Individual Registration</h4>
+                  <h4 className="text-white font-semibold">
+                    <HeadingHighlight text="Individual Registration" solidClassName="text-white" />
+                  </h4>
                   <p className="text-gray-400 text-sm">Each person registers individually. No team required.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Full-Day Event Access</h4>
+                  <h4 className="text-white font-semibold">
+                    <HeadingHighlight text="Full-Day Event Access" solidClassName="text-white" />
+                  </h4>
                   <p className="text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Physical Certificate Included</h4>
+                  <h4 className="text-white font-semibold">
+                    <HeadingHighlight text="Physical Certificate Included" solidClassName="text-white" />
+                  </h4>
                   <p className="text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="text-white font-semibold">Limited Seats</h4>
+                  <h4 className="text-white font-semibold">
+                    <HeadingHighlight text="Limited Seats" solidClassName="text-white" />
+                  </h4>
                   <p className="text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
                 </div>
               </div>
@@ -466,7 +480,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Registration <span className="text-cyan-400">Fields</span>
+              <HeadingHighlight text="Registration Fields" solidClassName="text-white" />
             </h2>
             <p className="text-gray-400 text-lg">What you'll need to register</p>
           </motion.div>
@@ -515,7 +529,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Secure <span className="text-cyan-400">Payment</span>
+              <HeadingHighlight text="Secure Payment" solidClassName="text-white" />
             </h2>
           </motion.div>
 
@@ -528,7 +542,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <FaRupeeSign className="text-3xl text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Secure UPI Payment</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">
+              <HeadingHighlight text="Secure UPI Payment" solidClassName="text-white" />
+            </h3>
             <p className="text-gray-400 mb-6 max-w-lg mx-auto">
               All payments are completed via UPI. After submitting the registration form, you'll be redirected 
               to your UPI app to complete payment. Payment confirmation is mandatory to secure your spot.
@@ -550,7 +566,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              What You'll <span className="text-cyan-400">Get</span>
+              <HeadingHighlight text="What You'll Get" solidClassName="text-white" />
             </h2>
           </motion.div>
 
@@ -563,7 +579,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaCertificate className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Participation Certificate</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                <HeadingHighlight text="Participation Certificate" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400">Physical certificate for everyone who participated</p>
             </motion.div>
 
@@ -575,7 +593,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaGift className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Swags</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                <HeadingHighlight text="Swags" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400">Exciting swags for top 3 quiz competition winners</p>
             </motion.div>
 
@@ -587,7 +607,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaTrophy className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Merit Certificate</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                <HeadingHighlight text="Merit Certificate" solidClassName="text-white" />
+              </h3>
               <p className="text-gray-400">Special merit certificates for top 3 competition winners</p>
             </motion.div>
           </div>
@@ -604,7 +626,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Venue & <span className="text-cyan-400">Location</span>
+              <HeadingHighlight text="Venue & Location" solidClassName="text-white" />
             </h2>
           </motion.div>
 
@@ -620,7 +642,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                   <FaMapMarkerAlt className="text-2xl text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-2">Auditorium, D-Block</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    <HeadingHighlight text="Auditorium, D-Block" solidClassName="text-white" />
+                  </h3>
                   <p className="text-gray-300 mb-1">Kommuri Pratap Reddy Institute of Technology (KPRIT)</p>
                   <p className="text-gray-400">Ghatkesar, Hyderabad, Telangana</p>
                   <a 
@@ -664,7 +688,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Frequently Asked <span className="text-cyan-400">Questions</span>
+              <HeadingHighlight text="Frequently Asked Questions" solidClassName="text-white" />
             </h2>
           </motion.div>
 
@@ -724,7 +748,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             </div>
 
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Ready to <span className="text-cyan-400">Learn & Level Up</span>?
+              <HeadingHighlight text="Ready to Learn & Level Up?" highlightWords={4} solidClassName="text-white" />
             </h2>
 
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">

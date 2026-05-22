@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { FaBrain, FaChartLine, FaCode, FaPalette, FaMicrophone, FaRocket, FaTrophy, FaFire } from 'react-icons/fa'
 import { useState } from 'react'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface SkillGenomeProps {
   data: Record<number, string>
@@ -55,8 +56,8 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
             <FaTrophy className="animate-bounce" />
             <span className="font-bold">Your SkillDNA™ Results</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
-            Your Learning Genome Mapped
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <HeadingHighlight text="Your Learning Genome Mapped" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Based on cutting-edge AI analysis, here's your personalized skill profile
@@ -125,7 +126,7 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
           className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-12 mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-            Your Skill DNA Map
+            <HeadingHighlight text="Your Skill DNA Map" />
           </h2>
 
           <div className="space-y-6">
@@ -187,7 +188,9 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
           transition={{ delay: 0.9 }}
           className="bg-gradient-to-br from-purple-500 to-blue-500 rounded-3xl shadow-2xl p-8 md:p-12 text-white text-center"
         >
-          <h2 className="text-3xl font-bold mb-4">Your Personalized Learning Path</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            <HeadingHighlight text="Your Personalized Learning Path" solidClassName="text-white" />
+          </h2>
           <p className="text-lg text-white/90 mb-6">
             Based on your SkillDNA™, we've curated the perfect learning journey for you
           </p>

@@ -19,6 +19,7 @@ import OverviewPanel from './OverviewPanel';
 import StudentIntelligence from './StudentIntelligence';
 import DepartmentAnalytics from './DepartmentAnalytics';
 import PlacementReadiness from './PlacementReadiness';
+import HeadingHighlight from '@/components/HeadingHighlight';
 
 const tabs: { key: DashboardTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'overview', label: 'Overview', icon: FaEye },
@@ -78,8 +79,8 @@ export default function ImpactVault() {
                   <FaChartLine className="animate-pulse" />
                   <span className="font-bold">ImpactVault™ Analytics</span>
                 </div>
-                <h1 className="text-3xl md:text-5xl font-bold gradient-text">
-                  Institutional Dashboard
+                <h1 className="text-3xl md:text-5xl font-bold">
+                  <HeadingHighlight text="Institutional Dashboard" />
                 </h1>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
                   <p className="text-gray-600 dark:text-gray-400">

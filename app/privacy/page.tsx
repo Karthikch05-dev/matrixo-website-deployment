@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - matriXO',
@@ -16,8 +17,8 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen pt-20 pb-20 bg-transparent">
       <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
-          Privacy Policy
+        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8">
+          <HeadingHighlight text="Privacy Policy" />
         </h1>
         <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
           <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: October 9, 2025</p>

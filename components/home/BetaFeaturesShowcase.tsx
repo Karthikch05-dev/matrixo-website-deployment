@@ -3,6 +3,7 @@
 import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
+import HeadingHighlight from '@/components/HeadingHighlight'
 import {
   HiOutlineChartBarSquare,
   HiOutlineCubeTransparent,
@@ -119,8 +120,12 @@ const FeatureNavButton = memo(function FeatureNavButton({
           : 'border-transparent opacity-70 hover:opacity-100 hover:bg-white/40 dark:hover:bg-white/[0.04]'
       }`}
     >
-      <div className={`font-bold ${isActive ? 'gradient-text' : 'text-gray-500 dark:text-gray-400'}`}>
-        {feature.title}
+      <div className={`font-bold ${isActive ? '' : 'text-gray-500 dark:text-gray-400'}`}>
+        {isActive ? (
+          <HeadingHighlight text={feature.title} solidClassName="text-gray-900 dark:text-white" />
+        ) : (
+          feature.title
+        )}
       </div>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
     </button>
@@ -154,15 +159,6 @@ export default function BetaFeaturesShowcase() {
   const [mounted, setMounted] = useState(false)
   const [isBeta, setIsBeta] = useState(false)
 
-  const splitHeading = (text: string) => {
-    const parts = text.trim().split(' ')
-    if (parts.length <= 1) {
-      return { lead: '', tail: text }
-    }
-    const tail = parts.pop() as string
-    return { lead: parts.join(' '), tail }
-  }
-
   useEffect(() => {
     setMounted(true)
     const hostname = window.location.hostname
@@ -185,8 +181,7 @@ export default function BetaFeaturesShowcase() {
           className="text-center mb-12 lg:mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            <span className="heading-solid">Explore</span>{' '}
-            <span className="gradient-text">New Features</span>
+            <HeadingHighlight text="Explore New Features" highlightWords={2} />
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Explore our latest features and discover powerful tools designed to enhance your experience.
@@ -222,15 +217,7 @@ export default function BetaFeaturesShowcase() {
                   <ActiveIcon className={`h-7 w-7 ${activeFeature.content.iconClassName}`} />
                 </div>
                 <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                  {(() => {
-                    const { lead, tail } = splitHeading(activeFeature.title)
-                    return (
-                      <>
-                        {lead && <span className="heading-solid">{lead} </span>}
-                        <span className="gradient-text">{tail}</span>
-                      </>
-                    )
-                  })()}
+                  <HeadingHighlight text={activeFeature.title} />
                 </h3>
                 <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
                   {activeFeature.description}
@@ -274,15 +261,7 @@ export default function BetaFeaturesShowcase() {
                 <ActiveIcon className={`h-7 w-7 ${activeFeature.content.iconClassName}`} />
               </div>
               <h3 className="mb-4 text-3xl font-display font-bold lg:text-4xl">
-                {(() => {
-                  const { lead, tail } = splitHeading(activeFeature.title)
-                  return (
-                    <>
-                      {lead && <span className="heading-solid">{lead} </span>}
-                      <span className="gradient-text">{tail}</span>
-                    </>
-                  )
-                })()}
+                <HeadingHighlight text={activeFeature.title} />
               </h3>
               <p className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
                 {activeFeature.description}

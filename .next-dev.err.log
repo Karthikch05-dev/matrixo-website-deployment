@@ -1,2 +1,1 @@
- ⚠ Port 3000 is in use, trying 3001 instead.
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'F:\matriXO\matrixo-website-deployment-beta\.next\cache\webpack\client-development\3.pack.gz_' -> 'F:\matriXO\matrixo-website-deployment-beta\.next\cache\webpack\client-development\3.pack.gz'
+ ⚠ Fast Refresh had to perform a full reload.

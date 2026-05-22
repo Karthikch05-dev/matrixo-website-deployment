@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { FaHome, FaRocket, FaCompass, FaBug } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 export default function NotFound() {
   return (
@@ -20,9 +21,7 @@ export default function NotFound() {
           
           {/* 404 Text */}
           <h1 className="relative text-[150px] md:text-[250px] font-black leading-none">
-            <span className="gradient-text">
-              404
-            </span>
+            <HeadingHighlight text="404" />
           </h1>
         </motion.div>
 
@@ -34,7 +33,7 @@ export default function NotFound() {
           className="mb-8 space-y-4"
         >
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Oops! Page Not Found
+            <HeadingHighlight text="Oops! Page Not Found" />
           </h2>
           
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -141,19 +140,25 @@ export default function NotFound() {
         >
           <div className="glass-card p-6 hover-lift">
             <div className="text-3xl mb-3">🏠</div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Go Home</h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+              <HeadingHighlight text="Go Home" />
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Start fresh from the homepage</p>
           </div>
 
           <div className="glass-card p-6 hover-lift">
             <div className="text-3xl mb-3">🎯</div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Find Events</h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+              <HeadingHighlight text="Find Events" />
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Discover amazing workshops</p>
           </div>
 
           <div className="glass-card p-6 hover-lift">
             <div className="text-3xl mb-3">📧</div>
-            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Get Support</h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+              <HeadingHighlight text="Get Support" />
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">We're here to help you</p>
           </div>
         </motion.div>

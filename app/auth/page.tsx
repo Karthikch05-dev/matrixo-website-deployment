@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { consumeRedirectAfterLogin, syncLegacyReturnUrl } from '@/lib/authRedirect'
 import { toast } from 'sonner'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 type AuthStep = 'form' | 'otp'
 
@@ -271,11 +272,10 @@ export default function AuthPage() {
             <div className="space-y-4">
               <div>
                 <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
-                  <span className="gradient-text">Experience</span>
+                  <HeadingHighlight text="Experience" />
                 </h1>
                 <h2 className="text-5xl font-bold pb-1 leading-tight">
-                  <span className="heading-solid">Personalized</span>{' '}
-                  <span className="gradient-text">Learning</span>
+                  <HeadingHighlight text="Personalized Learning" />
                 </h2>
               </div>
               <p className="text-2xl font-light text-gray-600 dark:text-gray-300">
@@ -290,8 +290,7 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    <span className="heading-solid">Enterprise</span>{' '}
-                    <span className="gradient-text">Security</span>
+                    <HeadingHighlight text="Enterprise Security" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">End-to-end encryption & data protection</p>
                 </div>
@@ -303,8 +302,7 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    <span className="heading-solid">Lightning</span>{' '}
-                    <span className="gradient-text">Fast</span>
+                    <HeadingHighlight text="Lightning Fast" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">Instant access to all platform features</p>
                 </div>
@@ -316,8 +314,7 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    <span className="heading-solid">Privacy</span>{' '}
-                    <span className="gradient-text">First</span>
+                    <HeadingHighlight text="Privacy First" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">Your data, your control, always</p>
                 </div>
@@ -363,8 +360,7 @@ export default function AuthPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                      <span className="heading-solid">Welcome</span>{' '}
-                      <span className="gradient-text">back!</span>
+                      <HeadingHighlight text="Welcome back!" />
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
                       You&apos;re already signed in as
@@ -437,8 +433,7 @@ export default function AuthPage() {
                       <FaEnvelope className="text-2xl text-purple-400" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      <span className="heading-solid">Verify Your</span>{' '}
-                      <span className="gradient-text">Email</span>
+                      <HeadingHighlight text="Verify Your Email" />
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       We&apos;ve sent a 6-digit verification code to

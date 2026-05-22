@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 const partners = [
   { name: 'Smartzy Edu Pvt. Ltd.', logo: '/logos/smartzy.png' },
@@ -27,8 +28,7 @@ export default function Partners({ hideLogos = false }: PartnersProps) {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            <span className="heading-solid">Trusted</span>{' '}
-            <span className="gradient-text">By</span>
+            <HeadingHighlight text="Trusted By" />
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Partnering with leading educational institutions and event organizers across India.
@@ -74,8 +74,7 @@ export default function Partners({ hideLogos = false }: PartnersProps) {
           className="mt-16 text-center glass-card p-8"
         >
             <h3 className="text-2xl font-bold mb-4">
-              <span className="heading-solid">Interested in Partnering with</span>{' '}
-              <span className="gradient-text">Us?</span>
+              <HeadingHighlight text="Interested in Partnering with Us?" />
             </h3>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
             Join our growing network of educational institutions and event organizers

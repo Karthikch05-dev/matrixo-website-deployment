@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useSearchParams } from 'next/navigation'
 import { FaBug, FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 const serviceSubjectOptions = [
   'Technical Workshops',
@@ -154,7 +155,9 @@ export default function ContactContent() {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
                 className="relative w-full h-auto space-y-4 rounded-2xl border border-white/10 bg-[#0a0f2c]/55 px-6 pb-5 pt-6 shadow-[0_22px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl"
               >
-                <h2 className="mb-1.5 text-2xl font-semibold text-white">Let's Connect</h2>
+                <h2 className="mb-1.5 text-2xl font-semibold text-white">
+                  <HeadingHighlight text="Let's Connect" solidClassName="text-white" />
+                </h2>
 
                 <form onSubmit={handleSubmit} className="w-full space-y-3 pb-3">
                   <div>
@@ -259,10 +262,7 @@ export default function ContactContent() {
             <div className="space-y-5">
               <div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] tracking-tight">
-                  We're Here
-                  <span className="block gradient-text">
-                    To Help You
-                  </span>
+                  <HeadingHighlight text="We're Here To Help You" highlightWords={3} solidClassName="text-white" />
                 </h1>
                 <div className="mt-4 h-px w-24 bg-gradient-to-r from-blue-400/80 via-blue-300/40 to-transparent shadow-[0_0_16px_rgba(96,165,250,0.4)]" />
               </div>

@@ -2,19 +2,11 @@
 
 import { motion } from 'framer-motion'
 import { HiOutlineBriefcase, HiOutlineCodeBracketSquare, HiOutlineUserGroup } from 'react-icons/hi2'
+import HeadingHighlight from '@/components/HeadingHighlight'
 import Features from '@/components/home/Features'
 import Partners from '@/components/home/Partners'
 
 export default function About() {
-  const splitHeading = (text: string) => {
-    const parts = text.trim().split(' ')
-    if (parts.length <= 1) {
-      return { lead: '', tail: text }
-    }
-    const tail = parts.pop() as string
-    return { lead: parts.join(' '), tail }
-  }
-
   return (
     <>
       <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
@@ -26,8 +18,7 @@ export default function About() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              <span className="heading-solid">Who We</span>{' '}
-              <span className="gradient-text">Are</span>
+              <HeadingHighlight text="Who We Are" />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               matriXO is an MSME-registered ed-tech startup building the future of skill
@@ -69,15 +60,7 @@ export default function About() {
                   <item.icon className={`h-7 w-7 ${item.iconClassName}`} />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-                  {(() => {
-                    const { lead, tail } = splitHeading(item.title)
-                    return (
-                      <>
-                        {lead && <span className="heading-solid">{lead} </span>}
-                        <span className="gradient-text">{tail}</span>
-                      </>
-                    )
-                  })()}
+                  <HeadingHighlight text={item.title} />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                   {item.description}

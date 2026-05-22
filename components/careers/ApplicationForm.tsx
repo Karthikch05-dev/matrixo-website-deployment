@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import PositionClosed from './PositionClosed'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 // ============================================
 // TYPES
@@ -675,7 +676,9 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center max-w-md mx-auto">
           <FaCheckCircle className="text-6xl text-green-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Application Submitted!</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <HeadingHighlight text="Application Submitted!" />
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
             Thank you for applying for <strong>{role.title}</strong>. We&apos;ll review your application and get back to you via email.
           </p>
@@ -700,7 +703,9 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             <div className="glass-card overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-cyan-600 to-blue-700 p-6 sm:p-8">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3">{role.title}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3">
+                  <HeadingHighlight text={role.title} solidClassName="text-white" />
+                </h1>
                 <div className="flex flex-wrap gap-3 text-cyan-100 text-sm">
                   <span className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full"><FaUsers className="text-xs" /> {role.team}</span>
                   <span className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full"><FaMapMarkerAlt className="text-xs" /> {role.location}</span>
@@ -711,13 +716,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
               {/* Details */}
               <div className="p-6 sm:p-8 space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">About This Role</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                    <HeadingHighlight text="About This Role" />
+                  </h3>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{role.description}</p>
                 </div>
 
                 {role.responsibilities && role.responsibilities.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Responsibilities</h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                      <HeadingHighlight text="Responsibilities" />
+                    </h3>
                     <ul className="space-y-2">
                       {role.responsibilities.map((resp, i) => (
                         <li key={i} className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
@@ -731,7 +740,9 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
                 {role.eligibility && role.eligibility.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Requirements & Eligibility</h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                      <HeadingHighlight text="Requirements & Eligibility" />
+                    </h3>
                     <ul className="space-y-2">
                       {role.eligibility.map((elig, i) => (
                         <li key={i} className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
@@ -764,7 +775,9 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
           <AnimatePresence>
             {showForm && (
               <motion.div ref={formRef} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.4 }} className="glass-card p-6 sm:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Application Form</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <HeadingHighlight text="Application Form" />
+                </h2>
                 <p className="text-gray-500 dark:text-neutral-400 text-sm mb-6">
                   Fill in your details below to apply for <strong className="text-gray-700 dark:text-neutral-200">{role.title}</strong>
                 </p>

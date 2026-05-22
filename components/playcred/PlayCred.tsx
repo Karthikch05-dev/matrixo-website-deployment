@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTrophy, FaMedal, FaStar, FaAward, FaShieldAlt, FaDownload, FaShareAlt, FaLink, FaCheckCircle, FaCertificate } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Badge {
   id: string
@@ -126,8 +127,8 @@ export default function PlayCred() {
             <FaTrophy className="animate-bounce" />
             <span className="font-bold">PlayCred™ Digital Credentials</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
-            Your Verified Achievements
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <HeadingHighlight text="Your Verified Achievements" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Blockchain-verified badges that showcase your skills to the world
@@ -242,7 +243,7 @@ export default function PlayCred() {
 
                 {/* Badge Info */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
-                  {badge.name}
+                  <HeadingHighlight text={badge.name} />
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
                   {badge.description}
@@ -282,7 +283,7 @@ export default function PlayCred() {
                     </div>
                     <div>
                       <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                        {selectedBadge.name}
+                        <HeadingHighlight text={selectedBadge.name} />
                       </h2>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         selectedBadge.rarity === 'legendary' ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' :

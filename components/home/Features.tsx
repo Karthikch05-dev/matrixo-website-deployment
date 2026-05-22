@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import HeadingHighlight from '@/components/HeadingHighlight'
 import {
   HiOutlineAcademicCap,
   HiOutlineBriefcase,
@@ -57,15 +58,6 @@ const features = [
 ]
 
 export default function Features() {
-  const splitHeading = (text: string) => {
-    const parts = text.trim().split(' ')
-    if (parts.length <= 1) {
-      return { lead: '', tail: text }
-    }
-    const tail = parts.pop() as string
-    return { lead: parts.join(' '), tail }
-  }
-
   return (
     <section className="section-padding bg-transparent">
       <div className="container-custom">
@@ -76,8 +68,7 @@ export default function Features() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-            <span className="heading-solid">What We</span>{' '}
-            <span className="gradient-text">Offer</span>
+            <HeadingHighlight text="What We Offer" />
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Comprehensive technical training programs designed to build
@@ -106,15 +97,7 @@ export default function Features() {
                     </div>
 
                     <h3 className="relative mb-3 text-xl font-bold text-slate-800 dark:text-white">
-                      {(() => {
-                        const { lead, tail } = splitHeading(feature.title)
-                        return (
-                          <>
-                            {lead && <span className="heading-solid">{lead} </span>}
-                            <span className="gradient-text">{tail}</span>
-                          </>
-                        )
-                      })()}
+                      <HeadingHighlight text={feature.title} />
                     </h3>
                     <p className="relative text-[15px] leading-7 text-gray-600 dark:text-gray-400">
                       {feature.description}
