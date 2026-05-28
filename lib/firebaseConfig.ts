@@ -14,15 +14,19 @@ type FirebaseBaseEnvKey =
 
 type FirebaseEnvKey = FirebaseBaseEnvKey | `${FirebaseBaseEnvKey}_BETA` | `${FirebaseBaseEnvKey}_MAIN`;
 
+// IMPORTANT: Do not hardcode any Firebase keys here.
+// Hardcoded API keys can be suspended/compromised and will silently break sign-in in production.
+// Provide values via NEXT_PUBLIC_FIREBASE_* env vars instead.
 const fallbackFirebaseConfig = {
-  apiKey: 'AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ',
-  authDomain: 'matrixo-in-auth.firebaseapp.com',
-  projectId: 'matrixo-in-auth',
-  storageBucket: 'matrixo-in-auth.firebasestorage.app',
-  messagingSenderId: '431287252568',
-  appId: '1:431287252568:web:0bdc2975d8951203bf7c2d',
-  measurementId: 'G-J18MTSRX3K'
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: '',
+  measurementId: ''
 } as const;
+
 
 const stripSurroundingQuotes = (value: string) => {
   if (
@@ -127,6 +131,28 @@ const firebaseConfig = {
   appId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_APP_ID', fallbackFirebaseConfig.appId),
   measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', fallbackFirebaseConfig.measurementId)
 };
+
+const requiredFirebaseConfigKeys: Array<keyof typeof firebaseConfig> = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+];
+
+const missingKeys = requiredFirebaseConfigKeys.filter((k) => !firebaseConfig[k]);
+
+if (missingKeys.length > 0) {
+  // Fail fast: without these, Firebase Auth/Google sign-in will not work.
+  // More importantly, we do not want to silently fall back to any hardcoded/suspended keys.
+  // eslint-disable-next-line no-console
+  console.error(
+    `[firebaseConfig] Missing required env vars for Firebase (${missingKeys.join(', ')}). ` +
+      'Set NEXT_PUBLIC_FIREBASE_* env vars (and the *_BETA variants if deploying to beta).'
+  );
+}
+
 
 // Initialize Firebase (avoid re-initialization)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
