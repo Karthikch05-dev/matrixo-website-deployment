@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBrain, FaCode, FaPalette, FaChartLine, FaMicrophone, FaRocket } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Question {
   id: number
@@ -82,8 +83,8 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
             <FaBrain className="animate-pulse" />
             <span className="font-bold">SkillDNA™ Assessment</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            Discover Your Learning Genome
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <HeadingHighlight text="Discover Your Learning Genome" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             Let's map your unique skill DNA in just 3 minutes
@@ -126,7 +127,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
 
               {/* Question */}
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8">
-                {currentQuestion.question}
+                <HeadingHighlight text={currentQuestion.question} />
               </h2>
 
               {/* Options */}
@@ -161,7 +162,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
                 <FaBrain className="text-4xl text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                Analyzing Your SkillDNA™...
+                <HeadingHighlight text="Analyzing Your SkillDNA™..." />
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
                 Mapping your unique learning genome

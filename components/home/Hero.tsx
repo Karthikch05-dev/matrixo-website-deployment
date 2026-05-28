@@ -4,6 +4,7 @@ import type { MouseEvent } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaRocket, FaUniversity } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 export default function Hero() {
   const getEntryDirection = (event: MouseEvent<HTMLButtonElement>) => {
@@ -71,7 +72,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl md:text-3xl lg:text-4xl font-light text-slate-700 dark:text-gray-300 mb-4 max-w-4xl mx-auto"
           >
-            Where AI Meets Your Career Journey
+            <HeadingHighlight text="Where AI Meets Your Career Journey" />
           </motion.p>
 
           {/* Bold tagline */}
@@ -81,7 +82,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-2xl md:text-3xl font-display font-bold text-slate-800 dark:text-white mb-12"
           >
-            Map Your Skills. Grow Smarter. Prove Your Worth.
+            <HeadingHighlight text="Map Your Skills. Grow Smarter. Prove Your Worth." />
           </motion.p>
 
           {/* Description */}

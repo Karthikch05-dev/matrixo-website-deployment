@@ -764,7 +764,7 @@ export default function PublicProfilePage() {
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                     <FaBrain className="text-purple-500" /> AI Persona
                   </h3>
-                  <h4 className="text-lg font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent mb-2">
+                  <h4 className="text-lg font-bold gradient-text mb-2">
                     {skillDNAProfile!.persona.headline}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">{skillDNAProfile!.persona.description}</p>

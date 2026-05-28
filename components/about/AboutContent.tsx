@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { FaGraduationCap, FaLightbulb, FaRocket, FaUsers, FaHeart, FaAward } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 export default function AboutContent() {
   return (
@@ -19,7 +20,7 @@ export default function AboutContent() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              About <span className="gradient-text">matriXO</span>
+              <HeadingHighlight text="About matriXO" />
             </h1>
             <p className="text-2xl text-gray-600 dark:text-gray-300 mb-8">
               Empowering students through technical workshops, hackathons, and career-focused bootcamps
@@ -38,7 +39,7 @@ export default function AboutContent() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl font-display font-bold mb-6">
-                Our <span className="gradient-text">Story</span>
+                <HeadingHighlight text="Our Story" />
               </h2>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                 matriXO is an MSME-registered organization dedicated to bridging the gap between academic learning 
@@ -64,7 +65,9 @@ export default function AboutContent() {
             >
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-4xl font-bold gradient-text mb-4">Why Choose matriXO?</h3>
+                  <h3 className="text-4xl font-bold mb-4">
+                    <HeadingHighlight text="Why Choose matriXO?" />
+                  </h3>
                   <ul className="space-y-4 text-gray-600 dark:text-gray-400 text-lg">
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">✓</span>
@@ -105,7 +108,9 @@ export default function AboutContent() {
               className="glass-card p-8"
             >
               <FaRocket className="text-5xl text-neon-blue mb-6" />
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Our Mission</h2>
+              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+                <HeadingHighlight text="Our Mission" />
+              </h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
                 To empower every student with industry-relevant technical skills through hands-on workshops, 
                 competitive hackathons, and intensive bootcamps. We believe that practical learning, combined 
@@ -122,7 +127,9 @@ export default function AboutContent() {
               className="glass-card p-8"
             >
               <FaLightbulb className="text-5xl text-neon-purple mb-6" />
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Our Vision</h2>
+              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+                <HeadingHighlight text="Our Vision" />
+              </h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
                 To become India's most trusted technical education platform for students, creating a vibrant 
                 ecosystem where learning meets career opportunities. We envision a future where every engineering 
@@ -144,7 +151,7 @@ export default function AboutContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Our <span className="gradient-text">Values</span>
+              <HeadingHighlight text="Our Values" />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               The principles that guide everything we do
@@ -197,7 +204,7 @@ export default function AboutContent() {
                   <value.icon size={28} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
-                  {value.title}
+                  <HeadingHighlight text={value.title} />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   {value.description}
@@ -218,7 +225,7 @@ export default function AboutContent() {
             className="text-center max-w-4xl mx-auto glass-card p-12"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-              Supported by <span className="gradient-text">KPRISE</span>
+              <HeadingHighlight text="Supported by KPRISE" />
             </h2>
             <div className="flex justify-center mb-6">
               <div className="dark:bg-white p-4 rounded-xl">
@@ -245,5 +252,4 @@ export default function AboutContent() {
     </div>
   )
 }
-
 

@@ -9,6 +9,7 @@ import { FaCalendar, FaMapMarkerAlt, FaClock, FaUsers, FaTag } from 'react-icons
 import EventRegistrationForm from './EventRegistrationForm'
 import Confetti from '../Confetti'
 import VibeCodeEventDetail from './VibeCodeEventDetail'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 export default function EventDetail({ event }: { event: any }) {
   // Check if this is a VibeCode event - render dedicated component
@@ -181,10 +182,10 @@ function DefaultEventDetail({ event }: { event: any }) {
                 </span>
               </div>
             )}
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-red-800 dark:text-white mb-4 drop-shadow-lg">
-              {event.title}
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-red-800 dark:text-white mb-4">
+              <HeadingHighlight text={event.title} />
             </h1>
-            <p className="text-2xl text-gray-800 dark:text-gray-200 font-medium mb-6 drop-shadow-md">
+            <p className="text-2xl text-gray-800 dark:text-gray-200 font-medium mb-6">
               {event.tagline}
             </p>
             <div className="flex flex-wrap gap-4 text-gray-900 dark:text-white">
@@ -255,14 +256,14 @@ function DefaultEventDetail({ event }: { event: any }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-600' : 'gradient-text'}`}>
-                  About This Event
+                <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                  <HeadingHighlight text="About This Event" />
                 </h2>
                 
                 {/* Event Title/Theme - Break The Loop */}
                 {isTEDxEvent && event.tagline && (
                   <h3 className="text-3xl md:text-4xl font-bold text-red-700 dark:text-white mb-6">
-                    {event.tagline}
+                    <HeadingHighlight text={event.tagline} />
                   </h3>
                 )}
                 
@@ -278,16 +279,16 @@ function DefaultEventDetail({ event }: { event: any }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.05 }}
                 >
-                  <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-600' : 'gradient-text'}`}>
-                    {event.theme.title}
+                  <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                    <HeadingHighlight text={event.theme.title} />
                   </h2>
                   <div className="grid md:grid-cols-3 gap-6">
                     {event.theme.pillars.map((pillar: any, index: number) => (
                       <div key={index} className={`${isTEDxEvent 
                         ? 'bg-red-50 dark:bg-black/40 border-2 border-red-200 dark:border-red-600/20 rounded-3xl shadow-sm' 
                         : 'glass-card'} p-6 hover-lift`}>
-                        <h3 className={`text-xl font-bold mb-3 ${isTEDxEvent ? 'text-red-700 dark:text-red-500' : 'text-neon-blue'}`}>
-                          {pillar.name}
+                        <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
+                          <HeadingHighlight text={pillar.name} />
                         </h3>
                         <p className={`${isTEDxEvent ? 'text-gray-800 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'}`}>
                           {pillar.description}
@@ -305,8 +306,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.08 }}
                 >
-                  <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : 'gradient-text'}`}>
-                    Event Highlights
+                  <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                    <HeadingHighlight text="Event Highlights" />
                   </h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {event.images.gallery.map((image: string, index: number) => (
@@ -344,15 +345,15 @@ function DefaultEventDetail({ event }: { event: any }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : ''}`}>
-                  Venue
+                <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                  <HeadingHighlight text="Venue" />
                 </h2>
                 <div className={`${isTEDxEvent ? 'bg-red-50 dark:bg-black/40 border-2 border-red-200 dark:border-red-600/20 rounded-3xl shadow-sm' : 'glass-card'} p-6 space-y-4`}>
                   <div className="flex items-start gap-3">
                     <FaMapMarkerAlt className={`${isTEDxEvent ? 'text-red-700 dark:text-red-500' : 'text-neon-blue'} text-2xl mt-1 flex-shrink-0`} />
                     <div className="flex-1">
                       <h3 className={`text-xl font-bold mb-2 ${isTEDxEvent ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                        {event.venue}
+                        <HeadingHighlight text={event.venue} />
                       </h3>
                       <a 
                         href="https://maps.app.goo.gl/phYNNYQyWgacvBA59"
@@ -392,8 +393,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : ''}`}>
-                    Event Agenda
+                  <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                    <HeadingHighlight text="Event Agenda" />
                   </h2>
                   <div className="space-y-4">
                     {event.agenda.map((item: any, index: number) => (
@@ -421,8 +422,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : ''}`}>
-                    Featured Speakers
+                  <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                    <HeadingHighlight text="Featured Speakers" />
                   </h2>
                   <div className="grid md:grid-cols-2 gap-6">
                     {event.speakers.map((speaker: any, index: number) => (
@@ -449,7 +450,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                               <span className="text-4xl opacity-50">❓</span>
                             </div>
                             <h3 className="text-xl font-bold mb-1 text-red-600 dark:text-red-500">
-                              {speaker.name}
+                              <HeadingHighlight text={speaker.name} />
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">
                               {speaker.title}
@@ -482,7 +483,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                               </div>
                             )}
                             <h3 className={`text-xl font-bold mb-1 ${isTEDxEvent ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                              {speaker.name}
+                              <HeadingHighlight text={speaker.name} />
                             </h3>
                             <p className={`text-sm ${isTEDxEvent ? 'text-gray-700 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'} mb-2`}>
                               {speaker.title || speaker.designation}
@@ -555,8 +556,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <h2 className={`text-3xl font-bold mb-6 ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : ''}`}>
-                  Partners & Sponsors
+                <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                  <HeadingHighlight text="Partners & Sponsors" />
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {[...event.partners, ...event.sponsors].map((org: string, index: number) => (
@@ -618,8 +619,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                     : 'glass-card'} p-8 space-y-6`}
                   id="tickets-section"
                 >
-                  <h2 className={`text-2xl font-bold ${isTEDxEvent ? 'text-red-700 dark:text-red-600' : 'gradient-text'}`}>
-                    Get Your Tickets
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <HeadingHighlight text="Get Your Tickets" />
                   </h2>
 
                   {/* Sold Out Notice */}
@@ -627,8 +628,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                     <div className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/30 dark:via-orange-900/30 dark:to-yellow-900/30 border-2 border-red-500 rounded-xl p-6 text-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
                       <div className="text-5xl mb-3 animate-celebrate">🎉</div>
-                      <h3 className="text-3xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-3">
-                        SOLD OUT!
+                      <h3 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-3">
+                        <HeadingHighlight text="SOLD OUT!" />
                       </h3>
                       <p className="text-base text-gray-700 dark:text-gray-300 mb-2 font-semibold">
                         All <strong className="text-red-600 dark:text-red-400">{event.totalCapacity}</strong> tickets have been claimed! 🎊
@@ -652,7 +653,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className={`font-bold text-lg ${isTEDxEvent ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                              {ticket.name}
+                              <HeadingHighlight text={ticket.name} />
                             </h3>
                             <p className={`text-sm ${isTEDxEvent ? 'text-gray-700 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
                               {ticket.description}

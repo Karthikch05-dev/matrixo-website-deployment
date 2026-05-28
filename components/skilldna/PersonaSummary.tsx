@@ -8,6 +8,7 @@
 import { motion } from 'framer-motion';
 import { FaUser, FaStar, FaArrowUp, FaBriefcase, FaBrain } from 'react-icons/fa';
 import { AIPersonaSummary } from '@/lib/skilldna/types';
+import HeadingHighlight from '@/components/HeadingHighlight';
 
 interface PersonaSummaryProps {
   persona: AIPersonaSummary;
@@ -22,13 +23,15 @@ export default function PersonaSummary({ persona }: PersonaSummaryProps) {
     >
       <div className="flex items-center gap-2 mb-4">
         <FaBrain className="text-purple-400" />
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Persona Summary</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          <HeadingHighlight text="AI Persona Summary" />
+        </h3>
       </div>
 
       {/* Headline */}
       <div className="mb-6">
-        <h4 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-          {persona.headline}
+        <h4 className="text-2xl font-bold mb-2">
+          <HeadingHighlight text={persona.headline} />
         </h4>
         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
           {persona.description}

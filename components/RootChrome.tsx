@@ -19,16 +19,19 @@ export default function RootChrome({
   const pathnameFromRouter = usePathname()
   const pathname = pathnameFromRouter || initialPathname
 
-  const isContactPage = pathname === '/contact' || pathname.startsWith('/contact/')
+  const isContactPage =
+    pathname === '/contact' ||
+    pathname.startsWith('/contact/') ||
+    pathname === '/talk-with-us' ||
+    pathname.startsWith('/talk-with-us/')
   const isEmployeePortal = hostIsEmployeeSubdomain || pathname.startsWith('/employee-portal')
 
   const showNavbar = !isEmployeePortal && !isContactPage
   const showFooter = !isEmployeePortal && !isContactPage
 
-  const baseMainClassName =
-    isEmployeePortal
-      ? 'min-h-screen overflow-x-hidden'
-      : `min-h-screen ${NAVBAR_OFFSET_CLASS} overflow-x-hidden`
+  const baseMainClassName = isEmployeePortal || isContactPage
+    ? 'min-h-screen overflow-x-hidden'
+    : `min-h-screen ${NAVBAR_OFFSET_CLASS} overflow-x-hidden`
   const mainClassName = isContactPage ? baseMainClassName : `${baseMainClassName} site-ambient`
 
   return (

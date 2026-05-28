@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaUserTie, FaStar, FaVideo, FaCalendar, FaCode, FaPalette, FaChartLine, FaRocket, FaMicrophone, FaGraduationCap, FaLinkedin, FaGithub, FaTwitter, FaHeart, FaCheckCircle, FaClock, FaUsers, FaAward } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Mentor {
   id: string
@@ -200,8 +201,8 @@ export default function MentorMatrix() {
             <FaUserTie className="animate-bounce" />
             <span className="font-bold">MentorMatrix™ Network</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            Find Your Perfect Mentor
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <HeadingHighlight text="Find Your Perfect Mentor" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             AI-matched mentorship connecting you with industry experts
@@ -312,7 +313,9 @@ export default function MentorMatrix() {
                   {mentor.avatar}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{mentor.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <HeadingHighlight text={mentor.name} />
+                  </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{mentor.title}</p>
                   <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{mentor.company}</p>
                 </div>
@@ -403,7 +406,7 @@ export default function MentorMatrix() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                          {selectedMentor.name}
+                          <HeadingHighlight text={selectedMentor.name} />
                         </h2>
                         <p className="text-lg text-gray-600 dark:text-gray-400">{selectedMentor.title}</p>
                         <p className="text-indigo-600 dark:text-indigo-400 font-semibold">{selectedMentor.company}</p>
@@ -463,13 +466,17 @@ export default function MentorMatrix() {
 
                 {/* About */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">About</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    <HeadingHighlight text="About" />
+                  </h3>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{selectedMentor.about}</p>
                 </div>
 
                 {/* Expertise */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Expertise</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    <HeadingHighlight text="Expertise" />
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedMentor.expertise.map((skill) => (
                       <span
@@ -484,7 +491,9 @@ export default function MentorMatrix() {
 
                 {/* Languages */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Languages</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    <HeadingHighlight text="Languages" />
+                  </h3>
                   <div className="flex gap-2">
                     {selectedMentor.languages.map((lang) => (
                       <span key={lang} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">

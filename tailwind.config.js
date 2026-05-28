@@ -22,9 +22,9 @@ module.exports = {
           900: '#0c4a6e',
         },
         neon: {
-          blue: '#2563eb',
-          purple: '#7c3aed',
-          pink: '#db2777',
+          blue: '#0f172a',
+          purple: '#1e3a8a',
+          pink: '#2563eb',
         },
       },
       fontFamily: {

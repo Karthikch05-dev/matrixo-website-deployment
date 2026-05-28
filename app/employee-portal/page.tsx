@@ -1151,7 +1151,7 @@ function ProfileTab() {
             <h2 className={`text-2xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {employee.name}
             </h2>
-            <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium text-base mb-1">
+            <p className="gradient-text font-medium text-base mb-1">
               {employee.designation || employee.role}
             </p>
             {employee.department && (

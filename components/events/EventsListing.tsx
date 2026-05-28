@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { FaCalendar, FaMapMarkerAlt, FaTicketAlt, FaSearch, FaFilter, FaClock, FaStar } from 'react-icons/fa'
 import eventsData from '@/data/events.json'
 import { format, isFuture, isPast, compareDesc, compareAsc } from 'date-fns'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 type SortOption = 'upcoming' | 'latest' | 'all'
 
@@ -49,7 +50,7 @@ export default function EventsListing() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 sm:mb-6">
-              Explore <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Programs</span>
+              <HeadingHighlight text="Explore Programs" />
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300">
               Workshops, hackathons, bootcamps, and technical events designed to accelerate your tech career
@@ -179,7 +180,7 @@ export default function EventsListing() {
                               className="object-cover object-center"
                             />
                           ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+                            <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold gradient-text">
                               {event.title.charAt(0)}
                             </div>
                           )}
@@ -205,10 +206,8 @@ export default function EventsListing() {
 
                         {/* Content */}
                         <div className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
-                          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900 dark:text-white group-hover:bg-clip-text 
-                                       group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-500 
-                                       group-hover:to-purple-600 transition-all duration-200 line-clamp-2">
-                            {event.title}
+                          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900 dark:text-white transition-all duration-200 line-clamp-2">
+                            <HeadingHighlight text={event.title} />
                           </h3>
                           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 line-clamp-2">
                             {event.tagline}
@@ -232,7 +231,7 @@ export default function EventsListing() {
                               <div className="w-full">
                                 <div className="bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-red-500 rounded-xl p-4 text-center">
                                   <span className="text-3xl mb-2 block">🎉</span>
-                                  <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                                  <span className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
                                     SOLD OUT!
                                   </span>
                                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">

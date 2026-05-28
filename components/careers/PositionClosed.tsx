@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { FaBan, FaArrowLeft, FaClock, FaArchive, FaFileAlt } from 'react-icons/fa'
 import Link from 'next/link'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 type ClosedReason = 'closed' | 'expired' | 'draft' | 'archived' | 'not-found'
 
@@ -53,7 +54,7 @@ export default function PositionClosed({ reason, roleTitle }: PositionClosedProp
         {config.icon}
 
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-          {config.heading}
+          <HeadingHighlight text={config.heading} />
         </h1>
 
         {roleTitle && (

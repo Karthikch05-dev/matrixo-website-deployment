@@ -29,6 +29,7 @@ import ProfileEditSection from './ProfileEditSection';
 import VerificationTestModal from './VerificationTestModal';
 import ScoreTooltip from './ScoreTooltip';
 import GoalAlignmentSection from './GoalAlignmentSection';
+import HeadingHighlight from '@/components/HeadingHighlight';
 
 interface SkillDNADashboardProps {
   profile: SkillDNAProfile;
@@ -133,7 +134,7 @@ export default function SkillDNADashboard({
                 <span className="font-semibold">SkillDNA&trade; Dashboard</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                {userName ? `${userName}'s` : 'Your'} Skill Genome
+                <HeadingHighlight text={`${userName ? `${userName}'s` : 'Your'} Skill Genome`} />
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Last updated: {new Date(profile.lastUpdated).toLocaleDateString()} &middot; 
@@ -144,7 +145,7 @@ export default function SkillDNADashboard({
             {/* Dynamic Score Badge */}
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                <div className="text-4xl md:text-5xl font-black gradient-text">
                   {realisticScores.dynamicSkillScore}
                 </div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
@@ -236,7 +237,7 @@ export default function SkillDNADashboard({
               <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FaChartLine className="text-purple-400" />
-                  Skill Radar
+                  <HeadingHighlight text="Skill Radar" />
                 </h3>
                 <SkillRadarChart skills={profile.technicalSkills} />
               </div>
@@ -245,7 +246,7 @@ export default function SkillDNADashboard({
               <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FaTrophy className="text-yellow-400" />
-                  Dynamic Skill Score
+                  <HeadingHighlight text="Dynamic Skill Score" />
                 </h3>
                 <DynamicScoreMeter score={realisticScores.dynamicSkillScore} />
               </div>
@@ -255,7 +256,7 @@ export default function SkillDNADashboard({
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaBullseye className="text-green-400" />
-                Career Alignment Progress
+                <HeadingHighlight text="Career Alignment Progress" />
               </h3>
               <CareerAlignmentBar
                 score={realisticScores.careerAlignmentScore}
@@ -269,7 +270,7 @@ export default function SkillDNADashboard({
               <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FaShieldAlt className="text-purple-400" />
-                  Verification Analytics
+                  <HeadingHighlight text="Verification Analytics" />
                   <span className="text-sm font-normal text-gray-500 ml-auto">
                     {verificationStats.verified}/{verificationStats.total} verified
                   </span>
@@ -341,7 +342,7 @@ export default function SkillDNADashboard({
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaChartBar className="text-purple-400" />
-                Your Skills
+                <HeadingHighlight text="Your Skills" />
                 <span className="text-sm font-normal text-gray-500">({profile.technicalSkills.length})</span>
               </h3>
               {profile.technicalSkills.length === 0 ? (
@@ -408,7 +409,7 @@ export default function SkillDNADashboard({
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaLightbulb className="text-amber-400" />
-                Behavioral Profile
+                <HeadingHighlight text="Behavioral Profile" />
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.behavioralTraits.map((trait, i) => (
@@ -445,7 +446,9 @@ export default function SkillDNADashboard({
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Technical Skills Detail */}
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Technical Skills Breakdown</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+                <HeadingHighlight text="Technical Skills Breakdown" />
+              </h3>
               <div className="space-y-4">
                 {profile.technicalSkills.map((skill, i) => {
                   const vf = skill.verification;
@@ -544,7 +547,9 @@ export default function SkillDNADashboard({
 
             {/* Skill Clusters */}
             <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Skill Clusters</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                <HeadingHighlight text="Skill Clusters" />
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {profile.skillClusters.map((cluster, i) => (
                   <motion.div
@@ -555,7 +560,9 @@ export default function SkillDNADashboard({
                     className="p-5 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 border border-gray-300/50 dark:border-gray-700/50"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-gray-900 dark:text-white text-sm">{cluster.name}</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm">
+                        <HeadingHighlight text={cluster.name} />
+                      </h4>
                       <span className={`text-sm font-bold ${getScoreColor(cluster.strength)}`}>{cluster.strength}%</span>
                     </div>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">{cluster.description}</p>

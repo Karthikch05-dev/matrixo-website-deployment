@@ -6,6 +6,7 @@ import { FaLinkedin, FaEnvelope } from 'react-icons/fa'
 import { collection, getDocs, query } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 import Link from 'next/link'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface TeamMember {
   employeeId: string
@@ -244,7 +245,7 @@ export default function TeamContent() {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Meet Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Team</span>
+              <HeadingHighlight text="Meet Our Team" />
             </h1>
             <p className="text-2xl text-gray-600 dark:text-gray-300">
               The passionate individuals building the future of technical education
@@ -305,10 +306,10 @@ export default function TeamContent() {
 
                     {/* Info */}
                     <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                      {member.name}
+                      <HeadingHighlight text={member.name} />
                     </h3>
-                    <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium mb-2">
-                      {getDisplayRole(member)}
+                    <p className="font-medium mb-2">
+                      <HeadingHighlight text={getDisplayRole(member)} />
                     </p>
                     {member.department && (
                       <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
@@ -371,8 +372,8 @@ export default function TeamContent() {
             viewport={{ once: true }}
             className="text-center glass-card p-12 max-w-3xl mx-auto"
           >
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6 gradient-text">
-              Want to Join Our Team?
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+              <HeadingHighlight text="Want to Join Our Team?" />
             </h2>
             <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
               We&apos;re always looking for talented individuals who share our passion for education and technology.

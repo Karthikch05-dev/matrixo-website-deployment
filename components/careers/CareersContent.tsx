@@ -8,6 +8,7 @@ import { db } from '@/lib/firebaseConfig'
 import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Role {
   id: string
@@ -172,8 +173,8 @@ export default function CareersContent() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-              Careers
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6">
+              <HeadingHighlight text="Careers" />
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
               Join matriXO and help shape the future of technical education
@@ -196,7 +197,7 @@ export default function CareersContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-              Open Positions
+              <HeadingHighlight text="Open Positions" />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Discover opportunities that match your skills and passion
@@ -231,7 +232,7 @@ export default function CareersContent() {
               >
                 <FaBriefcase className="text-6xl text-gray-400 mx-auto mb-6" />
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                  No Open Positions Right Now
+                  <HeadingHighlight text="No Open Positions Right Now" />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   We don't have any openings at the moment, but we're always looking for talented individuals.
@@ -249,7 +250,7 @@ export default function CareersContent() {
                 >
                   <FaCheckCircle className="text-6xl text-green-500 mx-auto mb-6" />
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Application Submitted!
+                    <HeadingHighlight text="Application Submitted!" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
                     Thank you for your interest. We'll review your information and contact you when a suitable position opens up.
@@ -263,7 +264,7 @@ export default function CareersContent() {
                   className="glass-card p-8"
                 >
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    Express Your Interest
+                    <HeadingHighlight text="Express Your Interest" />
                   </h3>
 
                   <form onSubmit={handleGeneralSubmit} className="space-y-6">
@@ -388,7 +389,7 @@ export default function CareersContent() {
                 >
                   <div className="mb-4">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-cyan-500 transition-colors">
-                      {role.title}
+                      <HeadingHighlight text={role.title} />
                     </h3>
                     <p className="text-cyan-600 dark:text-cyan-400 font-medium mb-4">
                       {role.team}
@@ -433,7 +434,7 @@ export default function CareersContent() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-              Why Join matriXO?
+              <HeadingHighlight text="Why Join matriXO?" />
             </h2>
           </motion.div>
 
@@ -465,7 +466,7 @@ export default function CareersContent() {
               >
                 <div className="text-5xl mb-4">{benefit.icon}</div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  {benefit.title}
+                  <HeadingHighlight text={benefit.title} />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   {benefit.description}

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTrophy, FaMedal, FaStar, FaAward, FaShieldAlt, FaDownload, FaShareAlt, FaLink, FaCheckCircle, FaCertificate } from 'react-icons/fa'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Badge {
   id: string
@@ -126,8 +127,8 @@ export default function PlayCred() {
             <FaTrophy className="animate-bounce" />
             <span className="font-bold">PlayCred™ Digital Credentials</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            Your Verified Achievements
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <HeadingHighlight text="Your Verified Achievements" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Blockchain-verified badges that showcase your skills to the world
@@ -142,7 +143,7 @@ export default function PlayCred() {
             transition={{ delay: 0.1 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Total Badges</p>
@@ -154,7 +155,7 @@ export default function PlayCred() {
             transition={{ delay: 0.2 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.filter(b => b.rarity === 'legendary').length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Legendary</p>
@@ -166,7 +167,7 @@ export default function PlayCred() {
             transition={{ delay: 0.3 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {badges.filter(b => b.verified).length}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Verified</p>
@@ -178,7 +179,7 @@ export default function PlayCred() {
             transition={{ delay: 0.4 }}
             className="glass-card p-6 text-center"
           >
-            <div className="text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent mb-2">
+            <div className="text-4xl font-bold gradient-text mb-2">
               {categories.length - 1}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Categories</p>
@@ -242,7 +243,7 @@ export default function PlayCred() {
 
                 {/* Badge Info */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
-                  {badge.name}
+                  <HeadingHighlight text={badge.name} />
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
                   {badge.description}
@@ -282,7 +283,7 @@ export default function PlayCred() {
                     </div>
                     <div>
                       <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                        {selectedBadge.name}
+                        <HeadingHighlight text={selectedBadge.name} />
                       </h2>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         selectedBadge.rarity === 'legendary' ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' :

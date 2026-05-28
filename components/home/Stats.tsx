@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import type { IconType } from 'react-icons'
+import HeadingHighlight from '@/components/HeadingHighlight'
 import {
   HiOutlineAdjustmentsHorizontal,
   HiOutlineCpuChip,
@@ -71,7 +72,7 @@ function FeatureCard({
       </div>
 
       <h3 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white sm:text-3xl">
-        {title}
+        <HeadingHighlight text={title} />
       </h3>
       <p className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400 sm:text-base">
         {subtitle}

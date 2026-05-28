@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaRocket, FaCode, FaPalette, FaChartLine, FaMicrophone, FaLock, FaCheckCircle, FaPlay, FaClock, FaStar, FaTrophy } from 'react-icons/fa'
 import Link from 'next/link'
+import HeadingHighlight from '@/components/HeadingHighlight'
 
 interface Module {
   id: string
@@ -168,8 +169,8 @@ export default function GrowGrid() {
             <FaRocket className="animate-bounce" />
             <span className="font-bold">GrowGrid™ Learning Paths</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            Your Adaptive Learning Journey
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <HeadingHighlight text="Your Adaptive Learning Journey" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Personalized micro-modules that adapt to your pace and style
@@ -237,7 +238,9 @@ export default function GrowGrid() {
 
         {/* Learning Paths Selection */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Choose Your Path</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <HeadingHighlight text="Choose Your Path" />
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {learningPaths.map((path, index) => {
               const Icon = path.icon
@@ -259,7 +262,9 @@ export default function GrowGrid() {
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${path.color} flex items-center justify-center text-white text-2xl mb-4`}>
                     <Icon />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{path.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    <HeadingHighlight text={path.name} />
+                  </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{path.description}</p>
                   
                   <div className="space-y-2">
@@ -289,13 +294,12 @@ export default function GrowGrid() {
           className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-3xl shadow-2xl p-8"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            {currentPath.name} Modules
+            <HeadingHighlight text={`${currentPath.name} Modules`} />
           </h2>
 
           <div className="space-y-4">
             {sampleModules.map((module, index) => {
               const Icon = module.icon
-              
               return (
                 <motion.div
                   key={module.id}
@@ -324,7 +328,9 @@ export default function GrowGrid() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{module.title}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                            <HeadingHighlight text={module.title} />
+                          </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">{module.description}</p>
                         </div>
                         {!module.locked && !module.completed && (
