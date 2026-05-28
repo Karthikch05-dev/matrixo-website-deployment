@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
 import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth'
-import { auth } from '@/lib/firebaseConfig'
+import { auth, firebaseReady } from '@/lib/firebaseConfig'
 
 export default function AuthPage() {
   const searchParams = useSearchParams()
@@ -54,7 +54,7 @@ export default function AuthPage() {
     if (resendCooldown > 0) return
     setLoading(true)
     try {
-      if (!auth) {
+      if (!firebaseReady || !auth) {
         toast.error('Authentication is not configured. Please try again later.')
         return
       }
@@ -123,6 +123,10 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
+      if (!firebaseReady) {
+        toast.error('Authentication is not configured. Please try again later.')
+        return
+      }
       const signInMethod = await signInWithGoogle()
       if (signInMethod === 'redirect') {
         return

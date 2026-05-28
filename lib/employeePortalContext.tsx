@@ -24,7 +24,7 @@ import {
   writeBatch,
   Firestore
 } from 'firebase/firestore'
-import { auth, db } from './firebaseConfig'
+import { auth, db, firebaseReady } from './firebaseConfig'
 import { createGlobalNotification } from './notificationUtils'
 
 // ============================================
@@ -415,6 +415,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
   
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setEmployee(null)
+      setAuthReady(false)
+      setLoading(false)
+      return
+    }
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       
@@ -691,6 +698,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const signIn = async (employeeId: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured')
     try {
       // Step 1: Query Firestore for employee (this needs special rule - see FIRESTORE RULES below)
       const employeesRef = collection(db, 'Employees')
@@ -733,6 +741,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
     setEmployee(null)
     setAuthReady(false)

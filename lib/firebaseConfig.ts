@@ -144,28 +144,29 @@ const requiredFirebaseConfigKeys: Array<keyof typeof firebaseConfig> = [
 const missingKeys = requiredFirebaseConfigKeys.filter((k) => !firebaseConfig[k]);
 
 if (missingKeys.length > 0) {
-  // Fail fast: without these, Firebase Auth/Google sign-in will not work.
-  // More importantly, we do not want to silently fall back to any
-  // hardcoded/suspended keys.
-  // eslint-disable-next-line no-console
-  console.error(
-    `[firebaseConfig] Missing required env vars for Firebase (${missingKeys.join(', ')}). ` +
-      'Set NEXT_PUBLIC_FIREBASE_* env vars (and the *_BETA variants if deploying to beta).'
-  );
-  throw new Error('[firebaseConfig] Missing required NEXT_PUBLIC_FIREBASE_* environment variables')
+  // Warn but do not throw — missing env vars should not hard-crash the site.
+  // Features that rely on Firebase will be disabled until env vars are set.
+  const globalScope = globalThis as typeof globalThis & { __firebaseConfigWarned?: boolean }
+  if (!globalScope.__firebaseConfigWarned) {
+    globalScope.__firebaseConfigWarned = true
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[firebaseConfig] Missing required env vars for Firebase (${missingKeys.join(', ')}). ` +
+        'Set NEXT_PUBLIC_FIREBASE_* env vars (and the *_BETA variants if deploying to beta).'
+    );
+  }
 }
 
-// Initialize Firebase (avoid re-initialization)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const firebaseReady = missingKeys.length === 0;
 
-// Initialize Firebase Auth
-export const auth: Auth = getAuth(app);
+// Initialize Firebase (avoid re-initialization) only when env is ready
+const app = firebaseReady ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()) : null;
 
-// Initialize Firebase Storage
-export const storage = getStorage(app);
-
-// Initialize Firestore
-export const db = getFirestore(app);
+// Initialize Firebase Auth/Storage/Firestore only when ready.
+// Cast to keep existing import sites working; guard usage with `firebaseReady`.
+export const auth = (firebaseReady && app ? getAuth(app) : null) as unknown as Auth;
+export const storage = (firebaseReady && app ? getStorage(app) : null) as unknown as ReturnType<typeof getStorage>;
+export const db = (firebaseReady && app ? getFirestore(app) : null) as unknown as ReturnType<typeof getFirestore>;
 
 export { RecaptchaVerifier, signInWithPhoneNumber };
 export type { ConfirmationResult };

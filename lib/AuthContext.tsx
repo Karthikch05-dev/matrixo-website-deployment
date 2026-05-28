@@ -14,7 +14,7 @@ import {
   updateProfile,
   sendEmailVerification
 } from 'firebase/auth'
-import { auth } from '@/lib/firebaseConfig'
+import { auth, firebaseReady } from '@/lib/firebaseConfig'
 
 interface AuthContextType {
   user: User | null
@@ -42,6 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
       setLoading(false)
@@ -51,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     // Check if email is verified for email/password sign-ins
     if (!userCredential.user.emailVerified) {
@@ -61,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, displayName?: string): Promise<User> => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     
     if (displayName && userCredential.user) {
@@ -79,10 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
   }
 
   const signInWithGoogle = async () => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
     const isBetaHost = typeof window !== 'undefined' && window.location.hostname === 'beta.matrixo.in'
@@ -109,10 +119,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     await sendPasswordResetEmail(auth, email)
   }
 
   const resendVerificationEmail = async () => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     // Temporarily sign in to resend - the user object needs to exist
     if (auth.currentUser) {
       await sendEmailVerification(auth.currentUser)

@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { auth } from '@/lib/firebaseConfig';
+import { auth, firebaseReady } from '@/lib/firebaseConfig';
 import {
   SkillDNAProfile,
   SkillDNAUserDocument,
@@ -65,6 +65,7 @@ export function useSkillDNA(): UseSkillDNAReturn {
 
   // Get Firebase Auth token for API calls
   const getAuthToken = useCallback(async (): Promise<string> => {
+    if (!firebaseReady) throw new Error('Firebase is not configured');
     if (!auth.currentUser) throw new Error('Not authenticated');
     return auth.currentUser.getIdToken();
   }, []);

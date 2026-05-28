@@ -19,11 +19,11 @@ import {
   Timestamp,
   updateDoc
 } from 'firebase/firestore'
-import { auth } from './firebaseConfig'
+import { auth, db as firebaseDb, firebaseReady } from './firebaseConfig'
 import { getFirestore } from 'firebase/firestore'
 
-// Initialize Firestore
-const db = getFirestore()
+// Use shared Firestore instance when configured
+const db = firebaseDb as ReturnType<typeof getFirestore>
 
 export interface EmployeeProfile {
   employeeId: string
@@ -76,6 +76,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setEmployee(null)
+      setLoading(false)
+      return
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       if (user) {
@@ -111,6 +117,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (employeeId: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured')
     // First, find the employee by employeeId to get their email
     const employeesRef = collection(db, 'Employees')
     const q = query(employeesRef, where('employeeId', '==', employeeId.trim()))
@@ -134,6 +141,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
     setEmployee(null)
   }
