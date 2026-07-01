@@ -14,6 +14,10 @@ type FirebaseBaseEnvKey =
 
 type FirebaseEnvKey = FirebaseBaseEnvKey | `${FirebaseBaseEnvKey}_BETA` | `${FirebaseBaseEnvKey}_MAIN`;
 
+// IMPORTANT: These are Firebase public web config values, not secrets.
+// We keep a known-good fallback so the site can still boot if deployment env
+// variables are missing or accidentally deployed as placeholders.
+// Env vars still win when present, including *_MAIN / *_BETA variants.
 const fallbackFirebaseConfig = {
   apiKey: 'AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ',
   authDomain: 'matrixo-in-auth.firebaseapp.com',
@@ -128,17 +132,40 @@ const firebaseConfig = {
   measurementId: pickFirebaseEnv('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', fallbackFirebaseConfig.measurementId)
 };
 
-// Initialize Firebase (avoid re-initialization)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const requiredFirebaseConfigKeys: Array<keyof typeof firebaseConfig> = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+];
 
-// Initialize Firebase Auth
-export const auth: Auth = getAuth(app);
+const missingKeys = requiredFirebaseConfigKeys.filter((k) => !firebaseConfig[k]);
 
-// Initialize Firebase Storage
-export const storage = getStorage(app);
+if (missingKeys.length > 0) {
+  // Warn but do not hard-crash — missing env vars should not take the whole site down.
+  const globalScope = globalThis as typeof globalThis & { __firebaseConfigWarned?: boolean }
+  if (!globalScope.__firebaseConfigWarned) {
+    globalScope.__firebaseConfigWarned = true
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[firebaseConfig] Missing required env vars for Firebase (${missingKeys.join(', ')}). ` +
+        'Set NEXT_PUBLIC_FIREBASE_* env vars (and the *_BETA variants if deploying to beta).'
+    )
+  }
+}
 
-// Initialize Firestore
-export const db = getFirestore(app);
+export const firebaseReady = missingKeys.length === 0;
+
+// Initialize Firebase (avoid re-initialization) only when env is ready
+const app = firebaseReady ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()) : null;
+
+// Initialize Firebase Auth/Storage/Firestore only when ready.
+// Cast to keep existing import sites working; guard usage with `firebaseReady`.
+export const auth = (firebaseReady && app ? getAuth(app) : null) as unknown as Auth;
+export const storage = (firebaseReady && app ? getStorage(app) : null) as unknown as ReturnType<typeof getStorage>;
+export const db = (firebaseReady && app ? getFirestore(app) : null) as unknown as ReturnType<typeof getFirestore>;
 
 export { RecaptchaVerifier, signInWithPhoneNumber };
 export type { ConfirmationResult };

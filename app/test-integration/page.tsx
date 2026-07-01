@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { storage } from '@/lib/firebaseConfig'
+import { storage, firebaseReady } from '@/lib/firebaseConfig'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 export default function TestPage() {
@@ -136,25 +136,27 @@ export default function TestPage() {
           </h2>
           <div className="space-y-2 text-sm font-mono">
             <div className="flex items-center gap-2">
-              <span className={process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'text-green-600' : 'text-red-600'}>
-                {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅' : '❌'}
-              </span>
-              <span className="text-gray-700 dark:text-gray-300">Firebase API Key</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'text-green-600' : 'text-red-600'}>
-                {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✅' : '❌'}
+              <span className={firebaseReady ? 'text-green-600' : 'text-red-600'}>
+                {firebaseReady ? '✅' : '❌'}
               </span>
               <span className="text-gray-700 dark:text-gray-300">
-                Firebase Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'Not set'}
+                Firebase Ready {firebaseReady ? '(using live config)' : '(check env/fallback values)'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className={process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? 'text-green-600' : 'text-red-600'}>
-                {process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? '✅' : '❌'}
+              <span className={firebaseReady ? 'text-green-600' : 'text-red-600'}>
+                {firebaseReady ? '✅' : '❌'}
               </span>
               <span className="text-gray-700 dark:text-gray-300">
-                Storage Bucket: {process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'Not set'}
+                Firebase Project ID: matrixo-in-auth
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={firebaseReady ? 'text-green-600' : 'text-red-600'}>
+                {firebaseReady ? '✅' : '❌'}
+              </span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Storage Bucket: matrixo-in-auth.firebasestorage.app
               </span>
             </div>
             <div className="flex items-center gap-2">
