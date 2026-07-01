@@ -10,8 +10,8 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 
 export default function EventVisibilityManager() {
-  const { employee } = useEmployeeAuth()
-  const { visibilityMap, loading } = useEventVisibility()
+  const { employee, user } = useEmployeeAuth()
+  const { visibilityMap, loading, refreshVisibility } = useEventVisibility()
   const [searchQuery, setSearchQuery] = useState('')
   const [savingSlug, setSavingSlug] = useState<string | null>(null)
 
@@ -42,15 +42,18 @@ export default function EventVisibilityManager() {
 
     setSavingSlug(event.slug)
     try {
+      const accessToken = await user?.getIdToken()
       await updateEventVisibility(event.slug, {
         hidden: nextHidden,
         eventId: event.id,
         eventTitle: event.title,
         updatedBy: employee.employeeId,
         updatedByName: employee.name,
+        accessToken,
       })
 
       toast.success(nextHidden ? 'Event hidden from public pages' : 'Event made public again')
+      await refreshVisibility()
     } catch (error: any) {
       console.error('Event visibility update failed:', error)
       toast.error(error?.message || 'Failed to update event visibility')

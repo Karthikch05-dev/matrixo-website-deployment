@@ -1,84 +1,83 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { collection, doc, onSnapshot, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore'
-import { db, firebaseReady } from './firebaseConfig'
+import { useEffect, useState, useCallback } from 'react'
 
-export const EVENT_VISIBILITY_COLLECTION = 'eventVisibility'
+export const EVENT_VISIBILITY_API = '/api/event-visibility'
 
 export interface EventVisibilityRecord {
   id?: string
   eventSlug: string
-  eventId?: string
-  eventTitle?: string
+  eventId?: string | null
+  eventTitle?: string | null
   hidden: boolean
-  updatedAt?: Timestamp | null
-  updatedBy?: string
-  updatedByName?: string
+  updatedAt?: string | null
+  updatedBy?: string | null
+  updatedByName?: string | null
+}
+
+async function fetchVisibilityMap(): Promise<Record<string, EventVisibilityRecord>> {
+  const response = await fetch(EVENT_VISIBILITY_API, {
+    method: 'GET',
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load event visibility')
+  }
+
+  const data = await response.json()
+  return data.visibilityMap || {}
 }
 
 export function useEventVisibility() {
   const [visibilityMap, setVisibilityMap] = useState<Record<string, EventVisibilityRecord>>({})
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!firebaseReady) {
+  const refreshVisibility = useCallback(async () => {
+    try {
+      const nextMap = await fetchVisibilityMap()
+      setVisibilityMap(nextMap)
+    } catch (error) {
+      console.error('Error fetching event visibility:', error)
       setVisibilityMap({})
+    } finally {
       setLoading(false)
-      return
     }
-
-    const unsubscribe = onSnapshot(
-      collection(db, EVENT_VISIBILITY_COLLECTION),
-      (snapshot) => {
-        const nextMap: Record<string, EventVisibilityRecord> = {}
-        snapshot.docs.forEach((eventDoc) => {
-          const data = eventDoc.data() as EventVisibilityRecord
-          const slug = data.eventSlug || eventDoc.id
-          nextMap[slug] = {
-            id: eventDoc.id,
-            ...data,
-            eventSlug: slug,
-            hidden: Boolean(data.hidden),
-          }
-        })
-        setVisibilityMap(nextMap)
-        setLoading(false)
-      },
-      (error) => {
-        console.error('Error fetching event visibility:', error)
-        setVisibilityMap({})
-        setLoading(false)
-      }
-    )
-
-    return () => unsubscribe()
   }, [])
 
-  return { visibilityMap, loading }
+  useEffect(() => {
+    refreshVisibility()
+  }, [refreshVisibility])
+
+  return { visibilityMap, loading, refreshVisibility }
 }
 
 export async function updateEventVisibility(
   eventSlug: string,
   updates: Omit<EventVisibilityRecord, 'id' | 'eventSlug' | 'hidden'> & {
     hidden: boolean
+    accessToken?: string
   }
 ) {
-  if (!firebaseReady) {
-    throw new Error('Firebase is not configured.')
-  }
-
-  await setDoc(
-    doc(db, EVENT_VISIBILITY_COLLECTION, eventSlug),
-    {
+  const response = await fetch(EVENT_VISIBILITY_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(updates.accessToken ? { Authorization: `Bearer ${updates.accessToken}` } : {}),
+    },
+    body: JSON.stringify({
       eventSlug,
       hidden: updates.hidden,
       eventId: updates.eventId || null,
       eventTitle: updates.eventTitle || null,
-      updatedAt: serverTimestamp(),
-      updatedBy: updates.updatedBy || null,
-      updatedByName: updates.updatedByName || null,
-    },
-    { merge: true }
-  )
+    }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data?.error || 'Failed to update event visibility')
+  }
+
+  return data as { success: true; visibility: EventVisibilityRecord }
 }
