@@ -14,17 +14,18 @@ type FirebaseBaseEnvKey =
 
 type FirebaseEnvKey = FirebaseBaseEnvKey | `${FirebaseBaseEnvKey}_BETA` | `${FirebaseBaseEnvKey}_MAIN`;
 
-// IMPORTANT: Do not hardcode any Firebase keys here.
-// Hardcoded API keys can be suspended/compromised and will silently break sign-in in production.
-// Provide values via NEXT_PUBLIC_FIREBASE_* env vars instead.
+// IMPORTANT: These are Firebase public web config values, not secrets.
+// We keep a known-good fallback so the site can still boot if deployment env
+// variables are missing or accidentally deployed as placeholders.
+// Env vars still win when present, including *_MAIN / *_BETA variants.
 const fallbackFirebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
-  measurementId: ''
+  apiKey: 'AIzaSyAkxv3nLMJZyqivl1QP-cerSCsxSoLYtPQ',
+  authDomain: 'matrixo-in-auth.firebaseapp.com',
+  projectId: 'matrixo-in-auth',
+  storageBucket: 'matrixo-in-auth.firebasestorage.app',
+  messagingSenderId: '431287252568',
+  appId: '1:431287252568:web:0bdc2975d8951203bf7c2d',
+  measurementId: 'G-J18MTSRX3K'
 } as const;
 
 
