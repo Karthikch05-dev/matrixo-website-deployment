@@ -232,6 +232,30 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
+### Firebase Admin SDK (server-side, required for `/api/event-visibility` and any other admin API route)
+
+These are **separate** from the `NEXT_PUBLIC_*` values above — they come from a **service account key**, not
+the web app config. Without these set correctly, admin API routes fail with a
+`16 UNAUTHENTICATED: Request had invalid authentication credentials` error.
+
+1. Go to Firebase Console → Project Settings → **Service Accounts** → **Generate new private key**.
+2. This downloads a JSON file containing `project_id`, `client_email`, and `private_key`.
+3. In Vercel, set (recommended — avoids escaping issues with the multi-line private key):
+
+```env
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project_id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"
+```
+
+   Keep the `\n` sequences and the surrounding quotes exactly as shown — Vercel stores this as a single
+   line, and `lib/firebaseAdmin.ts` converts `\n` back into real newlines at runtime.
+
+   Alternatively, you can set a single `FIREBASE_SERVICE_ACCOUNT_JSON` env var containing the entire
+   downloaded JSON file's contents, but the three separate vars above are less error-prone.
+
+4. Redeploy after changing env vars — Vercel does not hot-reload environment variables.
+
 ---
 
 ## Troubleshooting
@@ -253,6 +277,22 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ### Attendance not saving
 - Check browser console for Firestore errors
 - Verify security rules allow the current user to write to attendance collection
+
+### "16 UNAUTHENTICATED: Request had invalid authentication credentials" (Event Visibility, or any admin API route)
+This is a Firebase **Admin SDK** credential problem on the server, not a client login issue. Causes, in order
+of likelihood:
+
+1. **The service account key was rotated or deleted** in Google Cloud Console (IAM & Admin → Service Accounts →
+   Keys), so the key stored in Vercel is no longer valid. Fix: generate a new key (see above) and update the
+   Vercel env vars, then redeploy.
+2. **The private key got corrupted when pasted into Vercel** — e.g. real newlines were collapsed, or extra
+   quotes were added. Fix: re-set `FIREBASE_PRIVATE_KEY` (or `FIREBASE_SERVICE_ACCOUNT_JSON`) following the
+   format above exactly, then redeploy.
+3. **The wrong JSON was pasted** — e.g. the client-side web config instead of the service account key. Fix:
+   re-download the service account key from Firebase Console and use that instead.
+4. Check the Vercel function logs for the `event-visibility` route — after the recent fix to
+   `lib/firebaseAdmin.ts`, misconfigured credentials now throw a clear, specific error message before ever
+   reaching Firestore, which makes it much faster to identify which of the above applies.
 
 ---
 
