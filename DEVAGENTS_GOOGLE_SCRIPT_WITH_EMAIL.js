@@ -332,10 +332,25 @@ function uploadPaymentScreenshotToDrive_(folderId, dataUrl, entryNumber) {
   }
 }
 
-function buildImageFormula_(url) {
-  // Store only Drive URL in spreadsheet as thumbnail.
-  return `=IMAGE("${url}")`
+function buildImageFormula_(driveFileUrl) {
+  // IMPORTANT: Use an embeddable Drive direct image URL for IMAGE().
+  // This avoids failures with regular file "getUrl()" pages.
+  //
+  // driveFileUrl example: https://drive.google.com/file/d/<FILE_ID>/view
+  //
+  // We convert to:
+  //   https://drive.google.com/uc?export=view&id=<FILE_ID>
+
+  const match = String(driveFileUrl).match(/\/d\/([^/]+)\/view/)
+  const fileId = match ? match[1] : ''
+
+  const directUrl = fileId
+    ? `https://drive.google.com/uc?export=view&id=${fileId}`
+    : String(driveFileUrl)
+
+  return `=IMAGE("${directUrl}")`
 }
+
 
 function buildQrCodeFormula_(value) {
   // Uses an external QR generator for simplicity.
