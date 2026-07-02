@@ -47,7 +47,7 @@ const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
   size: `${2 + (i % 3)}px`,
   delay: `${((i * 0.4) % 5).toFixed(1)}s`,
   duration: `${5 + (i % 5)}s`,
-  color: (["#60a5fa", "#a78bfa", "#67e8f9"] as const)[i % 3],
+  color: (["#60a5fa", "#a78bfa", "#f472b6"] as const)[i % 3],
 }));
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -297,20 +297,20 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const isDarkMode = resolvedTheme !== "light";
   const pageBgClass = isDarkMode
-    ? "bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.95),_rgba(2,6,23,1)_55%)]"
+    ? "bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.95),_rgba(9,9,15,1)_55%)]"
     : "bg-gradient-to-b from-slate-50 via-white to-slate-100";
   const surfaceClass = isDarkMode
-    ? "bg-white/5 border-white/10 backdrop-blur-xl"
+    ? "bg-[rgba(22,22,35,0.85)] border-[rgba(255,255,255,0.08)] backdrop-blur-xl"
     : "bg-white/80 border-slate-200/80 backdrop-blur-xl shadow-sm";
   const textPrimaryClass = isDarkMode ? "text-white" : "text-slate-900";
-  const textSecondaryClass = isDarkMode ? "text-gray-300" : "text-slate-600";
+  const textSecondaryClass = isDarkMode ? "text-slate-300" : "text-slate-600";
   const mutedPanelClass = isDarkMode
-    ? "bg-white/5 border-white/10"
+    ? "bg-[rgba(22,22,35,0.85)] border-[rgba(255,255,255,0.08)]"
     : "bg-slate-100 border-slate-200";
   const accentButtonClass =
-    "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-purple-500/25 hover:scale-[1.03] active:scale-[.98]";
+    "bg-gradient-to-r from-blue-600 via-violet-500 to-pink-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-violet-500/25 hover:scale-[1.03] active:scale-[.98]";
   const secondaryButtonClass = isDarkMode
-    ? "bg-white/5 text-white border border-white/15 hover:bg-white/10"
+    ? "bg-white/5 text-white border border-white/[.12] hover:bg-white/10 hover:border-[#7C3AED]"
     : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50";
 
   /* Countdown ──────────────────────────────────────────────────────────── */
@@ -374,8 +374,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
           50%       { transform: translateY(-20px); opacity: .8; }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,.3); }
-          50%       { box-shadow: 0 0 40px rgba(99,102,241,.6); }
+          0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,.3); }
+          50%       { box-shadow: 0 0 40px rgba(124,58,237,.6); }
         }
         @keyframes shimmer {
           0%   { background-position: -200% center; }
@@ -392,18 +392,19 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
         .da-pulse-glow  { animation: pulse-glow  2s  ease-in-out infinite; }
         .da-pulse-dot   { animation: pulseDot    1.5s ease-in-out infinite; }
         .da-border-glow { animation: borderGlow  3s  ease-in-out infinite; }
-        .da-card-hover  { transition: transform .3s ease, box-shadow .3s ease; }
+        .da-card-hover  { transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
         .da-card-hover:hover {
           transform:  translateY(-4px) scale(1.02);
-          box-shadow: 0 20px 40px rgba(99,102,241,.25), 0 0 0 1px rgba(99,102,241,.3);
+          border-color: #7C3AED !important;
+          box-shadow: 0 20px 40px rgba(124,58,237,.25), 0 0 0 1px rgba(124,58,237,.35);
         }
 
         .devagents-shell[data-theme="light"] .text-white,
-        .devagents-shell[data-theme="light"] .text-gray-300,
-        .devagents-shell[data-theme="light"] .text-gray-400,
-        .devagents-shell[data-theme="light"] .text-gray-500,
+        .devagents-shell[data-theme="light"] .text-slate-300,
+        .devagents-shell[data-theme="light"] .text-slate-400,
+        .devagents-shell[data-theme="light"] .text-slate-500,
         .devagents-shell[data-theme="light"] .text-blue-400,
-        .devagents-shell[data-theme="light"] .text-purple-300 {
+        .devagents-shell[data-theme="light"] .text-violet-300 {
           color: #0f172a !important;
         }
 
@@ -427,7 +428,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(135deg, #05050f 0%, #0a0618 50%, #060310 100%)",
+                "linear-gradient(135deg, #09090F 0%, #0F172A 50%, #09090F 100%)",
             }}
           />
 
@@ -436,8 +437,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             className="absolute inset-0 opacity-25"
             style={{
               backgroundImage:
-                "linear-gradient(rgba(99,102,241,.07) 1px, transparent 1px)," +
-                "linear-gradient(90deg, rgba(99,102,241,.07) 1px, transparent 1px)",
+                "linear-gradient(rgba(124,58,237,.07) 1px, transparent 1px)," +
+                "linear-gradient(90deg, rgba(124,58,237,.07) 1px, transparent 1px)",
               backgroundSize: "60px 60px",
               animation: "gridMove 20s linear infinite",
             }}
@@ -459,7 +460,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
           <div
             className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-10"
             style={{
-              background: "radial-gradient(circle, #06b6d4, transparent)",
+              background: "radial-gradient(circle, #ec4899, transparent)",
             }}
           />
 
@@ -484,7 +485,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
         <div
           className="absolute top-6 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
           style={{
-            background: isDarkMode ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.8)",
+            background: isDarkMode ? "rgba(9,9,15,.6)" : "rgba(255,255,255,.8)",
             backdropFilter: "blur(12px)",
             border: isDarkMode
               ? "1px solid rgba(34,197,94,.3)"
@@ -509,18 +510,22 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <div
               className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium"
               style={{
-                background: isDarkMode ? "rgba(255,255,255,.05)" : "rgba(15,23,42,.04)",
+                background: isDarkMode
+                  ? "rgba(124,58,237,.12)"
+                  : "rgba(15,23,42,.04)",
                 backdropFilter: "blur(12px)",
                 border: isDarkMode
-                  ? "1px solid rgba(99,102,241,.35)"
-                  : "1px solid rgba(99,102,241,.18)",
+                  ? "1px solid rgba(124,58,237,.30)"
+                  : "1px solid rgba(124,58,237,.18)",
               }}
             >
               <span className="text-blue-400">✦</span>
-              <span className={`bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold`}>
+              <span
+                className={`bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent font-semibold`}
+              >
                 Agentic AI Workshop · matriXO
               </span>
-              <span className="text-purple-400">✦</span>
+              <span className="text-violet-400">✦</span>
             </div>
           </motion.div>
 
@@ -531,7 +536,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             animate="visible"
             className={`text-5xl md:text-7xl font-bold font-display leading-tight mb-6 ${textPrimaryClass}`}
           >
-            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent">
               Build Your First
             </span>
             <br />
@@ -561,8 +566,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               className={`px-8 py-4 rounded-2xl font-bold text-white text-lg transition-all duration-300 ${accentButtonClass}`}
               style={{
                 boxShadow: isDarkMode
-                  ? "0 8px 30px rgba(59,130,246,.25)"
-                  : "0 8px 24px rgba(79,70,229,.18)",
+                  ? "0 8px 30px rgba(124,58,237,.35)"
+                  : "0 8px 24px rgba(124,58,237,.20)",
               }}
             >
               Register Now →
@@ -592,15 +597,17 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 key={s.label}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium justify-center"
                 style={{
-                    background: isDarkMode ? "rgba(255,255,255,.05)" : "rgba(15,23,42,.04)",
+                  background: isDarkMode
+                    ? "rgba(255,255,255,.05)"
+                    : "rgba(15,23,42,.04)",
                   backdropFilter: "blur(12px)",
-                    border: isDarkMode
-                      ? "1px solid rgba(255,255,255,.1)"
-                      : "1px solid rgba(148,163,184,.22)",
+                  border: isDarkMode
+                    ? "1px solid rgba(255,255,255,.12)"
+                    : "1px solid rgba(148,163,184,.22)",
                 }}
               >
                 <span>{s.emoji}</span>
-                  <span className={textSecondaryClass}>{s.label}</span>
+                <span className={textSecondaryClass}>{s.label}</span>
               </div>
             ))}
           </motion.div>
@@ -613,7 +620,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               animate="visible"
               className="flex flex-col items-center gap-4"
             >
-              <p className="text-xs font-medium tracking-widest uppercase text-gray-500">
+              <p className="text-xs font-medium tracking-widest uppercase text-slate-500">
                 Event Starts In
               </p>
               <div className="flex gap-3">
@@ -629,9 +636,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     <div
                       className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center"
                       style={{
-                        background: "rgba(255,255,255,.05)",
+                        background: "rgba(22,22,35,.85)",
                         backdropFilter: "blur(12px)",
-                        border: "1px solid rgba(99,102,241,.3)",
+                        border: "1px solid rgba(124,58,237,.3)",
                       }}
                     >
                       <AnimatePresence mode="wait">
@@ -647,7 +654,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                         </motion.span>
                       </AnimatePresence>
                     </div>
-                    <span className="text-[11px] text-gray-500 font-medium">
+                    <span className="text-[11px] text-slate-500 font-medium">
                       {l}
                     </span>
                   </div>
@@ -692,16 +699,22 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 <div
                   key={item.label}
                   className="flex items-start gap-3 p-3 rounded-xl"
-                  style={{ background: isDarkMode ? "rgba(255,255,255,.03)" : "rgba(15,23,42,.03)" }}
+                  style={{
+                    background: isDarkMode
+                      ? "rgba(255,255,255,.03)"
+                      : "rgba(15,23,42,.03)",
+                  }}
                 >
                   <span className="text-2xl leading-none mt-0.5 flex-shrink-0">
                     {item.icon}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
                       {item.label}
                     </p>
-                    <p className={`text-sm font-semibold mt-0.5 truncate ${textPrimaryClass}`}>
+                    <p
+                      className={`text-sm font-semibold mt-0.5 truncate ${textPrimaryClass}`}
+                    >
                       {item.value}
                     </p>
                   </div>
@@ -725,7 +738,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
-              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent">
                 About DevAgents 1.0
               </span>
             </h2>
@@ -790,13 +803,17 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   <div
                     key={stat}
                     className="flex items-center gap-4 p-4 rounded-2xl"
-                    style={{ background: isDarkMode ? "rgba(255,255,255,.04)" : "rgba(15,23,42,.04)" }}
+                    style={{
+                      background: isDarkMode
+                        ? "rgba(255,255,255,.04)"
+                        : "rgba(15,23,42,.04)",
+                    }}
                   >
                     <span className="text-3xl leading-none flex-shrink-0">
                       {emoji}
                     </span>
                     <div>
-                      <p className="text-2xl font-bold font-display bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                      <p className="text-2xl font-bold font-display bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent">
                         {stat}
                       </p>
                       <p className={textSecondaryClass}>{label}</p>
@@ -821,7 +838,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className={`text-3xl md:text-4xl font-bold font-display mb-4 ${textPrimaryClass}`}>
+            <h2
+              className={`text-3xl md:text-4xl font-bold font-display mb-4 ${textPrimaryClass}`}
+            >
               What You&apos;ll Learn
             </h2>
             <p className={textSecondaryClass}>
@@ -876,7 +895,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               Workshop Agenda
             </h2>
-            <p className="text-gray-400">
+            <p className="text-slate-400">
               A packed 3.5-hour journey into Agentic AI
             </p>
           </motion.div>
@@ -907,7 +926,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                       className="w-9 h-9 rounded-full flex items-center justify-center text-base z-10 relative"
                       style={{
                         background: "linear-gradient(135deg,#1e40af,#5b21b6)",
-                        border: "2px solid rgba(99,102,241,.5)",
+                        border: "2px solid rgba(124,58,237,.5)",
                       }}
                     >
                       {item.icon}
@@ -921,8 +940,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   <div
                     className="flex-1 p-4 rounded-xl mb-1"
                     style={{
-                      background: "rgba(255,255,255,.03)",
-                      border: "1px solid rgba(255,255,255,.07)",
+                      background: "rgba(22,22,35,.85)",
+                      border: "1px solid rgba(255,255,255,.08)",
                     }}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -941,7 +960,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
@@ -967,7 +986,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               Event Highlights
             </h2>
-            <p className="text-gray-400">Everything you get at DevAgents 1.0</p>
+            <p className="text-slate-400">
+              Everything you get at DevAgents 1.0
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -981,9 +1002,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 transition={{ delay: i * 0.06 }}
                 className="da-card-hover da-border-glow p-5 rounded-2xl text-center cursor-default"
                 style={{
-                  background: "rgba(255,255,255,.03)",
+                  background: "rgba(22,22,35,.85)",
                   backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,.07)",
+                  border: "1px solid rgba(255,255,255,.08)",
                 }}
               >
                 <div
@@ -998,7 +1019,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 <h3 className="font-bold text-white text-sm mb-1">
                   {item.title}
                 </h3>
-                <p className="text-xs text-gray-500">{item.desc}</p>
+                <p className="text-xs text-slate-500">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -1020,7 +1041,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               What&apos;s Included
             </h2>
-            <p className="text-gray-400">
+            <p className="text-slate-400">
               Everything bundled in your ₹199 pass
             </p>
           </motion.div>
@@ -1032,7 +1053,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="rounded-2xl p-8"
             style={{
-              background: "rgba(255,255,255,.03)",
+              background: "rgba(22,22,35,.85)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255,255,255,.08)",
             }}
@@ -1043,7 +1064,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   <div className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
                     <FaCheckCircle className="text-green-400 text-[10px]" />
                   </div>
-                  <span className="text-gray-300 text-sm">{item}</span>
+                  <span className="text-slate-300 text-sm">{item}</span>
                 </div>
               ))}
             </div>
@@ -1066,7 +1087,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               Get Your Pass
             </h2>
-            <p className="text-gray-400">Secure your spot at DevAgents 1.0</p>
+            <p className="text-slate-400">Secure your spot at DevAgents 1.0</p>
           </motion.div>
 
           <motion.div
@@ -1076,16 +1097,16 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="rounded-2xl overflow-hidden da-pulse-glow"
             style={{
-              background: "rgba(255,255,255,.03)",
+              background: "rgba(22,22,35,.85)",
               backdropFilter: "blur(20px)",
-              border: "1px solid rgba(99,102,241,.35)",
+              border: "1px solid rgba(124,58,237,.35)",
             }}
           >
             {/* Rainbow top bar */}
             <div
               className="h-1 w-full"
               style={{
-                background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4)",
+                background: "linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899)",
               }}
             />
 
@@ -1093,11 +1114,11 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               {/* Pass badge */}
               <div className="flex justify-center mb-6">
                 <span
-                  className="px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-purple-300"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-violet-300"
                   style={{
                     background:
                       "linear-gradient(135deg,rgba(59,130,246,.2),rgba(139,92,246,.2))",
-                    border: "1px solid rgba(99,102,241,.35)",
+                    border: "1px solid rgba(124,58,237,.35)",
                   }}
                 >
                   DevAgents 1.0 Pass
@@ -1106,10 +1127,10 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
               {/* Price */}
               <div className="text-center mb-8">
-                <p className="text-6xl font-bold font-display bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                <p className="text-6xl font-bold font-display bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent">
                   ₹199
                 </p>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-slate-500 text-sm mt-1">
                   One-time · No hidden fees
                 </p>
               </div>
@@ -1128,7 +1149,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
                       <FaCheckCircle className="text-green-400 text-[10px]" />
                     </div>
-                    <span className="text-gray-300 text-sm">{item}</span>
+                    <span className="text-slate-300 text-sm">{item}</span>
                   </div>
                 ))}
               </div>
@@ -1138,8 +1159,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 onClick={() => setShowRegistration(true)}
                 className="w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-200 hover:scale-[1.02] active:scale-[.98]"
                 style={{
-                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                  boxShadow: "0 8px 30px rgba(59,130,246,.3)",
+                  background:
+                    "linear-gradient(135deg, #2563EB, #8B5CF6, #EC4899)",
+                  boxShadow: "0 8px 30px rgba(124,58,237,.35)",
                 }}
               >
                 Register Now — ₹199
@@ -1155,7 +1177,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   "⚡ Instant Verification",
                   "🎟️ Limited to 150 seats",
                 ].map((b) => (
-                  <span key={b} className="text-xs text-gray-500">
+                  <span key={b} className="text-xs text-slate-500">
                     {b}
                   </span>
                 ))}
@@ -1191,9 +1213,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               viewport={{ once: true }}
               className="rounded-2xl p-8 text-center"
               style={{
-                background: "rgba(255,255,255,.04)",
+                background: "rgba(22,22,35,.85)",
                 backdropFilter: "blur(20px)",
-                border: "1px solid rgba(99,102,241,.25)",
+                border: "1px solid rgba(124,58,237,.25)",
               }}
             >
               {/* Gradient avatar */}
@@ -1224,7 +1246,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               <p className="text-sm text-blue-400 font-medium mb-1">
                 Founder — matriXO
               </p>
-              <p className="text-xs text-gray-500 mb-5">
+              <p className="text-xs text-slate-500 mb-5">
                 Agentic AI Speaker · AI Educator · Startup Founder
               </p>
               <a
@@ -1254,10 +1276,10 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               }}
             >
               <span className="text-4xl mb-4">🎤</span>
-              <h3 className="text-gray-400 font-medium mb-2">
+              <h3 className="text-slate-400 font-medium mb-2">
                 More speakers to be announced...
               </h3>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-slate-600">
                 Stay tuned for guest speaker announcements
               </p>
             </motion.div>
@@ -1280,7 +1302,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               Who Should Attend
             </h2>
-            <p className="text-gray-400">
+            <p className="text-slate-400">
               DevAgents 1.0 is for everyone curious about AI
             </p>
           </motion.div>
@@ -1295,13 +1317,13 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 viewport={{ once: true }}
                 className="flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium da-card-hover cursor-default"
                 style={{
-                  background: "rgba(255,255,255,.05)",
+                  background: "rgba(124,58,237,.12)",
                   backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,.1)",
+                  border: "1px solid rgba(124,58,237,.30)",
                 }}
               >
                 <span>{item.icon}</span>
-                <span className="text-gray-300">{item.label}</span>
+                <span className="text-slate-300">{item.label}</span>
               </motion.div>
             ))}
           </div>
@@ -1335,8 +1357,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 viewport={{ once: true }}
                 className="rounded-xl overflow-hidden"
                 style={{
-                  background: "rgba(255,255,255,.03)",
-                  border: `1px solid ${expandedFaq === index ? "rgba(99,102,241,.4)" : "rgba(255,255,255,.07)"}`,
+                  background: "rgba(22,22,35,.85)",
+                  border: `1px solid ${expandedFaq === index ? "rgba(124,58,237,.4)" : "rgba(255,255,255,.08)"}`,
                   transition: "border-color .3s",
                 }}
               >
@@ -1350,7 +1372,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     {faq.q}
                   </span>
                   <FaChevronDown
-                    className="text-gray-400 flex-shrink-0 transition-transform duration-300"
+                    className="text-slate-400 flex-shrink-0 transition-transform duration-300"
                     style={{
                       transform:
                         expandedFaq === index
@@ -1371,7 +1393,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                       className="overflow-hidden"
                     >
                       <div
-                        className="px-5 pb-5 border-t text-gray-400 text-sm leading-relaxed"
+                        className="px-5 pb-5 border-t text-slate-400 text-sm leading-relaxed"
                         style={{ borderColor: "rgba(255,255,255,.05)" }}
                       >
                         <div className="pt-4">{faq.a}</div>
@@ -1400,7 +1422,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-3">
               Event Gallery
             </h2>
-            <p className="text-gray-500 text-sm">
+            <p className="text-slate-500 text-sm">
               Photos will be added after the event
             </p>
           </motion.div>
@@ -1424,15 +1446,15 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   className="absolute inset-0"
                   style={{
                     backdropFilter: "blur(2px)",
-                    background: "rgba(0,0,0,.2)",
+                    background: "rgba(9,9,15,.35)",
                   }}
                 />
                 <div className="relative flex flex-col items-center gap-2">
                   <span className="text-5xl">📷</span>
                   <span
-                    className="text-xs font-medium px-3 py-1 rounded-full text-gray-400"
+                    className="text-xs font-medium px-3 py-1 rounded-full text-slate-400"
                     style={{
-                      background: "rgba(0,0,0,.5)",
+                      background: "rgba(9,9,15,.6)",
                       border: "1px solid rgba(255,255,255,.1)",
                     }}
                   >
@@ -1473,15 +1495,21 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               <div
                 className="flex items-center gap-3 px-6 py-3 rounded-full"
                 style={{
-                  background: isDarkMode ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.8)",
+                  background: isDarkMode
+                    ? "rgba(124,58,237,.12)"
+                    : "rgba(255,255,255,.8)",
                   border: isDarkMode
-                    ? "1px solid rgba(99,102,241,.3)"
+                    ? "1px solid rgba(124,58,237,.30)"
                     : "1px solid rgba(148,163,184,.22)",
                 }}
               >
                 <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/10 flex-shrink-0">
                   <Image
-                    src={isDarkMode ? MATRIXO_LOGO_DARK_URL : MATRIXO_LOGO_LIGHT_URL}
+                    src={
+                      isDarkMode
+                        ? MATRIXO_LOGO_DARK_URL
+                        : MATRIXO_LOGO_LIGHT_URL
+                    }
                     alt="matriXO"
                     width={32}
                     height={32}
@@ -1490,7 +1518,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   />
                 </div>
                 <span className="text-white font-semibold">matriXO</span>
-                <span className="text-xs text-gray-500">— Main Organizer</span>
+                <span className="text-xs text-slate-500">— Main Organizer</span>
               </div>
             </motion.div>
 
@@ -1509,7 +1537,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     background: "rgba(255,255,255,.02)",
                   }}
                 >
-                  <p className="text-gray-600 text-xs">
+                  <p className="text-slate-600 text-xs">
                     Partner Spot Available
                   </p>
                 </motion.div>
@@ -1534,7 +1562,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
               Get in Touch
             </h2>
-            <p className="text-gray-400">
+            <p className="text-slate-400">
               Have questions? Reach us through any of these channels
             </p>
           </motion.div>
@@ -1587,15 +1615,15 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 viewport={{ once: true }}
                 className="flex items-center gap-4 p-5 rounded-xl da-card-hover"
                 style={{
-                  background: "rgba(255,255,255,.03)",
-                  border: "1px solid rgba(255,255,255,.07)",
+                  background: "rgba(22,22,35,.85)",
+                  border: "1px solid rgba(255,255,255,.08)",
                 }}
               >
                 <span className="text-2xl leading-none flex-shrink-0">
                   {item.icon}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">
                     {item.label}
                   </p>
                   <p className="text-white text-sm font-medium truncate">
@@ -1614,7 +1642,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
       <footer
         className="py-16 px-4"
         style={{
-          background: "rgba(0,0,0,.45)",
+          background: "rgba(9,9,15,.6)",
           borderTop: "1px solid rgba(255,255,255,.05)",
         }}
       >
@@ -1625,10 +1653,10 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <h3 className="text-3xl font-bold font-display bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <h3 className="text-3xl font-bold font-display bg-gradient-to-r from-[#4F8BFF] via-violet-500 to-pink-500 bg-clip-text text-transparent">
               DevAgents 1.0
             </h3>
-            <p className="text-gray-600 text-sm mt-1">Built by matriXO</p>
+            <p className="text-slate-600 text-sm mt-1">Built by matriXO</p>
           </motion.div>
 
           {/* Links */}
@@ -1637,19 +1665,22 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-6 text-xs text-gray-600"
+            className="flex flex-wrap justify-center gap-6 text-xs text-slate-600"
           >
             <span>© 2026 matriXO</span>
             <a
               href="/privacy"
-              className="hover:text-gray-400 transition-colors"
+              className="hover:text-slate-400 transition-colors"
             >
               Privacy Policy
             </a>
-            <a href="/terms" className="hover:text-gray-400 transition-colors">
+            <a href="/terms" className="hover:text-slate-400 transition-colors">
               Terms
             </a>
-            <a href="/refund" className="hover:text-gray-400 transition-colors">
+            <a
+              href="/refund"
+              className="hover:text-slate-400 transition-colors"
+            >
               Refund Policy
             </a>
           </motion.div>
@@ -1685,10 +1716,10 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={label}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all duration-200 hover:scale-110"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-white transition-all duration-200 hover:scale-110 hover:border-[#7C3AED]"
                 style={{
                   background: "rgba(255,255,255,.05)",
-                  border: "1px solid rgba(255,255,255,.08)",
+                  border: "1px solid rgba(255,255,255,.12)",
                 }}
               >
                 <Icon />
@@ -1696,7 +1727,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             ))}
           </motion.div>
 
-          <p className="text-xs text-gray-700">
+          <p className="text-xs text-slate-700">
             © 2026 matriXO. All rights reserved.
           </p>
         </div>
@@ -1715,15 +1746,15 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             className="fixed bottom-0 left-0 right-0 z-40 p-4"
             style={{
               background:
-                "linear-gradient(to top, rgba(5,5,15,.97) 60%, transparent)",
+                "linear-gradient(to top, rgba(9,9,15,.97) 60%, transparent)",
             }}
           >
             <div
               className="max-w-md mx-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl"
               style={{
-                background: "rgba(255,255,255,.06)",
+                background: "rgba(22,22,35,.9)",
                 backdropFilter: "blur(20px)",
-                border: "1px solid rgba(99,102,241,.35)",
+                border: "1px solid rgba(124,58,237,.35)",
               }}
             >
               <div>
@@ -1736,8 +1767,9 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 onClick={() => setShowRegistration(true)}
                 className="flex-shrink-0 px-6 py-2.5 rounded-xl font-bold text-white text-sm transition-all duration-200 hover:scale-[1.03] active:scale-[.97]"
                 style={{
-                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                  boxShadow: "0 4px 20px rgba(59,130,246,.3)",
+                  background:
+                    "linear-gradient(135deg, #2563EB, #8B5CF6, #EC4899)",
+                  boxShadow: "0 4px 20px rgba(124,58,237,.35)",
                 }}
               >
                 Register Now →
