@@ -16,14 +16,28 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    const { name, email, transactionCode } = body
+    const { fullName, name, email, paymentScreenshot, entryNumber, transactionCode } = body
 
-    if (!name || !email || !transactionCode) {
+    const resolvedFullName = String(fullName || name || '').trim()
+    const resolvedEmail = String(email || '').trim()
+    const hasScreenshot = !!paymentScreenshot
+
+    // Keep validations tolerant, since frontend payloads may use different field names.
+    if (!resolvedFullName || !resolvedEmail) {
       return NextResponse.json(
-        { error: 'Missing required registration details.' },
+        { success: false, error: 'Missing required registration details: fullName/name and email.' },
         { status: 400 }
       )
     }
+
+    // paymentScreenshot is required by the new Apps Script spec.
+    if (!hasScreenshot) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required registration details: paymentScreenshot.' },
+        { status: 400 }
+      )
+    }
+
 
     const response = await fetch(DEVAGENTS_GOOGLE_SCRIPT_URL, {
       method: 'POST',
