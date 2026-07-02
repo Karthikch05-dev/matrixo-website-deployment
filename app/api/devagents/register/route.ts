@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
-// Server-side only — NOT prefixed with NEXT_PUBLIC_
+// Check both names for compatibility — NEXT_PUBLIC_ is what Vercel/env has set
 const DEVAGENTS_GOOGLE_SCRIPT_URL =
-  process.env.DEVAGENTS_GOOGLE_SCRIPT_URL || "";
+  process.env.DEVAGENTS_GOOGLE_SCRIPT_URL ||
+  process.env.NEXT_PUBLIC_DEVAGENTS_GOOGLE_SCRIPT_URL ||
+  "";
 
 export const dynamic = "force-dynamic";
 
