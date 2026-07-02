@@ -100,9 +100,6 @@ export default function DevAgentsRegistrationForm({
     );
   }, []);
 
-  const GOOGLE_SCRIPT_URL =
-    process.env.NEXT_PUBLIC_DEVAGENTS_GOOGLE_SCRIPT_URL || "";
-
   const upiDeepLink = isUpiConfigured
     ? `upi://pay?pa=${DEVAGENTS_UPI_ID}&pn=matriXO&am=${PRICE}&cu=INR&tn=${encodeURIComponent(`DevAgents1.0-${transactionCode}`)}`
     : "";
@@ -203,27 +200,20 @@ export default function DevAgentsRegistrationForm({
 
   /* ── Submit to Google Sheet ──────────────────────────────────────── */
   const sendToGoogleSheet = async (data: Record<string, unknown>) => {
-    const targetUrl = GOOGLE_SCRIPT_URL || "/api/devagents/register";
-
     try {
-      if (GOOGLE_SCRIPT_URL) {
-        await fetch(targetUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=UTF-8" },
-          body: JSON.stringify(data),
-        });
-      } else {
-        await fetch(targetUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-      }
+      const response = await fetch("/api/devagents/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-      await new Promise((r) => setTimeout(r, 1500));
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result?.success === false) {
+        throw new Error(result?.error || "Registration failed");
+      }
     } catch {
       // Don't block registration on sheet errors
+      throw new Error("Failed to forward registration");
     }
   };
 

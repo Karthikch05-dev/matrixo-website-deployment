@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/firebaseConfig'
 import { collection, addDoc, Timestamp } from 'firebase/firestore'
+import { postToGoogleAppsScript } from '@/lib/googleAppsScript'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -29,40 +30,18 @@ export async function POST(request: Request) {
       status: 'unread',
     })
 
-    // Optionally send email via Resend if API key is configured
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const { Resend } = await import('resend')
-        const resend = new Resend(process.env.RESEND_API_KEY)
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'matriXO Contact Form <onboarding@resend.dev>',
-          to: ['hello@matrixo.in'],
-          subject: `New Contact Message from matrixo.in: ${subject || 'No Subject'}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #3b82f6;">New Contact Form Submission</h2>
-              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-                <p><strong>Subject:</strong> ${subject || 'No Subject'}</p>
-              </div>
-              <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                <h3 style="color: #374151; margin-top: 0;">Message:</h3>
-                <p style="white-space: pre-wrap; color: #4b5563;">${message}</p>
-              </div>
-              <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
-                <p>This email was sent from the matriXO website contact form.</p>
-                <p>Reply directly to this email to contact: ${email}</p>
-              </div>
-            </div>
-          `,
-          replyTo: email,
-        })
-      } catch (emailErr) {
-        // Email failure is non-critical — message is already saved to Firestore
-        console.warn('Email send failed (non-critical):', emailErr)
-      }
+    // Forward to Google Apps Script for email delivery and sheet logging.
+    try {
+      await postToGoogleAppsScript({
+        action: 'contactMessage',
+        name,
+        email,
+        phone: phone || '',
+        subject: subject || 'No Subject',
+        message,
+      })
+    } catch (scriptErr) {
+      console.warn('Google Apps Script forwarding failed (non-critical):', scriptErr)
     }
 
     return NextResponse.json({ success: true })
