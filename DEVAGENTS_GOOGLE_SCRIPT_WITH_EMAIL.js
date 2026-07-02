@@ -43,6 +43,7 @@ const SHEET_HEADERS_ = [
   'College',
   'Year',
   'Branch',
+  'City',
   'GitHub',
   'LinkedIn',
   'Experience Level',
@@ -55,6 +56,7 @@ const SHEET_HEADERS_ = [
   'Approved By',
   'Approval Time',
 ]
+
 
 const DEFAULT_PAYMENT_STATUS_ = 'Pending'
 const DEFAULT_APPROVAL_STATUS_ = 'Pending'
@@ -119,10 +121,12 @@ function register_(data) {
     const linkedIn = String(data.linkedIn || data.linkedin || '').trim()
     const experienceLevel = String(data.experienceLevel || '').trim()
     const whyAttend = String(data.whyAttend || '').trim()
+    const city = String(data.city || '').trim()
 
     // Base64 required by spec
     const paymentScreenshot = data.paymentScreenshot || data.paymentScreenshotBase64 || ''
     if (!fullName || !email) {
+
       return jsonError_(
         'MISSING_FIELDS',
         'Full Name and Email are required.',
@@ -160,6 +164,7 @@ function register_(data) {
       college, // College
       year, // Year
       branch, // Branch
+      city, // City
       github, // GitHub
       linkedIn, // LinkedIn
       experienceLevel, // Experience Level
@@ -172,6 +177,7 @@ function register_(data) {
       '', // Approved By
       '', // Approval Time
     ]
+
 
     sheet.appendRow(row)
 
