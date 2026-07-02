@@ -1777,40 +1777,19 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════════════════════════════
-          REGISTRATION MODAL OVERLAY
+          REGISTRATION MODAL
+          Note: DevAgentsRegistrationForm renders its own complete,
+          self-contained fixed overlay (backdrop + centered card). It must
+          NOT be wrapped in another fixed inset-0 overlay here, or the page
+          ends up with two stacked full-screen backdrops that fight over
+          pointer events (confirmed via automated click-through testing).
       ══════════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {showRegistration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{
-              background: "rgba(0,0,0,.82)",
-              backdropFilter: "blur(8px)",
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowRegistration(false);
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DevAgentsRegistrationForm
-                event={event}
-                onClose={() => setShowRegistration(false)}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showRegistration && (
+        <DevAgentsRegistrationForm
+          event={event}
+          onClose={() => setShowRegistration(false)}
+        />
+      )}
     </div>
   );
 }

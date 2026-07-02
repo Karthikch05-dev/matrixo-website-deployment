@@ -71,6 +71,24 @@ export default function DevAgentsRegistrationForm({
     }
   }, [user]);
 
+  // Lock background scroll while the modal is mounted
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  // Close on Escape (but not while a submission is in flight)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isSubmitting) onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSubmitting, onClose]);
+
   // Mobile detection
   useEffect(() => {
     const ua = navigator.userAgent.toLowerCase();
