@@ -18,88 +18,107 @@
  * - DEVAGENTS_ADMIN_EMAIL (default: events@matrixo.in)
  */
 function getConfig_() {
-  const props = PropertiesService.getScriptProperties()
+  const props = PropertiesService.getScriptProperties();
 
-  const spreadsheetId = (props.getProperty('DEVAGENTS_SHEET_ID') || '').trim()
-  const driveFolderId = (props.getProperty('DEVAGENTS_DRIVE_FOLDER_ID') || '').trim()
-  const entryPrefix = (props.getProperty('DEVAGENTS_ENTRY_PREFIX') || 'DA').trim()
-  const adminEmail = (props.getProperty('DEVAGENTS_ADMIN_EMAIL') || 'events@matrixo.in').trim()
+  const spreadsheetId = (props.getProperty("DEVAGENTS_SHEET_ID") || "").trim();
+  const driveFolderId = (
+    props.getProperty("DEVAGENTS_DRIVE_FOLDER_ID") || ""
+  ).trim();
+  const entryPrefix = (
+    props.getProperty("DEVAGENTS_ENTRY_PREFIX") || "DA"
+  ).trim();
+  const adminEmail = (
+    props.getProperty("DEVAGENTS_ADMIN_EMAIL") || "events@matrixo.in"
+  ).trim();
 
-  if (!spreadsheetId) throw new Error('Missing Script Property: DEVAGENTS_SHEET_ID')
-  if (!driveFolderId) throw new Error('Missing Script Property: DEVAGENTS_DRIVE_FOLDER_ID')
+  if (!spreadsheetId)
+    throw new Error("Missing Script Property: DEVAGENTS_SHEET_ID");
+  if (!driveFolderId)
+    throw new Error("Missing Script Property: DEVAGENTS_DRIVE_FOLDER_ID");
 
-  return { spreadsheetId, driveFolderId, entryPrefix, adminEmail }
+  return { spreadsheetId, driveFolderId, entryPrefix, adminEmail };
 }
 
 /**
  * Required spreadsheet header structure (exactly as requested)
  */
+// Column order MUST match the appendRow() call in register_() exactly.
+// 18 columns — do not add, remove, or reorder without updating register_() too.
 const SHEET_HEADERS_ = [
-  'Timestamp',
-  'Entry Number',
-  'Full Name',
-  'Email',
-  'Phone',
-  'College',
-  'Year',
-  'Branch',
-  'City',
-  'GitHub',
-  'LinkedIn',
-  'Experience Level',
-  'Why do you want to attend?',
-  'Payment Screenshot',
-  'Payment Status',
-  'Approval Status',
-  'QR Code',
-  'Check-in Status',
-  'Approved By',
-  'Approval Time',
-]
+  "Timestamp", // [0]
+  "Entry Number", // [1]  generated internally — never from frontend
+  "Full Name", // [2]
+  "Email", // [3]
+  "Phone", // [4]
+  "College", // [5]
+  "Year", // [6]
+  "Branch", // [7]
+  "City", // [8]
+  "GitHub", // [9]
+  "LinkedIn", // [10]
+  "Experience Level", // [11]
+  "Why do you want to attend?", // [12]
+  "Payment Screenshot", // [13]  =IMAGE() formula pointing to Drive thumbnail
+  "Payment Status", // [14]
+  "Approval Status", // [15]
+  "Drive File URL", // [16]  direct Google Drive link to screenshot file
+  "Registration Status", // [17]
+];
 
-
-const DEFAULT_PAYMENT_STATUS_ = 'Pending'
-const DEFAULT_APPROVAL_STATUS_ = 'Pending'
-const DEFAULT_CHECKIN_STATUS_ = 'Not Checked In'
+const DEFAULT_PAYMENT_STATUS_ = "Pending";
+const DEFAULT_APPROVAL_STATUS_ = "Pending";
+const DEFAULT_REGISTRATION_STATUS_ = "Pending";
 
 function doGet() {
-  return jsonResponse_({ success: true, message: 'DevAgents Apps Script is running.' })
+  return jsonResponse_({
+    success: true,
+    message: "DevAgents Apps Script is running.",
+  });
 }
 
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      return jsonError_(
-        'NO_DATA',
-        'No data received in request.',
-        400,
-        { hasPostData: !!(e && e.postData) }
-      )
+      return jsonError_("NO_DATA", "No data received in request.", 400, {
+        hasPostData: !!(e && e.postData),
+      });
     }
 
-    const raw = e.postData.contents
-    const data = safeJsonParse_(raw)
+    const raw = e.postData.contents;
+    const data = safeJsonParse_(raw);
 
     if (!data) {
-      return jsonError_('INVALID_JSON', 'Request body is not valid JSON.', 400, {
-        rawSample: String(raw).slice(0, 500),
-      })
+      return jsonError_(
+        "INVALID_JSON",
+        "Request body is not valid JSON.",
+        400,
+        {
+          rawSample: String(raw).slice(0, 500),
+        },
+      );
     }
 
-    const action = String(data.action || 'register')
+    const action = String(data.action || "register");
 
     // Prepared admin helpers for future use
-    if (action === 'approveRegistration') return approveRegistration_(data)
-    if (action === 'rejectRegistration') return rejectRegistration_(data)
-    if (action === 'sendApprovalEmail') return sendApprovalEmail_(data)
-    if (action === 'generateQRCode') return generateQRCode_(data)
-    if (action === 'markCheckedIn') return markCheckedIn_(data)
+    if (action === "approveRegistration") return approveRegistration_(data);
+    if (action === "rejectRegistration") return rejectRegistration_(data);
+    if (action === "sendApprovalEmail") return sendApprovalEmail_(data);
+    if (action === "generateQRCode") return generateQRCode_(data);
+    if (action === "markCheckedIn") return markCheckedIn_(data);
 
     // Default: registration workflow
-    return register_(data)
+    return register_(data);
   } catch (error) {
-    Logger.log('DevAgents doPost error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('INTERNAL_ERROR', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "DevAgents doPost error: " + (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "INTERNAL_ERROR",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
@@ -108,78 +127,86 @@ function doPost(e) {
 // =============================
 function register_(data) {
   try {
-    const cfg = getConfig_()
+    const cfg = getConfig_();
 
     // Accept payload keys in a tolerant manner.
-    const fullName = String(data.fullName || data.name || '').trim()
-    const email = String(data.email || '').trim()
-    const phone = String(data.phone || data.contactNumber || '').trim()
-    const college = String(data.college || data.collegeName || '').trim()
-    const year = String(data.year || '').trim()
-    const branch = String(data.branch || data.department || '').trim()
-    const github = String(data.github || '').trim()
-    const linkedIn = String(data.linkedIn || data.linkedin || '').trim()
-    const experienceLevel = String(data.experienceLevel || '').trim()
-    const whyAttend = String(data.whyAttend || '').trim()
-    const city = String(data.city || '').trim()
+    const fullName = String(data.fullName || data.name || "").trim();
+    const email = String(data.email || "").trim();
+    const phone = String(data.phone || data.contactNumber || "").trim();
+    const college = String(data.college || data.collegeName || "").trim();
+    const year = String(data.year || "").trim();
+    const branch = String(data.branch || data.department || "").trim();
+    const github = String(data.github || "").trim();
+    const linkedIn = String(data.linkedIn || data.linkedin || "").trim();
+    const experienceLevel = String(data.experienceLevel || "").trim();
+    const whyAttend = String(data.whyAttend || "").trim();
+    const city = String(data.city || "").trim();
 
     // Base64 required by spec
-    const paymentScreenshot = data.paymentScreenshot || data.paymentScreenshotBase64 || ''
+    const paymentScreenshot =
+      data.paymentScreenshot || data.paymentScreenshotBase64 || "";
     if (!fullName || !email) {
-
       return jsonError_(
-        'MISSING_FIELDS',
-        'Full Name and Email are required.',
+        "MISSING_FIELDS",
+        "Full Name and Email are required.",
         400,
-        { fullNamePresent: !!fullName, emailPresent: !!email }
-      )
+        { fullNamePresent: !!fullName, emailPresent: !!email },
+      );
     }
     if (!paymentScreenshot) {
-      return jsonError_('MISSING_PAYMENT_SCREENSHOT', 'Payment Screenshot is required.', 400, {})
+      return jsonError_(
+        "MISSING_PAYMENT_SCREENSHOT",
+        "Payment Screenshot is required.",
+        400,
+        {},
+      );
     }
 
-    const sheet = getOrInitSheet_(cfg.spreadsheetId)
+    const sheet = getOrInitSheet_(cfg.spreadsheetId);
 
-    // Sequential entry numbers (never timestamp-based)
-    const entryNumber = generateEntryNumber_(cfg.entryPrefix)
+    // 1. Generate Entry Number internally — NEVER taken from the frontend payload.
+    const entryNumber = generateEntryNumber_(cfg.entryPrefix);
 
-    // Upload to Drive
-    const driveInfo = uploadPaymentScreenshotToDrive_(cfg.driveFolderId, paymentScreenshot, entryNumber)
+    // 2. Upload Base64 screenshot to Google Drive.
+    //    paymentScreenshot must be a data:image/... Base64 Data URL.
+    const driveInfo = uploadPaymentScreenshotToDrive_(
+      cfg.driveFolderId,
+      paymentScreenshot,
+      entryNumber,
+    );
 
-    // QR code in sheet (formula). If later you want QR as Drive file, we can extend.
-    const qrFormula = buildQrCodeFormula_(entryNumber)
+    // 3. Build =IMAGE() formula for the thumbnail cell (Payment Screenshot column).
+    //    The actual Drive link goes into the separate Drive File URL column.
+    const screenshotFormula = buildImageFormula_(driveInfo.url);
 
-    // Payment Screenshot in sheet: thumbnail image via IMAGE(url).
-    // We store screenshot only in Drive (not Base64 in Sheets).
-    const screenshotFormula = buildImageFormula_(driveInfo.url)
+    const nowIso = new Date().toISOString();
 
-    const nowIso = new Date().toISOString()
-
+    // -----------------------------------------------------------------------
+    // CRITICAL: this array MUST stay in exact sync with SHEET_HEADERS_ above.
+    // Position [0..17] — 18 elements, no more, no less.
+    // -----------------------------------------------------------------------
     const row = [
-      nowIso, // Timestamp
-      entryNumber, // Entry Number
-      fullName, // Full Name
-      email, // Email
-      phone, // Phone
-      college, // College
-      year, // Year
-      branch, // Branch
-      city, // City
-      github, // GitHub
-      linkedIn, // LinkedIn
-      experienceLevel, // Experience Level
-      whyAttend, // Why do you want to attend?
-      screenshotFormula, // Payment Screenshot (thumbnail)
-      DEFAULT_PAYMENT_STATUS_, // Payment Status = Pending
-      DEFAULT_APPROVAL_STATUS_, // Approval Status = Pending
-      qrFormula, // QR Code
-      DEFAULT_CHECKIN_STATUS_, // Check-in Status
-      '', // Approved By
-      '', // Approval Time
-    ]
+      nowIso, // [0]  Timestamp
+      entryNumber, // [1]  Entry Number   ← generated above, NOT from payload
+      fullName, // [2]  Full Name
+      email, // [3]  Email
+      phone, // [4]  Phone
+      college, // [5]  College
+      year, // [6]  Year
+      branch, // [7]  Branch
+      city, // [8]  City
+      github, // [9]  GitHub
+      linkedIn, // [10] LinkedIn
+      experienceLevel, // [11] Experience Level
+      whyAttend, // [12] Why do you want to attend?
+      screenshotFormula, // [13] Payment Screenshot  (=IMAGE formula)
+      DEFAULT_PAYMENT_STATUS_, // [14] Payment Status      = Pending
+      DEFAULT_APPROVAL_STATUS_, // [15] Approval Status     = Pending
+      driveInfo.url, // [16] Drive File URL      (direct Drive link)
+      DEFAULT_REGISTRATION_STATUS_, // [17] Registration Status = Pending
+    ];
 
-
-    sheet.appendRow(row)
+    sheet.appendRow(row);
 
     // Confirmation email to participant
     sendRegistrationReceivedEmail_(cfg.adminEmail, {
@@ -188,12 +215,19 @@ function register_(data) {
       entryNumber,
       paymentVerificationPending: true,
       paymentScreenshotReceived: true,
-    })
+    });
 
-    return jsonResponse_({ success: true, entryNumber })
+    return jsonResponse_({ success: true, entryNumber });
   } catch (error) {
-    Logger.log('register_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('REGISTRATION_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "register_ error: " + (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "REGISTRATION_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
@@ -203,52 +237,105 @@ function register_(data) {
 function approveRegistration_(data) {
   // Prepared for future use.
   try {
-    return jsonResponse_({ success: true, message: 'approveRegistration endpoint is prepared.' })
+    return jsonResponse_({
+      success: true,
+      message: "approveRegistration endpoint is prepared.",
+    });
   } catch (error) {
-    Logger.log('approveRegistration_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('APPROVAL_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "approveRegistration_ error: " +
+        (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "APPROVAL_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
 function rejectRegistration_(data) {
   // Prepared for future use.
   try {
-    return jsonResponse_({ success: true, message: 'rejectRegistration endpoint is prepared.' })
+    return jsonResponse_({
+      success: true,
+      message: "rejectRegistration endpoint is prepared.",
+    });
   } catch (error) {
-    Logger.log('rejectRegistration_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('REJECTION_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "rejectRegistration_ error: " +
+        (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "REJECTION_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
 function sendApprovalEmail_(data) {
   // Prepared for future use.
   try {
-    return jsonResponse_({ success: true, message: 'sendApprovalEmail endpoint is prepared.' })
+    return jsonResponse_({
+      success: true,
+      message: "sendApprovalEmail endpoint is prepared.",
+    });
   } catch (error) {
-    Logger.log('sendApprovalEmail_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('EMAIL_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "sendApprovalEmail_ error: " +
+        (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "EMAIL_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
 function generateQRCode_(data) {
   // Prepared: generate QR formula payload.
   try {
-    const entryNumber = String(data.entryNumber || '').trim()
-    if (!entryNumber) throw new Error('Missing entryNumber')
-    return jsonResponse_({ success: true, qrFormula: buildQrCodeFormula_(entryNumber) })
+    const entryNumber = String(data.entryNumber || "").trim();
+    if (!entryNumber) throw new Error("Missing entryNumber");
+    return jsonResponse_({
+      success: true,
+      qrFormula: buildQrCodeFormula_(entryNumber),
+    });
   } catch (error) {
-    Logger.log('generateQRCode_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('QR_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "generateQRCode_ error: " + (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "QR_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
 function markCheckedIn_(data) {
   // Prepared: update sheet check-in fields in future.
   try {
-    return jsonResponse_({ success: true, message: 'markCheckedIn endpoint is prepared.' })
+    return jsonResponse_({
+      success: true,
+      message: "markCheckedIn endpoint is prepared.",
+    });
   } catch (error) {
-    Logger.log('markCheckedIn_ error: ' + (error && error.stack ? error.stack : error))
-    return jsonError_('CHECKIN_FAILED', error ? error.toString() : 'Unknown error', 500, {})
+    Logger.log(
+      "markCheckedIn_ error: " + (error && error.stack ? error.stack : error),
+    );
+    return jsonError_(
+      "CHECKIN_FAILED",
+      error ? error.toString() : "Unknown error",
+      500,
+      {},
+    );
   }
 }
 
@@ -256,79 +343,88 @@ function markCheckedIn_(data) {
 // Internal helpers
 // =============================
 function getOrInitSheet_(spreadsheetId) {
-  const ss = SpreadsheetApp.openById(spreadsheetId)
-  const sheet = ss.getActiveSheet()
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const sheet = ss.getActiveSheet();
 
   // Ensure header correctness.
-  const lastRow = sheet.getLastRow()
-  const existingHeader = lastRow >= 1
-    ? sheet.getRange(1, 1, 1, SHEET_HEADERS_.length).getValues()[0]
-    : []
+  const lastRow = sheet.getLastRow();
+  const existingHeader =
+    lastRow >= 1
+      ? sheet.getRange(1, 1, 1, SHEET_HEADERS_.length).getValues()[0]
+      : [];
 
   const isCorrect =
     existingHeader &&
     existingHeader.length === SHEET_HEADERS_.length &&
-    existingHeader.join('|') === SHEET_HEADERS_.join('|')
+    existingHeader.join("|") === SHEET_HEADERS_.join("|");
 
   if (!isCorrect) {
-    sheet.getRange(1, 1, 1, SHEET_HEADERS_.length).setValues([SHEET_HEADERS_])
+    sheet.getRange(1, 1, 1, SHEET_HEADERS_.length).setValues([SHEET_HEADERS_]);
   }
 
-  return sheet
+  return sheet;
 }
 
 function generateEntryNumber_(prefix) {
   // Must never duplicate: use ScriptProperties counter with LockService.
-  const lock = LockService.getScriptLock()
-  lock.waitLock(10000)
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
   try {
-    const props = PropertiesService.getScriptProperties()
+    const props = PropertiesService.getScriptProperties();
 
-    const current = parseInt(props.getProperty('DEVAGENTS_ENTRY_COUNTER') || '1000', 10)
-    const next = Math.max(1001, current + 1)
+    const current = parseInt(
+      props.getProperty("DEVAGENTS_ENTRY_COUNTER") || "1000",
+      10,
+    );
+    const next = Math.max(1001, current + 1);
 
-    props.setProperty('DEVAGENTS_ENTRY_COUNTER', String(next))
+    props.setProperty("DEVAGENTS_ENTRY_COUNTER", String(next));
 
     // DA1001, DA1002...
-    return `${prefix}${next}`
+    return `${prefix}${next}`;
   } finally {
-    lock.releaseLock()
+    lock.releaseLock();
   }
 }
 
 function uploadPaymentScreenshotToDrive_(folderId, dataUrl, entryNumber) {
   try {
-    const dataUrlStr = String(dataUrl)
-    if (!dataUrlStr.startsWith('data:image')) {
-      throw new Error('paymentScreenshot must be a base64 data URL starting with data:image')
+    const dataUrlStr = String(dataUrl);
+    if (!dataUrlStr.startsWith("data:image")) {
+      throw new Error(
+        "paymentScreenshot must be a base64 data URL starting with data:image",
+      );
     }
 
-    const folder = DriveApp.getFolderById(folderId)
+    const folder = DriveApp.getFolderById(folderId);
 
-    const base64 = dataUrlStr.split(',')[1]
-    const mimeType = dataUrlStr.split(',')[0].split(':')[1].split(';')[0]
-    const ext = mimeType.includes('png')
-      ? 'png'
-      : mimeType.includes('jpeg')
-        ? 'jpg'
-        : 'png'
+    const base64 = dataUrlStr.split(",")[1];
+    const mimeType = dataUrlStr.split(",")[0].split(":")[1].split(";")[0];
+    const ext = mimeType.includes("png")
+      ? "png"
+      : mimeType.includes("jpeg")
+        ? "jpg"
+        : "png";
 
     const blob = Utilities.newBlob(
       Utilities.base64Decode(base64),
       mimeType,
-      `${entryNumber}.${ext}`
-    )
+      `${entryNumber}.${ext}`,
+    );
 
-    const file = folder.createFile(blob)
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW)
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
     return {
       id: file.getId(),
       url: file.getUrl(),
-    }
+    };
   } catch (error) {
-    Logger.log('uploadPaymentScreenshotToDrive_ error: ' + (error && error.stack ? error.stack : error))
-    throw error
+    Logger.log(
+      "uploadPaymentScreenshotToDrive_ error: " +
+        (error && error.stack ? error.stack : error),
+    );
+    throw error;
   }
 }
 
@@ -341,30 +437,30 @@ function buildImageFormula_(driveFileUrl) {
   // We convert to:
   //   https://drive.google.com/uc?export=view&id=<FILE_ID>
 
-  const match = String(driveFileUrl).match(/\/d\/([^/]+)\/view/)
-  const fileId = match ? match[1] : ''
+  const match = String(driveFileUrl).match(/\/d\/([^/]+)\/view/);
+  const fileId = match ? match[1] : "";
 
   const directUrl = fileId
     ? `https://drive.google.com/uc?export=view&id=${fileId}`
-    : String(driveFileUrl)
+    : String(driveFileUrl);
 
-  return `=IMAGE("${directUrl}")`
+  return `=IMAGE("${directUrl}")`;
 }
-
 
 function buildQrCodeFormula_(value) {
   // Uses an external QR generator for simplicity.
   // If you want to store QR images in Drive later, we can extend.
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}`
-  return `=IMAGE("${qrUrl}")`
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}`;
+  return `=IMAGE("${qrUrl}")`;
 }
 
 function sendRegistrationReceivedEmail_(adminEmail, opts) {
-  const toEmail = String(opts.toEmail || '').trim()
-  const participantName = String(opts.participantName || '').trim()
-  const entryNumber = String(opts.entryNumber || '').trim()
+  const toEmail = String(opts.toEmail || "").trim();
+  const participantName = String(opts.participantName || "").trim();
+  const entryNumber = String(opts.entryNumber || "").trim();
 
-  if (!toEmail) throw new Error('sendRegistrationReceivedEmail_: missing toEmail')
+  if (!toEmail)
+    throw new Error("sendRegistrationReceivedEmail_: missing toEmail");
 
   // Professional HTML email (no plain text)
   const html = `
@@ -387,8 +483,8 @@ function sendRegistrationReceivedEmail_(adminEmail, opts) {
         </div>
 
         <div style="font-size: 14px; color: #334155;">
-          <p style="margin: 8px 0;"><b>Payment Screenshot:</b> ${opts.paymentScreenshotReceived ? 'Received' : 'Not Received'}</p>
-          <p style="margin: 8px 0;"><b>Payment Verification:</b> ${opts.paymentVerificationPending ? 'Pending' : 'Completed'}</p>
+          <p style="margin: 8px 0;"><b>Payment Screenshot:</b> ${opts.paymentScreenshotReceived ? "Received" : "Not Received"}</p>
+          <p style="margin: 8px 0;"><b>Payment Verification:</b> ${opts.paymentVerificationPending ? "Pending" : "Completed"}</p>
         </div>
 
         <div style="margin-top: 16px; font-size: 13px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;">
@@ -400,28 +496,28 @@ function sendRegistrationReceivedEmail_(adminEmail, opts) {
 
       <div style="margin-top: 14px; text-align: center; color: #64748b; font-size: 12px;">matriXO</div>
     </div>
-  `
+  `;
 
-  GmailApp.sendEmail(toEmail, 'DevAgents 1.0 Registration Received', '', {
+  GmailApp.sendEmail(toEmail, "DevAgents 1.0 Registration Received", "", {
     htmlBody: html,
-    name: 'matriXO Events',
+    name: "matriXO Events",
     replyTo: adminEmail,
-  })
+  });
 }
 
 function safeJsonParse_(raw) {
   try {
-    return JSON.parse(raw)
+    return JSON.parse(raw);
   } catch (e) {
-    Logger.log('safeJsonParse_ error: ' + (e && e.toString ? e.toString() : e))
-    return null
+    Logger.log("safeJsonParse_ error: " + (e && e.toString ? e.toString() : e));
+    return null;
   }
 }
 
 function jsonResponse_(payload) {
-  return ContentService
-    .createTextOutput(JSON.stringify(payload))
-    .setMimeType(ContentService.MimeType.JSON)
+  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
+    ContentService.MimeType.JSON,
+  );
 }
 
 function jsonError_(errorCode, message, status, details) {
@@ -432,6 +528,5 @@ function jsonError_(errorCode, message, status, details) {
     error: message,
     details: details || {},
     status: status,
-  })
+  });
 }
-
