@@ -304,7 +304,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
     ? "bg-white/5 border-white/10 backdrop-blur-xl"
     : "bg-white/80 border-slate-200/80 backdrop-blur-xl shadow-sm";
   const textPrimaryClass = isDarkMode ? "text-white" : "text-slate-900";
-  const textSecondaryClass = isDarkMode ? "text-gray-400" : "text-slate-600";
+  const textSecondaryClass = isDarkMode ? "text-gray-300" : "text-slate-600";
   const mutedPanelClass = isDarkMode
     ? "bg-white/5 border-white/10"
     : "bg-slate-100 border-slate-200";
