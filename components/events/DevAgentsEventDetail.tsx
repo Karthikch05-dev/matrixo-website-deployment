@@ -133,7 +133,7 @@ const EVENT_HIGHLIGHTS = [
     desc: "Code along with expert instructors",
   },
   { icon: "🤝", title: "Networking", desc: "Connect with AI enthusiasts" },
-  { icon: "🎁", title: "Swags", desc: "Exclusive event merchandise" },
+  { icon: "🎁", title: "Gifts & Swags", desc: "Exclusive event merchandise" },
   {
     icon: "🏆",
     title: "Top 3 Recognition",
@@ -142,7 +142,7 @@ const EVENT_HIGHLIGHTS = [
   {
     icon: "📜",
     title: "Digital Certificate",
-    desc: "Official certification from matriXO",
+    desc: "Official certification from Microsoft Learn & matriXO",
   },
   {
     icon: "⚡",
@@ -590,7 +590,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             {[
               { label: "₹199 Only", emoji: "💰" },
               { label: "Limited Seats", emoji: "🔥" },
-              { label: "120–150 Participants", emoji: "👥" },
+              { label: "120 Participants", emoji: "👥" },
               { label: "Hands-on Learning", emoji: "💻" },
             ].map((s) => (
               <div
@@ -687,13 +687,15 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 {
                   icon: "📍",
                   label: "Venue",
-                  value: event?.venue || "Venue to be announced",
+                  value:
+                    event?.venue ||
+                    "DraperU India(Formerly Draper Startup House Hyderabad), Rajiv gandhi Nagar, Gachibowli, Hyderabad, Telangana 500032",
                 },
                 { icon: "⏰", label: "Time", value: "3:30 PM – 7:00 PM" },
                 {
                   icon: "👥",
                   label: "Capacity",
-                  value: "120–150 Participants",
+                  value: "120 Participants",
                 },
               ].map((item) => (
                 <div
@@ -795,7 +797,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                   { stat: "3 Hours", label: "Intensive Workshop", emoji: "⏱️" },
                   { stat: "₹199", label: "All-inclusive Price", emoji: "💰" },
                   {
-                    stat: "120+ Seats",
+                    stat: "120 Seats",
                     label: "Limited Availability",
                     emoji: "🎟️",
                   },
@@ -972,103 +974,102 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          6. EVENT HIGHLIGHTS
+          6. EVENT HIGHLIGHTS + 7. WHAT'S INCLUDED
       ══════════════════════════════════════════════════════════════════ */}
       <section className="py-20 px-4">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
-              Event Highlights
-            </h2>
-            <p className="text-slate-400">
-              Everything you get at DevAgents 1.0
-            </p>
-          </motion.div>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Event Highlights */}
+          <div>
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
+                Event Highlights
+              </h2>
+              <p className="text-slate-400">
+                Everything you get at DevAgents 1.0
+              </p>
+            </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {EVENT_HIGHLIGHTS.map((item, i) => (
-              <motion.div
-                key={item.title}
-                variants={fadeInUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                className="da-card-hover da-border-glow p-5 rounded-2xl text-center cursor-default"
-                style={{
-                  background: "rgba(22,22,35,.85)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,.08)",
-                }}
-              >
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4">
+              {EVENT_HIGHLIGHTS.map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06 }}
+                  className="da-card-hover da-border-glow p-5 rounded-2xl text-center cursor-default"
                   style={{
-                    background:
-                      "linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15))",
+                    background: "rgba(22,22,35,.85)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,.08)",
                   }}
                 >
-                  {item.icon}
-                </div>
-                <h3 className="font-bold text-white text-sm mb-1">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-slate-500">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          7. WHAT'S INCLUDED
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
-              What&apos;s Included
-            </h2>
-            <p className="text-slate-400">
-              Everything bundled in your ₹199 pass
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="rounded-2xl p-8"
-            style={{
-              background: "rgba(22,22,35,.85)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,.08)",
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {WHATS_INCLUDED.map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <FaCheckCircle className="text-green-400 text-[10px]" />
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15))",
+                    }}
+                  >
+                    {item.icon}
                   </div>
-                  <span className="text-slate-300 text-sm">{item}</span>
-                </div>
+                  <h3 className="font-bold text-white text-sm mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-slate-500">{item.desc}</p>
+                </motion.div>
               ))}
             </div>
-          </motion.div>
+          </div>
+
+          {/* What's Included */}
+          <div>
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="text-center mb-10"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-4">
+                What&apos;s Included
+              </h2>
+              <p className="text-slate-400">
+                Everything bundled in your ₹199 pass
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="rounded-2xl p-8"
+              style={{
+                background: "rgba(22,22,35,.85)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(255,255,255,.08)",
+              }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-3">
+                {WHATS_INCLUDED.map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <FaCheckCircle className="text-green-400 text-[10px]" />
+                    </div>
+                    <span className="text-slate-300 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -1572,19 +1573,19 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               {
                 icon: "📧",
                 label: "Email",
-                value: "events@matrixo.in",
-                href: "mailto:events@matrixo.in",
+                value: "hello@matrixo.in",
+                href: "mailto:hello@matrixo.in",
               },
               {
                 icon: "📸",
                 label: "Instagram",
-                value: "@matrixo.in",
-                href: "https://instagram.com/matrixo.in",
+                value: "@matrixo_in",
+                href: "https://www.instagram.com/matrixo_in",
               },
               {
                 icon: "💼",
                 label: "LinkedIn",
-                value: "/company/matrixo",
+                value: "matriXO",
                 href: "https://linkedin.com/company/matrixo",
               },
               {
@@ -1597,7 +1598,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 icon: "💬",
                 label: "Community",
                 value: "Join our community",
-                href: "#",
+                href: "https://chat.whatsapp.com/CW5HbObfsi7CcLkoATLJ91",
               },
             ].map((item) => (
               <motion.a
@@ -1696,7 +1697,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             {[
               {
                 Icon: FaInstagram,
-                href: "https://instagram.com/matrixo.in",
+                href: "https://www.instagram.com/matrixo_in",
                 label: "Instagram",
               },
               {
