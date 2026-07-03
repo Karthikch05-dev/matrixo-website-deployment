@@ -156,7 +156,7 @@ export default function DevAgentsRegistrationForm({
     );
   }, []);
   // Format UPI link with Name and Currency (excluding amount to avoid PhonePe limits on personal accounts)
-  const upiDeepLink = `upi://pay?pa=karthikchinthakindi5@okicici&pn=Karthik&cu=INR`;
+  const upiDeepLink = `upi://pay?pa=shivaganesh9108@okhdfcbank`;
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
     e: React.ChangeEvent<
