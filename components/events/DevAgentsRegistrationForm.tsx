@@ -624,7 +624,7 @@ export default function DevAgentsRegistrationForm({
                 </div>
                 <div className="bg-white p-4 rounded-2xl shadow-lg">
                   <Image
-                    src="/devagents-payment-qr.png"
+                    src="https://www.matrixo.in/payment-qr.jpg"
                     alt="Payment QR Code"
                     width={200}
                     height={200}
