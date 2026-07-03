@@ -43,7 +43,7 @@ function getConfig_() {
  * Required spreadsheet header structure
  */
 // Column order MUST match the appendRow() call in register_() exactly.
-// 18 columns — do not add, remove, or reorder without updating register_() too.
+// 17 columns — do not add, remove, or reorder without updating register_() too.
 const SHEET_HEADERS_ = [
   "Timestamp", // [0]
   "Entry Number", // [1]  generated internally — never from frontend
@@ -57,12 +57,11 @@ const SHEET_HEADERS_ = [
   "GitHub", // [9]
   "LinkedIn", // [10]
   "Experience Level", // [11]
-  "Why do you want to attend?", // [12]
-  "Payment Screenshot", // [13]  =IMAGE() formula pointing to Drive thumbnail
-  "Payment Status", // [14]
-  "Approval Status", // [15]
-  "Drive File URL", // [16]  direct Google Drive link to screenshot file
-  "Registration Status", // [17]
+  "Payment Screenshot", // [12]  =IMAGE() formula pointing to Drive thumbnail
+  "Payment Status", // [13]
+  "Approval Status", // [14]
+  "Drive File URL", // [15]  direct Google Drive link to screenshot file
+  "Registration Status", // [16]
 ];
 
 const DEFAULT_PAYMENT_STATUS_ = "Pending";
@@ -139,7 +138,6 @@ function register_(data) {
     const github = String(data.github || "").trim();
     const linkedIn = String(data.linkedIn || data.linkedin || "").trim();
     const experienceLevel = String(data.experienceLevel || "").trim();
-    const whyAttend = String(data.whyAttend || "").trim();
     const city = String(data.city || "").trim();
 
     // Base64 required by spec
@@ -203,7 +201,7 @@ function register_(data) {
 
     // -----------------------------------------------------------------------
     // CRITICAL: this array MUST stay in exact sync with SHEET_HEADERS_ above.
-    // Position [0..17] — 18 elements, no more, no less.
+    // Position [0..16] — 17 elements, no more, no less.
     // -----------------------------------------------------------------------
     const row = [
       nowIso, // [0]  Timestamp
@@ -218,12 +216,11 @@ function register_(data) {
       github, // [9]  GitHub
       linkedIn, // [10] LinkedIn
       experienceLevel, // [11] Experience Level
-      whyAttend, // [12] Why do you want to attend?
-      screenshotFormula, // [13] Payment Screenshot (=IMAGE formula)
-      DEFAULT_PAYMENT_STATUS_, // [14] Payment Status
-      DEFAULT_APPROVAL_STATUS_, // [15] Approval Status
-      driveInfo.url, // [16] Drive File URL
-      DEFAULT_REGISTRATION_STATUS_, // [17] Registration Status
+      screenshotFormula, // [12] Payment Screenshot (=IMAGE formula)
+      DEFAULT_PAYMENT_STATUS_, // [13] Payment Status
+      DEFAULT_APPROVAL_STATUS_, // [14] Approval Status
+      driveInfo.url, // [15] Drive File URL
+      DEFAULT_REGISTRATION_STATUS_, // [16] Registration Status
     ];
 
     sheet.appendRow(row);

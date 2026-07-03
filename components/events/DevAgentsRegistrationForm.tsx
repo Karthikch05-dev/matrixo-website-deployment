@@ -64,7 +64,6 @@ export default function DevAgentsRegistrationForm({
     github: "",
     linkedIn: "",
     experienceLevel: "",
-    whyAttend: "",
     agreeTerms: false,
   });
 
@@ -242,10 +241,6 @@ export default function DevAgentsRegistrationForm({
       toast.error("Experience level is required");
       return false;
     }
-    if (!formData.whyAttend.trim()) {
-      toast.error("Please share why you want to attend");
-      return false;
-    }
     if (!formData.agreeTerms) {
       toast.error("Please agree to the terms & conditions");
       return false;
@@ -305,7 +300,6 @@ export default function DevAgentsRegistrationForm({
         github: formData.github.trim(),
         linkedIn: formData.linkedIn.trim(),
         experienceLevel: formData.experienceLevel,
-        whyAttend: formData.whyAttend.trim(),
         paymentScreenshot: base64Screenshot,
       };
 
@@ -939,19 +933,6 @@ export default function DevAgentsRegistrationForm({
                 <option>Intermediate Developer</option>
                 <option>Advanced Developer</option>
               </select>
-            </div>
-
-            {/* Why do you want to attend? */}
-            <div>
-              <label className={labelClass}>Why do you want to attend? *</label>
-              <textarea
-                name="whyAttend"
-                value={formData.whyAttend}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Tell us what you hope to learn or gain from DevAgents..."
-                className={`${inputClass} resize-none`}
-              />
             </div>
 
             {/* Agree to terms */}
