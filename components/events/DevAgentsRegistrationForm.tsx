@@ -155,17 +155,11 @@ export default function DevAgentsRegistrationForm({
     );
   }, []);
 
-  // UPI link for QR code and payment (same format as VibeCode form)
-  const upiDeepLink = isUpiConfigured
-    ? `upi://pay?pa=karthikchinthakindi5@okicici&pn=MatriXO&am=${PRICE}&cu=INR&tn=${encodeURIComponent(`DevAgents1.0-${transactionCode}`)}`
-    : "";
+  const upiDeepLink = "upi://pay?pa=karthikchinthakindi5@okicici";
 
   const handlePaymentClick = () => {
-    if (!isUpiConfigured) return;
-    toast.info("Opening UPI app for payment...");
-    setTimeout(() => {
-      window.location.href = upiDeepLink;
-    }, 1000);
+    window.location.href = upiDeepLink;
+    toast.info("Complete payment and upload screenshot below");
   };
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
