@@ -50,7 +50,6 @@ export async function POST(request: Request) {
         ["branch", branch],
         ["city", city],
         ["experienceLevel", experienceLevel],
-        ["whyAttend", whyAttend],
         ["paymentScreenshot", paymentScreenshot],
       ] as [string, string | undefined][]
     )
@@ -93,7 +92,7 @@ export async function POST(request: Request) {
       github: String(github || "").trim(),
       linkedIn: String(linkedIn || "").trim(),
       experienceLevel: String(experienceLevel),
-      whyAttend: String(whyAttend).trim(),
+      whyAttend: String(whyAttend || "").trim(),
       paymentScreenshot: String(paymentScreenshot), // Base64 Data URL → Apps Script uploads to Drive
     };
 
