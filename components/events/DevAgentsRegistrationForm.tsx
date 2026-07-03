@@ -156,8 +156,13 @@ export default function DevAgentsRegistrationForm({
   }, []);
 
   const upiDeepLink = isUpiConfigured
-    ? `upi://pay?pa=shivaganesh9108@okhdfcbank&pn=Shiva+Ganesh+Talikota&am=${PRICE}&cu=INR&tn=${encodeURIComponent(`DevAgents1.0-${transactionCode}`)}`
+    ? `upi://pay?pa=shivaganesh9108@okhdfcbank`
     : "";
+
+  const handlePaymentClick = () => {
+    window.location.href = upiDeepLink;
+    toast.info("Complete payment and upload screenshot below");
+  };
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
@@ -580,8 +585,9 @@ export default function DevAgentsRegistrationForm({
             {isMobile ? (
               <>
                 {isUpiConfigured ? (
-                  <a
-                    href={upiDeepLink}
+                  <button
+                    type="button"
+                    onClick={handlePaymentClick}
                     className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02]"
                     style={{
                       background:
@@ -591,7 +597,7 @@ export default function DevAgentsRegistrationForm({
                   >
                     <span className="text-xl">📱</span>
                     <span>Pay ₹{PRICE} with UPI App</span>
-                  </a>
+                  </button>
                 ) : (
                   <div className="w-full rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-5 text-center text-sm text-white/60">
                     UPI ID will be added soon. Once configured, this button will
