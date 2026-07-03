@@ -54,7 +54,7 @@ export default function DevAgentsRegistrationForm({
     !DEVAGENTS_UPI_ID.includes("YOUR_UPI_ID_HERE");
 
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     phone: "",
     college: "",
@@ -62,7 +62,7 @@ export default function DevAgentsRegistrationForm({
     branch: "",
     city: "",
     github: "",
-    linkedin: "",
+    linkedIn: "",
     experienceLevel: "",
     whyAttend: "",
     agreeTerms: false,
@@ -73,7 +73,7 @@ export default function DevAgentsRegistrationForm({
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        name: user.displayName || prev.name,
+        fullName: user.displayName || prev.fullName,
         email: user.email || prev.email,
       }));
     }
@@ -207,7 +207,7 @@ export default function DevAgentsRegistrationForm({
 
   /* ── Validation ──────────────────────────────────────────────────── */
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
+    if (!formData.fullName.trim()) {
       toast.error("Full name is required");
       return false;
     }
@@ -293,28 +293,18 @@ export default function DevAgentsRegistrationForm({
 
       const payload: Record<string, unknown> = {
         action: "register",
-        timestamp: new Date().toISOString(),
-        eventId: event?.id || "devagents-1-0",
-        eventTitle: event?.title || "DevAgents 1.0",
-        ticketType: "DevAgents 1.0 Pass",
-        price: PRICE,
-        transactionCode,
-        entryNumber: transactionCode,
-        qrCodeValue: transactionCode,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        college: formData.college,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        college: formData.college.trim(),
         year: formData.year,
-        branch: formData.branch,
-        city: formData.city,
-        github: formData.github || "",
-        linkedin: formData.linkedin || "",
+        branch: formData.branch.trim(),
+        city: formData.city.trim(),
+        github: formData.github.trim(),
+        linkedIn: formData.linkedIn.trim(),
         experienceLevel: formData.experienceLevel,
-        whyAttend: formData.whyAttend,
-        screenshotFileName: paymentScreenshot.name,
+        whyAttend: formData.whyAttend.trim(),
         paymentScreenshot: base64Screenshot,
-        status: "pending_verification",
       };
 
       await sendToGoogleSheet(payload);
@@ -805,8 +795,8 @@ export default function DevAgentsRegistrationForm({
             <div>
               <label className={labelClass}>Full Name *</label>
               <input
-                name="name"
-                value={formData.name}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Your full name"
                 className={inputClass}
@@ -917,8 +907,8 @@ export default function DevAgentsRegistrationForm({
                   <span className="text-white/30">(optional)</span>
                 </label>
                 <input
-                  name="linkedin"
-                  value={formData.linkedin}
+                  name="linkedIn"
+                  value={formData.linkedIn}
                   onChange={handleChange}
                   placeholder="linkedin.com/in/username"
                   className={inputClass}
