@@ -50,6 +50,7 @@ export async function POST(request: Request) {
         ["branch", branch],
         ["city", city],
         ["experienceLevel", experienceLevel],
+        ["whyAttend", whyAttend],
         ["paymentScreenshot", paymentScreenshot],
       ] as [string, string | undefined][]
     )
@@ -98,11 +99,29 @@ export async function POST(request: Request) {
 
     console.log("[DevAgents] Forwarding registration for:", payload.email);
 
-    const response = await fetch(DEVAGENTS_GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    let response: Response;
+    try {
+      response = await fetch(DEVAGENTS_GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (fetchError) {
+      // Network-level failure reaching the Apps Script URL itself
+      // (wrong URL, DNS failure, deployment removed, etc.)
+      const msg =
+        fetchError instanceof Error ? fetchError.message : String(fetchError);
+      console.error("[DevAgents] Could not reach Apps Script URL:", msg);
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Could not reach the DevAgents Google Apps Script. Verify the deployment URL and that it is redeployed with the latest code.",
+          details: msg,
+        },
+        { status: 502 },
+      );
+    }
 
     const raw = await response.text();
     let data: unknown = {};
@@ -110,8 +129,16 @@ export async function POST(request: Request) {
     try {
       data = raw ? JSON.parse(raw) : {};
     } catch {
-      // Apps Script returned plain text — wrap it
-      data = { success: response.ok, message: raw };
+      // Apps Script returned plain text/HTML — wrap it
+      data = { success: false, message: raw };
+    }
+
+    if (!response.ok) {
+      console.error(
+        "[DevAgents] Apps Script returned non-OK status:",
+        response.status,
+        raw.slice(0, 500),
+      );
     }
 
     return NextResponse.json(
@@ -121,9 +148,14 @@ export async function POST(request: Request) {
       { status: response.ok ? 200 : response.status },
     );
   } catch (error) {
-    console.error("[DevAgents] Registration proxy error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[DevAgents] Registration proxy error:", msg);
     return NextResponse.json(
-      { error: "Failed to forward registration to Google Apps Script." },
+      {
+        success: false,
+        error: "Failed to process registration request.",
+        details: msg,
+      },
       { status: 500 },
     );
   }

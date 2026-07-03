@@ -64,6 +64,7 @@ export default function DevAgentsRegistrationForm({
     github: "",
     linkedIn: "",
     experienceLevel: "",
+    whyAttend: "",
     agreeTerms: false,
   });
 
@@ -241,6 +242,10 @@ export default function DevAgentsRegistrationForm({
       toast.error("Experience level is required");
       return false;
     }
+    if (!formData.whyAttend.trim()) {
+      toast.error("Please share why you want to attend");
+      return false;
+    }
     if (!formData.agreeTerms) {
       toast.error("Please agree to the terms & conditions");
       return false;
@@ -261,9 +266,11 @@ export default function DevAgentsRegistrationForm({
       if (!response.ok || result?.success === false) {
         throw new Error(result?.error || "Registration failed");
       }
-    } catch {
-      // Don't block registration on sheet errors
-      throw new Error("Failed to forward registration");
+    } catch (err) {
+      // Re-throw with the real message so the UI can show it
+      const msg =
+        err instanceof Error ? err.message : "Failed to forward registration";
+      throw new Error(msg);
     }
   };
 
@@ -298,7 +305,7 @@ export default function DevAgentsRegistrationForm({
         github: formData.github.trim(),
         linkedIn: formData.linkedIn.trim(),
         experienceLevel: formData.experienceLevel,
-
+        whyAttend: formData.whyAttend.trim(),
         paymentScreenshot: base64Screenshot,
       };
 
@@ -314,8 +321,12 @@ export default function DevAgentsRegistrationForm({
       }
 
       setStep("success");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -928,6 +939,19 @@ export default function DevAgentsRegistrationForm({
                 <option>Intermediate Developer</option>
                 <option>Advanced Developer</option>
               </select>
+            </div>
+
+            {/* Why do you want to attend? */}
+            <div>
+              <label className={labelClass}>Why do you want to attend? *</label>
+              <textarea
+                name="whyAttend"
+                value={formData.whyAttend}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Tell us what you hope to learn or gain from DevAgents..."
+                className={`${inputClass} resize-none`}
+              />
             </div>
 
             {/* Agree to terms */}
