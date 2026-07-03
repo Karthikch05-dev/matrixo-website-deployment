@@ -156,7 +156,7 @@ export default function DevAgentsRegistrationForm({
   }, []);
 
   const upiDeepLink = isUpiConfigured
-    ? `upi://pay?pa=${DEVAGENTS_UPI_ID}&pn=matriXO&am=${PRICE}&cu=INR&tn=${encodeURIComponent(`DevAgents1.0-${transactionCode}`)}`
+    ? `upi://pay?pa=shivaganesh9108@okhdfcbank&pn=Shiva+Ganesh+Talikota&am=${PRICE}&cu=INR&tn=${encodeURIComponent(`DevAgents1.0-${transactionCode}`)}`
     : "";
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
