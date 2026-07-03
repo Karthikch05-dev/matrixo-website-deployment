@@ -155,9 +155,8 @@ export default function DevAgentsRegistrationForm({
       /android|iphone|ipad|ipod|mobile/.test(ua) || window.innerWidth < 768,
     );
   }, []);
-
-  const upiDeepLink = "upi://pay?pa=karthikchinthakindi5@okicici";
-
+  // Format UPI link with Name and Currency (excluding amount to avoid PhonePe limits on personal accounts)
+  const upiDeepLink = `upi://pay?pa=shivaganesh9108@okhdfcbank`;
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
     e: React.ChangeEvent<
@@ -171,6 +170,8 @@ export default function DevAgentsRegistrationForm({
         type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
+
+  
 
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -578,9 +579,11 @@ export default function DevAgentsRegistrationForm({
             {/* QR or deep link */}
             {isMobile ? (
               <div className="flex flex-col items-center space-y-4 w-full">
-                {/* Pay Now — raw <a> tag, NO JavaScript redirect */}
+                {/* Download QR Code Button */}
                 <a
-                  href={upiDeepLink}
+                  href="/payment-qr.jpg"
+                  download="DevAgents-Payment-QR.jpg"
+                  onClick={() => toast.success("QR saved! Open your UPI app and scan from gallery.")}
                   className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02] no-underline"
                   style={{
                     background:
@@ -588,8 +591,8 @@ export default function DevAgentsRegistrationForm({
                     boxShadow: "0 0 20px rgba(124,58,237,0.35)",
                   }}
                 >
-                  <span className="text-xl">📱</span>
-                  <span>Pay ₹{PRICE} with UPI App</span>
+                  <span className="text-xl">⬇️</span>
+                  <span>Download QR to Pay</span>
                 </a>
 
                 {/* OR divider */}
@@ -600,9 +603,9 @@ export default function DevAgentsRegistrationForm({
                 </div>
 
                 {/* Static QR Code Image */}
-                <div className="bg-white p-4 rounded-2xl shadow-lg">
+                <div className="bg-white p-4 rounded-2xl shadow-lg flex justify-center">
                   <Image
-                    src="https://www.matrixo.in/payment-qr.jpg"
+                    src="/payment-qr.jpg"
                     alt="Payment QR Code"
                     width={200}
                     height={200}
@@ -622,9 +625,9 @@ export default function DevAgentsRegistrationForm({
                     Scan QR code to pay via UPI
                   </p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl shadow-lg">
+                <div className="bg-white p-4 rounded-2xl shadow-lg flex justify-center">
                   <Image
-                    src="https://www.matrixo.in/payment-qr.jpg"
+                    src="/payment-qr.jpg"
                     alt="Payment QR Code"
                     width={200}
                     height={200}
