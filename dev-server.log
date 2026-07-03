@@ -15,3 +15,16 @@
  GET / 200 in 3082ms
  ✓ Compiled in 2.5s (619 modules)
  GET / 200 in 522ms
+ ○ Compiling /events ...
+ ✓ Compiled /events in 2.7s (1493 modules)
+ ○ Compiling /api/event-visibility ...
+ ✓ Compiled /api/event-visibility in 694ms (876 modules)
+ GET /api/event-visibility 500 in 3543ms
+ GET /api/event-visibility 500 in 3545ms
+ ○ Compiling /events/[slug] ...
+ ✓ Compiled /events/[slug] in 3.3s (1579 modules)
+ GET /events/devagents-banner.png 200 in 6387ms
+ GET /api/event-visibility 500 in 118ms
+ GET /api/event-visibility 500 in 115ms
+ ✓ Compiled in 7.6s (1593 modules)
+ GET /events/devagents-1-0?_rsc=1c7q8 200 in 568ms
