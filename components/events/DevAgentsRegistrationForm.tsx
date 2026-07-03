@@ -158,11 +158,6 @@ export default function DevAgentsRegistrationForm({
 
   const upiDeepLink = "upi://pay?pa=karthikchinthakindi5@okicici";
 
-  const handlePaymentClick = () => {
-    window.location.href = upiDeepLink;
-    toast.info("Complete payment and upload screenshot below");
-  };
-
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
     e: React.ChangeEvent<
@@ -583,11 +578,10 @@ export default function DevAgentsRegistrationForm({
             {/* QR or deep link */}
             {isMobile ? (
               <div className="flex flex-col items-center space-y-4 w-full">
-                {/* Pay Now Button */}
-                <button
-                  type="button"
-                  onClick={handlePaymentClick}
-                  className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02]"
+                {/* Pay Now — raw <a> tag, NO JavaScript redirect */}
+                <a
+                  href={upiDeepLink}
+                  className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02] no-underline"
                   style={{
                     background:
                       "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)",
@@ -596,7 +590,7 @@ export default function DevAgentsRegistrationForm({
                 >
                   <span className="text-xl">📱</span>
                   <span>Pay ₹{PRICE} with UPI App</span>
-                </button>
+                </a>
 
                 {/* OR divider */}
                 <div className="w-full text-center">
@@ -608,7 +602,7 @@ export default function DevAgentsRegistrationForm({
                 {/* Static QR Code Image */}
                 <div className="bg-white p-4 rounded-2xl shadow-lg">
                   <Image
-                    src="/payment-qr.png"
+                    src="https://www.matrixo.in/payment-qr.jpg"
                     alt="Payment QR Code"
                     width={200}
                     height={200}
