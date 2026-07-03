@@ -171,6 +171,8 @@ export default function DevAgentsRegistrationForm({
     }));
   };
 
+  
+
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -577,25 +579,21 @@ export default function DevAgentsRegistrationForm({
             {/* QR or deep link */}
             {isMobile ? (
               <div className="flex flex-col items-center space-y-4 w-full">
-                {/* Pay Now Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast.info("Opening UPI app for payment...");
-                    setTimeout(() => {
-                      window.location.href = upiDeepLink;
-                    }, 500);
-                  }}
-                  className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02]"
+                {/* Download QR Code Button */}
+                <a
+                  href="/payment-qr.jpg"
+                  download="DevAgents-Payment-QR.jpg"
+                  onClick={() => toast.success("QR saved! Open your UPI app and scan from gallery.")}
+                  className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02] no-underline"
                   style={{
                     background:
                       "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)",
                     boxShadow: "0 0 20px rgba(124,58,237,0.35)",
                   }}
                 >
-                  <span className="text-xl">📱</span>
-                  <span>Pay ₹{PRICE} with UPI App</span>
-                </button>
+                  <span className="text-xl">⬇️</span>
+                  <span>Download QR to Pay</span>
+                </a>
 
                 {/* OR divider */}
                 <div className="w-full text-center">
