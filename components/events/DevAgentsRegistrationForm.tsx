@@ -261,9 +261,11 @@ export default function DevAgentsRegistrationForm({
       if (!response.ok || result?.success === false) {
         throw new Error(result?.error || "Registration failed");
       }
-    } catch {
-      // Don't block registration on sheet errors
-      throw new Error("Failed to forward registration");
+    } catch (err) {
+      // Re-throw with the real message so the UI can show it
+      const msg =
+        err instanceof Error ? err.message : "Failed to forward registration";
+      throw new Error(msg);
     }
   };
 
@@ -298,7 +300,6 @@ export default function DevAgentsRegistrationForm({
         github: formData.github.trim(),
         linkedIn: formData.linkedIn.trim(),
         experienceLevel: formData.experienceLevel,
-
         paymentScreenshot: base64Screenshot,
       };
 
@@ -314,8 +315,12 @@ export default function DevAgentsRegistrationForm({
       }
 
       setStep("success");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
