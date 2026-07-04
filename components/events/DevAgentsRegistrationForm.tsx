@@ -303,9 +303,9 @@ export default function DevAgentsRegistrationForm({
   };
 
   /* ── Compress image via canvas (mobile photos can be 5–15 MB) ───── */
-  const compressScreenshot = (file: File): Promise<string> =>
+  const compressScreenshot = (dataUrl: string): Promise<string> =>
     new Promise((resolve, reject) => {
-      console.log("[DevAgents] Compressing image:", { name: file.name, type: file.type, size: file.size });
+      console.log("[DevAgents] Compressing image from data URL, length:", dataUrl.length);
       const img = new window.Image();
       img.onload = () => {
         try {
@@ -365,26 +365,23 @@ export default function DevAgentsRegistrationForm({
       };
       img.onerror = () => reject(new Error("Failed to load image for compression"));
 
-      // Load the file into the Image element
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error("Failed to read image file"));
-      reader.readAsDataURL(file);
+      // Load directly from the data URL already in memory — no File re-read needed
+      img.src = dataUrl;
     });
 
   /* ── Final submit (after payment + screenshot) ───────────────────── */
   const handleFinalSubmit = async () => {
-    if (!paymentScreenshot) {
+    if (!paymentScreenshot || !screenshotPreview) {
       toast.error("Please upload your payment screenshot");
       return;
     }
     setIsSubmitting(true);
     try {
-      // Compress and convert screenshot to base64 (handles large mobile photos)
-      console.log("[DevAgents] Starting image compression...");
-      const base64Screenshot = await compressScreenshot(paymentScreenshot);
+      // Compress using the preview data URL already in memory.
+      // We avoid re-reading the File object because mobile browsers
+      // can invalidate File blob references between selection and submission.
+      console.log("[DevAgents] Starting image compression from preview...");
+      const base64Screenshot = await compressScreenshot(screenshotPreview);
       console.log("[DevAgents] Image compressed successfully, base64 length:", base64Screenshot.length);
 
       const payload: Record<string, unknown> = {
