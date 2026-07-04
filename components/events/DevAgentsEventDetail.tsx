@@ -170,44 +170,44 @@ interface AgendaItem {
 
 const AGENDA: AgendaItem[] = [
   {
-    time: "3:30 PM",
+    time: "3:00 PM",
     icon: "👋",
     title: "Registration & Networking",
     desc: "Check-in, meet fellow participants, and settle in",
   },
   {
-    time: "4:00 PM",
+    time: "3:45 PM",
     icon: "🚀",
     title: "Opening Session",
     desc: "Introduction, the Future of AI, and why AI Agents matter today",
   },
   {
-    time: "4:30 PM",
+    time: "4:15 PM",
     icon: "🧠",
     title: "Session 1: LLMs & Prompt Engineering",
     desc: "Deep dive into large language models and crafting effective prompts",
   },
   {
-    time: "5:00 PM",
+    time: "4:45 PM",
     icon: "🤖",
     title: "Session 2: Agentic AI Deep Dive",
     desc: "Autonomous AI, Planning, Reasoning, Tool Calling, Memory & Multi-Agent Systems",
   },
   {
-    time: "5:45 PM",
+    time: "5:30 PM",
     icon: "💻",
     title: "Session 3: Hands-on Workshop",
     desc: "Live Coding — Build your own AI agents and work on real projects",
   },
   {
-    time: "6:30 PM",
+    time: "6:20 PM",
     icon: "🔥",
     title: "Fireside Chat (Planned)",
     desc: "AI Careers, Future Jobs, and Startups",
     badge: "Subject to confirmation",
   },
   {
-    time: "6:45 PM",
+    time: "6:40 PM",
     icon: "🏆",
     title: "Hands-on Challenge + Recognition",
     desc: "Top 3 participants get special recognition and prizes",
@@ -569,6 +569,31 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
         {/* Hero content */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          {/* Postponement Alert */}
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="inline-flex mb-8 w-full max-w-2xl mx-auto"
+          >
+            <div
+              className="flex items-start gap-4 px-6 py-4 rounded-2xl text-sm font-medium w-full text-left shadow-2xl shadow-red-500/10"
+              style={{
+                background: "rgba(220, 38, 38, 0.15)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+              }}
+            >
+              <span className="text-red-400 text-2xl mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <span className="text-red-400 font-bold text-base block mb-1 tracking-wide">URGENT: EVENT POSTPONED</span>
+                <span className="text-white/90 text-sm leading-relaxed">
+                  Due to extremely high demand, the event has been rescheduled to <strong className="text-white">Saturday, 11th July 2026 (3:00 PM - 7:00 PM)</strong>. 
+                  All existing registrations remain completely valid.
+                </span>
+              </div>
+            </div>
+          </motion.div>
           {/* Badge pill */}
           <motion.div
             variants={fadeInUp}
@@ -751,7 +776,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 {
                   icon: "📅",
                   label: "Date",
-                  value: event?.date ? formatEventDate(event.date) : "TBA",
+                  value: "Sat, 11th July 2026",
                 },
                 {
                   icon: "📍",
@@ -760,7 +785,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     event?.venue ||
                     "DraperU India(Formerly Draper Startup House Hyderabad), Rajiv gandhi Nagar, Gachibowli, Hyderabad, Telangana 500032",
                 },
-                { icon: "⏰", label: "Time", value: "3:30 PM – 7:00 PM" },
+                { icon: "⏰", label: "Time", value: "3:00 PM – 7:00 PM" },
                 {
                   icon: "👥",
                   label: "Capacity",
