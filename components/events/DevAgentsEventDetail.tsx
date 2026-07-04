@@ -241,6 +241,12 @@ const PARTNERS = [
     logoDark: THE_STUDENT_SPOT_LOGO_DARK_URL,
   },
   {
+    name: "Legion Community",
+    role: "Community Partner",
+    logoLight: "",
+    logoDark: "",
+  },
+  {
     name: "Any Events Ahead",
     role: "Event Partner",
     logoLight: ANY_EVENTS_AHEAD_LOGO_LIGHT_URL,
@@ -310,7 +316,7 @@ interface CountdownType {
 function PartnerLogo({ name, src }: { name: string; src: string }) {
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (failed || !src) {
     return (
       <div
         className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
@@ -1573,7 +1579,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Main speaker */}
             <motion.div
               variants={fadeInUp}
@@ -1632,25 +1638,96 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               </a>
             </motion.div>
 
-            {/* Guest placeholder */}
+            {/* Speaker 2 */}
             <motion.div
               variants={fadeInUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="rounded-2xl p-8 flex flex-col items-center justify-center text-center"
+              className="rounded-2xl p-8 text-center"
               style={{
-                border: "1px dashed rgba(255,255,255,.1)",
-                background: "rgba(255,255,255,.02)",
+                background: "rgba(22,22,35,.85)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(124,58,237,.25)",
               }}
             >
-              <span className="text-4xl mb-4">🎤</span>
-              <h3 className="text-slate-400 font-medium mb-2">
-                More speakers to be announced...
+              <div className="w-24 h-24 rounded-full mx-auto mb-5 overflow-hidden flex items-center justify-center border border-white/10 bg-white/5">
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-bold text-white font-display"
+                  style={{
+                    background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                  }}
+                >
+                  SR
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-1">
+                Saideep Reddy
               </h3>
-              <p className="text-xs text-slate-600">
-                Stay tuned for guest speaker announcements
+              <p className="text-sm text-blue-400 font-medium mb-1">
+                Guest Speaker
               </p>
+              <p className="text-xs text-slate-500 mb-5">
+                AI & Development Enthusiast
+              </p>
+              <a
+                href="https://www.linkedin.com/in/saideep-reddy7/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-blue-400 transition-colors hover:text-blue-300"
+                style={{
+                  background: "rgba(59,130,246,.1)",
+                  border: "1px solid rgba(59,130,246,.2)",
+                }}
+              >
+                <FaLinkedin /> LinkedIn Profile
+              </a>
+            </motion.div>
+
+            {/* Speaker 3 */}
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="rounded-2xl p-8 text-center"
+              style={{
+                background: "rgba(22,22,35,.85)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(124,58,237,.25)",
+              }}
+            >
+              <div className="w-24 h-24 rounded-full mx-auto mb-5 overflow-hidden flex items-center justify-center border border-white/10 bg-white/5">
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-bold text-white font-display"
+                  style={{
+                    background: "linear-gradient(135deg, #10b981, #3b82f6)",
+                  }}
+                >
+                  BP
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-1">
+                Bhargavi Papolu
+              </h3>
+              <p className="text-sm text-blue-400 font-medium mb-1">
+                Guest Speaker
+              </p>
+              <p className="text-xs text-slate-500 mb-5">
+                AI & Development Enthusiast
+              </p>
+              <a
+                href="https://www.linkedin.com/in/bhargavi-papolu-311989210/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-blue-400 transition-colors hover:text-blue-300"
+                style={{
+                  background: "rgba(59,130,246,.1)",
+                  border: "1px solid rgba(59,130,246,.2)",
+                }}
+              >
+                <FaLinkedin /> LinkedIn Profile
+              </a>
             </motion.div>
           </div>
         </div>
