@@ -176,44 +176,44 @@ const AGENDA: AgendaItem[] = [
     desc: "Check-in, meet fellow participants, and settle in",
   },
   {
-    time: "3:45 PM",
+    time: "3:20 PM",
     icon: "🚀",
     title: "Opening Session",
     desc: "Introduction, the Future of AI, and why AI Agents matter today",
   },
   {
-    time: "4:15 PM",
+    time: "3:40 PM",
     icon: "🧠",
     title: "Session 1: LLMs & Prompt Engineering",
     desc: "Deep dive into large language models and crafting effective prompts",
   },
   {
-    time: "4:45 PM",
+    time: "4:10 PM",
     icon: "🤖",
     title: "Session 2: Agentic AI Deep Dive",
     desc: "Autonomous AI, Planning, Reasoning, Tool Calling, Memory & Multi-Agent Systems",
   },
   {
-    time: "5:30 PM",
+    time: "4:40 PM",
     icon: "💻",
     title: "Session 3: Hands-on Workshop",
     desc: "Live Coding — Build your own AI agents and work on real projects",
   },
   {
-    time: "6:20 PM",
+    time: "5:20 PM",
     icon: "🔥",
     title: "Fireside Chat (Planned)",
     desc: "AI Careers, Future Jobs, and Startups",
     badge: "Subject to confirmation",
   },
   {
-    time: "6:40 PM",
+    time: "5:40 PM",
     icon: "🏆",
     title: "Hands-on Challenge + Recognition",
     desc: "Top 3 participants get special recognition and prizes",
   },
   {
-    time: "7:00 PM",
+    time: "5:50 PM",
     icon: "🎓",
     title: "Closing Ceremony",
     desc: "Certificates, Networking, and Group Photo",
@@ -588,7 +588,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               <div className="flex-1">
                 <span className="text-red-400 font-bold text-base block mb-1 tracking-wide">URGENT: EVENT POSTPONED</span>
                 <span className="text-white/90 text-sm leading-relaxed">
-                  Due to extremely high demand, the event has been rescheduled to <strong className="text-white">Saturday, 11th July 2026 (3:00 PM - 7:00 PM)</strong>. 
+                  Due to extremely high demand, the event has been rescheduled to <strong className="text-white">Saturday, 11th July 2026 (3:00 PM - 6:00 PM)</strong>. 
                   All existing registrations remain completely valid.
                 </span>
               </div>
@@ -785,7 +785,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     event?.venue ||
                     "DraperU India(Formerly Draper Startup House Hyderabad), Rajiv gandhi Nagar, Gachibowli, Hyderabad, Telangana 500032",
                 },
-                { icon: "⏰", label: "Time", value: "3:00 PM – 7:00 PM" },
+                { icon: "⏰", label: "Time", value: "3:00 PM – 6:00 PM" },
                 {
                   icon: "👥",
                   label: "Capacity",
