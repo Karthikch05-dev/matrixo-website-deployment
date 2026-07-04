@@ -553,7 +553,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
         {/* LIVE · OFFLINE badge */}
         <div
-          className="absolute top-6 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
+          className="absolute top-28 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
           style={{
             background: isDarkMode ? "rgba(9,9,15,.6)" : "rgba(255,255,255,.8)",
             backdropFilter: "blur(12px)",
