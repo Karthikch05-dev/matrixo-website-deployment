@@ -176,17 +176,28 @@ export default function DevAgentsRegistrationForm({
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
+    console.log("[DevAgents] Image selected:", { name: file.name, type: file.type, size: file.size });
+    // Mobile browsers (especially iOS Safari) may report empty file.type for HEIC/HEIF.
+    // Fall back to checking file extension when type is empty.
+    const isImageByType = file.type.startsWith("image/");
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif", "svg", "tiff", "tif"];
+    const isImageByExt = imageExtensions.includes(ext);
+    if (!isImageByType && !isImageByExt) {
+      toast.error("Please upload an image file (JPG, PNG, HEIC, WEBP, etc.)");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be under 5 MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be under 10 MB");
       return;
     }
     setPaymentScreenshot(file);
     const reader = new FileReader();
     reader.onloadend = () => setScreenshotPreview(reader.result as string);
+    reader.onerror = () => {
+      console.error("[DevAgents] FileReader failed for preview");
+      toast.error("Failed to read image. Please try a different file.");
+    };
     reader.readAsDataURL(file);
     toast.success("Screenshot uploaded!");
   };
@@ -252,23 +263,116 @@ export default function DevAgentsRegistrationForm({
   /* ── Submit to Google Sheet ──────────────────────────────────────── */
   const sendToGoogleSheet = async (data: Record<string, unknown>) => {
     try {
+      console.log("[DevAgents] Sending registration to /api/devagents/register...");
       const response = await fetch("/api/devagents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
+      console.log("[DevAgents] Response status:", response.status, response.statusText);
+
+      // Handle 413 Payload Too Large specifically
+      if (response.status === 413) {
+        throw new Error(
+          "Image too large for server. Please try a smaller screenshot."
+        );
+      }
+
       const result = await response.json().catch(() => ({}));
+      console.log("[DevAgents] Response body:", result);
       if (!response.ok || result?.success === false) {
-        throw new Error(result?.error || "Registration failed");
+        throw new Error(
+          result?.error ||
+          result?.details ||
+          `Registration failed (HTTP ${response.status})`
+        );
       }
     } catch (err) {
       // Re-throw with the real message so the UI can show it
+      console.error("[DevAgents] sendToGoogleSheet error:", err);
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        throw new Error(
+          "Network error: Could not reach the server. Please check your connection."
+        );
+      }
       const msg =
         err instanceof Error ? err.message : "Failed to forward registration";
       throw new Error(msg);
     }
   };
+
+  /* ── Compress image via canvas (mobile photos can be 5–15 MB) ───── */
+  const compressScreenshot = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      console.log("[DevAgents] Compressing image:", { name: file.name, type: file.type, size: file.size });
+      const img = new window.Image();
+      img.onload = () => {
+        try {
+          // Resize to max 1200×1200 maintaining aspect ratio
+          const MAX = 1200;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            const ratio = Math.min(MAX / width, MAX / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d", { alpha: false });
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Iteratively reduce quality until under 500 KB
+          let quality = 0.7;
+          const tryCompress = () => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  reject(new Error("Canvas toBlob failed"));
+                  return;
+                }
+                console.log("[DevAgents] Compressed blob:", { size: blob.size, quality });
+                if (blob.size > 500 * 1024 && quality > 0.15) {
+                  quality -= 0.1;
+                  tryCompress();
+                } else {
+                  // Convert compressed blob to base64 Data URL
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    const result = reader.result as string;
+                    console.log("[DevAgents] Final base64 length:", result.length);
+                    resolve(result);
+                  };
+                  reader.onerror = () => reject(new Error("Failed to read compressed image"));
+                  reader.readAsDataURL(blob);
+                }
+              },
+              "image/jpeg",
+              quality,
+            );
+          };
+          tryCompress();
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error("Failed to load image for compression"));
+
+      // Load the file into the Image element
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read image file"));
+      reader.readAsDataURL(file);
+    });
 
   /* ── Final submit (after payment + screenshot) ───────────────────── */
   const handleFinalSubmit = async () => {
@@ -278,16 +382,10 @@ export default function DevAgentsRegistrationForm({
     }
     setIsSubmitting(true);
     try {
-      // Convert screenshot to base64
-      const toBase64 = (file: File): Promise<string> =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-      const base64Screenshot = await toBase64(paymentScreenshot);
+      // Compress and convert screenshot to base64 (handles large mobile photos)
+      console.log("[DevAgents] Starting image compression...");
+      const base64Screenshot = await compressScreenshot(paymentScreenshot);
+      console.log("[DevAgents] Image compressed successfully, base64 length:", base64Screenshot.length);
 
       const payload: Record<string, unknown> = {
         action: "register",
@@ -306,6 +404,9 @@ export default function DevAgentsRegistrationForm({
         paymentScreenshot: base64Screenshot,
       };
 
+      const payloadSize = JSON.stringify(payload).length;
+      console.log("[DevAgents] Payload size (bytes):", payloadSize);
+
       await sendToGoogleSheet(payload);
 
       // Store in localStorage to prevent duplicate submissions
@@ -319,6 +420,7 @@ export default function DevAgentsRegistrationForm({
 
       setStep("success");
     } catch (err) {
+      console.error("[DevAgents] Registration error:", err);
       const msg =
         err instanceof Error
           ? err.message
