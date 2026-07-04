@@ -490,7 +490,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
       {/* ══════════════════════════════════════════════════════════════════
           1. HERO SECTION
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-36 pb-16">
         {/* Background stack */}
         <div className="absolute inset-0 pointer-events-none select-none">
           {/* Base gradient */}
