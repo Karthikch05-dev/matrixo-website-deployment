@@ -10,6 +10,8 @@ import {
   FaCopy,
   FaUpload,
   FaTrash,
+  FaLock,
+  FaMobileAlt,
 } from "react-icons/fa";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
@@ -40,6 +42,8 @@ export default function DevAgentsRegistrationForm({
   const [step, setStep] = useState<Step>("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
     null,
@@ -154,9 +158,20 @@ export default function DevAgentsRegistrationForm({
     setIsMobile(
       /android|iphone|ipad|ipod|mobile/.test(ua) || window.innerWidth < 768,
     );
+    // Detect Instagram, Facebook, and other social media in-app browsers
+    setIsInAppBrowser(
+      /instagram|fbav|fban|fb_iab|line\//i.test(navigator.userAgent),
+    );
   }, []);
-  // Format UPI link with Name and Currency (excluding amount to avoid PhonePe limits on personal accounts)
-  const upiDeepLink = `upi://pay?pa=shivaganesh9108@okhdfcbank`;
+  // Format UPI link
+  const upiDeepLink = `upi://pay?pa=shivaganesh9108@okhdfcbank&pn=MatriXO&cu=INR`;
+
+  const handlePayViaUPI = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // In WebViews, window.location.href works more reliably for custom URI schemes
+    window.location.href = upiDeepLink;
+    toast.success("Opening UPI app...");
+  };
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
     e: React.ChangeEvent<
@@ -208,7 +223,9 @@ export default function DevAgentsRegistrationForm({
       return;
     }
     navigator.clipboard.writeText(DEVAGENTS_UPI_ID);
+    setCopiedUpi(true);
     toast.success("UPI ID copied!");
+    setTimeout(() => setCopiedUpi(false), 2000);
   };
 
   const copyTxCode = () => {
@@ -442,46 +459,64 @@ export default function DevAgentsRegistrationForm({
   const labelClass = "block text-sm font-medium text-white/60 mb-1.5";
 
   /* ── Step indicator ──────────────────────────────────────────────── */
-  const StepDots = () => (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {(["form", "payment", "success"] as Step[]).map((s, i) => (
-        <div key={s} className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-            style={{
-              background:
-                step === s
-                  ? "linear-gradient(135deg,#3b82f6,#8b5cf6)"
-                  : step === "payment" && s === "form"
-                    ? "linear-gradient(135deg,#3b82f6,#8b5cf6)"
-                    : step === "success"
+  const StepDots = () => {
+    const steps: { key: Step; label: string }[] = [
+      { key: "form", label: "Details" },
+      { key: "payment", label: "Pay" },
+      { key: "success", label: "Done" },
+    ];
+    const currentIdx = steps.findIndex((s) => s.key === step);
+
+    return (
+      <div className="flex items-center justify-center gap-0 mb-5">
+        {steps.map((s, i) => (
+          <div key={s.key} className="flex items-center">
+            <div className="flex flex-col items-center gap-1 min-w-[3rem]">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+                style={{
+                  background:
+                    i <= currentIdx
                       ? "linear-gradient(135deg,#3b82f6,#8b5cf6)"
                       : "rgba(255,255,255,0.08)",
-              color: "white",
-              boxShadow: step === s ? "0 0 12px rgba(124,58,237,0.5)" : "none",
-            }}
-          >
-            {(step === "payment" && s === "form") || step === "success" ? (
-              <FaCheckCircle className="text-xs" />
-            ) : (
-              i + 1
+                  color: "white",
+                  boxShadow:
+                    i === currentIdx
+                      ? "0 0 12px rgba(124,58,237,0.5)"
+                      : "none",
+                }}
+              >
+                {i < currentIdx ? (
+                  <FaCheckCircle className="text-xs" />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={`text-[10px] font-medium transition-colors duration-300 ${
+                  i <= currentIdx ? "text-white/70" : "text-white/30"
+                }`}
+              >
+                {s.label}
+              </span>
+            </div>
+            {i < 2 && (
+              <div
+                className="w-8 h-px -mt-4"
+                style={{
+                  background:
+                    i < currentIdx
+                      ? "linear-gradient(90deg,#3b82f6,#8b5cf6)"
+                      : "rgba(255,255,255,0.1)",
+                  transition: "background 0.3s ease",
+                }}
+              />
             )}
           </div>
-          {i < 2 && (
-            <div
-              className="w-8 h-px"
-              style={{
-                background:
-                  (step === "payment" && i === 0) || step === "success"
-                    ? "linear-gradient(90deg,#3b82f6,#8b5cf6)"
-                    : "rgba(255,255,255,0.1)",
-              }}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
   /* ── Backdrop ────────────────────────────────────────────────────── */
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -584,15 +619,15 @@ export default function DevAgentsRegistrationForm({
         initial={{ opacity: 0 }}
         animate={{ opacity: isOpen ? 1 : 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:px-4"
         style={{ background: "rgba(9,9,15,0.85)", backdropFilter: "blur(8px)" }}
         onClick={handleBackdrop}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: isOpen ? 1 : 0.95, opacity: isOpen ? 1 : 0 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-          className="rounded-2xl overflow-hidden w-full max-w-md max-h-[90vh] overflow-y-auto"
+          initial={{ y: 60, opacity: 0 }}
+          animate={{ y: isOpen ? 0 : 60, opacity: isOpen ? 1 : 0 }}
+          transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          className="rounded-t-3xl sm:rounded-2xl overflow-hidden w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           style={cardStyle}
         >
           <div
@@ -601,7 +636,11 @@ export default function DevAgentsRegistrationForm({
               background: "linear-gradient(90deg,#2563eb,#7c3aed,#ec4899)",
             }}
           />
-          <div className="p-6 space-y-5">
+          {/* Drag handle for mobile bottom sheet */}
+          <div className="flex justify-center pt-3 sm:hidden">
+            <div className="w-10 h-1 rounded-full bg-white/20" />
+          </div>
+          <div className="p-5 sm:p-6 space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -624,143 +663,114 @@ export default function DevAgentsRegistrationForm({
 
             <StepDots />
 
-            {/* Amount */}
+            {/* Amount Hero */}
             <div
-              className="p-4 rounded-xl text-center"
+              className="p-4 rounded-2xl text-center relative overflow-hidden"
               style={{
-                background: "rgba(59,130,246,0.07)",
-                border: "1px solid rgba(59,130,246,0.18)",
+                background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))",
+                border: "1px solid rgba(99,102,241,0.2)",
               }}
             >
               <p
-                className="text-4xl font-bold"
+                className="text-4xl font-extrabold tracking-tight"
                 style={{
-                  background: "linear-gradient(90deg,#4F8BFF,#8B5CF6)",
+                  background: "linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
               >
                 ₹{PRICE}
               </p>
-              <p className="text-xs text-white/40 mt-1">
+              <p className="text-sm text-white/50 mt-1">
                 DevAgents 1.0 — Workshop Pass
               </p>
+              <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                <span className="text-xs font-semibold text-orange-300">
+                  Only few seats left — Book now!
+                </span>
+              </div>
             </div>
 
-            {/* Transaction code */}
-            <div>
-              <p className="text-xs text-white/40 mb-1.5 uppercase tracking-wider">
-                Your Transaction Reference
-              </p>
-              <div
-                className="flex items-center justify-between p-3 rounded-xl gap-2"
+            {/* PAY VIA UPI — Primary CTA for mobile */}
+            {isMobile && (
+              <button
+                onClick={handlePayViaUPI}
+                className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "linear-gradient(135deg,#2563eb,#7c3aed)",
+                  boxShadow: "0 4px 24px rgba(124,58,237,0.4), 0 0 0 1px rgba(124,58,237,0.2)",
                 }}
               >
-                <span className="text-white/70 font-mono text-xs truncate">
-                  {transactionCode}
-                </span>
-                <button
-                  onClick={copyTxCode}
-                  className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-blue-400 hover:text-blue-300"
-                  style={{ background: "rgba(59,130,246,0.1)" }}
-                >
-                  <FaCopy className="text-xs" /> Copy
-                </button>
-              </div>
-              <p className="text-xs text-white/30 mt-1">
-                Add this as a note in your UPI transaction
-              </p>
+                <FaMobileAlt className="text-lg" />
+                <span>Pay ₹{PRICE} via UPI App</span>
+              </button>
+            )}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-xs text-white/30 font-medium">
+                {isMobile ? "or scan QR code" : "Scan QR code to pay"}
+              </span>
+              <div className="flex-1 h-px bg-white/10" />
             </div>
 
-            {/* QR or deep link */}
-            {isMobile ? (
-              <div className="flex flex-col items-center space-y-4 w-full">
-                {/* Download QR Code Button */}
-                <a
-                  href="/payment-qr.jpg"
-                  download="DevAgents-Payment-QR.jpg"
-                  onClick={() => toast.success("QR saved! Open your UPI app and scan from gallery.")}
-                  className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl font-bold text-white transition-all hover:scale-[1.02] no-underline"
-                  style={{
-                    background:
-                      "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)",
-                    boxShadow: "0 0 20px rgba(124,58,237,0.35)",
-                  }}
-                >
-                  <span className="text-xl">⬇️</span>
-                  <span>Download QR to Pay</span>
-                </a>
-
-                {/* OR divider */}
-                <div className="w-full text-center">
-                  <p className="text-sm text-white/40 mb-3">
-                    OR scan QR code below
-                  </p>
-                </div>
-
-                {/* Static QR Code Image */}
-                <div className="bg-white p-4 rounded-2xl shadow-lg flex justify-center">
-                  <Image
-                    src="/payment-qr.jpg"
-                    alt="Payment QR Code"
-                    width={200}
-                    height={200}
-                    className="rounded-lg"
-                    priority
-                  />
-                </div>
-                <p className="text-xs text-white/40 text-center">
-                  Scan with any UPI app (Google Pay, PhonePe, Paytm, etc.)
-                </p>
+            {/* QR Code */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-white p-3 rounded-2xl shadow-lg shadow-black/20">
+                <Image
+                  src="/payment-qr.jpg"
+                  alt="Payment QR Code"
+                  width={isMobile ? 180 : 200}
+                  height={isMobile ? 180 : 200}
+                  className="rounded-lg"
+                  priority
+                />
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                {/* Static QR Code Image */}
-                <div>
-                  <p className="text-sm text-white/60 text-center mb-3">
-                    Scan QR code to pay via UPI
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl shadow-lg flex justify-center">
-                  <Image
-                    src="/payment-qr.jpg"
-                    alt="Payment QR Code"
-                    width={200}
-                    height={200}
-                    className="rounded-lg"
-                    priority
-                  />
-                </div>
-                <p className="text-xs text-white/40 text-center">
-                  Scan with GPay, PhonePe, Paytm or any UPI app
-                </p>
-              </div>
-            )}
+              <a
+                href="/payment-qr.jpg"
+                download="DevAgents-Payment-QR.jpg"
+                onClick={() => toast.success("QR saved! Open your UPI app and scan from gallery.")}
+                className="mt-2 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10"
+              >
+                <span>⬇️</span> Download QR Code
+              </a>
+              <p className="text-[11px] text-white/30 text-center mt-1">
+                Works with GPay, PhonePe, Paytm & all UPI apps
+              </p>
+            </div>
 
             {/* UPI ID */}
             <div>
-              <p className="text-xs text-white/40 mb-1.5 uppercase tracking-wider">
-                UPI ID
-              </p>
+              <p className="text-xs text-white/40 mb-1.5">UPI ID</p>
               <div
-                className="flex items-center justify-between p-3 rounded-xl"
+                className="flex items-center justify-between p-3 rounded-xl transition-all duration-300"
                 style={{
                   background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  border: copiedUpi
+                    ? "1px solid rgba(34,197,94,0.4)"
+                    : "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                <span className="text-white font-mono text-sm">
+                <span className="text-white font-mono text-sm truncate mr-2">
                   {DEVAGENTS_UPI_ID}
                 </span>
                 <button
                   onClick={copyUpi}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-blue-400 hover:text-blue-300"
-                  style={{ background: "rgba(59,130,246,0.1)" }}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
+                  style={{
+                    background: copiedUpi
+                      ? "rgba(34,197,94,0.15)"
+                      : "rgba(59,130,246,0.1)",
+                    color: copiedUpi ? "#4ade80" : "#60a5fa",
+                  }}
                 >
-                  <FaCopy /> Copy
+                  {copiedUpi ? (
+                    <><FaCheckCircle className="text-xs" /> Copied</>
+                  ) : (
+                    <><FaCopy className="text-xs" /> Copy</>
+                  )}
                 </button>
               </div>
               {!isUpiConfigured && (
@@ -771,16 +781,30 @@ export default function DevAgentsRegistrationForm({
               )}
             </div>
 
+            {/* After Payment divider */}
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-xs text-white/40 font-semibold uppercase tracking-wider">After Payment</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
             {/* Screenshot upload */}
             <div>
               <p className={labelClass}>Upload Payment Screenshot *</p>
               {screenshotPreview ? (
                 <div className="relative">
-                  <img
-                    src={screenshotPreview}
-                    alt="Payment screenshot"
-                    className="w-full h-40 object-cover rounded-xl border border-white/10"
-                  />
+                  <div className="rounded-xl overflow-hidden border border-green-500/30">
+                    <img
+                      src={screenshotPreview}
+                      alt="Payment screenshot"
+                      className="w-full h-40 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-xl" />
+                    <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
+                      <FaCheckCircle className="text-green-400 text-sm" />
+                      <span className="text-xs text-green-300 font-medium">Proof uploaded</span>
+                    </div>
+                  </div>
                   <button
                     onClick={() => {
                       setPaymentScreenshot(null);
@@ -796,15 +820,23 @@ export default function DevAgentsRegistrationForm({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all hover:border-blue-500/40"
+                  className="w-full py-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] hover:border-indigo-500/40"
                   style={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                    background: "rgba(255,255,255,0.03)",
+                    borderColor: "rgba(99,102,241,0.25)",
+                    background: "rgba(99,102,241,0.04)",
                   }}
                 >
-                  <FaUpload className="text-white/30 text-xl" />
-                  <span className="text-xs text-white/40">
-                    Click to upload (max 5 MB)
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center mb-1"
+                    style={{ background: "rgba(99,102,241,0.12)" }}
+                  >
+                    <FaUpload className="text-indigo-400 text-lg" />
+                  </div>
+                  <span className="text-sm text-white/50 font-medium">
+                    Tap to upload payment proof
+                  </span>
+                  <span className="text-[11px] text-white/25">
+                    JPG, PNG, HEIC — max 10 MB
                   </span>
                 </button>
               )}
@@ -817,17 +849,17 @@ export default function DevAgentsRegistrationForm({
               />
             </div>
 
-            {/* Confirm button */}
+            {/* Submit button */}
             <button
               onClick={handleFinalSubmit}
               disabled={isSubmitting || !paymentScreenshot}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
               style={{
                 background: paymentScreenshot
-                  ? "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)"
+                  ? "linear-gradient(135deg,#16a34a,#22c55e)"
                   : "rgba(255,255,255,0.06)",
                 boxShadow: paymentScreenshot
-                  ? "0 0 20px rgba(124,58,237,0.35)"
+                  ? "0 4px 20px rgba(34,197,94,0.3)"
                   : "none",
               }}
             >
@@ -835,8 +867,10 @@ export default function DevAgentsRegistrationForm({
                 <>
                   <FaSpinner className="animate-spin" /> Submitting…
                 </>
+              ) : paymentScreenshot ? (
+                <>I&apos;ve Paid — Submit ✓</>
               ) : (
-                "Complete Registration"
+                "Upload proof to continue"
               )}
             </button>
 
@@ -847,6 +881,16 @@ export default function DevAgentsRegistrationForm({
             >
               ← Back to form
             </button>
+
+            {/* Trust footer */}
+            <div className="flex items-center justify-center gap-3 pt-1 pb-1">
+              <div className="flex items-center gap-1.5 text-[10px] text-white/25">
+                <FaLock className="text-[8px]" />
+                <span>Secure payment</span>
+              </div>
+              <span className="text-white/10">·</span>
+              <span className="text-[10px] text-white/25">1,000+ registrations</span>
+            </div>
           </div>
         </motion.div>
       </motion.div>,
@@ -1102,7 +1146,7 @@ export default function DevAgentsRegistrationForm({
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:scale-[1.02] mt-2"
+              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98] mt-2"
               style={{
                 background: "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)",
                 boxShadow: "0 0 24px rgba(124,58,237,0.35)",
@@ -1111,11 +1155,12 @@ export default function DevAgentsRegistrationForm({
               Continue to Payment →
             </button>
 
-            <p className="text-center text-xs text-white/20 pb-2">
-              Ticket price:{" "}
-              <span className="text-white/40 font-semibold">₹{PRICE}</span> ·
-              Limited to 150 seats
-            </p>
+            <div className="flex items-center justify-center gap-2 pb-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <p className="text-xs text-white/30">
+                <span className="text-white/50 font-semibold">₹{PRICE}</span> · Limited to 150 seats · Instant confirmation
+              </p>
+            </div>
           </form>
         </div>
       </motion.div>

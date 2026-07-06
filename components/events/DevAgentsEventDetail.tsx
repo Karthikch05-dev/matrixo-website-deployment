@@ -170,50 +170,50 @@ interface AgendaItem {
 
 const AGENDA: AgendaItem[] = [
   {
-    time: "3:30 PM",
+    time: "3:00 PM",
     icon: "👋",
     title: "Registration & Networking",
     desc: "Check-in, meet fellow participants, and settle in",
   },
   {
-    time: "4:00 PM",
+    time: "3:20 PM",
     icon: "🚀",
     title: "Opening Session",
     desc: "Introduction, the Future of AI, and why AI Agents matter today",
   },
   {
-    time: "4:30 PM",
+    time: "3:40 PM",
     icon: "🧠",
     title: "Session 1: LLMs & Prompt Engineering",
     desc: "Deep dive into large language models and crafting effective prompts",
   },
   {
-    time: "5:00 PM",
+    time: "4:10 PM",
     icon: "🤖",
     title: "Session 2: Agentic AI Deep Dive",
     desc: "Autonomous AI, Planning, Reasoning, Tool Calling, Memory & Multi-Agent Systems",
   },
   {
-    time: "5:45 PM",
+    time: "4:40 PM",
     icon: "💻",
     title: "Session 3: Hands-on Workshop",
     desc: "Live Coding — Build your own AI agents and work on real projects",
   },
   {
-    time: "6:30 PM",
+    time: "5:20 PM",
     icon: "🔥",
     title: "Fireside Chat (Planned)",
     desc: "AI Careers, Future Jobs, and Startups",
     badge: "Subject to confirmation",
   },
   {
-    time: "6:45 PM",
+    time: "5:40 PM",
     icon: "🏆",
     title: "Hands-on Challenge + Recognition",
     desc: "Top 3 participants get special recognition and prizes",
   },
   {
-    time: "7:00 PM",
+    time: "5:50 PM",
     icon: "🎓",
     title: "Closing Ceremony",
     desc: "Certificates, Networking, and Group Photo",
@@ -239,6 +239,12 @@ const PARTNERS = [
     role: "Community Partner",
     logoLight: THE_STUDENT_SPOT_LOGO_LIGHT_URL,
     logoDark: THE_STUDENT_SPOT_LOGO_DARK_URL,
+  },
+  {
+    name: "Legion Community",
+    role: "Community Partner",
+    logoLight: "",
+    logoDark: "",
   },
   {
     name: "Any Events Ahead",
@@ -310,7 +316,7 @@ interface CountdownType {
 function PartnerLogo({ name, src }: { name: string; src: string }) {
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (failed || !src) {
     return (
       <div
         className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
@@ -373,7 +379,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
   /* Countdown ──────────────────────────────────────────────────────────── */
   useEffect(() => {
-    const targetDate = event?.date ? new Date(event.date) : null;
+    // Hardcoded to the postponed date: July 11, 2026 at 3:00 PM IST
+    const targetDate = new Date("2026-07-11T15:00:00+05:30");
     if (!targetDate || isNaN(targetDate.getTime())) return;
 
     const tick = () => {
@@ -423,7 +430,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
   /* ───────────────────────────────────────────────────────────────────── */
   return (
     <div
-      className={`devagents-shell min-h-screen font-sans overflow-x-hidden ${pageBgClass}`}
+      className={`devagents-shell min-h-screen font-sans overflow-x-hidden ${pageBgClass} -mt-24`}
       data-theme={isDarkMode ? "dark" : "light"}
     >
       {/* ── Injected CSS keyframes ────────────────────────────────────────── */}
@@ -483,7 +490,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
       {/* ══════════════════════════════════════════════════════════════════
           1. HERO SECTION
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-36 pb-16">
         {/* Background stack */}
         <div className="absolute inset-0 pointer-events-none select-none">
           {/* Base gradient */}
@@ -546,7 +553,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
         {/* LIVE · OFFLINE badge */}
         <div
-          className="absolute top-6 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
+          className="absolute top-28 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
           style={{
             background: isDarkMode ? "rgba(9,9,15,.6)" : "rgba(255,255,255,.8)",
             backdropFilter: "blur(12px)",
@@ -563,6 +570,31 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
 
         {/* Hero content */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          {/* Postponement Alert */}
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="flex mb-8 w-full max-w-2xl mx-auto"
+          >
+            <div
+              className="flex items-start gap-4 px-6 py-4 rounded-2xl text-sm font-medium w-full text-left shadow-2xl shadow-red-500/10"
+              style={{
+                background: "rgba(220, 38, 38, 0.15)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+              }}
+            >
+              <span className="text-red-400 text-2xl mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <span className="text-red-400 font-bold text-base block mb-1 tracking-wide">URGENT: EVENT POSTPONED</span>
+                <span className="text-white/90 text-sm leading-relaxed">
+                  Due to extremely high demand, the event has been rescheduled to <strong className="text-white">Saturday, 11th July 2026 (3:00 PM - 6:00 PM)</strong>. 
+                  All existing registrations remain completely valid.
+                </span>
+              </div>
+            </div>
+          </motion.div>
           {/* Badge pill */}
           <motion.div
             variants={fadeInUp}
@@ -745,7 +777,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 {
                   icon: "📅",
                   label: "Date",
-                  value: event?.date ? formatEventDate(event.date) : "TBA",
+                  value: "Sat, 11th July 2026",
                 },
                 {
                   icon: "📍",
@@ -754,7 +786,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                     event?.venue ||
                     "DraperU India(Formerly Draper Startup House Hyderabad), Rajiv gandhi Nagar, Gachibowli, Hyderabad, Telangana 500032",
                 },
-                { icon: "⏰", label: "Time", value: "3:30 PM – 7:00 PM" },
+                { icon: "⏰", label: "Time", value: "3:00 PM – 6:00 PM" },
                 {
                   icon: "👥",
                   label: "Capacity",
@@ -1573,7 +1605,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Main speaker */}
             <motion.div
               variants={fadeInUp}
@@ -1619,7 +1651,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                 Agentic AI Speaker · AI Educator · Startup Founder
               </p>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/shivaganesht/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-blue-400 transition-colors hover:text-blue-300"
@@ -1632,25 +1664,96 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               </a>
             </motion.div>
 
-            {/* Guest placeholder */}
+            {/* Speaker 2 */}
             <motion.div
               variants={fadeInUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="rounded-2xl p-8 flex flex-col items-center justify-center text-center"
+              className="rounded-2xl p-8 text-center"
               style={{
-                border: "1px dashed rgba(255,255,255,.1)",
-                background: "rgba(255,255,255,.02)",
+                background: "rgba(22,22,35,.85)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(124,58,237,.25)",
               }}
             >
-              <span className="text-4xl mb-4">🎤</span>
-              <h3 className="text-slate-400 font-medium mb-2">
-                More speakers to be announced...
+              <div className="w-24 h-24 rounded-full mx-auto mb-5 overflow-hidden flex items-center justify-center border border-white/10 bg-white/5">
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-bold text-white font-display"
+                  style={{
+                    background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                  }}
+                >
+                  SR
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-1">
+                Saideep Reddy
               </h3>
-              <p className="text-xs text-slate-600">
-                Stay tuned for guest speaker announcements
+              <p className="text-sm text-blue-400 font-medium mb-1">
+                Guest Speaker
               </p>
+              <p className="text-xs text-slate-500 mb-5">
+                AI & Development Enthusiast
+              </p>
+              <a
+                href="https://www.linkedin.com/in/saideep-reddy7/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-blue-400 transition-colors hover:text-blue-300"
+                style={{
+                  background: "rgba(59,130,246,.1)",
+                  border: "1px solid rgba(59,130,246,.2)",
+                }}
+              >
+                <FaLinkedin /> LinkedIn Profile
+              </a>
+            </motion.div>
+
+            {/* Speaker 3 */}
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="rounded-2xl p-8 text-center"
+              style={{
+                background: "rgba(22,22,35,.85)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(124,58,237,.25)",
+              }}
+            >
+              <div className="w-24 h-24 rounded-full mx-auto mb-5 overflow-hidden flex items-center justify-center border border-white/10 bg-white/5">
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-bold text-white font-display"
+                  style={{
+                    background: "linear-gradient(135deg, #10b981, #3b82f6)",
+                  }}
+                >
+                  BP
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-1">
+                Bhargavi Papolu
+              </h3>
+              <p className="text-sm text-blue-400 font-medium mb-1">
+                Guest Speaker
+              </p>
+              <p className="text-xs text-slate-500 mb-5">
+                AI & Development Enthusiast
+              </p>
+              <a
+                href="https://www.linkedin.com/in/bhargavi-papolu-311989210/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-blue-400 transition-colors hover:text-blue-300"
+                style={{
+                  background: "rgba(59,130,246,.1)",
+                  border: "1px solid rgba(59,130,246,.2)",
+                }}
+              >
+                <FaLinkedin /> LinkedIn Profile
+              </a>
             </motion.div>
           </div>
         </div>
