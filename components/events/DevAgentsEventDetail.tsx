@@ -551,25 +551,28 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
           ))}
         </div>
 
-        {/* LIVE · OFFLINE badge */}
-        <div
-          className="absolute top-28 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full"
-          style={{
-            background: isDarkMode ? "rgba(9,9,15,.6)" : "rgba(255,255,255,.8)",
-            backdropFilter: "blur(12px)",
-            border: isDarkMode
-              ? "1px solid rgba(34,197,94,.3)"
-              : "1px solid rgba(34,197,94,.18)",
-          }}
-        >
-          <span className="w-2 h-2 rounded-full bg-green-500 da-pulse-dot" />
-          <span className="text-xs font-semibold tracking-widest text-green-400">
-            LIVE · OFFLINE
-          </span>
-        </div>
+        {/* Removed absolute LIVE OFFLINE badge to be placed below */}
 
         {/* Hero content */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          {/* LIVE · OFFLINE badge */}
+          <div className="flex justify-center mb-6 mt-4">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: isDarkMode ? "rgba(9,9,15,.6)" : "rgba(255,255,255,.8)",
+                backdropFilter: "blur(12px)",
+                border: isDarkMode
+                  ? "1px solid rgba(34,197,94,.3)"
+                  : "1px solid rgba(34,197,94,.18)",
+              }}
+            >
+              <span className="w-2 h-2 rounded-full bg-green-500 da-pulse-dot" />
+              <span className="text-xs font-bold tracking-widest text-green-400">
+                LIVE · OFFLINE
+              </span>
+            </div>
+          </div>
           {/* Postponement Alert */}
           <motion.div
             variants={fadeInUp}
@@ -656,13 +659,6 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             animate="visible"
             className="flex items-center justify-center gap-2 mb-10"
           >
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0f172a] bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-[10px] text-white font-bold z-10" style={{ zIndex: 10 - i }}>
-                  {String.fromCharCode(64 + i)}
-                </div>
-              ))}
-            </div>
             <p className="text-sm font-medium text-slate-400">Join <strong className="text-white">100+ developers</strong> from top tech companies & universities.</p>
           </motion.div>
 
@@ -756,47 +752,59 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
-              className="flex flex-col items-center gap-4"
+              className="mt-8 mb-4 w-full"
             >
-              <p className="text-xs font-medium tracking-widest uppercase text-slate-500">
-                Event Starts In
-              </p>
-              <div className="flex gap-3">
-                {(
-                  [
-                    { v: countdown.days, l: "Days" },
-                    { v: countdown.hours, l: "Hours" },
-                    { v: countdown.minutes, l: "Minutes" },
-                    { v: countdown.seconds, l: "Seconds" },
-                  ] as { v: number; l: string }[]
-                ).map(({ v, l }) => (
-                  <div key={l} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: "rgba(22,22,35,.85)",
-                        backdropFilter: "blur(12px)",
-                        border: "1px solid rgba(124,58,237,.3)",
-                      }}
-                    >
-                      <AnimatePresence mode="wait">
-                        <motion.span
-                          key={v}
-                          initial={{ opacity: 0, y: -8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-2xl md:text-3xl font-bold font-display text-white tabular-nums"
-                        >
-                          {String(v).padStart(2, "0")}
-                        </motion.span>
-                      </AnimatePresence>
+              <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 px-8 py-6 rounded-3xl"
+                   style={{
+                     background: "rgba(22,22,35,.6)",
+                     backdropFilter: "blur(20px)",
+                     border: "1px solid rgba(124,58,237,.2)"
+                   }}>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <Image src={MATRIXO_LOGO_LIGHT_URL} alt="matriXO" width={120} height={40} className="hidden dark:block" />
+                  <Image src={MATRIXO_LOGO_DARK_URL} alt="matriXO" width={120} height={40} className="block dark:hidden" />
+                  <div className="h-8 w-px bg-slate-700 hidden md:block"></div>
+                  <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 mt-2 md:mt-0">
+                    Event Starts In
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {(
+                    [
+                      { v: countdown.days, l: "Days" },
+                      { v: countdown.hours, l: "Hours" },
+                      { v: countdown.minutes, l: "Minutes" },
+                      { v: countdown.seconds, l: "Seconds" },
+                    ] as { v: number; l: string }[]
+                  ).map(({ v, l }) => (
+                    <div key={l} className="flex flex-col items-center gap-1">
+                      <div
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: "rgba(22,22,35,.85)",
+                          backdropFilter: "blur(12px)",
+                          border: "1px solid rgba(124,58,237,.3)",
+                        }}
+                      >
+                        <AnimatePresence mode="wait">
+                          <motion.span
+                            key={v}
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 8 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-xl md:text-2xl font-bold font-display text-white tabular-nums"
+                          >
+                            {String(v).padStart(2, "0")}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        {l}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      {l}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -847,7 +855,7 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                         {item.label}
                       </p>
                       <p
-                        className={`text-sm font-semibold mt-0.5 truncate ${textPrimaryClass}`}
+                        className={`text-sm font-semibold mt-0.5 ${textPrimaryClass}`}
                       >
                         {item.value}
                       </p>
