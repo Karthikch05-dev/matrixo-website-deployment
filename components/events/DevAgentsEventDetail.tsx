@@ -761,8 +761,8 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
                      border: "1px solid rgba(124,58,237,.2)"
                    }}>
                 <div className="flex flex-col md:flex-row items-center gap-4">
-                  <Image src={MATRIXO_LOGO_LIGHT_URL} alt="matriXO" width={120} height={40} className="hidden dark:block" />
-                  <Image src={MATRIXO_LOGO_DARK_URL} alt="matriXO" width={120} height={40} className="block dark:hidden" />
+                  <Image src={MATRIXO_LOGO_DARK_URL} alt="matriXO" width={120} height={40} className="hidden dark:block" />
+                  <Image src={MATRIXO_LOGO_LIGHT_URL} alt="matriXO" width={120} height={40} className="block dark:hidden" />
                   <div className="h-8 w-px bg-slate-700 hidden md:block"></div>
                   <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 mt-2 md:mt-0">
                     Event Starts In
