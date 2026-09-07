@@ -3,10 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { FaSpinner, FaLock, FaPlus, FaCheckCircle } from 'react-icons/fa'
-import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import type { Offer } from '@/lib/studentvault/types'
 import { daysUntil } from '@/lib/studentvault/types'
 import OfferForm from './OfferForm'
+
+/**
+ * Supplies the caller's Firebase ID token. The console works from either the
+ * employee portal or a normal website session — the server decides whether the
+ * token belongs to an employee.
+ */
+type GetIdToken = () => Promise<string | undefined>
 
 const FILTERS = [
   'All',
@@ -21,8 +27,7 @@ type Filter = (typeof FILTERS)[number]
 
 const STALE_DAYS = 30
 
-export default function EmployeeConsole() {
-  const { user } = useEmployeeAuth()
+export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken }) {
   const [offers, setOffers] = useState<Offer[]>([])
   const [busy, setBusy] = useState(true)
   const [denied, setDenied] = useState<string | null>(null)
@@ -33,7 +38,7 @@ export default function EmployeeConsole() {
 
   const authedFetch = useCallback(
     async (url: string, init: RequestInit = {}) => {
-      const token = await user?.getIdToken()
+      const token = await getIdToken()
       return fetch(url, {
         ...init,
         headers: {
@@ -43,14 +48,10 @@ export default function EmployeeConsole() {
         },
       })
     },
-    [user]
+    [getIdToken]
   )
 
   const load = useCallback(async () => {
-    if (!user) {
-      setBusy(false)
-      return
-    }
     setBusy(true)
     try {
       const res = await authedFetch('/api/studentvault/offers')
@@ -67,7 +68,7 @@ export default function EmployeeConsole() {
     } finally {
       setBusy(false)
     }
-  }, [user, authedFetch])
+  }, [authedFetch])
 
   useEffect(() => {
     load()

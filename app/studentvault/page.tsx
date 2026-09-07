@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getPublishedOffers } from '@/lib/studentvault/data'
 import { getProductBreakdown } from '@/lib/products'
 import CatalogBrowser from '@/components/studentvault/CatalogBrowser'
+import ManageLink from '@/components/studentvault/ManageLink'
 import { daysUntil } from '@/lib/studentvault/types'
 
 export const revalidate = 3600
@@ -77,6 +78,7 @@ export default async function StudentVaultPage() {
               <Link href="/studentvault/expired" className="btn-secondary inline-flex">
                 View archive
               </Link>
+              <ManageLink />
             </div>
           </header>
 

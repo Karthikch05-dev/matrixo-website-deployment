@@ -46,8 +46,22 @@ export async function getAuthedUser(request: NextRequest): Promise<AuthedUser | 
  */
 const DEFAULT_EMPLOYEE_EMAIL_PATTERN = /(@matrixo\.in|\.matrixo@gmail\.com)$/i
 
+/**
+ * Explicit allowlist for employees whose sign-in address is not a company
+ * address (comma-separated). Set server-side only, so it cannot be self-granted.
+ */
+function allowlistedEmails(): string[] {
+  return (process.env.STUDENTVAULT_EMPLOYEE_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 function isCompanyEmail(email: string | null): boolean {
   if (!email) return false
+
+  if (allowlistedEmails().includes(email.toLowerCase())) return true
+
   const configured = process.env.STUDENTVAULT_EMPLOYEE_EMAIL_PATTERN
   if (configured) {
     try {

@@ -37,7 +37,7 @@ function ConsoleGate() {
     )
   }
 
-  return <EmployeeConsole />
+  return <EmployeeConsole getIdToken={() => user.getIdToken()} />
 }
 
 export default function StudentVaultAdminPage() {
