@@ -7,30 +7,22 @@ import {
   FaTimes,
   FaSpinner,
   FaCheckCircle,
-  FaCopy,
-  FaUpload,
-  FaTrash,
   FaLock,
-  FaMobileAlt,
 } from "react-icons/fa";
-import { QRCodeSVG } from "qrcode.react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
-import { DEVAGENTS_UPI_ID } from "@/lib/eventBranding";
+import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
+import { getPaymentBreakdown } from "@/lib/payments";
 
 interface DevAgentsRegistrationFormProps {
   event: any;
   onClose: () => void;
 }
 
+const EVENT_ID = "devagents-1-0";
+const TICKET_ID = "devagents-pass";
 const PRICE = 199;
-
-const generateTransactionCode = () => {
-  const ts = Date.now();
-  const rand = Math.floor(Math.random() * 9000) + 1000;
-  return `DEVAGENTS-${ts}-${rand}`;
-};
+const BREAKDOWN = getPaymentBreakdown(PRICE);
 
 type Step = "form" | "payment" | "success";
 
@@ -41,22 +33,12 @@ export default function DevAgentsRegistrationForm({
   const { user } = useAuth();
   const [step, setStep] = useState<Step>("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [copiedUpi, setCopiedUpi] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
-    null,
-  );
-  const [transactionCode] = useState(generateTransactionCode);
+  const [paymentRef, setPaymentRef] = useState("");
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const closeTimerRef = useRef<number | null>(null);
   const isSubmittingRef = useRef(false);
-  const isUpiConfigured =
-    DEVAGENTS_UPI_ID.trim().length > 0 &&
-    !DEVAGENTS_UPI_ID.includes("YOUR_UPI_ID_HERE");
+  const { startCheckout, isProcessing } = useRazorpayCheckout();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -152,26 +134,6 @@ export default function DevAgentsRegistrationForm({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [requestClose]);
 
-  // Mobile detection
-  useEffect(() => {
-    const ua = navigator.userAgent.toLowerCase();
-    setIsMobile(
-      /android|iphone|ipad|ipod|mobile/.test(ua) || window.innerWidth < 768,
-    );
-    // Detect Instagram, Facebook, and other social media in-app browsers
-    setIsInAppBrowser(
-      /instagram|fbav|fban|fb_iab|line\//i.test(navigator.userAgent),
-    );
-  }, []);
-  // Format UPI link
-  const upiDeepLink = `upi://pay?pa=shivaganesh9108@okhdfcbank&pn=MatriXO&cu=INR`;
-
-  const handlePayViaUPI = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // In WebViews, window.location.href works more reliably for custom URI schemes
-    window.location.href = upiDeepLink;
-    toast.success("Opening UPI app...");
-  };
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleChange = (
     e: React.ChangeEvent<
@@ -187,51 +149,6 @@ export default function DevAgentsRegistrationForm({
   };
 
   
-
-  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    console.log("[DevAgents] Image selected:", { name: file.name, type: file.type, size: file.size });
-    // Mobile browsers (especially iOS Safari) may report empty file.type for HEIC/HEIF.
-    // Fall back to checking file extension when type is empty.
-    const isImageByType = file.type.startsWith("image/");
-    const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif", "svg", "tiff", "tif"];
-    const isImageByExt = imageExtensions.includes(ext);
-    if (!isImageByType && !isImageByExt) {
-      toast.error("Please upload an image file (JPG, PNG, HEIC, WEBP, etc.)");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be under 10 MB");
-      return;
-    }
-    setPaymentScreenshot(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setScreenshotPreview(reader.result as string);
-    reader.onerror = () => {
-      console.error("[DevAgents] FileReader failed for preview");
-      toast.error("Failed to read image. Please try a different file.");
-    };
-    reader.readAsDataURL(file);
-    toast.success("Screenshot uploaded!");
-  };
-
-  const copyUpi = () => {
-    if (!isUpiConfigured) {
-      toast.error("UPI ID is not configured yet");
-      return;
-    }
-    navigator.clipboard.writeText(DEVAGENTS_UPI_ID);
-    setCopiedUpi(true);
-    toast.success("UPI ID copied!");
-    setTimeout(() => setCopiedUpi(false), 2000);
-  };
-
-  const copyTxCode = () => {
-    navigator.clipboard.writeText(transactionCode);
-    toast.success("Transaction code copied!");
-  };
 
   /* ── Validation ──────────────────────────────────────────────────── */
   const validateForm = (): boolean => {
@@ -319,88 +236,37 @@ export default function DevAgentsRegistrationForm({
     }
   };
 
-  /* ── Compress image via canvas (mobile photos can be 5–15 MB) ───── */
-  const compressScreenshot = (dataUrl: string): Promise<string> =>
-    new Promise((resolve, reject) => {
-      console.log("[DevAgents] Compressing image from data URL, length:", dataUrl.length);
-      const img = new window.Image();
-      img.onload = () => {
-        try {
-          // Resize to max 1200×1200 maintaining aspect ratio
-          const MAX = 1200;
-          let { width, height } = img;
-          if (width > MAX || height > MAX) {
-            const ratio = Math.min(MAX / width, MAX / height);
-            width = Math.round(width * ratio);
-            height = Math.round(height * ratio);
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d", { alpha: false });
-          if (!ctx) {
-            reject(new Error("Could not get canvas context"));
-            return;
-          }
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Iteratively reduce quality until under 500 KB
-          let quality = 0.7;
-          const tryCompress = () => {
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  reject(new Error("Canvas toBlob failed"));
-                  return;
-                }
-                console.log("[DevAgents] Compressed blob:", { size: blob.size, quality });
-                if (blob.size > 500 * 1024 && quality > 0.15) {
-                  quality -= 0.1;
-                  tryCompress();
-                } else {
-                  // Convert compressed blob to base64 Data URL
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    const result = reader.result as string;
-                    console.log("[DevAgents] Final base64 length:", result.length);
-                    resolve(result);
-                  };
-                  reader.onerror = () => reject(new Error("Failed to read compressed image"));
-                  reader.readAsDataURL(blob);
-                }
-              },
-              "image/jpeg",
-              quality,
-            );
-          };
-          tryCompress();
-        } catch (err) {
-          reject(err);
-        }
-      };
-      img.onerror = () => reject(new Error("Failed to load image for compression"));
-
-      // Load directly from the data URL already in memory — no File re-read needed
-      img.src = dataUrl;
+  /* ── Pay with Razorpay, then submit ──────────────────────────────── */
+  const handlePayAndSubmit = async () => {
+    await startCheckout({
+      eventId: EVENT_ID,
+      ticketId: TICKET_ID,
+      description: "DevAgentic 1.0 — Workshop Pass",
+      prefill: {
+        name: formData.fullName,
+        email: formData.email,
+        contact: formData.phone,
+      },
+      onSuccess: async (result) => {
+        toast.success("Payment successful! Saving your registration…");
+        setPaymentRef(result.paymentId);
+        await submitRegistration(result);
+      },
+      onFailure: (message) => toast.error(message),
+      onDismiss: () =>
+        toast.info("Payment cancelled — you have not been charged."),
     });
+  };
 
-  /* ── Final submit (after payment + screenshot) ───────────────────── */
-  const handleFinalSubmit = async () => {
-    if (!paymentScreenshot || !screenshotPreview) {
-      toast.error("Please upload your payment screenshot");
-      return;
-    }
+  const submitRegistration = async (payment: {
+    paymentId: string;
+    orderId: string;
+    signature: string;
+    total: number;
+    platformFee: number;
+  }) => {
     setIsSubmitting(true);
     try {
-      // Compress using the preview data URL already in memory.
-      // We avoid re-reading the File object because mobile browsers
-      // can invalidate File blob references between selection and submission.
-      console.log("[DevAgents] Starting image compression from preview...");
-      const base64Screenshot = await compressScreenshot(screenshotPreview);
-      console.log("[DevAgents] Image compressed successfully, base64 length:", base64Screenshot.length);
-
       const payload: Record<string, unknown> = {
         action: "register",
         fullName: formData.fullName.trim(),
@@ -414,12 +280,12 @@ export default function DevAgentsRegistrationForm({
         linkedIn: formData.linkedIn.trim(),
         experienceLevel: formData.experienceLevel,
         whyAttend: formData.whyAttend.trim(),
-        screenshotFileName: paymentScreenshot.name,
-        paymentScreenshot: base64Screenshot,
+        razorpayPaymentId: payment.paymentId,
+        razorpayOrderId: payment.orderId,
+        razorpaySignature: payment.signature,
+        platformFee: payment.platformFee,
+        amountPaid: payment.total,
       };
-
-      const payloadSize = JSON.stringify(payload).length;
-      console.log("[DevAgents] Payload size (bytes):", payloadSize);
 
       await sendToGoogleSheet(payload);
 
@@ -591,8 +457,8 @@ export default function DevAgentsRegistrationForm({
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              Transaction ref:{" "}
-              <span className="text-white/60 font-mono">{transactionCode}</span>
+              Payment ref:{" "}
+              <span className="text-white/60 font-mono">{paymentRef}</span>
             </div>
             <button
               onClick={requestClose}
@@ -648,7 +514,7 @@ export default function DevAgentsRegistrationForm({
                   Complete Payment
                 </h3>
                 <p className="text-xs text-white/40">
-                  Step 2 of 3 — Pay ₹{PRICE} via UPI
+                  Step 2 of 3 — Pay ₹{BREAKDOWN.total} securely
                 </p>
               </div>
               <button
@@ -673,207 +539,72 @@ export default function DevAgentsRegistrationForm({
             >
               <div className="flex items-center justify-center gap-1.5 mb-2 opacity-60">
                 <FaLock className="text-[10px] text-green-400" />
-                <span className="text-[10px] uppercase tracking-widest font-semibold text-green-400">100% Secure Payment</span>
+                <span className="text-[10px] uppercase tracking-widest font-semibold text-green-400">
+                  100% Secure Payment
+                </span>
               </div>
               <p
                 className="text-5xl font-extrabold tracking-tighter"
                 style={{
                   color: "#ffffff",
-                  textShadow: "0 0 20px rgba(255,255,255,0.2)"
+                  textShadow: "0 0 20px rgba(255,255,255,0.2)",
                 }}
               >
-                ₹{PRICE}
+                ₹{BREAKDOWN.total}
               </p>
               <p className="text-sm text-zinc-400 mt-2 font-medium">
                 DevAgentic 1.0 — Workshop Pass
               </p>
-              <div className="flex items-center justify-center gap-2 mt-4 inline-flex px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 mx-auto">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-bold text-red-400 uppercase tracking-wider">Only 14 Seats Left</span>
-              </div>
             </div>
 
-            {/* PAY VIA UPI — Primary CTA for mobile */}
-            {isMobile && (
-              <button
-                onClick={handlePayViaUPI}
-                className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-                style={{
-                  background: "linear-gradient(135deg,#2563eb,#7c3aed)",
-                  boxShadow: "0 4px 24px rgba(124,58,237,0.4), 0 0 0 1px rgba(124,58,237,0.2)",
-                }}
-              >
-                <FaMobileAlt className="text-lg" />
-                <span>Pay ₹{PRICE} via UPI App</span>
-              </button>
-            )}
-
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-xs text-white/30 font-medium">
-                {isMobile ? "or scan QR code" : "Scan QR code to pay"}
-              </span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            {/* QR Code */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="bg-white p-3 rounded-2xl shadow-lg shadow-black/20">
-                <Image
-                  src="/payment-qr.jpg"
-                  alt="Payment QR Code"
-                  width={isMobile ? 180 : 200}
-                  height={isMobile ? 180 : 200}
-                  className="rounded-lg"
-                  priority
-                />
-              </div>
-              <a
-                href="/payment-qr.jpg"
-                download="DevAgents-Payment-QR.jpg"
-                onClick={() => toast.success("QR saved! Open your UPI app and scan from gallery.")}
-                className="mt-2 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10"
-              >
-                <span>⬇️</span> Download QR Code
-              </a>
-              <p className="text-[11px] text-white/30 text-center mt-1">
-                Works with GPay, PhonePe, Paytm & all UPI apps
-              </p>
-            </div>
-
-            {/* UPI ID */}
-            <div>
-              <p className="text-xs text-white/40 mb-1.5">UPI ID</p>
-              <div
-                className="flex items-center justify-between p-3 rounded-xl transition-all duration-300"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: copiedUpi
-                    ? "1px solid rgba(34,197,94,0.4)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <span className="text-white font-mono text-sm truncate mr-2">
-                  {DEVAGENTS_UPI_ID}
-                </span>
-                <button
-                  onClick={copyUpi}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
-                  style={{
-                    background: copiedUpi
-                      ? "rgba(34,197,94,0.15)"
-                      : "rgba(59,130,246,0.1)",
-                    color: copiedUpi ? "#4ade80" : "#60a5fa",
-                  }}
-                >
-                  {copiedUpi ? (
-                    <><FaCheckCircle className="text-xs" /> Copied</>
-                  ) : (
-                    <><FaCopy className="text-xs" /> Copy</>
-                  )}
-                </button>
-              </div>
-              {!isUpiConfigured && (
-                <p className="mt-1 text-xs text-amber-300">
-                  UPI ID is pending — update{" "}
-                  <code>NEXT_PUBLIC_DEVAGENTS_UPI_ID</code> in the env file.
-                </p>
-              )}
-            </div>
-
-            {/* After Payment divider */}
-            <div className="flex items-center gap-3 pt-1">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-xs text-white/40 font-semibold uppercase tracking-wider">After Payment</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            {/* Screenshot upload */}
-            <div>
-              <p className={labelClass}>Upload Payment Screenshot *</p>
-              {screenshotPreview ? (
-                <div className="relative">
-                  <div className="rounded-xl overflow-hidden border border-green-500/30">
-                    <img
-                      src={screenshotPreview}
-                      alt="Payment screenshot"
-                      className="w-full h-40 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-xl" />
-                    <div className="absolute bottom-2 left-3 flex items-center gap-1.5">
-                      <FaCheckCircle className="text-green-400 text-sm" />
-                      <span className="text-xs text-green-300 font-medium">Proof uploaded</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setPaymentScreenshot(null);
-                      setScreenshotPreview(null);
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white transition-colors"
-                    style={{ background: "rgba(239,68,68,0.7)" }}
-                  >
-                    <FaTrash className="text-xs" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] hover:border-indigo-500/40"
-                  style={{
-                    borderColor: "rgba(99,102,241,0.25)",
-                    background: "rgba(99,102,241,0.04)",
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mb-1"
-                    style={{ background: "rgba(99,102,241,0.12)" }}
-                  >
-                    <FaUpload className="text-indigo-400 text-lg" />
-                  </div>
-                  <span className="text-sm text-white/50 font-medium">
-                    Tap to upload payment proof
-                  </span>
-                  <span className="text-[11px] text-white/25">
-                    JPG, PNG, HEIC — max 10 MB
-                  </span>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleScreenshotChange}
-              />
-            </div>
-
-            {/* Submit button */}
-            <button
-              onClick={handleFinalSubmit}
-              disabled={isSubmitting || !paymentScreenshot}
-              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+            {/* Price breakdown */}
+            <div
+              className="p-4 rounded-2xl space-y-2"
               style={{
-                background: paymentScreenshot
-                  ? "linear-gradient(135deg,#16a34a,#22c55e)"
-                  : "rgba(255,255,255,0.06)",
-                boxShadow: paymentScreenshot
-                  ? "0 4px 20px rgba(34,197,94,0.3)"
-                  : "none",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              {isSubmitting ? (
+              <div className="flex justify-between text-sm text-white/60">
+                <span>Workshop pass</span>
+                <span>₹{BREAKDOWN.basePrice}</span>
+              </div>
+              <div className="flex justify-between text-sm text-white/60">
+                <span>Platform fee</span>
+                <span>₹{BREAKDOWN.platformFee}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-white/10 text-base font-bold text-white">
+                <span>Total payable</span>
+                <span>₹{BREAKDOWN.total}</span>
+              </div>
+            </div>
+
+            {/* Pay with Razorpay */}
+            <button
+              onClick={handlePayAndSubmit}
+              disabled={isSubmitting || isProcessing}
+              className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg,#2563eb,#7c3aed)",
+                boxShadow:
+                  "0 4px 24px rgba(124,58,237,0.4), 0 0 0 1px rgba(124,58,237,0.2)",
+              }}
+            >
+              {isSubmitting || isProcessing ? (
                 <>
-                  <FaSpinner className="animate-spin" /> Submitting…
+                  <FaSpinner className="animate-spin" /> Processing…
                 </>
-              ) : paymentScreenshot ? (
-                <>I&apos;ve Paid — Submit ✓</>
               ) : (
-                "Upload proof to continue"
+                <>
+                  <FaLock className="text-sm" />
+                  <span>Pay ₹{BREAKDOWN.total} securely</span>
+                </>
               )}
             </button>
+
+            <p className="text-[11px] text-white/30 text-center">
+              UPI, cards, net banking &amp; wallets — powered by Razorpay
+            </p>
 
             <button
               onClick={() => !isSubmitting && setStep("form")}
@@ -1159,7 +890,7 @@ export default function DevAgentsRegistrationForm({
             <div className="flex items-center justify-center gap-2 pb-2">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               <p className="text-xs text-white/30">
-                <span className="text-white/50 font-semibold">₹{PRICE}</span> · Limited to 120 seats · Instant confirmation
+                <span className="text-white/50 font-semibold">₹{BREAKDOWN.total}</span> · Limited to 120 seats · Instant confirmation
               </p>
             </div>
           </form>

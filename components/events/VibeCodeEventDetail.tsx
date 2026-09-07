@@ -27,6 +27,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { toast } from 'sonner'
 // @ts-ignore - Import error is a VS Code cache issue, file exists
 import VibeCodeRegistrationForm from './VibeCodeRegistrationForm'
+import { PLATFORM_FEE } from '@/lib/payments'
 
 export default function VibeCodeEventDetail({ event }: { event: any }) {
   const { user } = useAuth()
@@ -472,6 +473,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                   </span>
                 </div>
                 <p className="text-gray-400">Per person</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  + ₹{PLATFORM_FEE} platform fee at checkout (₹{69 + PLATFORM_FEE} total)
+                </p>
                 <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
                   <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
                 </div>
@@ -568,8 +572,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
             <div className="mt-6 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
               <p className="text-cyan-400 text-sm text-center">
-                After form submission, you'll be redirected to your UPI app to complete payment. 
-                Payment confirmation is mandatory to secure your spot.
+                After filling the form, you&apos;ll complete payment in a secure Razorpay
+                checkout window. Your spot is confirmed as soon as payment succeeds.
               </p>
             </div>
           </motion.div>
@@ -599,13 +603,17 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <FaRupeeSign className="text-3xl text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Secure UPI Payment</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Secure Online Payment</h3>
             <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-              All payments are completed via UPI. After submitting the registration form, you'll be redirected 
-              to your UPI app to complete payment. Payment confirmation is mandatory to secure your spot.
+              Payments are processed by Razorpay, our PCI-DSS compliant payment gateway.
+              Pay by UPI, credit/debit card, net banking or wallet — your spot is confirmed
+              the moment payment succeeds. A ₹{PLATFORM_FEE} platform fee is added at checkout.
             </p>
-            <div className="flex justify-center">
-              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">UPI Payment</span>
+            <div className="flex justify-center flex-wrap gap-3">
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">UPI</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Cards</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Net Banking</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Wallets</span>
             </div>
           </motion.div>
         </div>

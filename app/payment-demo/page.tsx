@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import RazorpayCheckoutButton from '@/components/RazorpayCheckoutButton'
+import { PLATFORM_FEE } from '@/lib/payments'
 
 export const metadata: Metadata = {
   title: 'Payment Demo - matriXO',
@@ -12,13 +13,16 @@ export default function PaymentDemoPage() {
       <div className="max-w-md w-full text-center space-y-6 py-24">
         <h1 className="text-2xl font-bold">Razorpay Checkout Demo</h1>
         <p className="text-sm opacity-70">
-          Click below to test the Razorpay Standard Checkout flow (test mode).
+          Runs the real DevAgentic 1.0 pass through checkout in test mode: ₹199 ticket
+          + ₹{PLATFORM_FEE} platform fee.
         </p>
         <RazorpayCheckoutButton
-          amount={499}
+          eventId="devagents-1-0"
+          ticketId="devagents-pass"
           description="matriXO test payment"
-          prefill={{ name: '', email: '', contact: '' }}
-        />
+        >
+          Pay ₹{199 + PLATFORM_FEE}
+        </RazorpayCheckoutButton>
       </div>
     </div>
   )

@@ -14,10 +14,11 @@ import {
   FaBus,
   FaInfoCircle,
   FaTimes,
-  FaUpload,
+  FaLock,
 } from "react-icons/fa";
 import { toast } from "sonner";
-import Image from "next/image";
+import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
+import { getPaymentBreakdown } from "@/lib/payments";
 
 interface EventRegistrationFormProps {
   event: any;
@@ -31,13 +32,12 @@ export default function EventRegistrationForm({
   onClose,
 }: EventRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const closeTimerRef = useRef<number | null>(null);
   const isSubmittingRef = useRef(false);
+  const { startCheckout, isProcessing } = useRazorpayCheckout();
+  const breakdown = getPaymentBreakdown(ticket.price);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -55,19 +55,6 @@ export default function EventRegistrationForm({
     wantTransport: "no",
     hearAboutEvent: "",
   });
-
-  // UPI Payment Link for TEDxKPRIT
-  const UPI_PAYMENT_LINK = "upi://pay?pa=bhuvaneshwaripothuraju2005@oksbi";
-
-  // Detect mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     isSubmittingRef.current = isSubmitting;
@@ -147,33 +134,6 @@ export default function EventRegistrationForm({
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please upload an image file");
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-      setPaymentScreenshot(file);
-      toast.success("Screenshot uploaded successfully");
-    }
-  };
-
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
     });
   };
 
@@ -266,31 +226,15 @@ export default function EventRegistrationForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    console.log("🚀 Form submission started");
-
-    // Validate payment screenshot for paid events
-    if (ticket.price > 0 && !paymentScreenshot) {
-      console.error("❌ No payment screenshot uploaded");
-      toast.error("Please upload payment screenshot before submitting");
-      return;
-    }
-
+  const submitRegistration = async (payment?: {
+    paymentId: string;
+    orderId: string;
+    total: number;
+    platformFee: number;
+  }) => {
     setIsSubmitting(true);
 
     try {
-      let base64Image = "";
-
-      if (paymentScreenshot) {
-        // Convert screenshot to base64
-        console.log("🔄 Converting screenshot to base64...");
-        toast.info("Processing payment screenshot...");
-        base64Image = await convertFileToBase64(paymentScreenshot);
-        console.log("✅ Screenshot converted to base64");
-      }
-
       // Prepare data to send to Google Sheet
       console.log("📝 Preparing registration data...");
       const registrationData = {
@@ -310,8 +254,13 @@ export default function EventRegistrationForm({
         emergencyContact: formData.emergencyContact,
         city: formData.city,
         state: formData.state,
-        paymentScreenshot: base64Image,
-        screenshotFileName: paymentScreenshot?.name || "",
+        platformFee: payment?.platformFee ?? 0,
+        amountPaid: payment?.total ?? 0,
+        razorpayPaymentId: payment?.paymentId || "",
+        razorpayOrderId: payment?.orderId || "",
+        // Existing sheet column for payment proof now carries the Razorpay
+        // payment ID, which is the verifiable reference for the transaction.
+        paymentScreenshot: payment?.paymentId || "",
         wantCertificate: formData.wantCertificate,
         wantTransport: formData.wantTransport,
         hearAboutEvent: formData.hearAboutEvent,
@@ -330,7 +279,7 @@ export default function EventRegistrationForm({
 
       // Success message
       toast.success(
-        "✅ Registration submitted successfully! We will verify your payment and send confirmation via email.",
+        "✅ Registration confirmed! Your confirmation email is on its way.",
       );
 
       // Reset form
@@ -350,7 +299,6 @@ export default function EventRegistrationForm({
         wantTransport: "no",
         hearAboutEvent: "",
       });
-      setPaymentScreenshot(null);
 
       // Close the form after a short delay and signal success
       setTimeout(() => {
@@ -382,9 +330,30 @@ export default function EventRegistrationForm({
     }
   };
 
-  const handlePaymentClick = () => {
-    window.location.href = UPI_PAYMENT_LINK;
-    toast.info("Complete payment and upload screenshot below");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (breakdown.isFree) {
+      await submitRegistration();
+      return;
+    }
+
+    await startCheckout({
+      eventId: event.id,
+      ticketId: ticket.id,
+      description: `${event.title} — ${ticket.name}`,
+      prefill: {
+        name: formData.fullName,
+        email: formData.email,
+        contact: formData.contactNumber,
+      },
+      onSuccess: async (result) => {
+        toast.success("Payment successful! Saving your registration…");
+        await submitRegistration(result);
+      },
+      onFailure: (message) => toast.error(message),
+      onDismiss: () => toast.info("Payment cancelled — you have not been charged."),
+    });
   };
 
   if (!mounted) {
@@ -721,6 +690,7 @@ export default function EventRegistrationForm({
           </div>
 
           {/* Payment Section */}
+          {!breakdown.isFree && (
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <FaInfoCircle className="text-orange-500" />
@@ -728,120 +698,27 @@ export default function EventRegistrationForm({
             </h3>
 
             <div className="glass-card p-6 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-2 border-orange-200 dark:border-orange-700">
-              <div className="space-y-4">
-                {/* Mobile: Show Both QR Code and Pay Now Button */}
-                {isMobile ? (
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="w-full">
-                      <p className="text-lg font-bold text-gray-900 dark:text-white text-center">
-                        Ticket Price: ₹{ticket.price}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        Choose your payment method
-                      </p>
-                    </div>
-
-                    {/* Pay Now Button */}
-                    <button
-                      type="button"
-                      onClick={handlePaymentClick}
-                      className="w-full px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600
-                               text-white rounded-lg font-semibold shadow-lg text-lg
-                               hover:shadow-xl transform hover:scale-105 transition-all
-                               flex items-center justify-center gap-2"
-                    >
-                      <span>💳</span> Pay Now ₹{ticket.price}
-                    </button>
-
-                    <div className="w-full text-center">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        OR scan QR code below
-                      </p>
-                    </div>
-
-                    {/* QR Code */}
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                      <Image
-                        src="/payment-qr.jpg"
-                        alt="Payment QR Code"
-                        width={180}
-                        height={180}
-                        className="rounded-lg"
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Scan with any UPI app (Google Pay, PhonePe, Paytm, etc.)
-                    </p>
-                  </div>
-                ) : (
-                  /* Desktop: Show QR Code */
-                  <div className="flex flex-col items-center space-y-4">
-                    <div>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white text-center">
-                        Ticket Price: ₹{ticket.price}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        Scan QR code to pay via UPI
-                      </p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                      <Image
-                        src="/payment-qr.jpg"
-                        alt="Payment QR Code"
-                        width={200}
-                        height={200}
-                        className="rounded-lg"
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Scan with any UPI app (Google Pay, PhonePe, Paytm, etc.)
-                    </p>
-                  </div>
-                )}
-
-                <div className="border-t border-orange-300 dark:border-orange-700 pt-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Upload Payment Screenshot (Transaction Number Should Be
-                    Visible For Verification)*
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600
-                               text-gray-700 dark:text-gray-300 rounded-lg font-medium
-                               hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
-                               flex items-center gap-2"
-                    >
-                      <FaUpload />
-                      Choose File
-                    </button>
-                    {paymentScreenshot && (
-                      <span className="text-sm text-green-600 dark:text-green-400 font-medium flex items-center gap-2">
-                        ✓ {paymentScreenshot.name}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    After making payment, please upload the screenshot here (Max
-                    5MB, image only)
-                  </p>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                  <span>Ticket ({ticket.name})</span>
+                  <span>₹{breakdown.basePrice}</span>
                 </div>
+                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                  <span>Platform fee</span>
+                  <span>₹{breakdown.platformFee}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-orange-300 dark:border-orange-700 text-lg font-bold text-gray-900 dark:text-white">
+                  <span>Total payable</span>
+                  <span>₹{breakdown.total}</span>
+                </div>
+                <p className="flex items-center justify-center gap-2 pt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <FaLock className="text-green-600 dark:text-green-400" />
+                  Secure payment via Razorpay — UPI, cards, net banking &amp; wallets
+                </p>
               </div>
             </div>
           </div>
+          )}
 
           {/* Submit Button */}
           <div className="flex gap-4 pt-4">
@@ -856,13 +733,19 @@ export default function EventRegistrationForm({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isProcessing}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600
                        text-white rounded-lg font-semibold shadow-lg
                        hover:shadow-xl transform hover:scale-105 transition-all
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isSubmitting ? "Submitting..." : "Complete Registration"}
+              {isSubmitting
+                ? "Submitting..."
+                : isProcessing
+                  ? "Processing payment..."
+                  : breakdown.isFree
+                    ? "Complete Registration"
+                    : `Pay ₹${breakdown.total} & Register`}
             </button>
           </div>
         </form>

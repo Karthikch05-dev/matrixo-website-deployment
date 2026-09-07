@@ -1,6 +1,3 @@
-export const DEVAGENTS_UPI_ID =
-  process.env.NEXT_PUBLIC_DEVAGENTS_UPI_ID || "YOUR_UPI_ID_HERE";
-
 export const DEVAGENTS_SPEAKER_IMAGE_URL =
   process.env.NEXT_PUBLIC_DEVAGENTS_SPEAKER_IMAGE_URL || "";
 

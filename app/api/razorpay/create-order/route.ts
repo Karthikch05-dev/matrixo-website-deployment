@@ -1,18 +1,58 @@
 import { NextResponse } from 'next/server'
 import { getRazorpayInstance } from '@/lib/razorpay'
+import { getPaymentBreakdown } from '@/lib/payments'
+import eventsData from '@/data/events.json'
 
 export const dynamic = 'force-dynamic'
 
 const MIN_AMOUNT_PAISE = 100
 
+// Prices always come from the server-side catalog so a tampered client
+// cannot pick its own ticket price.
+function resolveCatalogPrice(eventId?: string, ticketId?: string): number | null {
+  if (!eventId) return null
+
+  const event = (eventsData as any[]).find((e) => e.id === eventId)
+  if (!event) return null
+
+  const tickets = event.tickets || []
+  const ticket = ticketId
+    ? tickets.find((t: any) => t.id === ticketId)
+    : tickets[0]
+
+  if (!ticket || typeof ticket.price !== 'number') return null
+
+  return ticket.price
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { amount, currency, receipt } = body
+    const { eventId, ticketId, currency, receipt, notes } = body
 
-    if (!amount || typeof amount !== 'number' || amount < MIN_AMOUNT_PAISE) {
+    const catalogPrice = resolveCatalogPrice(eventId, ticketId)
+
+    if (catalogPrice === null) {
       return NextResponse.json(
-        { error: `Amount must be a number and at least ${MIN_AMOUNT_PAISE} paise.` },
+        { error: 'Unknown event or ticket. Cannot determine price.' },
+        { status: 400 }
+      )
+    }
+
+    const breakdown = getPaymentBreakdown(catalogPrice)
+
+    if (breakdown.isFree) {
+      return NextResponse.json(
+        { error: 'This ticket is free and does not require payment.' },
+        { status: 400 }
+      )
+    }
+
+    const amountInPaise = breakdown.total * 100
+
+    if (amountInPaise < MIN_AMOUNT_PAISE) {
+      return NextResponse.json(
+        { error: `Amount must be at least ${MIN_AMOUNT_PAISE} paise.` },
         { status: 400 }
       )
     }
@@ -29,15 +69,25 @@ export async function POST(request: Request) {
     }
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount),
+      amount: amountInPaise,
       currency: currency || 'INR',
-      receipt: receipt || `receipt_${Date.now()}`,
+      receipt: (receipt || `rcpt_${Date.now()}`).toString().slice(0, 40),
+      notes: {
+        ...(notes || {}),
+        eventId: eventId || '',
+        ticketId: ticketId || '',
+        basePrice: String(breakdown.basePrice),
+        platformFee: String(breakdown.platformFee),
+      },
     })
 
     return NextResponse.json({
       order_id: order.id,
       amount: order.amount,
       currency: order.currency,
+      basePrice: breakdown.basePrice,
+      platformFee: breakdown.platformFee,
+      total: breakdown.total,
     })
   } catch (error) {
     const err = error as { statusCode?: number; error?: { description?: string } }

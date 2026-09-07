@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - matriXO',
-  description: 'Read the Terms and Conditions for using matriXO services, events, and platform. Last updated October 2025.',
+  description: 'Read the Terms and Conditions for using matriXO services, events, and platform. Last updated September 2026.',
   openGraph: {
     title: 'Terms of Service - matriXO',
     description: 'Terms and Conditions for matriXO services and events.',
@@ -20,7 +20,7 @@ export default function TermsPage() {
           Terms and Conditions
         </h1>
         <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: October 9, 2025</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: September 7, 2026</p>
           
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">1. Acceptance of Terms</h2>
@@ -73,20 +73,36 @@ export default function TermsPage() {
               <li>Prices are listed in INR and include applicable taxes</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Payments</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Payment Processing</h3>
             <ul className="list-disc pl-6 mb-4">
-              <li>All payments are processed securely.</li>
-              <li>We accept UPI, credit/debit cards, net banking, and wallets</li>
-              <li>Prices are subject to change without prior notice</li>
+              <li>All online payments are processed by <strong>Razorpay Software Private Limited</strong>, a PCI-DSS compliant payment gateway</li>
+              <li>We accept UPI, credit/debit cards, net banking, and wallets through Razorpay Checkout</li>
+              <li>matriXO does not collect, store, or have access to your card numbers, UPI PIN, CVV, or net banking credentials — these are handled entirely by Razorpay</li>
+              <li>Your use of the payment gateway is additionally governed by Razorpay&apos;s own terms and privacy policy</li>
+              <li>Payment is confirmed only after Razorpay returns a successful, digitally signed payment confirmation which we verify on our servers</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Platform Fee</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>A <strong>platform fee of ₹5</strong> is added to every paid registration on matrixo.in</li>
+              <li>This fee covers payment gateway charges and the cost of operating our registration platform</li>
+              <li>The fee is shown separately in the payment summary before you pay, and is included in the total amount charged (for example, a ₹499 ticket is charged as ₹504)</li>
+              <li>The platform fee is charged per transaction and is <strong>non-refundable</strong>, except where matriXO cancels the event — see our Cancellations and Refunds Policy</li>
+              <li>Free events carry no platform fee</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Pricing</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Prices are subject to change without prior notice, but the price shown at checkout is the price you pay</li>
               <li>All sales are final unless covered by our refund policy</li>
-              <li>You are responsible for any bank charges or payment gateway fees</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Payment Failures</h3>
             <ul className="list-disc pl-6 mb-4">
-              <li>In case of payment failure, your registration will not be confirmed</li>
-              <li>Failed payment amounts will be refunded by your bank/payment provider within 5-7 days</li>
-              <li>For payment issues, contact our support team</li>
+              <li>In case of payment failure, your registration will not be confirmed and no seat is reserved</li>
+              <li>If an amount is debited but the payment fails or is not verified, it is normally auto-reversed by your bank or Razorpay within 5-7 working days</li>
+              <li>If a debited amount is not reversed within 7 working days, contact us with your transaction reference and we will raise it with Razorpay on your behalf</li>
+              <li>Do not attempt multiple payments for the same registration if you are unsure — contact support first</li>
             </ul>
           </section>
 

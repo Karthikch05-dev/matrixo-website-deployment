@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyRazorpaySignature } from "@/lib/razorpay";
 
 // Check both names for compatibility — NEXT_PUBLIC_ is what Vercel/env has set
 const DEVAGENTS_GOOGLE_SCRIPT_URL =
@@ -35,7 +36,11 @@ export async function POST(request: Request) {
       github,
       linkedIn,
       experienceLevel,
-      paymentScreenshot,
+      razorpayPaymentId,
+      razorpayOrderId,
+      razorpaySignature,
+      platformFee,
+      amountPaid,
     } = body;
 
     // Validate required fields
@@ -49,7 +54,9 @@ export async function POST(request: Request) {
         ["branch", branch],
         ["city", city],
         ["experienceLevel", experienceLevel],
-        ["paymentScreenshot", paymentScreenshot],
+        ["razorpayPaymentId", razorpayPaymentId],
+        ["razorpayOrderId", razorpayOrderId],
+        ["razorpaySignature", razorpaySignature],
       ] as [string, string | undefined][]
     )
       .filter(([, v]) => !v?.toString().trim())
@@ -65,13 +72,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!String(paymentScreenshot).startsWith("data:image")) {
+    // Re-verify the payment here so a registration can never be recorded
+    // from a forged client call that skipped checkout.
+    const paymentIsValid = verifyRazorpaySignature({
+      orderId: String(razorpayOrderId),
+      paymentId: String(razorpayPaymentId),
+      signature: String(razorpaySignature),
+    });
+
+    if (!paymentIsValid) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "paymentScreenshot must be a Base64 image Data URL (data:image/...)",
-        },
+        { success: false, error: "Payment could not be verified." },
         { status: 400 },
       );
     }
@@ -91,7 +102,13 @@ export async function POST(request: Request) {
       github: String(github || "").trim(),
       linkedIn: String(linkedIn || "").trim(),
       experienceLevel: String(experienceLevel),
-      paymentScreenshot: String(paymentScreenshot), // Base64 Data URL → Apps Script uploads to Drive
+      razorpayPaymentId: String(razorpayPaymentId),
+      razorpayOrderId: String(razorpayOrderId),
+      platformFee: String(platformFee ?? ""),
+      amountPaid: String(amountPaid ?? ""),
+      // The Apps Script column that used to hold a screenshot link now holds
+      // the verified Razorpay payment ID, which is the transaction's proof.
+      paymentScreenshot: String(razorpayPaymentId),
     };
 
     console.log("[DevAgents] Forwarding registration for:", payload.email);
