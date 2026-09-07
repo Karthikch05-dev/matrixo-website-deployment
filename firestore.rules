@@ -322,5 +322,50 @@ service cloud.firestore {
       allow update: if isAuthenticated();
       allow delete: if false;
     }
+
+    // ================================================
+    // STUDENTVAULT — OFFERS (public catalog)
+    // ================================================
+    // Readable by anyone so the public catalog can be served and indexed.
+    // ALL writes go through /api/studentvault/* using the Admin SDK, which
+    // bypasses these rules after verifying the caller is a matriXO employee.
+    // Client writes are denied outright: the Employees collection is itself
+    // client-writable, so an `exists(/Employees/$(uid))` check here would be
+    // self-grantable by any signed-in user.
+    match /studentvault_offers/{offerId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ================================================
+    // STUDENTVAULT — PAID GUIDES
+    // ================================================
+    // Never client-readable. Guide content is returned only by the server after
+    // an entitlement check, so it cannot be scraped by unpaid users.
+    match /studentvault_guides/{offerId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ================================================
+    // STUDENTVAULT — ENTITLEMENTS
+    // ================================================
+    // Owner may read their own entitlement; nobody may write from the client.
+    // Granting happens server-side only, after Razorpay signature verification.
+    match /studentvault_entitlements/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // ================================================
+    // STUDENTVAULT — CLAIM TRACKER (owner-only)
+    // ================================================
+    match /studentvault_claims/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+
+      match /items/{offerSlug} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
   }
 }

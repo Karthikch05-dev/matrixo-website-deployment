@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getRazorpayInstance } from '@/lib/razorpay'
 import { getPaymentBreakdown } from '@/lib/payments'
+import { getProduct } from '@/lib/products'
 import eventsData from '@/data/events.json'
 
 export const dynamic = 'force-dynamic'
@@ -28,9 +29,17 @@ function resolveCatalogPrice(eventId?: string, ticketId?: string): number | null
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { eventId, ticketId, currency, receipt, notes } = body
+    const { eventId, ticketId, productId, currency, receipt, notes } = body
 
-    const catalogPrice = resolveCatalogPrice(eventId, ticketId)
+    // Two catalogs, both server-side: events (data/events.json) and products
+    // (lib/products.ts). The client never supplies a price.
+    const product = productId ? getProduct(productId) : null
+
+    if (productId && !product) {
+      return NextResponse.json({ error: 'Unknown product.' }, { status: 400 })
+    }
+
+    const catalogPrice = product ? product.price : resolveCatalogPrice(eventId, ticketId)
 
     if (catalogPrice === null) {
       return NextResponse.json(
@@ -76,6 +85,8 @@ export async function POST(request: Request) {
         ...(notes || {}),
         eventId: eventId || '',
         ticketId: ticketId || '',
+        // Read back during entitlement grant to confirm what was actually paid for.
+        productId: product?.id || '',
         basePrice: String(breakdown.basePrice),
         platformFee: String(breakdown.platformFee),
       },

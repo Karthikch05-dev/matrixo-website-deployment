@@ -53,8 +53,11 @@ export interface RazorpaySuccess {
 }
 
 export interface StartCheckoutOptions {
-  eventId: string
+  /** Event checkout. Provide either eventId or productId. */
+  eventId?: string
   ticketId?: string
+  /** Product checkout (e.g. 'studentvault'). */
+  productId?: string
   description?: string
   prefill?: {
     name?: string
@@ -62,6 +65,10 @@ export interface StartCheckoutOptions {
     contact?: string
   }
   notes?: Record<string, string>
+  /** Defaults to the shared signature-verification endpoint. */
+  verifyPath?: string
+  /** Firebase ID token, when the verify endpoint needs to identify the buyer. */
+  authToken?: string
   onSuccess: (result: RazorpaySuccess) => void | Promise<void>
   onFailure?: (message: string) => void
   onDismiss?: () => void
@@ -74,9 +81,12 @@ export function useRazorpayCheckout() {
     const {
       eventId,
       ticketId,
+      productId,
       description,
       prefill,
       notes,
+      verifyPath = '/api/razorpay/verify-payment',
+      authToken,
       onSuccess,
       onFailure,
       onDismiss,
@@ -90,7 +100,7 @@ export function useRazorpayCheckout() {
       const orderResponse = await fetch('/api/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ticketId, notes }),
+        body: JSON.stringify({ eventId, ticketId, productId, notes }),
       })
 
       const orderData = await orderResponse.json()
@@ -116,9 +126,12 @@ export function useRazorpayCheckout() {
           }
 
           try {
-            const verifyResponse = await fetch('/api/razorpay/verify-payment', {
+            const verifyResponse = await fetch(verifyPath, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+              },
               body: JSON.stringify(payment),
             })
 

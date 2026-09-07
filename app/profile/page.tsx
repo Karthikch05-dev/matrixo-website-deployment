@@ -17,6 +17,7 @@ import { storage } from '@/lib/firebaseConfig'
 import { compressImage, getValidImageUrl } from '@/lib/imageUtils'
 import Link from 'next/link'
 import { getCollegeName } from '@/lib/colleges'
+import StudentVaultDashboardCard from '@/components/studentvault/DashboardCard'
 import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
@@ -676,6 +677,11 @@ export default function ProfilePage() {
                     <FaLink className="text-sm" /> Open in New Tab
                   </Link>
                 )}
+
+                {/* StudentVault */}
+                <div className="mt-6">
+                  <StudentVaultDashboardCard />
+                </div>
               </div>
             )}
 
