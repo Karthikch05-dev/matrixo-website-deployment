@@ -13,10 +13,20 @@ import { toast } from 'sonner'
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 import { getValidImageUrl } from '@/lib/imageUtils'
 
-// Standalone nav link (no dropdown)
+// Standalone nav links (no dropdown), rendered before the Menu dropdown
 const standaloneNavLinks = [
   { name: 'Events', href: '/events' },
+  { name: 'StudentVault', href: '/studentvault' },
 ]
+
+// The Events link also lights up on the homepage; every other standalone link
+// matches its own path.
+const isStandaloneLinkActive = (href: string, pathname: string) => {
+  if (href === '/events') {
+    return pathname === '/' || pathname === '/events' || pathname.startsWith('/events/')
+  }
+  return pathname === href || pathname.startsWith(href + '/')
+}
 
 // All links that live inside the "Menu" dropdown
 const menuDropdownLinks = [
@@ -189,9 +199,9 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-6 lg:gap-8 whitespace-nowrap min-w-0 flex-1 justify-center">
             <div className="flex items-center gap-6 lg:gap-8 whitespace-nowrap min-w-0">
 
-              {/* Standalone nav links (Events) */}
+              {/* Standalone nav links (Events, StudentVault) */}
               {standaloneNavLinks.map((link, index) => {
-                const isActive = pathname === '/' || pathname === '/events' || pathname.startsWith('/events/')
+                const isActive = isStandaloneLinkActive(link.href, pathname)
                 return (
                   <motion.div
                     key={link.name}
@@ -502,9 +512,9 @@ export default function Navbar() {
               <div className="mobile-menu-inner mx-3 rounded-2xl overflow-hidden">
                 <div className="overflow-y-auto max-h-[calc(100dvh-100px)] px-4 py-4 space-y-1">
 
-                  {/* ── Standalone Nav Links (Events) ── */}
+                  {/* ── Standalone Nav Links (Events, StudentVault) ── */}
                   {standaloneNavLinks.map((link, index) => {
-                    const isActive = pathname === '/' || pathname === '/events' || pathname.startsWith('/events/')
+                    const isActive = isStandaloneLinkActive(link.href, pathname)
                     return (
                       <motion.div
                         key={link.name}
