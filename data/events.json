@@ -39,7 +39,9 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "agenda": [
       {
@@ -187,7 +189,9 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "agenda": [
       {
@@ -215,7 +219,12 @@
         "title": "Session 2: Team-Based Coding Challenge & Certificates"
       }
     ],
-    "tags": ["Workshop", "AI Coding", "1st Year", "matriXO"],
+    "tags": [
+      "Workshop",
+      "AI Coding",
+      "1st Year",
+      "matriXO"
+    ],
     "organizer": "matriXO",
     "ticketingPartner": "matriXO",
     "contactEmail": "events@matrixo.in",
@@ -311,7 +320,9 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "speakers": [
       {
@@ -716,7 +727,10 @@
       {
         "name": "PromptOff Championship",
         "description": "AI Prompt Engineering Competition — 3 rounds testing creativity, logic & technical thinking. Microsoft Participation Certificates for all. Win an exclusive campus tour at Microsoft Hyderabad! Fee: ₹149 (Individual)",
-        "images": ["/events/wranglex/1.png", "/events/wranglex/2.png"],
+        "images": [
+          "/events/wranglex/1.png",
+          "/events/wranglex/2.png"
+        ],
         "image": "/events/wranglex/1.png",
         "registrationLink": "https://datawranglers-jbiet.in/promptoff/",
         "category": "Tech Competition"
@@ -724,7 +738,10 @@
       {
         "name": "Tech Presenta",
         "description": "Technical Presentation Competition — Present innovative ideas through Idea Screening & Final Presentation rounds. Individual: ₹99 | Team of 2: ₹169. Win exciting prize money & certificates!",
-        "images": ["/events/wranglex/3.png", "/events/wranglex/4.png"],
+        "images": [
+          "/events/wranglex/3.png",
+          "/events/wranglex/4.png"
+        ],
         "image": "/events/wranglex/3.png",
         "registrationLink": "https://datawranglers-jbiet.in/tech-presenta/",
         "category": "Tech Competition"
@@ -732,7 +749,10 @@
       {
         "name": "Pottery Workshop",
         "description": "Hands-on clay modelling session — design and build unique pottery with guidance from instructors. Machines & tools provided. Refreshments included. Take home your creation! Team of 3: ₹449 | Team of 4: ₹549",
-        "images": ["/events/wranglex/5.png", "/events/wranglex/6.png"],
+        "images": [
+          "/events/wranglex/5.png",
+          "/events/wranglex/6.png"
+        ],
         "image": "/events/wranglex/5.png",
         "registrationLink": "https://datawranglers-jbiet.in/pottery/",
         "category": "Non-Tech"
@@ -740,7 +760,10 @@
       {
         "name": "BGMI Tournament",
         "description": "Battlegrounds Mobile India esports tournament — Squad Format (4 players). Classic Mode on Erangel, Sanhok & Miramar. Standard competitive rules apply. Prize pool: ₹7500!",
-        "images": ["/events/wranglex/7.png", "/events/wranglex/8.png"],
+        "images": [
+          "/events/wranglex/7.png",
+          "/events/wranglex/8.png"
+        ],
         "image": "/events/wranglex/7.png",
         "registrationLink": "https://datawranglers-jbiet.in/bgmi/",
         "category": "Esports"
@@ -748,7 +771,10 @@
       {
         "name": "Free Fire Tournament",
         "description": "Free Fire battle royale esports tournament — last team standing wins. Form your squad and compete for the prize pool!",
-        "images": ["/events/wranglex/9.png", "/events/wranglex/10.png"],
+        "images": [
+          "/events/wranglex/9.png",
+          "/events/wranglex/10.png"
+        ],
         "image": "/events/wranglex/9.png",
         "registrationLink": "https://datawranglers-jbiet.in/freefire/",
         "category": "Esports"
@@ -796,7 +822,9 @@
         ]
       }
     ],
-    "partners": ["matriXO"],
+    "partners": [
+      "matriXO"
+    ],
     "sponsors": [],
     "speakers": [
       {
@@ -812,7 +840,10 @@
       }
     ],
     "agenda": [
-      { "time": "3:30 PM", "title": "Registration, Welcome & Networking" },
+      {
+        "time": "3:30 PM",
+        "title": "Registration, Welcome & Networking"
+      },
       {
         "time": "4:00 PM",
         "title": "Opening Session — Introduction, Future of AI & Why AI Agents Matter"
@@ -833,7 +864,10 @@
         "time": "6:30 PM",
         "title": "Fireside Chat (Planned) — AI Careers, Future Jobs & Startups"
       },
-      { "time": "6:45 PM", "title": "Hands-on Challenge + Top 3 Recognition" },
+      {
+        "time": "6:45 PM",
+        "title": "Hands-on Challenge + Top 3 Recognition"
+      },
       {
         "time": "7:00 PM",
         "title": "Closing — Certificates, Networking & Group Photo"
@@ -909,5 +943,49 @@
       "currency": "INR",
       "note": "Pay via UPI. Payment confirmation required to finalise registration."
     }
+  },
+  {
+    "id": "payment-test-event",
+    "slug": "payment-test-event",
+    "title": "Payment Test Event",
+    "tagline": "Internal payment gateway verification — not a real event",
+    "description": "Internal test event used to verify the Razorpay checkout flow end to end. This is not a public event and is not open for registration. The ticket is priced at the minimum chargeable amount so a live transaction can be confirmed and refunded.",
+    "date": "2027-12-31T10:00:00",
+    "endDate": "2027-12-31T12:00:00",
+    "venue": "Internal",
+    "location": "Online",
+    "totalCapacity": 10,
+    "ticketsSold": 0,
+    "featured": false,
+    "status": "upcoming",
+    "category": "Workshop",
+    "images": {
+      "banner": "/events/vibecoding cover page.jpeg",
+      "thumbnail": "/events/vibecoding cover page.jpeg",
+      "gallery": []
+    },
+    "tickets": [
+      {
+        "id": "test-pass",
+        "name": "Test Pass",
+        "price": 1,
+        "available": 10,
+        "description": "Minimum-amount ticket used only to verify the payment gateway.",
+        "perks": [
+          "Payment gateway verification only"
+        ]
+      }
+    ],
+    "partners": [],
+    "sponsors": [],
+    "speakers": [],
+    "agenda": [],
+    "tags": [
+      "internal",
+      "test",
+      "workshop"
+    ],
+    "organizer": "matriXO",
+    "contactEmail": "hello@matrixo.in"
   }
 ]
