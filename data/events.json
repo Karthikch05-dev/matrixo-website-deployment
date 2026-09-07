@@ -958,7 +958,7 @@
     "ticketsSold": 0,
     "featured": false,
     "status": "upcoming",
-    "category": "Workshop",
+    "category": "Test Event",
     "images": {
       "banner": "/events/vibecoding cover page.jpeg",
       "thumbnail": "/events/vibecoding cover page.jpeg",
@@ -982,8 +982,7 @@
     "agenda": [],
     "tags": [
       "internal",
-      "test",
-      "workshop"
+      "test"
     ],
     "organizer": "matriXO",
     "contactEmail": "hello@matrixo.in"
