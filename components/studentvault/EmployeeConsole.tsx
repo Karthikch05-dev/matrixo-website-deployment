@@ -175,10 +175,10 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
 
   if (denied) {
     return (
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-center">
-        <FaLock className="mx-auto mb-3 text-2xl text-red-400" aria-hidden="true" />
-        <p className="font-semibold text-red-300">Access denied</p>
-        <p className="text-sm text-red-200/80 mt-1">{denied}</p>
+      <div className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-6 text-center">
+        <FaLock className="mx-auto mb-3 text-2xl text-red-500 dark:text-red-400" aria-hidden="true" />
+        <p className="font-semibold text-red-700 dark:text-red-300">Access denied</p>
+        <p className="text-sm text-red-600 dark:text-red-200/80 mt-1">{denied}</p>
       </div>
     )
   }
@@ -214,7 +214,7 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
               className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
                 filter === f
                   ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
+                  : 'bg-white/60 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               {f}
@@ -230,24 +230,24 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         {filtered.length} offer{filtered.length === 1 ? '' : 's'} · sorted by oldest
         verification first
       </p>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-10 text-center">
-          <p className="text-sm text-gray-400">
+        <div className="glass-card p-10 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {offers.length === 0
               ? 'No offers yet. Add the first one — it stays a draft until you verify and publish it.'
               : 'No offers match this filter.'}
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10">
           <table className="w-full text-sm min-w-[46rem]">
             <caption className="sr-only">StudentVault offers</caption>
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-gray-50 dark:bg-white/5 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
               <tr>
                 <th scope="col" className="px-4 py-3">Offer</th>
                 <th scope="col" className="px-4 py-3">Status</th>
@@ -256,7 +256,7 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
                 <th scope="col" className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-gray-200 dark:divide-white/5">
               {filtered.map((offer) => {
                 const verified = offer.lastVerifiedAt
                   ? new Date(offer.lastVerifiedAt).toLocaleDateString('en-IN', {
@@ -272,23 +272,23 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
                     STALE_DAYS
 
                 return (
-                  <tr key={offer.id} className="text-gray-300">
+                  <tr key={offer.id} className="text-gray-700 dark:text-gray-300">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-white">{offer.name}</div>
-                      <div className="text-xs text-gray-500">{offer.category}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{offer.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-500">{offer.category}</div>
                     </td>
                     <td className="px-4 py-3 capitalize">{offer.status}</td>
-                    <td className={`px-4 py-3 ${stale ? 'text-amber-400' : ''}`}>
+                    <td className={`px-4 py-3 ${stale ? 'text-amber-600 dark:text-amber-400' : ''}`}>
                       {verified}
                       {offer.verifiedBy && (
-                        <div className="text-xs text-gray-500">{offer.verifiedBy}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">{offer.verifiedBy}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {offer.publishState === 'published' ? (
-                        <span className="text-emerald-400">Public</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">Public</span>
                       ) : (
-                        <span className="text-gray-500">Draft</span>
+                        <span className="text-gray-500 dark:text-gray-500">Draft</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -297,7 +297,7 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
                           type="button"
                           onClick={() => verifyToday(offer)}
                           disabled={actioning === offer.id}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-600/25 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600/10 dark:bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/20 dark:hover:bg-emerald-600/25 disabled:opacity-50"
                         >
                           <FaCheckCircle className="text-[10px]" aria-hidden="true" />
                           Verify Today
@@ -305,7 +305,7 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
                         <button
                           type="button"
                           onClick={() => setEditing(offer)}
-                          className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-white/10"
+                          className="rounded-lg border border-gray-200 dark:border-transparent bg-white/60 dark:bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10"
                         >
                           Edit
                         </button>
@@ -313,7 +313,7 @@ export default function EmployeeConsole({ getIdToken }: { getIdToken: GetIdToken
                           type="button"
                           onClick={() => togglePublish(offer)}
                           disabled={actioning === offer.id}
-                          className="rounded-lg bg-blue-600/15 px-3 py-1.5 text-xs font-medium text-blue-300 hover:bg-blue-600/25 disabled:opacity-50"
+                          className="rounded-lg bg-blue-600/10 dark:bg-blue-600/15 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-600/20 dark:hover:bg-blue-600/25 disabled:opacity-50"
                         >
                           {offer.publishState === 'published' ? 'Unpublish' : 'Publish'}
                         </button>

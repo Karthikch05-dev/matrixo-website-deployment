@@ -12,9 +12,16 @@ interface Props {
   onCancel: () => void
 }
 
+// Light-first with dark: variants so the form is legible both on the main site
+// and inside the dark employee portal.
 const inputClass =
-  'w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-blue-500/60'
-const labelClass = 'block text-xs font-medium text-gray-400 mb-1.5'
+  'glass-input w-full rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30'
+const labelClass =
+  'block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5'
+const legendClass =
+  'text-sm font-semibold text-gray-900 dark:text-white mb-3'
+const panelClass =
+  'glass-card p-6'
 
 function toLines(list: string[]): string {
   return list.join('\n')
@@ -117,9 +124,9 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
 
   if (review) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h3 className="text-lg font-semibold text-white mb-1">Review before publishing</h3>
-        <p className="text-sm text-gray-400 mb-5">
+      <div className={panelClass}>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Review before publishing</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">
           Check every field against the provider&apos;s official page. Anything you are
           unsure about should stay a draft.
         </p>
@@ -136,13 +143,13 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
             ['Requires card', form.requiresCard ? 'Yes' : 'No'],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-xs text-gray-500">{label}</dt>
-              <dd className="text-gray-200 break-words">{value || '—'}</dd>
+              <dt className="text-xs text-gray-500 dark:text-gray-500">{label}</dt>
+              <dd className="text-gray-900 dark:text-gray-200 break-words">{value || '—'}</dd>
             </div>
           ))}
         </dl>
 
-        <label className="flex items-start gap-3 mb-6 text-sm text-gray-300">
+        <label className="flex items-start gap-3 mb-6 text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={confirmed}
@@ -168,7 +175,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
             type="button"
             onClick={() => submit(false)}
             disabled={saving}
-            className="rounded-xl bg-white/5 px-4 py-2 text-sm font-semibold text-gray-300 hover:bg-white/10 disabled:opacity-50"
+            className="rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 disabled:opacity-50"
           >
             Save as draft
           </button>
@@ -176,7 +183,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
             type="button"
             onClick={() => setReview(false)}
             disabled={saving}
-            className="rounded-xl px-4 py-2 text-sm text-gray-400 hover:text-white"
+            className="rounded-xl px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             ← Back to edit
           </button>
@@ -191,14 +198,14 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
         e.preventDefault()
         setReview(true)
       }}
-      className="rounded-2xl border border-white/10 bg-white/5 p-6"
+      className={panelClass}
     >
-      <h3 className="text-lg font-semibold text-white mb-5">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5">
         {isEdit ? `Edit — ${offer!.name}` : 'Add new offer'}
       </h3>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Basic information</legend>
+        <legend className={legendClass}>Basic information</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="of-name">Name *</label>
@@ -231,7 +238,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
       </fieldset>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Benefits</legend>
+        <legend className={legendClass}>Benefits</legend>
         <div className="space-y-4">
           <div>
             <label className={labelClass} htmlFor="of-summary">Summary * (shown as the direct answer)</label>
@@ -254,7 +261,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
       </fieldset>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Eligibility</legend>
+        <legend className={legendClass}>Eligibility</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="of-elig">Eligibility (one per line)</label>
@@ -272,7 +279,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
       </fieldset>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Status</legend>
+        <legend className={legendClass}>Status</legend>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className={labelClass} htmlFor="of-status">Status</label>
@@ -300,8 +307,8 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
       </fieldset>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Financial safety</legend>
-        <label className="flex items-center gap-3 text-sm text-gray-300 mb-3">
+        <legend className={legendClass}>Financial safety</legend>
+        <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 mb-3">
           <input type="checkbox" checked={form.requiresCard}
             onChange={(e) => set('requiresCard', e.target.checked)} />
           This offer requires a card or payment method
@@ -318,7 +325,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
       </fieldset>
 
       <fieldset className="mb-6">
-        <legend className="text-sm font-semibold text-white mb-3">Relationships</legend>
+        <legend className={legendClass}>Relationships</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="of-depends">Depends on (offer slugs, one per line)</label>
@@ -340,7 +347,7 @@ export default function OfferForm({ offer, authedFetch, onDone, onCancel }: Prop
           Continue to review
         </button>
         <button type="button" onClick={onCancel}
-          className="rounded-xl px-4 py-2 text-sm text-gray-400 hover:text-white">
+          className="rounded-xl px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
           Cancel
         </button>
       </div>

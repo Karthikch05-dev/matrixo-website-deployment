@@ -43,7 +43,9 @@ function ConsoleGate() {
 export default function StudentVaultAdminPage() {
   return (
     <EmployeeAuthProvider>
-      <div className="min-h-screen bg-[#09090b] px-4 py-10 sm:px-6 lg:px-8">
+      {/* The portal is always dark, so scope `dark` here to keep the shared
+          console legible regardless of the visitor's site theme. */}
+      <div className="dark min-h-screen bg-[#09090b] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <nav aria-label="Breadcrumb" className="mb-4 text-sm">
             <Link href="/employee-portal" className="text-gray-500 hover:text-gray-300">
