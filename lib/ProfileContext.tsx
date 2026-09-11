@@ -36,6 +36,9 @@ export interface UserProfile {
   email: string
   college: string
   collegeId?: string
+  country?: string
+  state?: string
+  district?: string
   year: string
   branch: string
   graduationYear?: string
@@ -121,14 +124,41 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Username is already taken')
     }
 
-    const profileData: UserProfile = {
-      ...data,
+    // Explicitly construct Firestore document payload with guaranteed required fields
+    const rawProfileData: Record<string, any> = {
       uid: user.uid,
       email: user.email || '',
+      username: data.username,
+      fullName: data.fullName,
+      rollNumber: data.rollNumber,
+      phone: data.phone,
+      college: data.college,
+      year: data.year,
+      branch: data.branch,
       privacy: data.privacy || DEFAULT_PRIVACY,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }
+
+    // Required location fields when provided
+    if (data.collegeId) rawProfileData.collegeId = data.collegeId
+    if (data.country) rawProfileData.country = data.country
+    if (data.state) rawProfileData.state = data.state
+    if (data.district) rawProfileData.district = data.district
+
+    // Optional fields: only attach when defined and non-empty
+    if (data.profilePhoto) rawProfileData.profilePhoto = data.profilePhoto
+    if (data.coverPhoto) rawProfileData.coverPhoto = data.coverPhoto
+    if (data.bio) rawProfileData.bio = data.bio
+    if (data.graduationYear) rawProfileData.graduationYear = data.graduationYear
+    if (data.linkedin) rawProfileData.linkedin = data.linkedin
+    if (data.github) rawProfileData.github = data.github
+    if (data.portfolio) rawProfileData.portfolio = data.portfolio
+
+    // Omit any undefined values so setDoc never encounters unsupported undefined
+    const profileData = Object.fromEntries(
+      Object.entries(rawProfileData).filter(([_, v]) => v !== undefined)
+    ) as unknown as UserProfile
 
     const docRef = doc(db, 'UserProfiles', user.uid)
     
@@ -152,13 +182,18 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('User not authenticated')
     if (!profileExists) throw new Error('Profile does not exist')
 
+    // Omit any undefined values so updateDoc never encounters unsupported undefined
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined)
+    )
+
     const docRef = doc(db, 'UserProfiles', user.uid)
     await updateDoc(docRef, {
-      ...data,
+      ...cleanData,
       updatedAt: serverTimestamp(),
     })
 
-    setProfile(prev => prev ? { ...prev, ...data, updatedAt: new Date() } : null)
+    setProfile(prev => prev ? { ...prev, ...cleanData, updatedAt: new Date() } : null)
   }
 
   const setUsername = async (username: string) => {

@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
-import { DISTRICTS } from './constants';
+import { DISTRICTS, TELANGANA_DISTRICT_MAP } from './constants';
 
 function slugify(text: string): string {
   return text
@@ -25,6 +25,71 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9-]/g, '');
 }
 
+// Fallback countries if Firestore is loading or offline
+const FALLBACK_COUNTRIES: Country[] = [
+  { id: 'IN', name: 'India', code: 'IN' },
+  { id: 'US', name: 'United States', code: 'US' },
+  { id: 'UK', name: 'United Kingdom', code: 'UK' },
+  { id: 'AE', name: 'United Arab Emirates', code: 'AE' },
+  { id: 'AU', name: 'Australia', code: 'AU' },
+  { id: 'CA', name: 'Canada', code: 'CA' },
+  { id: 'DE', name: 'Germany', code: 'DE' },
+  { id: 'FR', name: 'France', code: 'FR' },
+  { id: 'SG', name: 'Singapore', code: 'SG' },
+];
+
+// Fallback Indian states
+const FALLBACK_STATES: State[] = [
+  { id: 'AP', name: 'Andhra Pradesh', country: 'IN', code: 'AP' },
+  { id: 'AR', name: 'Arunachal Pradesh', country: 'IN', code: 'AR' },
+  { id: 'AS', name: 'Assam', country: 'IN', code: 'AS' },
+  { id: 'BR', name: 'Bihar', country: 'IN', code: 'BR' },
+  { id: 'CG', name: 'Chhattisgarh', country: 'IN', code: 'CG' },
+  { id: 'CH', name: 'Chandigarh', country: 'IN', code: 'CH' },
+  { id: 'DL', name: 'Delhi', country: 'IN', code: 'DL' },
+  { id: 'GA', name: 'Goa', country: 'IN', code: 'GA' },
+  { id: 'GJ', name: 'Gujarat', country: 'IN', code: 'GJ' },
+  { id: 'HR', name: 'Haryana', country: 'IN', code: 'HR' },
+  { id: 'HP', name: 'Himachal Pradesh', country: 'IN', code: 'HP' },
+  { id: 'JH', name: 'Jharkhand', country: 'IN', code: 'JH' },
+  { id: 'JK', name: 'Jammu and Kashmir', country: 'IN', code: 'JK' },
+  { id: 'KA', name: 'Karnataka', country: 'IN', code: 'KA' },
+  { id: 'KL', name: 'Kerala', country: 'IN', code: 'KL' },
+  { id: 'MP', name: 'Madhya Pradesh', country: 'IN', code: 'MP' },
+  { id: 'MH', name: 'Maharashtra', country: 'IN', code: 'MH' },
+  { id: 'MN', name: 'Manipur', country: 'IN', code: 'MN' },
+  { id: 'ML', name: 'Meghalaya', country: 'IN', code: 'ML' },
+  { id: 'MZ', name: 'Mizoram', country: 'IN', code: 'MZ' },
+  { id: 'NL', name: 'Nagaland', country: 'IN', code: 'NL' },
+  { id: 'OD', name: 'Odisha', country: 'IN', code: 'OD' },
+  { id: 'PB', name: 'Punjab', country: 'IN', code: 'PB' },
+  { id: 'PY', name: 'Puducherry', country: 'IN', code: 'PY' },
+  { id: 'RJ', name: 'Rajasthan', country: 'IN', code: 'RJ' },
+  { id: 'SK', name: 'Sikkim', country: 'IN', code: 'SK' },
+  { id: 'TN', name: 'Tamil Nadu', country: 'IN', code: 'TN' },
+  { id: 'TS', name: 'Telangana', country: 'IN', code: 'TS' },
+  { id: 'TR', name: 'Tripura', country: 'IN', code: 'TR' },
+  { id: 'UP', name: 'Uttar Pradesh', country: 'IN', code: 'UP' },
+  { id: 'UK', name: 'Uttarakhand', country: 'IN', code: 'UK' },
+  { id: 'WB', name: 'West Bengal', country: 'IN', code: 'WB' },
+];
+
+// Build all 33 unique Telangana districts
+const uniqueDistrictMap = new Map<string, District>();
+for (const d of Object.values(TELANGANA_DISTRICT_MAP)) {
+  if (!uniqueDistrictMap.has(d.id)) {
+    uniqueDistrictMap.set(d.id, {
+      id: d.id,
+      name: d.name,
+      state: 'TS',
+      country: 'IN',
+      code: d.code,
+    });
+  }
+}
+const ALL_TELANGANA_DISTRICTS: District[] = Array.from(uniqueDistrictMap.values()).sort((a, b) =>
+  a.name.localeCompare(b.name)
+);
 
 // Keep location data in memory for fast access
 interface CachedLocations {
@@ -78,65 +143,199 @@ async function initializeLocations() {
   if (cachedLocations) return cachedLocations;
 
   try {
-    // Load countries
-    const countriesSnap = await getDocs(collection(db, 'countries'));
-    const countries = countriesSnap.docs.map(d => d.data()) as Country[];
+    let countries: Country[] = [];
+    let states: State[] = [];
+    let districts: District[] = [];
+    let colleges: College[] = [];
 
-    // Load states
-    const statesSnap = await getDocs(collection(db, 'states'));
-    const states = statesSnap.docs.map(d => d.data()) as State[];
+    if (db) {
+      // Load countries
+      const countriesSnap = await getDocs(collection(db, 'countries'));
+      countries = countriesSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      })) as Country[];
 
-    // Load districts
-    const districtsSnap = await getDocs(collection(db, 'districts'));
-    const districts = districtsSnap.docs.map(d => d.data()) as District[];
+      // Load states
+      const statesSnap = await getDocs(collection(db, 'states'));
+      states = statesSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      })) as State[];
 
-    // Load colleges
-    const collegesSnap = await getDocs(collection(db, 'colleges'));
-    const colleges = collegesSnap.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-    })) as College[];
+      // Load districts
+      const districtsSnap = await getDocs(collection(db, 'districts'));
+      districts = districtsSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      })) as District[];
+
+      // Load colleges
+      const collegesSnap = await getDocs(collection(db, 'colleges'));
+      colleges = collegesSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      })) as College[];
+    }
+
+    // Merge fallback data if Firestore returned empty
+    if (countries.length === 0) {
+      countries = FALLBACK_COUNTRIES;
+    }
+    if (states.length === 0) {
+      states = FALLBACK_STATES;
+    }
 
     cachedLocations = { countries, states, districts, colleges };
     return cachedLocations;
   } catch (error) {
-    console.error('Error initializing locations:', error);
-    // Fallback to empty data
-    return { countries: [], states: [], districts: [], colleges: [] };
+    console.error('Error initializing locations from Firestore:', error);
+    // Fallback to built-in datasets
+    cachedLocations = {
+      countries: FALLBACK_COUNTRIES,
+      states: FALLBACK_STATES,
+      districts: ALL_TELANGANA_DISTRICTS,
+      colleges: [],
+    };
+    return cachedLocations;
   }
+}
+
+// Helper to resolve district identifier to canonical district ID
+function resolveCanonicalDistrictId(input: string): string {
+  const normalized = input.trim().toLowerCase();
+
+  // Check against Telangana map
+  for (const [key, info] of Object.entries(TELANGANA_DISTRICT_MAP)) {
+    if (
+      info.id.toLowerCase() === normalized ||
+      key.toLowerCase() === normalized ||
+      slugify(key) === normalized ||
+      info.code.toLowerCase() === normalized
+    ) {
+      return info.id;
+    }
+  }
+
+  // Handle known aliases
+  if (normalized === 'ts-med' || normalized === 'medchal' || normalized === 'medchal-malkajgiri') return 'TS-MED';
+  if (normalized === 'ts-hyd' || normalized === 'hyderabad' || normalized === 'tg-hy') return 'TS-HYD';
+  if (normalized === 'ts-ran' || normalized === 'rangareddy' || normalized === 'ranga-reddy') return 'TS-RAN';
+  if (normalized === 'ts-war' || normalized === 'warangal') return 'TS-WAR';
+  if (normalized === 'ts-kar' || normalized === 'karimnagar') return 'TS-KAR';
+  if (normalized === 'ts-niz' || normalized === 'nizamabad') return 'TS-NIZ';
+  if (normalized === 'ts-adi' || normalized === 'adilabad') return 'TS-ADI';
+  if (normalized === 'ts-kha' || normalized === 'khammam') return 'TS-KHA';
+  if (normalized === 'ts-mah' || normalized === 'mahbubnagar' || normalized === 'mahabubnagar') return 'TS-MAH';
+  if (normalized === 'ts-nal' || normalized === 'nalgonda') return 'TS-NAL';
+  if (normalized === 'ts-san' || normalized === 'sangareddy') return 'TS-SAN';
+  if (normalized === 'ts-sid' || normalized === 'siddipet') return 'TS-SID';
+
+  return input.trim();
 }
 
 // Get all countries
 export async function getCountries(): Promise<Country[]> {
   const locations = await initializeLocations();
-  return locations.countries;
+  return locations.countries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Get states for a country
 export async function getStatesByCountry(country: string): Promise<State[]> {
   const locations = await initializeLocations();
-  return locations.states.filter(s => s.country === country);
+  const normalizedCountry = country.toLowerCase().trim();
+
+  // Filter states by country (supports 'IN', 'india', 'India', etc.)
+  const filtered = locations.states.filter(s => {
+    const sCountry = (s.country || '').toLowerCase().trim();
+    return (
+      sCountry === normalizedCountry ||
+      (normalizedCountry === 'india' && sCountry === 'in') ||
+      (normalizedCountry === 'in' && sCountry === 'india')
+    );
+  });
+
+  // State codes that have active districts in the database
+  const districtStateCodes = new Set(locations.districts.map(d => (d.state || '').toUpperCase()));
+  // TS is the primary code for Telangana districts
+  districtStateCodes.add('TS');
+
+  // Deduplicate states by name (e.g., TS vs TG, CG vs CT, OD vs OR, UK vs UT)
+  const stateMap = new Map<string, State>();
+  for (const s of filtered) {
+    const key = s.name.toLowerCase().trim();
+    const existing = stateMap.get(key);
+    if (!existing) {
+      stateMap.set(key, s);
+    } else {
+      // Prioritize the state ID that has districts in the database (e.g. 'TS' over 'TG')
+      const currentId = (s.id || s.code || '').toUpperCase();
+      const existingId = (existing.id || existing.code || '').toUpperCase();
+      if (districtStateCodes.has(currentId) && !districtStateCodes.has(existingId)) {
+        stateMap.set(key, s);
+      }
+    }
+  }
+
+  return Array.from(stateMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Get districts for a state
 export async function getDistrictsByState(state: string): Promise<District[]> {
-  if (state.toLowerCase() === 'telangana') {
-    return DISTRICTS.Telangana.map(name => ({
-      id: slugify(name),
-      name,
-      state: 'telangana',
-      country: 'india',
-      code: name.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4)
-    })).sort((a, b) => a.name.localeCompare(b.name));
-  }
+  if (!state) return [];
   const locations = await initializeLocations();
-  return locations.districts.filter(d => d.state === state);
+  const trimmed = state.trim();
+  const upper = trimmed.toUpperCase();
+  const lower = trimmed.toLowerCase();
+
+  // Handle Telangana (matches 'TS', 'TG', 'telangana', 'Telangana')
+  if (upper === 'TS' || upper === 'TG' || lower === 'telangana') {
+    // Return all 33 Telangana districts with their canonical TS- IDs
+    return ALL_TELANGANA_DISTRICTS;
+  }
+
+  // For other states:
+  // Match state by ID, code, or name
+  const stateObj = locations.states.find(
+    s =>
+      s.id.toUpperCase() === upper ||
+      (s.code && s.code.toUpperCase() === upper) ||
+      s.name.toLowerCase() === lower
+  );
+
+  const targetStateCode = stateObj ? stateObj.id.toUpperCase() : upper;
+
+  const filtered = locations.districts.filter(d => {
+    const dState = (d.state || '').toUpperCase();
+    return (
+      dState === targetStateCode ||
+      (stateObj && d.state && d.state.toLowerCase() === stateObj.name.toLowerCase())
+    );
+  });
+
+  return filtered.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Get colleges for a district
 export async function getCollegesByDistrict(district: string): Promise<College[]> {
+  if (!district) return [];
   const locations = await initializeLocations();
-  return locations.colleges.filter(c => c.district === district).sort((a, b) => a.name.localeCompare(b.name));
+  const canonicalDistrictId = resolveCanonicalDistrictId(district);
+  const normalizedInput = district.trim().toLowerCase();
+  const canonicalLower = canonicalDistrictId.toLowerCase();
+
+  const matchingColleges = locations.colleges.filter(c => {
+    const cDistrict = (c.district || '').trim().toLowerCase();
+    const cCanonical = resolveCanonicalDistrictId(c.district || '').toLowerCase();
+
+    return (
+      cDistrict === canonicalLower ||
+      cDistrict === normalizedInput ||
+      cCanonical === canonicalLower
+    );
+  });
+
+  return matchingColleges.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Search colleges by name and optional district
@@ -148,11 +347,25 @@ export async function searchColleges(
   const normalized = query.toLowerCase().trim();
 
   let results = locations.colleges.filter(
-    c => c.normalizedName.includes(normalized) || c.name.toLowerCase().includes(normalized)
+    c =>
+      (c.normalizedName && c.normalizedName.includes(normalized)) ||
+      (c.name && c.name.toLowerCase().includes(normalized))
   );
 
   if (district) {
-    results = results.filter(c => c.district === district);
+    const canonicalDistrictId = resolveCanonicalDistrictId(district);
+    const normalizedInput = district.trim().toLowerCase();
+    const canonicalLower = canonicalDistrictId.toLowerCase();
+
+    results = results.filter(c => {
+      const cDistrict = (c.district || '').trim().toLowerCase();
+      const cCanonical = resolveCanonicalDistrictId(c.district || '').toLowerCase();
+      return (
+        cDistrict === canonicalLower ||
+        cDistrict === normalizedInput ||
+        cCanonical === canonicalLower
+      );
+    });
   }
 
   return results.sort((a, b) => a.name.localeCompare(b.name));
@@ -160,10 +373,14 @@ export async function searchColleges(
 
 // Get college by ID
 export async function getCollegeById(collegeId: string): Promise<College | null> {
+  const locations = await initializeLocations();
+  const cached = locations.colleges.find(c => c.id === collegeId);
+  if (cached) return cached;
+
   try {
     const docRef = doc(db, 'colleges', collegeId);
     const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? { id: collegeId, ...docSnap.data() } as College : null;
+    return docSnap.exists() ? ({ id: collegeId, ...docSnap.data() } as College) : null;
   } catch (error) {
     console.error('Error fetching college:', error);
     return null;
