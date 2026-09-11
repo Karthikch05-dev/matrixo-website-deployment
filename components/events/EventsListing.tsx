@@ -203,7 +203,7 @@ export default function EventsListing() {
                         />
                         <span>Remember me</span>
                       </label>
-                      <Link href="/auth?mode=forgot" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                      <Link href="/forgot-password" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
                         Forgot password?
                       </Link>
                     </div>
