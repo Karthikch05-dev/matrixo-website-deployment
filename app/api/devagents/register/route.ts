@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyRazorpaySignature } from "@/lib/razorpay";
+import { validateRegistration } from "@/lib/registrationValidation";
 
 // Check both names for compatibility — NEXT_PUBLIC_ is what Vercel/env has set
 const DEVAGENTS_GOOGLE_SCRIPT_URL =
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       github,
       linkedIn,
       experienceLevel,
+      whyAttend,
       razorpayPaymentId,
       razorpayOrderId,
       razorpaySignature,
@@ -43,17 +45,40 @@ export async function POST(request: Request) {
       amountPaid,
     } = body;
 
-    // Validate required fields
+    // ------------------------------------------------------------------
+    // Server-side validation — same rules as the frontend form.
+    // This is the SECURITY boundary: even if a caller bypasses the UI
+    // and posts directly to this endpoint, invalid data is rejected.
+    // ------------------------------------------------------------------
+    const validation = validateRegistration({
+      fullName: String(fullName ?? ""),
+      email: String(email ?? ""),
+      phone: String(phone ?? ""),
+      college: String(college ?? ""),
+      year: String(year ?? ""),
+      branch: String(branch ?? ""),
+      city: String(city ?? ""),
+      github: String(github ?? ""),
+      linkedIn: String(linkedIn ?? ""),
+      experienceLevel: String(experienceLevel ?? ""),
+      whyAttend: String(whyAttend ?? ""),
+      agreeTerms: true, // Backend doesn't re-check the checkbox; the data is already submitted
+    });
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed. Please correct the highlighted fields.",
+          errors: validation.errors,
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate payment-related required fields
     const missing = (
       [
-        ["fullName", fullName],
-        ["email", email],
-        ["phone", phone],
-        ["college", college],
-        ["year", year],
-        ["branch", branch],
-        ["city", city],
-        ["experienceLevel", experienceLevel],
         ["razorpayPaymentId", razorpayPaymentId],
         ["razorpayOrderId", razorpayOrderId],
         ["razorpaySignature", razorpaySignature],
