@@ -1042,8 +1042,8 @@ function TaskDetailModal({
                               <button
                                 onClick={() => task.id && toggleTaskCommentReaction(task.id, comment.id, emoji)}
                                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all ${hasReacted
-                                    ? 'bg-[#2563EB]/10 border border-[#2563EB]/50 text-[#2563EB] dark:bg-primary-500/20 dark:border-primary-500/50 dark:text-primary-300'
-                                    : 'bg-[#F1F5F9] border border-[rgba(15,23,42,0.08)] text-[#64748B] hover:bg-[#E2E8F0] dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                                  ? 'bg-[#2563EB]/10 border border-[#2563EB]/50 text-[#2563EB] dark:bg-primary-500/20 dark:border-primary-500/50 dark:text-primary-300'
+                                  : 'bg-[#F1F5F9] border border-[rgba(15,23,42,0.08)] text-[#64748B] hover:bg-[#E2E8F0] dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700'
                                   }`}
                               >
                                 <span className="text-sm">{emoji}</span>
@@ -1236,7 +1236,7 @@ function TaskCard({
         <div className="flex items-center gap-3 text-[#64748B] dark:text-neutral-500 text-sm">
           {task.dueDate && (
             <span className={`flex items-center gap-1 ${new Date(task.dueDate) < new Date() && task.status !== 'completed'
-                ? 'text-red-500 dark:text-red-400' : ''
+              ? 'text-red-500 dark:text-red-400' : ''
               }`}>
               <FaClock className="text-xs" />
               {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
