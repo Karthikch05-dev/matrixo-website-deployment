@@ -320,7 +320,8 @@ export default function DevAgentsRegistrationForm({
 
   const inputClass =
     "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 " +
-    "focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 transition-all text-sm";
+    "focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 transition-all text-sm " +
+    "[&>option]:bg-[#09090b] [&>option]:text-white";
 
   const labelClass = "block text-sm font-medium text-white/60 mb-1.5";
 
