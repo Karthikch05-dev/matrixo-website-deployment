@@ -20,8 +20,8 @@ const BRANCH_OPTIONS = [
 ]
 
 export default function ProfileSetupPage() {
-  const { user } = useAuth()
-  const { createProfile, profileExists, checkUsernameAvailable } = useProfile()
+  const { user, loading: authLoading } = useAuth()
+  const { createProfile, profileExists, checkUsernameAvailable, loading: profileLoading } = useProfile()
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -70,19 +70,25 @@ export default function ProfileSetupPage() {
 
   // Handle redirects in useEffect to avoid side-effects during render
   useEffect(() => {
-    if (profileExists) {
-      router.replace('/')
-    } else if (!user) {
-      router.replace('/auth')
-    }
-  }, [profileExists, user, router])
+    if (authLoading || profileLoading) return
 
-  if (profileExists || !user) {
+    if (!user) {
+      router.replace('/auth')
+    } else if (profileExists) {
+      router.replace('/')
+    }
+  }, [authLoading, profileLoading, profileExists, user, router])
+
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center">
         <FaSpinner className="animate-spin text-blue-500 text-3xl" />
       </div>
     )
+  }
+
+  if (!user || profileExists) {
+    return null
   }
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +140,8 @@ export default function ProfileSetupPage() {
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
     else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Enter a valid 10-digit phone number'
 
+    if (!location.country) newErrors.country = 'Please select your country'
+    if (!location.state) newErrors.state = 'Please select your state'
     if (!location.district) newErrors.district = 'Please select your district.'
     if (!location.collegeId) newErrors.college = 'Please select your college'
     if (!formData.year) newErrors.year = 'Select your year'
@@ -173,19 +181,34 @@ export default function ProfileSetupPage() {
         profilePhotoUrl = await getDownloadURL(photoRef)
       }
 
-      await createProfile({
+      // Explicitly attach required fields
+      const profilePayload: Parameters<typeof createProfile>[0] = {
         username: formData.username.trim().toLowerCase(),
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim().toUpperCase(),
         phone: formData.phone.trim(),
         college: location.collegeName || location.collegeId,
+        collegeId: location.collegeId,
+        country: location.country,
+        state: location.state,
+        district: location.district,
         year: formData.year,
         branch: formData.branch,
-        graduationYear: formData.year === 'Graduate' ? formData.graduationYear.trim() : '',
-        bio: formData.bio.trim(),
-        profilePhoto: profilePhotoUrl || undefined,
         privacy: DEFAULT_PRIVACY,
-      })
+      }
+
+      // Optional fields: only attach when defined and non-empty
+      if (profilePhotoUrl) {
+        profilePayload.profilePhoto = profilePhotoUrl
+      }
+      if (formData.bio.trim()) {
+        profilePayload.bio = formData.bio.trim()
+      }
+      if (formData.year === 'Graduate' && formData.graduationYear.trim()) {
+        profilePayload.graduationYear = formData.graduationYear.trim()
+      }
+
+      await createProfile(profilePayload)
       toast.success('Profile created successfully!')
       router.push('/')
     } catch (error: any) {
@@ -371,6 +394,8 @@ export default function ProfileSetupPage() {
                   onChange={setLocation}
                   disabled={loading}
                 />
+                {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
                 {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
                 {errors.college && <p className="text-red-500 text-xs mt-1">{errors.college}</p>}
               </div>

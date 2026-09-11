@@ -24,26 +24,51 @@ export function DistrictSelect({ value, onChange, state, disabled }: DistrictSel
   useEffect(() => {
     if (!state) {
       setDistricts([])
+      setError(null)
       return
     }
+
+    let isMounted = true
+    const controller = new AbortController()
 
     const fetchDistricts = async () => {
       setLoading(true)
       setError(null)
+      setDistricts([]) // Clear stale districts immediately
+
       try {
-        const res = await fetch(`/api/locations/districts?state=${state}`)
+        const res = await fetch(`/api/locations/districts?state=${encodeURIComponent(state)}`, {
+          signal: controller.signal,
+        })
         if (!res.ok) throw new Error('Failed to fetch districts')
         const data = await res.json()
-        setDistricts(data)
-      } catch (err) {
-        setError('Unable to load districts. Please try again.')
+        if (isMounted) {
+          setDistricts(Array.isArray(data) ? data : [])
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && isMounted) {
+          setError('Unable to load districts. Please try again.')
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchDistricts()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
   }, [state])
+
+  const placeholderText = loading
+    ? 'Loading districts...'
+    : state && districts.length === 0 && !error
+    ? 'No districts available'
+    : 'Select District'
 
   return (
     <div className="relative">
@@ -54,10 +79,10 @@ export function DistrictSelect({ value, onChange, state, disabled }: DistrictSel
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || !state || loading}
+          disabled={disabled || !state || loading || (districts.length === 0 && !loading && !error)}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          <option value="">Select District</option>
+          <option value="">{placeholderText}</option>
           {districts.map(district => (
             <option key={district.id} value={district.id}>
               {district.name}
@@ -70,3 +95,4 @@ export function DistrictSelect({ value, onChange, state, disabled }: DistrictSel
     </div>
   )
 }
+

@@ -51,33 +51,61 @@ export function CollegeSelect({
   useEffect(() => {
     if (!district) {
       setColleges([])
+      setError(null)
+      setIsDropdownOpen(false)
       return
     }
+
+    let isMounted = true
+    const controller = new AbortController()
 
     const fetchColleges = async () => {
       setLoading(true)
       setError(null)
+      setColleges([]) // Clear stale colleges immediately
+
       try {
-        const res = await fetch(`/api/locations/colleges?district=${district}`)
+        const res = await fetch(`/api/locations/colleges?district=${encodeURIComponent(district)}`, {
+          signal: controller.signal,
+        })
         if (!res.ok) throw new Error('Failed to fetch colleges')
         const data = await res.json()
-        setColleges(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch colleges')
+        if (isMounted) {
+          setColleges(Array.isArray(data) ? data : [])
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && isMounted) {
+          setError('Unable to load colleges. Please try again.')
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchColleges()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
   }, [district])
 
   const filteredColleges = colleges.filter(c =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.city.toLowerCase().includes(searchTerm.toLowerCase())
+    (c.city && c.city.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const selectedCollege = colleges.find(c => c.id === value)
+
+  const buttonText = loading
+    ? 'Loading colleges...'
+    : selectedCollege
+    ? selectedCollege.name
+    : district && colleges.length === 0 && !loading && !error
+    ? 'No colleges available'
+    : 'Select College'
 
   return (
     <div className="relative college-dropdown-container">
@@ -92,7 +120,7 @@ export function CollegeSelect({
           disabled={disabled || !district || loading}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          <span>{selectedCollege ? selectedCollege.name : 'Select College'}</span>
+          <span>{buttonText}</span>
           <FaChevronDown
             className={`text-gray-400 transition-transform ${
               isDropdownOpen ? 'rotate-180' : ''

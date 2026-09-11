@@ -24,26 +24,51 @@ export function StateSelect({ value, onChange, country, disabled }: StateSelectP
   useEffect(() => {
     if (!country) {
       setStates([])
+      setError(null)
       return
     }
+
+    let isMounted = true
+    const controller = new AbortController()
 
     const fetchStates = async () => {
       setLoading(true)
       setError(null)
+      setStates([]) // Clear stale states immediately
+
       try {
-        const res = await fetch(`/api/locations/states?country=${country}`)
+        const res = await fetch(`/api/locations/states?country=${encodeURIComponent(country)}`, {
+          signal: controller.signal,
+        })
         if (!res.ok) throw new Error('Failed to fetch states')
         const data = await res.json()
-        setStates(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch states')
+        if (isMounted) {
+          setStates(Array.isArray(data) ? data : [])
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && isMounted) {
+          setError('Unable to load states. Please try again.')
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchStates()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
   }, [country])
+
+  const placeholderText = loading
+    ? 'Loading states...'
+    : country && states.length === 0 && !error
+    ? 'No states available'
+    : 'Select State'
 
   return (
     <div className="relative">
@@ -54,10 +79,10 @@ export function StateSelect({ value, onChange, country, disabled }: StateSelectP
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || !country || loading}
+          disabled={disabled || !country || loading || (states.length === 0 && !loading && !error)}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          <option value="">Select State</option>
+          <option value="">{placeholderText}</option>
           {states.map(state => (
             <option key={state.id} value={state.id}>
               {state.name}
@@ -70,3 +95,4 @@ export function StateSelect({ value, onChange, country, disabled }: StateSelectP
     </div>
   )
 }
+
