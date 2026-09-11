@@ -13,6 +13,11 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
 import { getPaymentBreakdown } from "@/lib/payments";
+import {
+  validateRegistration,
+  ALLOWED_YEARS,
+  ALLOWED_EXPERIENCE_LEVELS,
+} from "@/lib/registrationValidation";
 
 interface DevAgentsRegistrationFormProps {
   event: any;
@@ -39,6 +44,7 @@ export default function DevAgentsRegistrationForm({
   const closeTimerRef = useRef<number | null>(null);
   const isSubmittingRef = useRef(false);
   const { startCheckout, isProcessing } = useRazorpayCheckout();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -54,6 +60,8 @@ export default function DevAgentsRegistrationForm({
     whyAttend: "",
     agreeTerms: false,
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Auto-fill from auth user
   useEffect(() => {
@@ -146,49 +154,37 @@ export default function DevAgentsRegistrationForm({
       [name]:
         type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
+    // Clear the error for this field as the user types / selects
+    if (formErrors[name]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
-  
+
 
   /* ── Validation ──────────────────────────────────────────────────── */
   const validateForm = (): boolean => {
-    if (!formData.fullName.trim()) {
-      toast.error("Full name is required");
-      return false;
-    }
-    if (!formData.email.trim() || !formData.email.includes("@")) {
-      toast.error("Valid email is required");
-      return false;
-    }
-    if (
-      !formData.phone.trim() ||
-      formData.phone.replace(/\D/g, "").length < 10
-    ) {
-      toast.error("Valid 10-digit phone number is required");
-      return false;
-    }
-    if (!formData.college.trim()) {
-      toast.error("College / Institution is required");
-      return false;
-    }
-    if (!formData.year) {
-      toast.error("Year of study is required");
-      return false;
-    }
-    if (!formData.branch.trim()) {
-      toast.error("Branch / Specialization is required");
-      return false;
-    }
-    if (!formData.city.trim()) {
-      toast.error("City is required");
-      return false;
-    }
-    if (!formData.experienceLevel) {
-      toast.error("Experience level is required");
-      return false;
-    }
-    if (!formData.agreeTerms) {
-      toast.error("Please agree to the terms & conditions");
+    const result = validateRegistration(formData);
+    setFormErrors(result.errors);
+
+    if (!result.valid) {
+      // Show a toast for the first error
+      const firstKey = Object.keys(result.errors)[0];
+      toast.error(result.errors[firstKey]);
+
+      // Scroll to the first invalid field
+      if (formRef.current && firstKey) {
+        const el =
+          formRef.current.querySelector<HTMLElement>(`[name="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+        }
+      }
       return false;
     }
     return true;
@@ -323,6 +319,18 @@ export default function DevAgentsRegistrationForm({
     "focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 transition-all text-sm " +
     "[&>option]:bg-[#09090b] [&>option]:text-white";
 
+  const inputErrorClass =
+    "w-full bg-white/5 border border-red-500/60 rounded-xl px-4 py-3 text-white placeholder-white/30 " +
+    "focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/40 transition-all text-sm " +
+    "[&>option]:bg-[#09090b] [&>option]:text-white";
+
+  const fieldClass = (name: string) => (formErrors[name] ? inputErrorClass : inputClass);
+
+  const FieldError = ({ name }: { name: string }) =>
+    formErrors[name] ? (
+      <p className="mt-1 text-xs text-red-400">{formErrors[name]}</p>
+    ) : null;
+
   const labelClass = "block text-sm font-medium text-white/60 mb-1.5";
 
   /* ── Step indicator ──────────────────────────────────────────────── */
@@ -360,9 +368,8 @@ export default function DevAgentsRegistrationForm({
                 )}
               </div>
               <span
-                className={`text-[10px] font-medium transition-colors duration-300 ${
-                  i <= currentIdx ? "text-white/70" : "text-white/30"
-                }`}
+                className={`text-[10px] font-medium transition-colors duration-300 ${i <= currentIdx ? "text-white/70" : "text-white/30"
+                  }`}
               >
                 {s.label}
               </span>
@@ -679,6 +686,7 @@ export default function DevAgentsRegistrationForm({
           <StepDots />
 
           <form
+            ref={formRef}
             onSubmit={(e) => {
               e.preventDefault();
               if (validateForm()) setStep("payment");
@@ -693,8 +701,10 @@ export default function DevAgentsRegistrationForm({
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Your full name"
-                className={inputClass}
+                className={fieldClass("fullName")}
+                maxLength={100}
               />
+              <FieldError name="fullName" />
             </div>
 
             {/* Row: Email + Phone */}
@@ -707,8 +717,9 @@ export default function DevAgentsRegistrationForm({
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className={inputClass}
+                  className={fieldClass("email")}
                 />
+                <FieldError name="email" />
               </div>
               <div>
                 <label className={labelClass}>Phone Number *</label>
@@ -718,8 +729,10 @@ export default function DevAgentsRegistrationForm({
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="10-digit number"
-                  className={inputClass}
+                  className={fieldClass("phone")}
+                  maxLength={15}
                 />
+                <FieldError name="phone" />
               </div>
             </div>
 
@@ -731,8 +744,10 @@ export default function DevAgentsRegistrationForm({
                 value={formData.college}
                 onChange={handleChange}
                 placeholder="Name of your college or organisation"
-                className={inputClass}
+                className={fieldClass("college")}
+                maxLength={200}
               />
+              <FieldError name="college" />
             </div>
 
             {/* Row: Year + Branch */}
@@ -743,18 +758,18 @@ export default function DevAgentsRegistrationForm({
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={fieldClass("year")}
                 >
                   <option value="" disabled>
                     Select year
                   </option>
-                  <option>1st Year</option>
-                  <option>2nd Year</option>
-                  <option>3rd Year</option>
-                  <option>4th Year</option>
-                  <option>Working Professional</option>
-                  <option>Other</option>
+                  {ALLOWED_YEARS.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
                 </select>
+                <FieldError name="year" />
               </div>
               <div>
                 <label className={labelClass}>Branch / Specialization *</label>
@@ -763,8 +778,10 @@ export default function DevAgentsRegistrationForm({
                   value={formData.branch}
                   onChange={handleChange}
                   placeholder="e.g. CSE, ECE, MBA…"
-                  className={inputClass}
+                  className={fieldClass("branch")}
+                  maxLength={100}
                 />
+                <FieldError name="branch" />
               </div>
             </div>
 
@@ -776,8 +793,10 @@ export default function DevAgentsRegistrationForm({
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="Your current city"
-                className={inputClass}
+                className={fieldClass("city")}
+                maxLength={100}
               />
+              <FieldError name="city" />
             </div>
 
             {/* Row: GitHub + LinkedIn */}
@@ -791,9 +810,10 @@ export default function DevAgentsRegistrationForm({
                   name="github"
                   value={formData.github}
                   onChange={handleChange}
-                  placeholder="github.com/username"
-                  className={inputClass}
+                  placeholder="https://github.com/username"
+                  className={fieldClass("github")}
                 />
+                <FieldError name="github" />
               </div>
               <div>
                 <label className={labelClass}>
@@ -804,9 +824,10 @@ export default function DevAgentsRegistrationForm({
                   name="linkedIn"
                   value={formData.linkedIn}
                   onChange={handleChange}
-                  placeholder="linkedin.com/in/username"
-                  className={inputClass}
+                  placeholder="https://linkedin.com/in/username"
+                  className={fieldClass("linkedIn")}
                 />
+                <FieldError name="linkedIn" />
               </div>
             </div>
 
@@ -817,16 +838,18 @@ export default function DevAgentsRegistrationForm({
                 name="experienceLevel"
                 value={formData.experienceLevel}
                 onChange={handleChange}
-                className={inputClass}
+                className={fieldClass("experienceLevel")}
               >
                 <option value="" disabled>
                   Select your level
                 </option>
-                <option>Complete Beginner</option>
-                <option>Some Programming Experience</option>
-                <option>Intermediate Developer</option>
-                <option>Advanced Developer</option>
+                {ALLOWED_EXPERIENCE_LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    {lvl}
+                  </option>
+                ))}
               </select>
+              <FieldError name="experienceLevel" />
             </div>
 
             {/* Why Attend */}
@@ -841,40 +864,45 @@ export default function DevAgentsRegistrationForm({
                 onChange={handleChange}
                 placeholder="Tell us briefly what you hope to learn or build…"
                 rows={3}
-                className={inputClass}
+                className={fieldClass("whyAttend")}
                 style={{ resize: "none" }}
+                maxLength={2000}
               />
+              <FieldError name="whyAttend" />
             </div>
 
             {/* Agree to terms */}
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                name="agreeTerms"
-                checked={formData.agreeTerms}
-                onChange={handleChange}
-                className="mt-1 w-4 h-4 rounded border-white/20 accent-blue-500 cursor-pointer"
-              />
-              <span className="text-xs text-white/50 group-hover:text-white/70 transition-colors leading-relaxed">
-                I agree to the{" "}
-                <a
-                  href="/terms"
-                  target="_blank"
-                  className="text-blue-400 underline"
-                >
-                  terms & conditions
-                </a>{" "}
-                and understand the{" "}
-                <a
-                  href="/refund"
-                  target="_blank"
-                  className="text-blue-400 underline"
-                >
-                  refund policy
-                </a>
-                .
-              </span>
-            </label>
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  name="agreeTerms"
+                  checked={formData.agreeTerms}
+                  onChange={handleChange}
+                  className="mt-1 w-4 h-4 rounded border-white/20 accent-blue-500 cursor-pointer"
+                />
+                <span className="text-xs text-white/50 group-hover:text-white/70 transition-colors leading-relaxed">
+                  I agree to the{" "}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    className="text-blue-400 underline"
+                  >
+                    terms & conditions
+                  </a>{" "}
+                  and understand the{" "}
+                  <a
+                    href="/refund"
+                    target="_blank"
+                    className="text-blue-400 underline"
+                  >
+                    refund policy
+                  </a>
+                  .
+                </span>
+              </label>
+              <FieldError name="agreeTerms" />
+            </div>
 
             {/* Submit */}
             <button
