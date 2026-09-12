@@ -67,18 +67,22 @@ export async function getPublishedOffers(): Promise<Offer[]> {
 }
 
 export async function getPublishedOfferBySlug(slug: string): Promise<Offer | null> {
-  // Deliberately allowed to throw: a transient Firestore failure should surface
-  // as an error (and let ISR keep serving the last good page) rather than be
-  // cached as a permanent 404 for a URL that really exists.
+  // Query by slug only (single-field, auto-indexed) to avoid requiring a
+  // Firestore composite index on (slug, publishState). The publishState check
+  // is done in application code below.
+  //
+  // Deliberately allowed to throw on transient Firestore failures so ISR keeps
+  // serving the last good page rather than caching a permanent 404.
   const snap = await getAdminFirestore()
     .collection(OFFERS_COLLECTION)
     .where('slug', '==', slug)
-    .where('publishState', '==', 'published')
     .limit(1)
     .get()
 
   if (snap.empty) return null
-  return normalizeOffer(snap.docs[0].id, snap.docs[0].data())
+  const offer = normalizeOffer(snap.docs[0].id, snap.docs[0].data())
+  if (offer.publishState !== 'published') return null
+  return offer
 }
 
 /** Every offer including drafts — employee console only. */
