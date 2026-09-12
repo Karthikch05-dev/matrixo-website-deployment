@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "studentvault_offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "slug", "order": "ASCENDING" },
+        { "fieldPath": "publishState", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "roles",
       "queryScope": "COLLECTION",
       "fields": [

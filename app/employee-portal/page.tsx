@@ -375,9 +375,10 @@ function TopNavbar({
             </div>
           </Link>
 
-          {/* Desktop Navigation - Centered */}
-          <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-0.5">
+          {/* Desktop Navigation - Centered (Scrollable on overflow) */}
+          <div className="hidden lg:flex items-center flex-1 min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex-1 min-w-0 shrink"></div>
+            <div className="flex items-center gap-0.5 px-2 shrink-0">
               {navigationItems.filter(item => !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
                 <button
                   key={item.id}
@@ -396,42 +397,27 @@ function TopNavbar({
               ))}
               
               {isAdmin && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('job-postings')}
-                    className={`
-                      relative flex items-center gap-1.5 px-3 py-2 rounded-[14px] transition-all duration-150 font-medium text-xs whitespace-nowrap
-                      ${activeTab === 'job-postings'
-                        ? 'bg-[#0F2B5B] text-white dark:bg-[#1E3A8A] dark:text-[#F8FAFC]'
-                        : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#EEF3F8] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] dark:hover:bg-[#152542]'
-                      }
-                    `}
-                  >
-                    <FaBriefcase className="text-xs shrink-0" />
-                    <span>Careers</span>
-                    {pendingAppCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                        {pendingAppCount > 99 ? '99+' : pendingAppCount}
-                      </span>
-                    )}
-                  </button>
-                  <div className="w-px h-5 bg-white/10 mx-0.5" />
-                  <button
-                    onClick={() => setActiveTab('admin')}
-                    className={`
-                      flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 font-medium text-xs whitespace-nowrap
-                      ${activeTab === 'admin'
-                        ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
-                      }
-                    `}
-                  >
-                    <FaUserShield className="text-xs shrink-0" />
-                    <span>Admin</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => setActiveTab('job-postings')}
+                  className={`
+                    relative flex items-center gap-1.5 px-3 py-2 rounded-[14px] transition-all duration-150 font-medium text-xs whitespace-nowrap
+                    ${activeTab === 'job-postings'
+                      ? 'bg-[#0F2B5B] text-white dark:bg-[#1E3A8A] dark:text-[#F8FAFC]'
+                      : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#EEF3F8] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] dark:hover:bg-[#152542]'
+                    }
+                  `}
+                >
+                  <FaBriefcase className="text-xs shrink-0" />
+                  <span>Careers</span>
+                  {pendingAppCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                    </span>
+                  )}
+                </button>
               )}
             </div>
+            <div className="flex-1 min-w-0 shrink"></div>
           </div>
 
           {/* Right side */}
@@ -552,7 +538,16 @@ function TopNavbar({
                         <FaUserCircle />
                         <span>My Profile</span>
                       </button>
-                    <button
+                      {isAdmin && (
+                        <button
+                          onClick={() => { setActiveTab('admin'); setUserMenuOpen(false) }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'text-neutral-300 hover:bg-white/8' : 'text-gray-700 hover:bg-black/5'}`}
+                        >
+                          <FaUserShield />
+                          <span>Admin Panel</span>
+                        </button>
+                      )}
+                      <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
                       >
