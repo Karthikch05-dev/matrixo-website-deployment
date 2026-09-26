@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendar, FaMapMarkerAlt, FaUsers, FaTrophy, FaChevronRight, FaTimes, FaSpinner, FaCheckCircle } from "react-icons/fa";
+import { FaCalendar, FaMapMarkerAlt, FaUsers, FaTrophy, FaChevronRight, FaTimes, FaSpinner, FaCheckCircle, FaExternalLinkAlt } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
 
 const fadeInUp = {
@@ -17,6 +17,7 @@ export default function DevAgents2EventDetail({ event }: { event: any }) {
   const [submitError, setSubmitError] = useState("");
   const [formData, setFormData] = useState({
     teamName: "",
+    email: "",
     teamLead: "",
     teamMember1: "",
     teamMember2: "",
@@ -49,6 +50,11 @@ export default function DevAgents2EventDetail({ event }: { event: any }) {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.teamName.trim()) newErrors.teamName = "Team Name is required";
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
     if (!formData.teamLead.trim()) newErrors.teamLead = "Team Lead is required";
     if (!formData.teamMember1.trim()) newErrors.teamMember1 = "Team Member 1 is required";
     if (!formData.teamMember2.trim()) newErrors.teamMember2 = "Team Member 2 is required";
@@ -59,28 +65,52 @@ export default function DevAgents2EventDetail({ event }: { event: any }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     setIsSubmitting(true);
     setSubmitError("");
-    
+
     try {
-      const res = await fetch("/api/devagents2/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to register team. Please try again.");
+      const scriptUrl = process.env.NEXT_PUBLIC_GOOGLE_APPS_SCRIPT_URL;
+
+      if (!scriptUrl) {
+        throw new Error("Registration URL is not configured. Please contact support.");
       }
-      
+
+      const payload = {
+        teamName: formData.teamName,
+        registrationEmail: formData.email,
+        teamLead: formData.teamLead,
+        teamMember1: formData.teamMember1,
+        teamMember2: formData.teamMember2,
+        teamMember3: formData.teamMember3,
+        teamMember4: formData.teamMember4
+      };
+
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        throw new Error("Unable to submit registration. Please try again.");
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to register team. Please try again.");
+      }
+
       setIsSuccess(true);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setSubmitError(err.message);
       } else {
-        setSubmitError("An unexpected error occurred.");
+        setSubmitError("Unable to submit registration. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -95,6 +125,7 @@ export default function DevAgents2EventDetail({ event }: { event: any }) {
         setIsSuccess(false);
         setFormData({
           teamName: "",
+          email: "",
           teamLead: "",
           teamMember1: "",
           teamMember2: "",
@@ -329,173 +360,188 @@ export default function DevAgents2EventDetail({ event }: { event: any }) {
                 className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
               />
 
-            {/* Modal Dialog */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden my-auto"
-            >
-              <button
-                onClick={handleClose}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10 rounded-full transition-colors z-10"
-                aria-label="Close"
+              {/* Modal Dialog */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-xl bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden my-auto"
               >
-                <FaTimes />
-              </button>
+                <button
+                  onClick={handleClose}
+                  className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10 rounded-full transition-colors z-10"
+                  aria-label="Close"
+                >
+                  <FaTimes />
+                </button>
 
-              <div className="p-6 sm:p-8">
-                {isSuccess ? (
-                  <div className="text-center py-10">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", bounce: 0.5 }}
-                      className="w-20 h-20 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl"
-                    >
-                      <FaCheckCircle />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Registration Successful</h3>
-                    <p className="text-slate-600 dark:text-gray-400 mb-8">Your team has been registered for DevAgentic 2.0.</p>
-                    <button
-                      onClick={handleClose}
-                      className="px-8 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-black/5 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white font-medium rounded-full transition-colors dark:border-white/5"
-                    >
-                      Close
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">DEVAGENTIC 2.0</h2>
-                      <h3 className="text-lg text-indigo-600 dark:text-indigo-300 font-medium mb-1">Registration Form</h3>
-                      <p className="text-sm text-slate-600 dark:text-gray-400">Register your team for the 24 Hours AI Agents Hackathon.</p>
+                <div className="p-6 sm:p-8">
+                  {isSuccess ? (
+                    <div className="text-center py-10">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", bounce: 0.5 }}
+                        className="w-20 h-20 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl"
+                      >
+                        <FaCheckCircle />
+                      </motion.div>
+                      <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Registration Successful</h3>
+                      <p className="text-slate-600 dark:text-gray-400 mb-8">Your team has been registered for DevAgentic 2.0.</p>
+                      <button
+                        onClick={handleClose}
+                        className="px-8 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-black/5 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white font-medium rounded-full transition-colors dark:border-white/5"
+                      >
+                        Close
+                      </button>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      {submitError && (
-                        <div className="p-3 bg-red-50 border border-red-200 text-red-600 dark:bg-red-500/10 dark:border-red-500/20 rounded-lg dark:text-red-400 text-sm">
-                          {submitError}
-                        </div>
-                      )}
-                      
-                      <div className="space-y-4">
-                        {/* Team Name */}
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                            Team Name <span className="text-indigo-600 dark:text-indigo-400">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.teamName}
-                            onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                            className={`w-full bg-white dark:bg-white/5 border ${errors.teamName ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
-                            placeholder="Enter team name"
-                          />
-                          {errors.teamName && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamName}</p>}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Team Lead */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                              Team Lead <span className="text-indigo-600 dark:text-indigo-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.teamLead}
-                              onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
-                              className={`w-full bg-white dark:bg-white/5 border ${errors.teamLead ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
-                              placeholder="Lead name"
-                            />
-                            {errors.teamLead && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamLead}</p>}
-                          </div>
-
-                          {/* Team Member 1 */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                              Team Member 1 <span className="text-indigo-600 dark:text-indigo-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.teamMember1}
-                              onChange={(e) => setFormData({ ...formData, teamMember1: e.target.value })}
-                              className={`w-full bg-white dark:bg-white/5 border ${errors.teamMember1 ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
-                              placeholder="Member 1 name"
-                            />
-                            {errors.teamMember1 && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamMember1}</p>}
-                          </div>
-
-                          {/* Team Member 2 */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                              Team Member 2 <span className="text-indigo-600 dark:text-indigo-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.teamMember2}
-                              onChange={(e) => setFormData({ ...formData, teamMember2: e.target.value })}
-                              className={`w-full bg-white dark:bg-white/5 border ${errors.teamMember2 ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
-                              placeholder="Member 2 name"
-                            />
-                            {errors.teamMember2 && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamMember2}</p>}
-                          </div>
-
-                          {/* Team Member 3 */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                              Team Member 3
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.teamMember3}
-                              onChange={(e) => setFormData({ ...formData, teamMember3: e.target.value })}
-                              className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-indigo-500 dark:focus:border-indigo-500 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none"
-                              placeholder="Member 3 name"
-                            />
-                          </div>
-
-                          {/* Team Member 4 */}
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
-                              Team Member 4
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.teamMember4}
-                              onChange={(e) => setFormData({ ...formData, teamMember4: e.target.value })}
-                              className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-indigo-500 dark:focus:border-indigo-500 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none"
-                              placeholder="Member 4 name"
-                            />
-                          </div>
-                        </div>
+                  ) : (
+                    <>
+                      <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">DEVAGENTIC 2.0</h2>
+                        <h3 className="text-lg text-indigo-600 dark:text-indigo-300 font-medium mb-1">Registration Form</h3>
+                        <p className="text-sm text-slate-600 dark:text-gray-400">Register your team for the 24 Hours AI Agents Hackathon.</p>
                       </div>
 
-                      <div className="pt-6 mt-6 border-t border-black/5 dark:border-white/10">
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="w-full relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white font-medium rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden shadow-sm dark:shadow-none"
-                        >
-                          <span className="relative z-10 flex items-center gap-2">
-                            {isSubmitting ? (
-                              <>
-                                <FaSpinner className="animate-spin" />
-                                Registering...
-                              </>
-                            ) : (
-                              "Register Team"
-                            )}
-                          </span>
-                        </button>
-                      </div>
-                    </form>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        {submitError && (
+                          <div className="p-3 bg-red-50 border border-red-200 text-red-600 dark:bg-red-500/10 dark:border-red-500/20 rounded-lg dark:text-red-400 text-sm">
+                            {submitError}
+                          </div>
+                        )}
+
+                        <div className="space-y-4">
+                          {/* Team Name */}
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                              Team Name <span className="text-indigo-600 dark:text-indigo-400">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.teamName}
+                              onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
+                              className={`w-full bg-white dark:bg-white/5 border ${errors.teamName ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
+                              placeholder="Enter team name"
+                            />
+                            {errors.teamName && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamName}</p>}
+                          </div>
+
+                          {/* Gmail */}
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                              Gmail <span className="text-indigo-600 dark:text-indigo-400">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              className={`w-full bg-white dark:bg-white/5 border ${errors.email ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
+                              placeholder="example@gmail.com"
+                            />
+                            {errors.email && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.email}</p>}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Team Lead */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                                Team Lead <span className="text-indigo-600 dark:text-indigo-400">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.teamLead}
+                                onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
+                                className={`w-full bg-white dark:bg-white/5 border ${errors.teamLead ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
+                                placeholder="Lead name"
+                              />
+                              {errors.teamLead && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamLead}</p>}
+                            </div>
+
+                            {/* Team Member 1 */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                                Team Member 1 <span className="text-indigo-600 dark:text-indigo-400">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.teamMember1}
+                                onChange={(e) => setFormData({ ...formData, teamMember1: e.target.value })}
+                                className={`w-full bg-white dark:bg-white/5 border ${errors.teamMember1 ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
+                                placeholder="Member 1 name"
+                              />
+                              {errors.teamMember1 && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamMember1}</p>}
+                            </div>
+
+                            {/* Team Member 2 */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                                Team Member 2 <span className="text-indigo-600 dark:text-indigo-400">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.teamMember2}
+                                onChange={(e) => setFormData({ ...formData, teamMember2: e.target.value })}
+                                className={`w-full bg-white dark:bg-white/5 border ${errors.teamMember2 ? 'border-red-500/50 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500 dark:border-white/10 dark:focus:border-indigo-500'} rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none`}
+                                placeholder="Member 2 name"
+                              />
+                              {errors.teamMember2 && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.teamMember2}</p>}
+                            </div>
+
+                            {/* Team Member 3 */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                                Team Member 3
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.teamMember3}
+                                onChange={(e) => setFormData({ ...formData, teamMember3: e.target.value })}
+                                className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-indigo-500 dark:focus:border-indigo-500 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none"
+                                placeholder="Member 3 name"
+                              />
+                            </div>
+
+                            {/* Team Member 4 */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">
+                                Team Member 4
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.teamMember4}
+                                onChange={(e) => setFormData({ ...formData, teamMember4: e.target.value })}
+                                className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-indigo-500 dark:focus:border-indigo-500 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm dark:shadow-none"
+                                placeholder="Member 4 name"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-6 mt-6 border-t border-black/5 dark:border-white/10">
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white font-medium rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden shadow-sm dark:shadow-none"
+                          >
+                            <span className="relative z-10 flex items-center gap-2">
+                              {isSubmitting ? (
+                                <>
+                                  <FaSpinner className="animate-spin" />
+                                  Registering...
+                                </>
+                              ) : (
+                                "Register Team"
+                              )}
+                            </span>
+                          </button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>,
         document.body
       )}

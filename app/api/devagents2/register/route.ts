@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { teamName, teamLead, teamMember1, teamMember2, teamMember3, teamMember4 } = body
+    const { teamName, email, teamLead, teamMember1, teamMember2, teamMember3, teamMember4 } = body
 
-    if (!teamName || !teamLead || !teamMember1 || !teamMember2) {
+    if (!teamName || !email || !teamLead || !teamMember1 || !teamMember2) {
       return NextResponse.json(
         { error: 'Please fill in all required fields' },
         { status: 400 }
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const registrationForward = await postToGoogleAppsScript({
       action: 'devAgentic2Registration',
       teamName,
+      email,
       teamLead,
       teamMember1,
       teamMember2,
