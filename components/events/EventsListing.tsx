@@ -307,6 +307,7 @@ export default function EventsListing() {
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
               <input
                 type="text"
+                aria-label="Search events"
                 placeholder="Search programs, topics..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

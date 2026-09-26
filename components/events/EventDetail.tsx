@@ -455,8 +455,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
-                            <span className="text-gray-900 dark:text-white text-sm font-medium">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
+                            <span className="text-white text-sm font-medium">
                               Click to expand
                             </span>
                           </div>
@@ -997,10 +997,11 @@ function DefaultEventDetail({ event }: { event: any }) {
               {/* Close Button */}
               <button
                 onClick={closeImageModal}
-                className="absolute -top-12 right-0 text-gray-900 dark:text-white hover:text-red-500 transition-colors z-10"
+                aria-label="Close image viewer"
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-900 dark:text-white p-3 rounded-full transition-all z-20"
               >
                 <svg
-                  className="w-10 h-10"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1021,7 +1022,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                     e.stopPropagation();
                     navigateImage("prev");
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-900 dark:text-white p-3 rounded-full transition-all z-10"
+                  aria-label="Previous image"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-900 dark:text-white p-4 sm:p-5 rounded-full transition-all z-10"
                 >
                   <svg
                     className="w-6 h-6"
@@ -1058,7 +1060,8 @@ function DefaultEventDetail({ event }: { event: any }) {
                     e.stopPropagation();
                     navigateImage("next");
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-900 dark:text-white p-3 rounded-full transition-all z-10"
+                  aria-label="Next image"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-900 dark:text-white p-4 sm:p-5 rounded-full transition-all z-10"
                 >
                   <svg
                     className="w-6 h-6"
