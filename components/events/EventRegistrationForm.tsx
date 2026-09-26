@@ -383,6 +383,7 @@ export default function EventRegistrationForm({
         <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
           <button
             onClick={() => requestClose(false)}
+            aria-label="Close registration form"
             className="absolute top-4 right-4 text-gray-900 dark:text-white hover:text-gray-200 transition-colors"
           >
             <FaTimes className="text-2xl" />
@@ -402,11 +403,12 @@ export default function EventRegistrationForm({
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Full Name *
                 </label>
                 <input
                   type="text"
+                  id="fullName"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
@@ -421,11 +423,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email ID *
                 </label>
                 <input
                   type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
@@ -440,11 +443,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Contact Number *
                 </label>
                 <input
                   type="tel"
+                  id="contactNumber"
                   name="contactNumber"
                   value={formData.contactNumber}
                   onChange={handleChange}
@@ -460,11 +464,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="emergencyContact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Emergency Contact Number *
                 </label>
                 <input
                   type="tel"
+                  id="emergencyContact"
                   name="emergencyContact"
                   value={formData.emergencyContact}
                   onChange={handleChange}
@@ -482,11 +487,12 @@ export default function EventRegistrationForm({
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   City *
                 </label>
                 <input
                   type="text"
+                  id="city"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
@@ -501,11 +507,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   State *
                 </label>
                 <input
                   type="text"
+                  id="state"
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
@@ -530,11 +537,12 @@ export default function EventRegistrationForm({
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Student ID / Roll Number *
                 </label>
                 <input
                   type="text"
+                  id="studentId"
                   name="studentId"
                   value={formData.studentId}
                   onChange={handleChange}
@@ -549,11 +557,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="collegeName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   College Name *
                 </label>
                 <input
                   type="text"
+                  id="collegeName"
                   name="collegeName"
                   value={formData.collegeName}
                   onChange={handleChange}
@@ -568,11 +577,12 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Department *
                 </label>
                 <input
                   type="text"
+                  id="department"
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
@@ -587,10 +597,11 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="year" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Year *
                 </label>
                 <select
+                  id="year"
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
@@ -615,12 +626,13 @@ export default function EventRegistrationForm({
               {/* Graduation Year - Only show if Graduate is selected */}
               {formData.year === "Graduate" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Year of Graduation *
-                  </label>
+                  <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Year of Graduation *
+                </label>
                   <input
                     type="text"
-                    name="graduationYear"
+                    id="graduationYear"
+                  name="graduationYear"
                     value={formData.graduationYear}
                     onChange={handleChange}
                     placeholder="e.g. 2023"
@@ -648,11 +660,12 @@ export default function EventRegistrationForm({
               {/* Hide certificate option for TEDxKPRIT */}
               {event.id !== "tedxkprit-2025" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Do you prefer a certificate? *
-                  </label>
+                  <label htmlFor="wantCertificate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Do you prefer a certificate? *
+                </label>
                   <select
-                    name="wantCertificate"
+                    id="wantCertificate"
+                  name="wantCertificate"
                     value={formData.wantCertificate}
                     onChange={handleChange}
                     required
@@ -667,10 +680,11 @@ export default function EventRegistrationForm({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="wantTransport" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Do you want transport? *
                 </label>
                 <select
+                  id="wantTransport"
                   name="wantTransport"
                   value={formData.wantTransport}
                   onChange={handleChange}
@@ -687,10 +701,11 @@ export default function EventRegistrationForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="hearAboutEvent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   How did you know about this event? *
                 </label>
                 <select
+                  id="hearAboutEvent"
                   name="hearAboutEvent"
                   value={formData.hearAboutEvent}
                   onChange={handleChange}
