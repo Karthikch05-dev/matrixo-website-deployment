@@ -69,3 +69,8 @@ functions/node_modules/
 
 # ensure only example env is tracked
 !.env.example
+
+# Firebase Admin credentials — never commit. Use FIREBASE_* env vars instead.
+serviceAccountKey.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json

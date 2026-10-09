@@ -988,48 +988,5 @@
       "currency": "INR",
       "note": "Pay via UPI. Payment confirmation required to finalise registration."
     }
-  },
-  {
-    "id": "payment-test-event",
-    "slug": "payment-test-event",
-    "title": "Payment Test Event",
-    "tagline": "Internal payment gateway verification — not a real event",
-    "description": "Internal test event used to verify the Razorpay checkout flow end to end. This is not a public event and is not open for registration. The ticket is priced at the minimum chargeable amount so a live transaction can be confirmed and refunded.",
-    "date": "2027-12-31T10:00:00",
-    "endDate": "2027-12-31T12:00:00",
-    "venue": "Internal",
-    "location": "Online",
-    "totalCapacity": 10,
-    "ticketsSold": 0,
-    "featured": false,
-    "status": "upcoming",
-    "category": "Test Event",
-    "images": {
-      "banner": "/events/vibecoding cover page.jpeg",
-      "thumbnail": "/events/vibecoding cover page.jpeg",
-      "gallery": []
-    },
-    "tickets": [
-      {
-        "id": "test-pass",
-        "name": "Test Pass",
-        "price": 1,
-        "available": 10,
-        "description": "Minimum-amount ticket used only to verify the payment gateway.",
-        "perks": [
-          "Payment gateway verification only"
-        ]
-      }
-    ],
-    "partners": [],
-    "sponsors": [],
-    "speakers": [],
-    "agenda": [],
-    "tags": [
-      "internal",
-      "test"
-    ],
-    "organizer": "matriXO",
-    "contactEmail": "hello@matrixo.in"
   }
 ]

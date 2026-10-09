@@ -120,7 +120,7 @@ export default function CareersContent() {
 
     try {
       const applicationsRef = collection(db, 'applications')
-      await addDoc(applicationsRef, {
+      const applicationRef = await addDoc(applicationsRef, {
         ...formData,
         roleId: null,
         roleTitle: formData.interestedRole,
@@ -135,6 +135,7 @@ export default function CareersContent() {
 
       // Notify all admin team members about the new general application
       notifyAdminsOfNewApplication({
+        applicationId: applicationRef.id,
         applicantName: formData.fullName,
         roleTitle: formData.interestedRole,
         roleId: null,

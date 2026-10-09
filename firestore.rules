@@ -231,9 +231,12 @@ service cloud.firestore {
     // ================================================
     // PUSH SUBSCRIPTIONS COLLECTION (Web Push)
     // ================================================
+    // Staff devices only. Pushes are sent server-side (Admin SDK), so no
+    // client ever needs to read someone else's endpoint. Legacy name-keyed
+    // Employees docs are covered by the portalRole claim the server mirrors.
     match /pushSubscriptions/{subscriptionId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read, write: if isEmployee() ||
+        (isAuthenticated() && 'portalRole' in request.auth.token);
     }
 
     // ================================================
