@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'ImpactVault - Community Impact | matriXO',
+  title: 'ImpactVault — community impact',
   description: 'Explore matriXO ImpactVault - see our community impact, student success stories, and the difference we\'re making in technical education.',
   openGraph: {
     title: 'ImpactVault - Community Impact | matriXO',

@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'SkillDNA™ - AI Skill Genome Engine | matriXO',
+  title: 'SkillDNA™ — AI skill genome',
   description: 'Discover your unique skill genome with SkillDNA™. AI-powered skill profiling, career alignment analysis, personalized learning paths, and dynamic skill scoring.',
   openGraph: {
     title: 'SkillDNA™ - AI-Powered Skill Genome Engine | matriXO',

@@ -4,7 +4,7 @@ import { BETA_PRODUCTS_ENABLED } from '@/lib/site'
 export const metadata: Metadata = {
   // Beta product: kept out of search on matrixo.in, indexable on beta.
   robots: BETA_PRODUCTS_ENABLED ? undefined : { index: false, follow: false },
-  title: 'MentorMatrix - Find Your Mentor | matriXO',
+  title: 'MentorMatrix — find your mentor',
   description: 'Connect with industry mentors through MentorMatrix by matriXO. Get personalized guidance and career advice from experienced professionals.',
   openGraph: {
     title: 'MentorMatrix - Find Your Mentor | matriXO',

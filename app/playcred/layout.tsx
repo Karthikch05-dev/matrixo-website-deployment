@@ -4,7 +4,7 @@ import { BETA_PRODUCTS_ENABLED } from '@/lib/site'
 export const metadata: Metadata = {
   // Beta product: kept out of search on matrixo.in, indexable on beta.
   robots: BETA_PRODUCTS_ENABLED ? undefined : { index: false, follow: false },
-  title: 'PlayCred - Gamified Learning | matriXO',
+  title: 'PlayCred — gamified learning',
   description: 'Earn credentials through gamified learning with PlayCred by matriXO. Complete challenges, earn badges, and showcase your technical skills.',
   openGraph: {
     title: 'PlayCred - Gamified Learning | matriXO',
