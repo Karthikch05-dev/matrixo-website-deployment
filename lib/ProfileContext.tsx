@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { db } from '@/lib/firebaseConfig'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
+import { loadFirestore } from '@/lib/firebase/lazyFirestore'
 
 export interface PrivacySettings {
   showEmail: boolean
@@ -91,6 +90,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
+      const { db, doc, getDoc } = await loadFirestore()
       const docRef = doc(db, 'UserProfiles', user.uid)
       const docSnap = await getDoc(docRef)
 
@@ -123,6 +123,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!usernameAvailable) {
       throw new Error('Username is already taken')
     }
+
+    const { db, doc, getDoc, setDoc, serverTimestamp } = await loadFirestore()
 
     // Explicitly construct Firestore document payload with guaranteed required fields
     const rawProfileData: Record<string, any> = {
@@ -182,6 +184,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('User not authenticated')
     if (!profileExists) throw new Error('Profile does not exist')
 
+    const { db, doc, updateDoc, serverTimestamp } = await loadFirestore()
+
     // Omit any undefined values so updateDoc never encounters unsupported undefined
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== undefined)
@@ -205,6 +209,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const available = await checkUsernameAvailable(username)
     if (!available) throw new Error('Username is already taken')
 
+    const { db, doc, deleteDoc, setDoc, updateDoc, serverTimestamp } = await loadFirestore()
+
     // Delete old username mapping if user had one
     if (profile?.username && profile.username.toLowerCase() !== username.toLowerCase()) {
       try {
@@ -227,6 +233,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const checkUsernameAvailable = async (username: string): Promise<boolean> => {
     if (!username || username.length < 3) return false
+    const { db, doc, getDoc } = await loadFirestore()
     const usernameRef = doc(db, 'Usernames', username.toLowerCase())
     const snap = await getDoc(usernameRef)
     if (!snap.exists()) return true
@@ -237,6 +244,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const getProfileByUsername = async (username: string): Promise<UserProfile | null> => {
     try {
+      const { db, doc, getDoc } = await loadFirestore()
       const usernameRef = doc(db, 'Usernames', username.toLowerCase())
       const usernameSnap = await getDoc(usernameRef)
       if (!usernameSnap.exists()) return null

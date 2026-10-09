@@ -3,6 +3,9 @@ import ApplicationForm from '@/components/careers/ApplicationForm'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 
+// Role details can change; re-render the page at most every five minutes.
+export const revalidate = 300
+
 // Use the shared Firestore instance from `lib/firebaseConfig`
 function getServerDb() {
   return db

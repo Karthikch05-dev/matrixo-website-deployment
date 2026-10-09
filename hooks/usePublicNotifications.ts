@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { PublicNotification } from '@/lib/publicNotifications'
+import type { PublicNotification } from '@/lib/publicNotifications'
 
 const LOCAL_STORAGE_KEY = 'matrixo_public_read_notifications'
 
@@ -81,13 +81,23 @@ export function usePublicNotifications() {
     setReadIds(new Set(getLocalReadIds()))
   }, [user])
 
-  // Initial load & lightweight polling
+  // First load waits until the page has painted and settled, so the badge
+  // request never competes with the page's own content. Polling pauses while
+  // the tab is hidden.
   useEffect(() => {
-    fetchNotifications()
+    let cancelled = false
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }
+    const start = () => !cancelled && fetchNotifications()
+    const idle = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 4000 }) : window.setTimeout(start, 2000)
+
     const interval = setInterval(() => {
-      fetchNotifications()
-    }, 60000) // Poll every 60 seconds
-    return () => clearInterval(interval)
+      if (document.visibilityState === 'visible') fetchNotifications()
+    }, 60000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      if (!w.requestIdleCallback) window.clearTimeout(idle)
+    }
   }, [fetchNotifications])
 
   // Load read state initially and on user change

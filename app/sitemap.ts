@@ -1,5 +1,8 @@
 import { MetadataRoute } from 'next'
 import { getPublishedOffers } from '@/lib/studentvault/data'
+import eventsData from '@/data/events.json'
+
+export const revalidate = 3600
 
 const baseUrl = 'https://matrixo.in'
 
@@ -8,11 +11,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [
     '',
     '/events',
+    '/home',
     '/services',
     '/about',
     '/team',
+    '/careers',
     '/contact',
-    '/auth',
+    '/blog',
+    '/brand',
     '/privacy',
     '/terms',
     '/refund',
@@ -59,5 +65,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('[sitemap] Could not load StudentVault offers:', error)
   }
 
-  return [...staticEntries, ...studentVaultEntries]
+  const eventEntries: MetadataRoute.Sitemap = (eventsData as Array<{ slug: string; date?: string; hidden?: boolean }>)
+    .filter((event) => !event.hidden)
+    .map((event) => ({
+      url: `${baseUrl}/events/${event.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
+
+  return [...staticEntries, ...eventEntries, ...studentVaultEntries]
 }

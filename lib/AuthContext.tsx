@@ -12,9 +12,16 @@ import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  getRedirectResult,
+  browserPopupRedirectResolver
 } from 'firebase/auth'
-import { auth, firebaseReady } from '@/lib/firebaseConfig'
+import { auth, firebaseReady } from '@/lib/firebase/client'
+
+// Set just before a Google redirect sign-in so the return trip knows to finish
+// it. Without the flag we'd load the redirect resolver (and Google's auth
+// iframe) on every page view.
+const REDIRECT_FLAG = 'mx-auth-redirect'
 
 interface AuthContextType {
   user: User | null
@@ -52,6 +59,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user)
       setLoading(false)
     })
+
+    try {
+      if (sessionStorage.getItem(REDIRECT_FLAG)) {
+        sessionStorage.removeItem(REDIRECT_FLAG)
+        getRedirectResult(auth, browserPopupRedirectResolver).catch((error) => {
+          console.error('Google redirect sign-in failed:', error)
+        })
+      }
+    } catch {
+      // sessionStorage can be unavailable (private mode); nothing to resume.
+    }
 
     return unsubscribe
   }, [])
@@ -97,13 +115,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     provider.setCustomParameters({ prompt: 'select_account' })
     const isBetaHost = typeof window !== 'undefined' && window.location.hostname === 'beta.matrixo.in'
 
-    if (isBetaHost) {
-      await signInWithRedirect(auth, provider)
+    const redirect = async () => {
+      try {
+        sessionStorage.setItem(REDIRECT_FLAG, '1')
+      } catch {
+        // Without the flag the redirect still signs in; the result is just
+        // picked up by onAuthStateChanged instead.
+      }
+      await signInWithRedirect(auth, provider, browserPopupRedirectResolver)
       return 'redirect' as const
     }
 
+    if (isBetaHost) return redirect()
+
     try {
-      await signInWithPopup(auth, provider)
+      await signInWithPopup(auth, provider, browserPopupRedirectResolver)
       return 'popup' as const
     } catch (error: any) {
       if (
@@ -111,8 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error?.code === 'auth/web-storage-unsupported' ||
         error?.code === 'auth/operation-not-supported-in-this-environment'
       ) {
-        await signInWithRedirect(auth, provider)
-        return 'redirect' as const
+        return redirect()
       }
       throw error
     }

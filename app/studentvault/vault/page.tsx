@@ -2,6 +2,9 @@ import { Metadata } from 'next'
 import { getPublishedOffers } from '@/lib/studentvault/data'
 import VaultClient from '@/components/studentvault/VaultClient'
 
+// Offer list refreshes hourly, like the other StudentVault pages.
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: 'Your StudentVault',
   description: 'Your StudentVault command centre.',

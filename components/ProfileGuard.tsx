@@ -4,12 +4,18 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/ProfileContext'
-import { FaSpinner } from 'react-icons/fa'
 import XOLoader from '@/components/XOLoader'
 
 // Routes that don't require profile setup
 const PUBLIC_ROUTES = [
   '/',
+  '/home',
+  '/brand',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/notifications',
+  '/studentvault',
   '/about',
   '/team',
   '/services',
@@ -60,11 +66,8 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
     // Only show loading on non-public routes to avoid flash
     if (!isPublicRoute(pathname)) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
-          <div className="flex flex-col items-center gap-3">
-            <XOLoader size={20} />
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
-          </div>
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <XOLoader size={20} label="Loading your account" />
         </div>
       )
     }
@@ -73,11 +76,8 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
   // If user is logged in but has no profile, show redirect UI instead of a blank screen
   if (needsProfileRedirect) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
-        <div className="flex flex-col items-center gap-3">
-          <XOLoader size={20} />
-          <p className="text-gray-600 dark:text-gray-300 text-sm">Redirecting to profile setup...</p>
-        </div>
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <XOLoader size={20} label="Taking you to profile setup" />
       </div>
     )
   }

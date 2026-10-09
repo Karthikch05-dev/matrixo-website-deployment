@@ -2,6 +2,9 @@ import { Metadata } from 'next'
 import { getPublishedOffers } from '@/lib/studentvault/data'
 import TrackerClient from '@/components/studentvault/TrackerClient'
 
+// Offer list refreshes hourly, like the other StudentVault pages.
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: 'My StudentVault claim tracker',
   description: 'Track which student offers you have claimed.',
