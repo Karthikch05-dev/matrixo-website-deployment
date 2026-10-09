@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: 'Map your technical skills, get AI-powered career alignment insights, and follow personalized learning paths.',
     url: 'https://beta.matrixo.in/skilldna',
     siteName: 'matriXO Beta',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://matrixo.in/brand/og-default.png', width: 1200, height: 630 }],
   },
 }
 

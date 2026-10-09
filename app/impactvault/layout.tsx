@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: 'See our community impact and student success stories.',
     url: 'https://matrixo.in/impactvault',
     siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://matrixo.in/brand/og-default.png', width: 1200, height: 630 }],
   },
 }
 

@@ -5,10 +5,10 @@ export const SHOW_DEVAGENTS_LEAD_SPEAKER =
   process.env.NEXT_PUBLIC_SHOW_DEVAGENTS_LEAD_SPEAKER === "true";
 
 export const MATRIXO_LOGO_LIGHT_URL =
-  process.env.NEXT_PUBLIC_MATRIXO_LOGO_LIGHT_URL || "/logos/logo-light.png";
+  process.env.NEXT_PUBLIC_MATRIXO_LOGO_LIGHT_URL || "/brand/matrixo-logo.svg";
 
 export const MATRIXO_LOGO_DARK_URL =
-  process.env.NEXT_PUBLIC_MATRIXO_LOGO_DARK_URL || "/logos/logo-dark.png";
+  process.env.NEXT_PUBLIC_MATRIXO_LOGO_DARK_URL || "/brand/matrixo-logo-white.svg";
 
 export const DEVAGENTS_APPROVAL_ENTRY_PREFIX =
   process.env.NEXT_PUBLIC_DEVAGENTS_ENTRY_PREFIX || "DEVAGENTS";
