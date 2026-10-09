@@ -19,8 +19,6 @@ Write-Host ""
 Write-Host "2. Kishan Sai Vutukuri" -ForegroundColor White
 Write-Host "   https://www.linkedin.com/in/kishan-sai-vutukuri/" -ForegroundColor Gray
 Write-Host ""
-Write-Host "3. Jatin Jangir" -ForegroundColor White
-Write-Host "   https://www.linkedin.com/in/astro-jatin-jangir-0287a6228" -ForegroundColor Gray
 Write-Host ""
 
 # Instructions

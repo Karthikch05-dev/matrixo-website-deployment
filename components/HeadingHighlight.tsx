@@ -9,7 +9,7 @@ export default function HeadingHighlight({
   text,
   highlightWords = 1,
   solidClassName = 'heading-solid',
-  gradientClassName = 'gradient-text',
+  gradientClassName = 'heading-accent',
 }: HeadingHighlightProps) {
   const words = text.trim().split(/\s+/)
   const tailCount = Math.min(Math.max(highlightWords, 1), words.length)

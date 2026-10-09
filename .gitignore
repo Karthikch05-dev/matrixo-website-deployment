@@ -10,11 +10,7 @@
 
 # next.js
 /.next/
-.next
-.next-dev.log
-.next-dev.err.log
 /out/
-out
 
 # production
 /build
@@ -38,7 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
- 
+
 # Additional ignores for this Next.js/Node workspace
 
 # editor
@@ -49,12 +45,13 @@ next-env.d.ts
 # os-specific
 Thumbs.db
 
+# Windows reserved device names accidentally created by shell
+# redirects (e.g. `command > out.log 2>nul` run outside cmd.exe).
+# Git cannot track these paths on Windows, so keep them ignored.
+nul
+NUL
+
 # build caches and outputs
-node_modules
-dist
-.next
-.next-dev.log
-.next-dev.err.log
 dist/
 .cache/
 
@@ -67,9 +64,21 @@ test-results/
 functions/lib/
 functions/node_modules/
 
+# nested project clone (not part of this repo)
+/matrixo-website-deployment-beta/
+
 # ensure only example env is tracked
 !.env.example
-serviceAccountKey.json
 
-# Ignore nested repository folder
-/matrixo-website-deployment-beta/
+# Firebase Admin credentials — never commit. Use FIREBASE_* env vars instead.
+serviceAccountKey.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# From beta
+.next
+.next-dev.log
+.next-dev.err.log
+out
+node_modules
+dist

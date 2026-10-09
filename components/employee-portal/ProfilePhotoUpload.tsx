@@ -1,20 +1,21 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaCamera, FaTimes, FaUpload, FaTrash, FaCheck, FaExclamationTriangle, FaSpinner } from 'react-icons/fa'
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { storage, db } from '@/lib/firebaseConfig'
 import { toast } from 'sonner'
-import ImageCropModal from '@/components/shared/ImageCropModal'
 
 // ============================================
 // CONSTANTS & TYPES
 // ============================================
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE_BYTES = 3 * 1024 * 1024 // 3MB
+const OUTPUT_SIZE = 512 // 512×512 px output
 
 interface ProfilePhotoUploadProps {
   employeeId: string
@@ -26,8 +27,48 @@ interface ProfilePhotoUploadProps {
 }
 
 // ============================================
-// CLIENT-SIDE IMAGE PROCESSING (REMOVED - using crop modal)
+// CLIENT-SIDE IMAGE PROCESSING
 // ============================================
+
+/** Resize and center-crop an image File to OUTPUT_SIZE×OUTPUT_SIZE WebP using Canvas */
+async function processImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = OUTPUT_SIZE
+      canvas.height = OUTPUT_SIZE
+      const ctx = canvas.getContext('2d')!
+
+      // Center-crop: fill the square from the center of the source image
+      const srcSize = Math.min(img.width, img.height)
+      const srcX = (img.width - srcSize) / 2
+      const srcY = (img.height - srcSize) / 2
+
+      ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error('Canvas toBlob failed'))
+        },
+        'image/webp',
+        0.88 // quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to load image'))
+    }
+
+    img.src = objectUrl
+  })
+}
 
 /** Validate a File before processing */
 function validateFile(file: File): string | null {
@@ -35,7 +76,7 @@ function validateFile(file: File): string | null {
     return `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP`
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 5MB`
+    return `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: 3MB`
   }
   return null
 }
@@ -53,7 +94,7 @@ function InitialsAvatar({ name, size = 128 }: { name: string; size?: number }) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold select-none"
+      className="flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold select-none"
       style={{ width: size, height: size, fontSize: size * 0.33 }}
     >
       {initials}
@@ -79,12 +120,22 @@ export default function ProfilePhotoUpload({
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
-  
-  // Crop modal states
-  const [cropModalOpen, setCropModalOpen] = useState(false)
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Ensure we're client-side before using createPortal ──────────────────
+  useEffect(() => setMounted(true), [])
+
+  // ── Lock body scroll while modal is open ────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   // ── Close & reset modal ─────────────────────────────────────────────────
   const closeModal = useCallback(() => {
@@ -94,10 +145,7 @@ export default function ProfilePhotoUpload({
     setDragActive(false)
     setProgress(0)
     setValidationError(null)
-    setCropModalOpen(false)
-    if (tempImageUrl) URL.revokeObjectURL(tempImageUrl)
-    setTempImageUrl(null)
-  }, [tempImageUrl])
+  }, [])
 
   // ── Handle file selection ───────────────────────────────────────────────
   const handleFile = useCallback((file: File) => {
@@ -111,8 +159,7 @@ export default function ProfilePhotoUpload({
     setValidationError(null)
     setSelectedFile(file)
     const objectUrl = URL.createObjectURL(file)
-    setTempImageUrl(objectUrl)
-    setCropModalOpen(true)
+    setPreview(objectUrl)
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,27 +183,25 @@ export default function ProfilePhotoUpload({
   }
 
   // ── Upload ──────────────────────────────────────────────────────────────
-  const handleCropComplete = async (croppedBlob: Blob) => {
-    if (!employeeId) return
+  const handleUpload = async () => {
+    if (!selectedFile || !employeeId) return
 
     setUploading(true)
     setProgress(0)
-    setCropModalOpen(false)
-
-    // Set preview
-    const previewUrl = URL.createObjectURL(croppedBlob)
-    setPreview(previewUrl)
 
     try {
-      // Build storage path
+      // 1. Process image client-side (resize + crop + webp)
+      const processedBlob = await processImage(selectedFile)
+
+      // 2. Build storage path
       const timestamp = Date.now()
-      const storagePath = `profile-images/${employeeId}/${timestamp}.jpg`
+      const storagePath = `profile-images/${employeeId}/${timestamp}.webp`
       const storageRef = ref(storage, storagePath)
 
-      // Upload with progress tracking
+      // 3. Upload with progress tracking
       await new Promise<void>((resolve, reject) => {
-        const uploadTask = uploadBytesResumable(storageRef, croppedBlob, {
-          contentType: 'image/jpeg',
+        const uploadTask = uploadBytesResumable(storageRef, processedBlob, {
+          contentType: 'image/webp',
         })
 
         uploadTask.on(
@@ -170,9 +215,16 @@ export default function ProfilePhotoUpload({
             try {
               const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref)
 
-              // Update Firestore
-              const employeeRef = doc(db, 'Employees', employeeId)
-              await updateDoc(employeeRef, {
+              // 4. Update Firestore – query by employeeId field to find the actual document
+              const employeesRef = collection(db, 'Employees')
+              const q = query(employeesRef, where('employeeId', '==', employeeId))
+              const querySnapshot = await getDocs(q)
+
+              if (querySnapshot.empty) {
+                throw new Error('Employee record not found')
+              }
+
+              await updateDoc(querySnapshot.docs[0].ref, {
                 profileImage: downloadUrl,
                 imageUpdatedAt: serverTimestamp(),
               })
@@ -193,7 +245,6 @@ export default function ProfilePhotoUpload({
     } finally {
       setUploading(false)
       setProgress(0)
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
   }
 
@@ -204,9 +255,17 @@ export default function ProfilePhotoUpload({
 
     setUploading(true)
     try {
+      // Query for the actual Firestore document by employeeId field
+      const employeesRef = collection(db, 'Employees')
+      const q = query(employeesRef, where('employeeId', '==', employeeId))
+      const querySnapshot = await getDocs(q)
+
+      if (querySnapshot.empty) {
+        throw new Error('Employee record not found')
+      }
+
       // Remove from Firestore first so the UI updates immediately
-      const employeeRef = doc(db, 'Employees', employeeId)
-      await updateDoc(employeeRef, {
+      await updateDoc(querySnapshot.docs[0].ref, {
         profileImage: '',
         imageUpdatedAt: serverTimestamp(),
       })
@@ -249,21 +308,37 @@ export default function ProfilePhotoUpload({
         Change Photo
       </button>
 
-      {/* Modal */}
-      <AnimatePresence>
-        {isOpen && (
+      {/* Modal – rendered in a portal so parent transforms can't break fixed centering */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
           <div
-            className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
-            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Update Profile Photo"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
           >
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-2xl"
               onClick={closeModal}
-              style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.80)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+              }}
             />
 
             {/* Modal card */}
@@ -306,9 +381,9 @@ export default function ProfilePhotoUpload({
 
               {/* Body */}
               <div className="p-6 space-y-5">
-                {/* Current / Preview avatar - Square with rounded corners */}
+                {/* Current / Preview avatar */}
                 <div className="flex justify-center">
-                  <div className="relative w-32 h-32 rounded-xl overflow-hidden ring-4 ring-blue-500/40">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-blue-500/40">
                     {preview ? (
                       <img
                         src={preview}
@@ -354,7 +429,7 @@ export default function ProfilePhotoUpload({
                     {dragActive ? 'Drop to select' : 'Click or drag & drop an image'}
                   </p>
                   <p className={`text-xs mt-1 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
-                    JPEG · PNG · WebP · Max 5MB
+                    JPEG · PNG · WebP · Max 3MB
                   </p>
                 </div>
 
@@ -418,14 +493,31 @@ export default function ProfilePhotoUpload({
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-3">
-                  {/* Upload progress indicator */}
-                  {uploading && (
-                    <div className="text-center py-2">
-                      <p className={`text-sm ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
-                        Uploading your photo...
-                      </p>
-                    </div>
-                  )}
+                  {/* Upload button */}
+                  <button
+                    onClick={handleUpload}
+                    disabled={!selectedFile || uploading}
+                    className={`
+                      w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-200
+                      ${selectedFile && !uploading
+                        ? 'to-purple-600 hover:to-purple-500 cta-glass'
+                        : darkMode
+                          ? 'bg-white/5 text-neutral-500 cursor-not-allowed'
+                          : 'bg-black/5 text-gray-400 cursor-not-allowed'}
+                    `}
+                  >
+                    {uploading ? (
+                      <>
+                        <FaSpinner className="animate-spin" size={14} />
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <FaCheck size={13} />
+                        Save Photo
+                      </>
+                    )}
+                  </button>
 
                   {/* Remove photo button (only if current image exists) */}
                   {currentImageUrl && !uploading && (
@@ -446,33 +538,16 @@ export default function ProfilePhotoUpload({
 
                 {/* Info note */}
                 <p className={`text-xs text-center ${darkMode ? 'text-neutral-600' : 'text-gray-400'}`}>
-                  Photos are cropped to square and compressed to ≤100KB.
+                  Photos are resized to 512×512 and stored securely.
                   <br />
                   Only you and admins can change this photo.
                 </p>
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
-
-      {/* Crop Modal */}
-      {tempImageUrl && (
-        <ImageCropModal
-          isOpen={cropModalOpen}
-          imageSrc={tempImageUrl}
-          aspectRatio={1}
-          onClose={() => {
-            setCropModalOpen(false)
-            if (tempImageUrl) URL.revokeObjectURL(tempImageUrl)
-            setTempImageUrl(null)
-            setSelectedFile(null)
-          }}
-          onComplete={handleCropComplete}
-          title="Crop Profile Photo (Square)"
-          cropShape="rect"
-          darkMode={darkMode}
-        />
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </>
   )

@@ -112,7 +112,7 @@ export default function ProfileDownload({ targetRef, userName }: ProfileDownload
         <div className="flex items-center gap-3 print:hidden">
             <button
                 onClick={handlePDFDownload}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-medium text-sm hover:from-red-500 hover:to-rose-500 transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+                className="inline-flex items-center gap-2 px-5 py-2.5 from-red-600 to-rose-600 rounded-xl font-medium text-sm cta-glass"
             >
                 <FaFilePdf />
                 Download PDF
@@ -120,7 +120,7 @@ export default function ProfileDownload({ targetRef, userName }: ProfileDownload
             <button
                 onClick={handleJPGDownload}
                 disabled={downloading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-medium text-sm hover:from-blue-500 hover:to-cyan-500 transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 to-cyan-600 rounded-xl font-medium text-sm hover:to-cyan-500 disabled:opacity-50 cta-glass"
             >
                 {downloading ? <FaSpinner className="animate-spin" /> : <FaImage />}
                 {downloading ? 'Generating...' : 'Download JPG'}

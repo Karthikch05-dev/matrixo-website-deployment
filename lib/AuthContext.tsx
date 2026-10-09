@@ -8,12 +8,20 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  getRedirectResult,
+  browserPopupRedirectResolver
 } from 'firebase/auth'
-import { auth } from '@/lib/firebaseConfig'
+import { auth, firebaseReady } from '@/lib/firebase/client'
+
+// Set just before a Google redirect sign-in so the return trip knows to finish
+// it. Without the flag we'd load the redirect resolver (and Google's auth
+// iframe) on every page view.
+const REDIRECT_FLAG = 'mx-auth-redirect'
 
 interface AuthContextType {
   user: User | null
@@ -21,7 +29,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName?: string) => Promise<User>
   logout: () => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: () => Promise<'popup' | 'redirect'>
   resetPassword: (email: string) => Promise<void>
   resendVerificationEmail: () => Promise<void>
 }
@@ -41,15 +49,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
       setLoading(false)
     })
 
+    try {
+      if (sessionStorage.getItem(REDIRECT_FLAG)) {
+        sessionStorage.removeItem(REDIRECT_FLAG)
+        getRedirectResult(auth, browserPopupRedirectResolver).catch((error) => {
+          console.error('Google redirect sign-in failed:', error)
+        })
+      }
+    } catch {
+      // sessionStorage can be unavailable (private mode); nothing to resume.
+    }
+
     return unsubscribe
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     // Check if email is verified for email/password sign-ins
     if (!userCredential.user.emailVerified) {
@@ -60,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, displayName?: string): Promise<User> => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     
     if (displayName && userCredential.user) {
@@ -78,19 +105,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
   }
 
   const signInWithGoogle = async () => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    provider.setCustomParameters({ prompt: 'select_account' })
+    const isBetaHost = typeof window !== 'undefined' && window.location.hostname === 'beta.matrixo.in'
+
+    const redirect = async () => {
+      try {
+        sessionStorage.setItem(REDIRECT_FLAG, '1')
+      } catch {
+        // Without the flag the redirect still signs in; the result is just
+        // picked up by onAuthStateChanged instead.
+      }
+      await signInWithRedirect(auth, provider, browserPopupRedirectResolver)
+      return 'redirect' as const
+    }
+
+    if (isBetaHost) return redirect()
+
+    try {
+      await signInWithPopup(auth, provider, browserPopupRedirectResolver)
+      return 'popup' as const
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/popup-blocked' ||
+        error?.code === 'auth/web-storage-unsupported' ||
+        error?.code === 'auth/operation-not-supported-in-this-environment'
+      ) {
+        return redirect()
+      }
+      throw error
+    }
   }
 
   const resetPassword = async (email: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     await sendPasswordResetEmail(auth, email)
   }
 
   const resendVerificationEmail = async () => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
     // Temporarily sign in to resend - the user object needs to exist
     if (auth.currentUser) {
       await sendEmailVerification(auth.currentUser)
@@ -110,6 +169,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
+      {/* Always render children. Withholding them until `loading` flips meant the
+          server produced an empty <body> (the effect below only runs on the
+          client), so nothing painted until Firebase Auth had fully initialised.
+          Consumers that care about the pre-resolution state read `loading` from
+          this context instead. */}
       {children}
     </AuthContext.Provider>
   )

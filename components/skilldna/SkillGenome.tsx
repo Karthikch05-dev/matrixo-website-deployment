@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { BETA_PRODUCTS_ENABLED } from '@/lib/site'
 import { motion } from 'framer-motion'
 import { FaBrain, FaChartLine, FaCode, FaPalette, FaMicrophone, FaRocket, FaTrophy, FaFire } from 'react-icons/fa'
 import { useState } from 'react'
@@ -194,13 +196,14 @@ export default function SkillGenome({ data, scores, learnerType: learnerTypeProp
           <p className="text-lg text-white/90 mb-6">
             Based on your SkillDNA™, we've curated the perfect learning journey for you
           </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-lg hover:shadow-xl transition-shadow"
-          >
-            Start Your GrowGrid™ Journey →
-          </motion.button>
+          {BETA_PRODUCTS_ENABLED && (
+            <Link
+              href="/growgrid"
+              className="inline-flex bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-lg hover:shadow-xl transition-shadow"
+            >
+              Start Your GrowGrid™ Journey →
+            </Link>
+          )}
         </motion.div>
       </div>
     </div>

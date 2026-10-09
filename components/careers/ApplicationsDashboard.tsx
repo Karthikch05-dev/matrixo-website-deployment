@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { getFirestore } from 'firebase/firestore'
 import { useAuth } from '@/lib/AuthContext'
+import XOLoader from '@/components/XOLoader'
 
 interface Application {
   id: string
@@ -141,7 +142,7 @@ export default function ApplicationsDashboard() {
   if (!isEmployee) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <XOLoader size={20} />
       </div>
     )
   }
@@ -200,7 +201,7 @@ export default function ApplicationsDashboard() {
           {/* Applications List */}
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <XOLoader size={16} />
             </div>
           ) : filteredApplications.length === 0 ? (
             <div className="glass-card p-12 text-center">
@@ -251,7 +252,7 @@ export default function ApplicationsDashboard() {
                     <div className="flex flex-col gap-2 ml-4">
                       <button
                         onClick={() => setSelectedApp(app)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                        className="px-4 py-2 rounded-lg flex items-center gap-2 cta-glass"
                       >
                         <FaEye />
                         View Details
@@ -355,7 +356,7 @@ export default function ApplicationsDashboard() {
             <div className="flex justify-center">
               <button
                 onClick={() => setSelectedApp(null)}
-                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                className="px-8 py-3 rounded-lg font-semibold cta-glass"
               >
                 Close
               </button>

@@ -7,11 +7,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const district = searchParams.get('district');
+    const state = searchParams.get('state');
     const search = searchParams.get('search');
 
     if (search) {
       // Search mode
-      const colleges = await searchColleges(search, district || undefined);
+      const colleges = await searchColleges(search, district || undefined, state || undefined);
       return NextResponse.json(colleges);
     }
 
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const colleges = await getCollegesByDistrict(district);
+    const colleges = await getCollegesByDistrict(district, state || undefined);
     return NextResponse.json(colleges);
   } catch (error) {
     console.error('Error fetching colleges:', error);

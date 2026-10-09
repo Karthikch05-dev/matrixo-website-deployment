@@ -1,15 +1,30 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
 import ApplicationForm from '@/components/careers/ApplicationForm'
-import PositionClosed from '@/components/careers/PositionClosed'
-import { validateRole } from '@/lib/careers/jobValidation'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebaseConfig'
 
+// Role details can change; re-render the page at most every five minutes.
+export const revalidate = 300
+
+// Use the shared Firestore instance from `lib/firebaseConfig`
+function getServerDb() {
+  return db
+}
 
 export async function generateMetadata({ params }: { params: { roleId: string } }): Promise<Metadata> {
   try {
-    const result = await validateRole(params.roleId, true) // preview=true → just for meta
-    if (result.ok || result.role) {
-      const role = result.ok ? result.role : result.role!
+    const db = getServerDb()
+    if (!db) {
+      console.warn('[careers] Firestore not initialized (missing Firebase config). Using fallback metadata.')
+      return {
+        title: 'Apply - Careers | matriXO',
+        description: 'Submit your application to join the matriXO team.',
+      }
+    }
+
+    const roleDoc = await getDoc(doc(db, 'roles', params.roleId))
+    if (roleDoc.exists()) {
+      const role = roleDoc.data()
       return {
         title: `${role.title} - Apply | matriXO`,
         description: role.description?.slice(0, 160) || `Apply for ${role.title} at matriXO. ${role.team} team, ${role.location}, ${role.type}.`,
@@ -38,27 +53,6 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
   }
 }
 
-export default async function ApplyPage({
-  params,
-  searchParams,
-}: {
-  params: { roleId: string }
-  searchParams: { preview?: string }
-}) {
-  // Admin preview: ?preview=matrixo-admin-preview
-  const isAdminPreview = searchParams.preview === 'matrixo-admin-preview'
-  const result = await validateRole(params.roleId, isAdminPreview)
-
-  // Role does not exist at all → Next.js 404 page
-  if (!result.ok && result.reason === 'not-found') {
-    notFound()
-  }
-
-  // Role exists but is not open → show PositionClosed page
-  if (!result.ok) {
-    return <PositionClosed reason={result.reason} roleTitle={result.role?.title} />
-  }
-
-  // Role is open → render the application form
+export default function ApplyPage({ params }: { params: { roleId: string } }) {
   return <ApplicationForm roleId={params.roleId} />
 }

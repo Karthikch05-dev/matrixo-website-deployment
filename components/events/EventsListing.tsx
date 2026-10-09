@@ -1,321 +1,481 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { FaCalendar, FaMapMarkerAlt, FaTicketAlt, FaSearch, FaFilter, FaClock, FaStar } from 'react-icons/fa'
-import eventsData from '@/data/events.json'
-import { format, isFuture, compareDesc, compareAsc } from 'date-fns'
-import HeadingHighlight from '@/components/HeadingHighlight'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { ArrowRight, ArrowUpRight, CalendarDays, Eye, EyeOff, Lock, Mail, MapPin, Search, X } from 'lucide-react'
+import { useEventVisibility } from '@/lib/eventVisibility'
+import { useAuth } from '@/lib/AuthContext'
+import { useProfile } from '@/lib/ProfileContext'
+import { getValidImageUrl } from '@/lib/imageUtils'
+import { firebaseReady } from '@/lib/firebase/client'
+import { formatEventDate, formatEventTime, isEventPast } from '@/lib/eventDates'
+import type { EventSummary } from '@/lib/events'
+import { MARK_PATH, MARK_VIEWBOX, O_COUNTER } from '@/components/brand/logoPaths'
+import AdUnit from '@/components/ads/AdUnit'
+import { AD_SLOTS } from '@/lib/adsense'
+import { Badge } from '@/components/ui/Badge'
+import { Button, ButtonLink } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Field'
+import { Avatar, SegmentedControl } from '@/components/ui/Controls'
+import { Skeleton } from '@/components/ui/Feedback'
+import { cn } from '@/lib/cn'
 
-type SortOption = 'upcoming' | 'latest' | 'all'
+type Filter = 'all' | 'upcoming' | 'past'
 
-// Program-type categories that have dedicated filter chips.
-// Anything NOT in this set is considered a generic "event".
-const PROGRAM_TYPE_CATEGORIES = new Set(['course', 'workshop', 'hackathon', 'bootcamp'])
+function GoogleGlyph() {
+  return (
+    <svg viewBox="0 0 18 18" className="h-[18px] w-[18px]" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.7H.94v2.33A9 9 0 0 0 9 18z" />
+      <path fill="#FBBC05" d="M3.96 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.94A9 9 0 0 0 0 9c0 1.45.35 2.83.94 4.05l3.02-2.33z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .94 4.95l3.02 2.33C4.67 5.16 6.66 3.58 9 3.58z" />
+    </svg>
+  )
+}
 
-export default function EventsListing() {
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [sortOption, setSortOption] = useState<SortOption>('upcoming')
-  const [searchTerm, setSearchTerm] = useState('')
+export { GoogleGlyph }
 
-  const filteredAndSortedEvents = useMemo(() => {
-    // ── Step 1: filter by program type (category chip) ──────────────────────
-    let filtered = eventsData.filter(event => {
-      if (categoryFilter === 'all') return true
+function SignInCard() {
+  const router = useRouter()
+  const { signIn, signInWithGoogle } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [busy, setBusy] = useState<'email' | 'google' | null>(null)
 
-      const cat = event.category.toLowerCase()
-
-      if (categoryFilter === 'event') {
-        // "Events" chip: show anything that is NOT a standard program type
-        return !PROGRAM_TYPE_CATEGORIES.has(cat)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBusy('email')
+    try {
+      await signIn(email, password)
+      toast.success('Welcome back')
+      router.push('/profile')
+    } catch (error: any) {
+      const code = error?.code
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        toast.error('That email and password don’t match.')
+      } else if (code === 'auth/email-not-verified') {
+        toast.message('Verify your email first', { description: 'We’ve sent you a new verification link.' })
+      } else if (code === 'auth/too-many-requests') {
+        toast.error('Too many attempts. Try again in a few minutes.')
+      } else {
+        toast.error('Couldn’t sign you in. Try again.')
       }
-
-      // Standard program-type chips: exact match
-      return cat === categoryFilter.toLowerCase()
-    })
-
-    // ── Step 2: filter / sort by status (sort-option chip) ──────────────────
-    if (sortOption === 'upcoming') {
-      // Use the status field as the source of truth so that events whose
-      // dates may be in the past but are still marked "upcoming" are shown.
-      filtered = filtered.filter(event => event.status === 'upcoming')
-      // Secondary sort: soonest first
-      filtered = filtered.sort((a, b) => compareAsc(new Date(a.date), new Date(b.date)))
-    } else if (sortOption === 'latest') {
-      // "Latest" = events marked as latest, OR fall back to most-recently dated
-      const hasLatestStatus = filtered.some(e => e.status === 'latest')
-      if (hasLatestStatus) {
-        filtered = filtered.filter(event => event.status === 'latest')
-      }
-      // Always sort by date descending so newest appear first
-      filtered = filtered.sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)))
+    } finally {
+      setBusy(null)
     }
-    // sortOption === 'all' → no status filtering, keep all
+  }
 
-    // ── Step 3: filter by search term ────────────────────────────────────────
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase()
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(q) ||
-        event.tagline.toLowerCase().includes(q) ||
-        event.location.toLowerCase().includes(q)
-      )
+  const handleGoogle = async () => {
+    if (!firebaseReady) {
+      toast.error('Sign-in is unavailable right now. Please try again later.')
+      return
     }
-
-    return filtered
-  }, [categoryFilter, sortOption, searchTerm])
-
-  const activeFilterClass =
-    'bg-[#4B5563] text-white shadow-[0_2px_6px_rgba(0,0,0,0.08)] hover:bg-[#2F3542] dark:bg-white dark:text-[#111111] dark:shadow-[0_2px_8px_rgba(255,255,255,0.08)] dark:hover:bg-[#F3F3F3]'
+    setBusy('google')
+    try {
+      const method = await signInWithGoogle()
+      if (method === 'redirect') return
+      toast.success('Signed in')
+      router.push('/profile')
+    } catch (error: any) {
+      if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') return
+      toast.error('Google sign-in didn’t work. Try again.')
+    } finally {
+      setBusy(null)
+    }
+  }
 
   return (
-    <div className="min-h-screen pt-5 pb-20">
-      {/* Header */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white py-16 sm:py-20 overflow-hidden">
-        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="container-custom px-4 sm:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 sm:mb-6">
-              <HeadingHighlight text="Explore Programs" />
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300">
-              Workshops, hackathons, bootcamps, and technical events designed to accelerate your tech career
-            </p>
-          </motion.div>
+    <div className="rounded-[26px] border border-line bg-surface p-6 shadow-raised">
+      <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-ink">Sign in</h2>
+      <p className="mt-1 text-[14px] text-muted">Register for events and track your tickets.</p>
+
+      <Button variant="secondary" fullWidth className="mt-5" onClick={handleGoogle} loading={busy === 'google'} disabled={busy !== null} leadingIcon={<GoogleGlyph />}>
+        Continue with Google
+      </Button>
+
+      <div className="my-4 flex items-center gap-3 text-[12px] text-subtle">
+        <span className="h-px flex-1 bg-line" />
+        or
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <form onSubmit={handleLogin} className="space-y-3" aria-label="Sign in with email">
+        <Input
+          type="email"
+          name="email"
+          autoComplete="email"
+          placeholder="Email"
+          aria-label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          leadingIcon={<Mail className="h-4 w-4" />}
+          required
+        />
+        <Input
+          type={showPassword ? 'text' : 'password'}
+          name="password"
+          autoComplete="current-password"
+          placeholder="Password"
+          aria-label="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          leadingIcon={<Lock className="h-4 w-4" />}
+          required
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-subtle hover:bg-ink/[0.06] hover:text-ink"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          }
+        />
+        <div className="flex justify-end">
+          <Link href="/forgot-password" className="text-[13px] font-medium text-accent hover:underline">
+            Forgot password?
+          </Link>
         </div>
-      </section>
+        <Button type="submit" fullWidth loading={busy === 'email'} disabled={busy !== null}>
+          Sign in
+        </Button>
+      </form>
 
-      {/* Filters and Search - Compact Version */}
-      <section className="bg-white/40 dark:bg-white/[0.02] backdrop-blur-md py-3 border-b border-gray-200/30 dark:border-white/[0.06]">
-        <div className="container-custom px-4 sm:px-6">
-          <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-            {/* Controls Group */}
-            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center w-full xl:w-auto">
-              {/* Search - Compact */}
-              <div className="relative w-full md:w-64 lg:w-72 flex-shrink-0">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Search programs, topics..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-full glass-input text-sm"
-                />
-              </div>
+      <p className="mt-5 text-center text-[13px] text-muted">
+        New to matriXO?{' '}
+        <Link href="/auth?mode=register" className="font-medium text-accent hover:underline">
+          Create an account
+        </Link>
+      </p>
+    </div>
+  )
+}
 
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-                {/* Sort Options - Compact */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <FaClock className="hidden sm:block text-gray-400 text-xs mr-1" />
-                  {[
-                    { value: 'upcoming', label: 'Upcoming', icon: FaClock },
-                    { value: 'latest', label: 'Latest', icon: FaStar },
-                    { value: 'all', label: 'All', icon: FaCalendar }
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setSortOption(option.value as SortOption)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] flex items-center gap-1.5 ${
-                        sortOption === option.value
-                          ? activeFilterClass
-                          : 'glass-chip text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <option.icon className="text-[10px] sm:text-xs" />
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
+function WelcomeCard() {
+  const { user } = useAuth()
+  const { profile } = useProfile()
+  if (!user) return null
+  const name = (profile?.fullName || user.displayName || user.email?.split('@')[0] || 'there').trim()
+  return (
+    <div className="rounded-[26px] border border-line bg-surface p-6 shadow-raised">
+      <Avatar name={name} src={profile?.profilePhoto ? getValidImageUrl(profile.profilePhoto) : user.photoURL} size={52} />
+      <h2 className="mt-4 text-[19px] font-semibold tracking-[-0.02em] text-ink">Welcome back, {name.split(' ')[0]}</h2>
+      <p className="mt-1 truncate text-[14px] text-muted">{user.email}</p>
+      <div className="mt-6 grid gap-2">
+        <ButtonLink href="/profile" variant="contrast" fullWidth>
+          Your profile
+        </ButtonLink>
+        <ButtonLink href="/notifications" variant="secondary" fullWidth>
+          Notifications
+        </ButtonLink>
+      </div>
+    </div>
+  )
+}
 
-                <div className="hidden md:block w-px h-5 bg-gray-300/50 dark:bg-gray-700/50 mx-1"></div>
+function EventArtwork({ event, priority }: { event: EventSummary; priority: boolean }) {
+  if (event.thumbnail) {
+    return (
+      <Image
+        src={event.thumbnail}
+        alt=""
+        fill
+        priority={priority}
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 384px"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+      />
+    )
+  }
+  // Branded placeholder for events whose artwork isn't ready yet.
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(120%_90%_at_50%_0%,#123a63_0%,#06070B_60%)] text-white">
+      <svg viewBox={`0 0 ${MARK_VIEWBOX.w} ${MARK_VIEWBOX.h}`} className="h-10 w-auto opacity-90" aria-hidden="true">
+        <ellipse cx={O_COUNTER.cx - MARK_VIEWBOX.x} cy={O_COUNTER.cy} rx={O_COUNTER.rx} ry={O_COUNTER.ry} fill="#2283C5" opacity="0.8" />
+        <path fill="currentColor" fillRule="evenodd" d={MARK_PATH} />
+      </svg>
+      <span className="px-6 text-center text-[15px] font-semibold tracking-[-0.01em]">{event.title}</span>
+    </div>
+  )
+}
 
-                {/* Category Filter Buttons - Compact */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <FaFilter className="hidden sm:block text-gray-400 text-xs mr-1" />
-                  {[
-                    { value: 'all', label: 'All Programs' },
-                    { value: 'course', label: 'Courses' },
-                    { value: 'workshop', label: 'Workshops' },
-                    { value: 'hackathon', label: 'Hackathons' },
-                    { value: 'bootcamp', label: 'Bootcamps' },
-                    { value: 'event', label: 'Events' }
-                  ].map((cat) => (
-                    <button
-                      key={cat.value}
-                      onClick={() => setCategoryFilter(cat.value)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-                        categoryFilter === cat.value
-                          ? activeFilterClass
-                          : 'glass-chip text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+function StatusBadge({ status }: { status: EventSummary['status'] }) {
+  if (status === 'sold-out') return <Badge tone="inverse">Sold out</Badge>
+  if (status === 'ended') return <Badge tone="neutral" className="bg-surface/90 backdrop-blur">Ended</Badge>
+  return (
+    <Badge tone="success" dot className="bg-surface/95 backdrop-blur">
+      Upcoming
+    </Badge>
+  )
+}
+
+function Price({ event }: { event: EventSummary }) {
+  if (event.status === 'sold-out') return <span className="text-[14px] font-medium text-muted">All tickets claimed</span>
+  if (event.status === 'ended') return <span className="text-[14px] font-medium text-muted">See highlights</span>
+  if (event.priceFrom === null) return <span className="text-[14px] font-medium text-muted">Details soon</span>
+  if (event.priceFrom === 0) return <span className="text-[15px] font-semibold text-ink">Free</span>
+  return (
+    <span className="flex items-baseline gap-1.5">
+      <span className="text-[13px] text-muted">From</span>
+      <span className="text-[17px] font-semibold tabular-nums text-ink">₹{event.priceFrom}</span>
+      {event.originalPrice && event.originalPrice > event.priceFrom && (
+        <span className="text-[13px] tabular-nums text-subtle line-through">₹{event.originalPrice}</span>
+      )}
+    </span>
+  )
+}
+
+function EventCard({ event, priority }: { event: EventSummary; priority: boolean }) {
+  const tba = /coming soon|tba/i.test(event.location)
+  return (
+    <Link
+      href={event.href}
+      target={event.external ? '_blank' : undefined}
+      rel={event.external ? 'noopener noreferrer' : undefined}
+      className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition-[box-shadow,transform,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-raised"
+    >
+      <div className="relative aspect-[16/10] overflow-hidden bg-canvas-subtle">
+        <EventArtwork event={event} priority={priority} />
+        <div className="absolute left-3 top-3">
+          <StatusBadge status={event.status} />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-subtle">{event.category}</p>
+        <h3 className="mt-1.5 text-[19px] font-semibold leading-snug tracking-[-0.02em] text-ink">{event.title}</h3>
+        {event.tagline && <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-muted">{event.tagline}</p>}
+        <dl className="mt-4 space-y-1.5 text-[13px] text-muted">
+          <div className="flex items-center gap-2">
+            <dt className="sr-only">Date</dt>
+            <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0 text-subtle" strokeWidth={1.8} />
+            <dd>{tba ? 'Dates announced soon' : `${formatEventDate(event.date)} · ${formatEventTime(event.date)}`}</dd>
+          </div>
+          {!tba && event.location && (
+            <div className="flex items-start gap-2">
+              <dt className="sr-only">Location</dt>
+              <MapPin aria-hidden="true" className="mt-px h-4 w-4 shrink-0 text-subtle" strokeWidth={1.8} />
+              <dd className="line-clamp-1">{event.location}</dd>
             </div>
+          )}
+        </dl>
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-4 [margin-top:max(1.25rem,auto)]">
+          <Price event={event} />
+          <span className="inline-flex items-center gap-1 text-[14px] font-medium text-accent">
+            {event.external ? 'Open' : event.status === 'upcoming' ? 'Get tickets' : 'View'}
+            {event.external ? (
+              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            )}
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
 
-            {/* Results Count */}
-            <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap pt-2 xl:pt-0 mt-1 xl:mt-0 w-full xl:w-auto border-t border-gray-200/30 dark:border-white/[0.06] xl:border-none flex items-center justify-between xl:justify-start">
-              <span>Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredAndSortedEvents.length}</span> program{filteredAndSortedEvents.length !== 1 ? 's' : ''}</span>
+export default function EventsListing({ events }: { events: EventSummary[] }) {
+  const { user, loading: authResolving } = useAuth()
+  const { visibilityMap } = useEventVisibility()
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<Filter>('all')
+  const [now, setNow] = useState<number | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // Restore ?q= so search results can be linked to (and used by agents).
+  useEffect(() => {
+    setNow(Date.now())
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q) setQuery(q.slice(0, 80))
+  }, [])
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const url = new URL(window.location.href)
+      if (query.trim()) url.searchParams.set('q', query.trim())
+      else url.searchParams.delete('q')
+      window.history.replaceState(window.history.state, '', url.toString())
+    }, 300)
+    return () => window.clearTimeout(t)
+  }, [query])
+
+  // Recompute status in the browser so a cached page never shows a finished
+  // event as upcoming.
+  const live = useMemo(
+    () =>
+      events
+        .filter((e) => visibilityMap[e.slug]?.hidden !== true)
+        .map((e) =>
+          now && e.status === 'upcoming' && isEventPast(e.date, now) && !/coming soon|tba/i.test(e.location)
+            ? { ...e, status: 'ended' as const }
+            : e
+        ),
+    [events, visibilityMap, now]
+  )
+
+  const counts = useMemo(
+    () => ({
+      all: live.length,
+      upcoming: live.filter((e) => e.status === 'upcoming').length,
+      past: live.filter((e) => e.status !== 'upcoming').length,
+    }),
+    [live]
+  )
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return live
+      .filter((e) => (filter === 'upcoming' ? e.status === 'upcoming' : filter === 'past' ? e.status !== 'upcoming' : true))
+      .filter((e) => !q || [e.title, e.tagline, e.location, e.category].some((v) => v.toLowerCase().includes(q)))
+      .sort((a, b) => {
+        // Upcoming first (soonest first), then past (most recent first).
+        if (a.status === 'upcoming' && b.status !== 'upcoming') return -1
+        if (b.status === 'upcoming' && a.status !== 'upcoming') return 1
+        const da = new Date(a.date).getTime()
+        const db = new Date(b.date).getTime()
+        return a.status === 'upcoming' ? da - db : db - da
+      })
+  }, [live, filter, query])
+
+  return (
+    <div className="pb-20">
+      <section className="relative overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_70%_0%,rgb(var(--accent)/0.09),transparent_70%)]" />
+        <div className="relative mx-auto grid max-w-site items-center gap-12 px-4 pb-12 pt-12 sm:px-6 sm:pt-16 lg:grid-cols-[1fr_360px] lg:gap-16 lg:px-8 lg:pb-16 lg:pt-20">
+          <div className="max-w-2xl">
+            <p className="eyebrow animate-enter-up">matriXO events</p>
+            <h1 className="mt-3 animate-enter-up text-[44px] font-semibold leading-[1.02] tracking-[-0.04em] text-ink delay-75ms sm:text-[64px] lg:text-[72px]">
+              Explore programs.
+            </h1>
+            <p className="mt-5 max-w-xl animate-enter-up text-[17px] leading-relaxed text-muted delay-150ms sm:text-[19px]">
+              Hands-on workshops, hackathons and talks, run with colleges across India. Find one, sign up in a minute, and spend the day building something real.
+            </p>
+            <div className="mt-7 flex animate-enter-up flex-wrap items-center gap-x-5 gap-y-3 delay-225ms">
+              <Link
+                href="/home"
+                className="group inline-flex h-10 items-center gap-1.5 rounded-full border border-line-strong bg-surface pl-4 pr-3 text-[14px] font-medium text-ink transition-colors hover:bg-canvas-subtle"
+              >
+                Know more about matriXO
+                <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+              {!user && !authResolving && (
+                <Link href="/auth" className="text-[14px] font-medium text-accent hover:underline lg:hidden">
+                  Sign in to register faster
+                </Link>
+              )}
             </div>
+          </div>
+
+          <div className="hidden lg:block">
+            {authResolving ? (
+              <div className="rounded-[26px] border border-line bg-surface p-6 shadow-raised" aria-busy="true" aria-label="Checking your session">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="mt-2 h-4 w-48" />
+                <Skeleton className="mt-6 h-11 w-full rounded-full" />
+                <Skeleton className="mt-4 h-11 w-full" />
+                <Skeleton className="mt-3 h-11 w-full" />
+                <Skeleton className="mt-6 h-11 w-full rounded-full" />
+              </div>
+            ) : user ? (
+              <WelcomeCard />
+            ) : (
+              <SignInCard />
+            )}
           </div>
         </div>
       </section>
 
-      {/* Events Grid */}
-      <section className="section-padding bg-transparent">
-        <div className="container-custom px-4 sm:px-6">
-          {filteredAndSortedEvents.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-xl text-gray-500">No programs found matching your criteria</p>
-                <button
-                  onClick={() => {
-                    setCategoryFilter('all')
-                    setSortOption('all')
-                    setSearchTerm('')
-                  }}
-                  className={`mt-4 px-6 py-3 rounded-full transition-all duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${activeFilterClass}`}
-                >
-                  Clear All Filters
-                </button>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {filteredAndSortedEvents.map((event, index) => {
-                const eventLink = (event as any).externalLink || `/events/${event.slug}`
-                const isExternal = !!(event as any).externalLink
-
-                return (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
-                  >
-                    <Link 
-                      href={eventLink}
-                      target={isExternal ? "_blank" : undefined}
-                      rel={isExternal ? "noopener noreferrer" : undefined}
-                    >
-                      <div className="group glass-card overflow-hidden
-                                    transition-all duration-200 hover:-translate-y-2 border-2 border-transparent 
-                                    hover:border-blue-500/30 h-full flex flex-col">
-                        {/* Image */}
-                        <div className="relative h-40 sm:h-44 md:h-48 bg-gradient-to-br from-blue-500/20 to-purple-600/20 overflow-hidden">
-                          {event.images?.thumbnail ? (
-                            <Image
-                              src={event.images.thumbnail}
-                              alt={event.title}
-                              fill
-                              className="object-cover object-center"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold gradient-text">
-                              {event.title.charAt(0)}
-                            </div>
-                          )}
-                          {event.featured && (
-                            <div className="absolute top-4 right-4 bg-gradient-to-r from-pink-500 to-rose-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                              FEATURED
-                            </div>
-                          )}
-                          {event.status === 'sold-out' && (
-                            <div className="absolute top-4 right-4 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-celebrate animate-shine">
-                              🎉 SOLD OUT 🎊
-                            </div>
-                          )}
-                          <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold">
-                            {event.category.toUpperCase()}
-                          </div>
-                          {isFuture(new Date(event.date)) && event.status !== 'sold-out' && (
-                            <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                              UPCOMING
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
-                          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900 dark:text-white transition-all duration-200 line-clamp-2">
-                            <HeadingHighlight text={event.title} />
-                          </h3>
-                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 line-clamp-2">
-                            {event.tagline}
-                          </p>
-
-                          {/* Details */}
-                          <div className="space-y-2 mb-4 flex-1">
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                              <FaCalendar className="mr-2 text-blue-500 flex-shrink-0" />
-                              {format(new Date(event.date), 'MMM dd, yyyy • hh:mm a')}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                              <FaMapMarkerAlt className="mr-2 text-purple-600 flex-shrink-0" />
-                              {event.location}
-                            </div>
-                          </div>
-
-                          {/* Price & CTA */}
-                          <div className="flex items-center justify-between">
-                            {event.status === 'sold-out' ? (
-                              <div className="w-full">
-                                <div className="bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-red-500 rounded-xl p-4 text-center">
-                                  <span className="text-3xl mb-2 block">🎉</span>
-                                  <span className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
-                                    SOLD OUT!
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    🎊 All tickets claimed! 🎊
-                                  </p>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div>
-                                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">From</span>
-                                  <div className="flex items-baseline gap-1 sm:gap-2">
-                                    <span className="text-xl sm:text-2xl font-bold gradient-text">
-                                      ₹{Math.min(...event.tickets.map((t: any) => t.price))}
-                                    </span>
-                                    {event.tickets.some((t: any) => t.originalPrice) && (
-                                      <span className="text-xs sm:text-sm text-gray-400 line-through">
-                                        ₹{(event.tickets.find((t: any) => t.originalPrice) as any)?.originalPrice}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-neon-blue to-neon-purple 
-                                           text-white px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm shadow-lg 
-                                           hover:shadow-neon-blue/50 transition-shadow"
-                                >
-                                  <FaTicketAlt className="text-xs sm:text-sm" />
-                                  <span>Book</span>
-                                </motion.button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
+      <section aria-labelledby="events-heading" className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+        <h2 id="events-heading" className="sr-only">
+          Events
+        </h2>
+        <div className="flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <form
+            role="search"
+            onSubmit={(e) => e.preventDefault()}
+            className="relative w-full sm:max-w-xs"
+            // WebMCP declarative hints: lets browser agents call this search as a tool.
+            {...{ toolname: 'search_events', tooldescription: 'Search matriXO events by name, topic, college or city.' }}
+          >
+            <label htmlFor="event-search" className="sr-only">
+              Search events
+            </label>
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <input
+              ref={searchRef}
+              id="event-search"
+              name="q"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search events, topics, colleges"
+              autoComplete="off"
+              className="field h-11 w-full rounded-full pl-10 pr-10 text-[15px] [&::-webkit-search-cancel-button]:hidden"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('')
+                  searchRef.current?.focus()
+                }}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-subtle hover:bg-ink/[0.06] hover:text-ink"
+              >
+                <X aria-hidden="true" className="h-4 w-4" />
+              </button>
+            )}
+          </form>
+          <SegmentedControl<Filter>
+            label="Filter events"
+            value={filter}
+            onChange={setFilter}
+            segments={[
+              { value: 'all', label: 'All', count: counts.all },
+              { value: 'upcoming', label: 'Upcoming', count: counts.upcoming },
+              { value: 'past', label: 'Past', count: counts.past },
+            ]}
+          />
         </div>
+
+        <p className="mt-4 text-[13px] text-subtle" aria-live="polite">
+          {shown.length === 0 ? 'No events match' : `${shown.length} ${shown.length === 1 ? 'event' : 'events'}`}
+          {query.trim() && <> for “{query.trim()}”</>}
+        </p>
+
+        {shown.length === 0 ? (
+          <div className="mt-6 flex flex-col items-center rounded-card border border-dashed border-line-strong px-6 py-16 text-center">
+            <p className="text-[17px] font-semibold text-ink">Nothing here yet</p>
+            <p className="mt-1.5 max-w-sm text-[15px] text-muted">
+              {query ? 'Try a different word, or clear the search.' : 'New events are announced often. Turn on notifications so you hear first.'}
+            </p>
+            <Button
+              variant="secondary"
+              className="mt-5"
+              onClick={() => {
+                setQuery('')
+                setFilter('all')
+              }}
+            >
+              Show all events
+            </Button>
+          </div>
+        ) : (
+          <ul className={cn('mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6')}>
+            {shown.map((event, i) => (
+              <li key={event.id} className="animate-enter-up" style={{ animationDelay: `${Math.min(i, 6) * 50}ms` }}>
+                <EventCard event={event} priority={i === 0} />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <AdUnit slot={AD_SLOTS.eventsFooter} className="mt-14" minHeight={280} />
       </section>
     </div>
   )

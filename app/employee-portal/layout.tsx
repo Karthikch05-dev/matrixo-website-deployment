@@ -1,4 +1,7 @@
 import { Metadata } from 'next'
+// Light-mode theme overrides for the portal. Scoped to this route segment so the
+// public site doesn't pay for ~24 KB of CSS it never uses.
+import './portal-theme.css'
 
 export const metadata: Metadata = {
   title: 'Employee Portal | matriXO Team',

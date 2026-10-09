@@ -1,57 +1,22 @@
 import type { Metadata } from 'next'
-import Hero from '@/components/home/Hero'
-import BetaFeaturesShowcase from '@/components/home/BetaFeaturesShowcase'
-import Stats from '@/components/home/Stats'
+import EventsListing from '@/components/events/EventsListing'
+import { getListedEvents } from '@/lib/events'
+
+// Rebuild hourly so event status and visibility stay fresh between deploys.
+export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'matriXO - AI-Powered Career Growth Platform',
-  description: 'matriXO is an ed-tech platform offering hands-on technical workshops, hackathons, bootcamps, and career-focused events for students. Build industry-ready skills with expert mentorship.',
-  keywords: 'matriXO, technical workshops, hackathons, bootcamps, career events, ed-tech, coding workshops, student training, industry skills',
+  title: { absolute: 'matriXO — Workshops, hackathons and career programs for students' },
+  description:
+    'Find hands-on technical workshops, hackathons and talks run by matriXO with colleges across India. See dates, venues and prices, and register in a minute.',
+  alternates: { canonical: '/' },
   openGraph: {
-    type: 'website',
-    url: 'https://matrixo.in',
-    title: 'matriXO - AI-Powered Career Growth Platform',
-    description: 'Map your skills with AI. Grow with personalized paths. Prove your worth with verified credentials. matriXO — the future of career development.',
-    siteName: 'matriXO',
-    images: [
-      {
-        url: '/logos/logo-dark.png',
-        width: 1200,
-        height: 630,
-        alt: 'matriXO - AI-Powered Career Growth Platform',
-        type: 'image/png',
-      },
-      {
-        url: '/logos/logo-dark.png',
-        width: 1080,
-        height: 1080,
-        alt: 'matriXO - AI-Powered Career Growth Platform',
-        type: 'image/png',
-      },
-    ],
-    locale: 'en_IN',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'matriXO - AI-Powered Career Growth Platform',
-    description: 'Map your skills with AI. Grow with personalized paths. Prove your worth with verified credentials.',
-    images: ['/logos/logo-dark.png'],
-    creator: '@matrixo',
-  },
-  other: {
-    'instagram:card': 'summary_large_image',
-    'instagram:title': 'matriXO - AI-Powered Career Growth Platform',
-    'instagram:description': 'AI-powered skill analysis, personalized learning, and blockchain-verified credentials.',
-    'instagram:image': 'https://matrixo.in/logos/logo-dark.png',
+    url: '/',
+    title: 'matriXO — Workshops, hackathons and career programs for students',
+    description: 'Hands-on workshops, hackathons and talks run with colleges across India.',
   },
 }
 
-export default function Home() {
-  return (
-    <div>
-      <Hero />
-      <Stats />
-      <BetaFeaturesShowcase />
-    </div>
-  )
+export default function HomePage() {
+  return <EventsListing events={getListedEvents()} />
 }

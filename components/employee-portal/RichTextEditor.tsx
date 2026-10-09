@@ -46,8 +46,8 @@ const ToolbarButton = ({
     className={`
       p-2 rounded-lg transition-colors
       ${isActive 
-        ? 'bg-primary-500 text-white' 
-        : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600 hover:text-white'
+        ? 'bg-[#2563EB] text-white dark:bg-primary-500' 
+        : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] hover:text-[#0F172A] dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600 dark:hover:text-white'
       }
     `}
   >
@@ -101,7 +101,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         // Single line class to avoid DOMTokenList InvalidCharacterError
-        class: 'prose prose-invert prose-sm max-w-none focus:outline-none prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer prose-strong:text-white prose-strong:font-bold prose-em:italic',
+        class: 'prose dark:prose-invert prose-sm max-w-none focus:outline-none prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 prose-a:text-[#2563EB] dark:prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer prose-strong:text-[#0F172A] dark:prose-strong:text-white prose-strong:font-bold prose-em:italic text-[#0F172A] dark:text-white',
       },
     },
     onUpdate: ({ editor }) => {
@@ -144,11 +144,11 @@ export default function RichTextEditor({
   if (!mounted || !editor) {
     return (
       <div 
-        className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 animate-pulse"
+        className="bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-xl p-4 animate-pulse shadow-sm dark:shadow-none"
         style={{ minHeight }}
       >
-        <div className="h-4 bg-neutral-700 rounded w-3/4 mb-2" />
-        <div className="h-4 bg-neutral-700 rounded w-1/2" />
+        <div className="h-4 bg-[#E2E8F0] dark:bg-neutral-700 rounded w-3/4 mb-2" />
+        <div className="h-4 bg-[#E2E8F0] dark:bg-neutral-700 rounded w-1/2" />
       </div>
     )
   }
@@ -157,7 +157,7 @@ export default function RichTextEditor({
     <div className="rich-text-editor">
       {/* Toolbar - Only shown when editable */}
       {editable && (
-        <div className="flex items-center gap-1 p-2 bg-neutral-800 border border-neutral-700 rounded-t-xl border-b-0">
+        <div className="flex items-center gap-1 p-2 bg-[#F8FAFC] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-t-xl border-b-0">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
@@ -177,7 +177,7 @@ export default function RichTextEditor({
             title="Underline (Ctrl+U)"
           />
           
-          <div className="w-px h-6 bg-neutral-600 mx-1" />
+          <div className="w-px h-6 bg-[rgba(15,23,42,0.12)] dark:bg-neutral-600 mx-1" />
           
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -197,7 +197,7 @@ export default function RichTextEditor({
       {/* Editor Content */}
       <div 
         className={`
-          bg-neutral-800 border border-neutral-700 p-4 overflow-y-auto
+          bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 p-4 overflow-y-auto text-[#0F172A] dark:text-white shadow-sm dark:shadow-none
           ${editable ? 'rounded-b-xl' : 'rounded-xl'}
           ${editable ? 'cursor-text' : 'cursor-default'}
         `}
@@ -265,8 +265,8 @@ export function RichTextRenderer({ content, className = '' }: RichTextRendererPr
   if (!mounted) {
     return (
       <div className="animate-pulse">
-        <div className="h-4 bg-neutral-700 rounded w-3/4 mb-2" />
-        <div className="h-4 bg-neutral-700 rounded w-1/2" />
+        <div className="h-4 bg-[#E2E8F0] dark:bg-neutral-700 rounded w-3/4 mb-2" />
+        <div className="h-4 bg-[#E2E8F0] dark:bg-neutral-700 rounded w-1/2" />
       </div>
     )
   }
@@ -274,17 +274,17 @@ export function RichTextRenderer({ content, className = '' }: RichTextRendererPr
   return (
     <div 
       className={`
-        prose prose-invert prose-sm max-w-none
-        prose-p:my-2 prose-p:leading-relaxed prose-p:text-neutral-300
-        prose-ul:my-2 prose-ul:pl-6 prose-ul:text-neutral-300
-        prose-ol:my-2 prose-ol:pl-6 prose-ol:text-neutral-300
-        prose-li:my-1 prose-li:text-neutral-300
-        prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer hover:prose-a:text-primary-300
-        prose-strong:text-white prose-strong:font-bold
-        prose-em:italic prose-em:text-neutral-300
+        prose dark:prose-invert prose-sm max-w-none
+        prose-p:my-2 prose-p:leading-relaxed prose-p:text-[#475569] dark:prose-p:text-neutral-300
+        prose-ul:my-2 prose-ul:pl-6 prose-ul:text-[#475569] dark:prose-ul:text-neutral-300
+        prose-ol:my-2 prose-ol:pl-6 prose-ol:text-[#475569] dark:prose-ol:text-neutral-300
+        prose-li:my-1 prose-li:text-[#475569] dark:prose-li:text-neutral-300
+        prose-a:text-[#2563EB] dark:prose-a:text-primary-400 prose-a:underline prose-a:cursor-pointer hover:prose-a:text-blue-700 dark:hover:prose-a:text-primary-300
+        prose-strong:text-[#0F172A] dark:prose-strong:text-white prose-strong:font-bold
+        prose-em:italic prose-em:text-[#475569] dark:prose-em:text-neutral-300
         [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2
         [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2
-        [&_li]:my-1 [&_li]:text-neutral-300
+        [&_li]:my-1 [&_li]:text-[#475569] dark:[&_li]:text-neutral-300
         ${className}
       `}
       dangerouslySetInnerHTML={{ __html: sanitizedHTML || content }}

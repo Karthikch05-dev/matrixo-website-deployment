@@ -1,45 +1,50 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  FaUser,
-  FaLock,
-  FaSignOutAlt,
-  FaCalendarCheck,
-  FaChartLine,
-  FaHistory,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaPlane,
-  FaBriefcase,
-  FaUmbrellaBeach,
-  FaSpinner,
-  FaIdCard,
-  FaCalendarAlt,
-  FaBars,
-  FaTimes,
-  FaExclamationTriangle,
-  FaUserShield,
-  FaReceipt,
-  FaTasks,
-  FaComments,
-  FaChevronDown,
-  FaPlus,
-  FaTrash,
-  FaListAlt,
-  FaQrcode,
-  FaVideo,
-  FaSun,
-  FaMoon,
-  FaUserCircle
-} from 'react-icons/fa'
-import { EmployeeAuthProvider, useEmployeeAuth } from '@/lib/employeePortalContext'
+import { 
+  User as FaUser, 
+  Lock as FaLock, 
+  LogOut as FaSignOutAlt, 
+  CalendarCheck as FaCalendarCheck, 
+  LayoutDashboard as FaChartLine, 
+  History as FaHistory,
+  CheckCircle as FaCheckCircle,
+  XCircle as FaTimesCircle,
+  Plane as FaPlane,
+  Briefcase as FaBriefcase,
+  Umbrella as FaUmbrellaBeach,
+  Loader2 as FaSpinner,
+  IdCard as FaIdCard,
+  Calendar as FaCalendarAlt,
+  Menu as FaBars,
+  X as FaTimes,
+  AlertTriangle as FaExclamationTriangle,
+  ShieldAlert as FaUserShield,
+  ListTodo as FaTasks,
+  MessageSquare as FaComments,
+  ChevronDown as FaChevronDown,
+  ChevronLeft as FaChevronLeft,
+  ChevronRight as FaChevronRight,
+  Plus as FaPlus,
+  Trash2 as FaTrash,
+  List as FaListAlt,
+  QrCode as FaQrcode,
+  Video as FaVideo,
+  Sun as FaSun,
+  Moon as FaMoon,
+  UserCircle as FaUserCircle,
+  Eye as FaEye,
+  EyeOff as FaEyeSlash,
+  Receipt as FaReceipt,
+} from 'lucide-react'
+import { CalendarDays as HiCalendarDays } from "lucide-react"
+import { EmployeeAuthProvider, useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import ProfilePhotoUpload from '@/components/employee-portal/ProfilePhotoUpload'
 import { registerServiceWorker, subscribeToPush } from '@/lib/serviceWorkerRegistration'
 import { createGlobalNotification } from '@/lib/notificationUtils'
-import { PortalThemeContext, usePortalTheme } from '@/lib/portalThemeContext'
+import { PortalThemeContext, usePortalTheme, resolvePortalTheme } from '@/lib/portalThemeContext'
 import { db } from '@/lib/firebaseConfig'
 import { collection, doc, setDoc, getDocs, query, where, Timestamp, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { toast, Toaster } from 'sonner'
@@ -49,14 +54,16 @@ import Link from 'next/link'
 import Calendar from '@/components/employee-portal/Calendar'
 import Attendance from '@/components/employee-portal/Attendance'
 import Tasks from '@/components/employee-portal/Tasks'
+import TodoList from '@/components/employee-portal/TodoList'
 import Discussions from '@/components/employee-portal/Discussions'
 import Meetings from '@/components/employee-portal/Meetings'
 import AdminPanel from '@/components/employee-portal/AdminPanel'
+import SubscriptionAdmin from '@/components/employee-portal/SubscriptionAdmin'
 import NotificationBell from '@/components/employee-portal/NotificationBell'
 import EventQRScanner from '@/components/employee-portal/EventQRScanner'
 import JobPostings from '@/components/employee-portal/JobPostings'
-import SubscriptionAdmin from '@/components/employee-portal/SubscriptionAdmin'
-import { ProfileInfo, employeeToProfileData } from '@/components/employee-portal/ui'
+import { ProfileInfo, employeeToProfileData, getLocalProfileImage } from '@/components/employee-portal/ui'
+import XOLoader from '@/components/XOLoader'
 
 // ============================================
 // THEME CONTEXT
@@ -71,22 +78,10 @@ const useTheme = usePortalTheme
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=7c3aed&color=fff&size=200'
 
-// Local profile image mapping (fallback when Firestore profileImage is empty)
-const localProfileImages: Record<string, string> = {
-  'M-A001': '/intern-images/M-A001.webp',
-  'M-A005': '/intern-images/M-A005.webp',
-  'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.webp',
-  'M-A009': '/intern-images/M-A009.webp',
-  'M-A010': '/intern-images/M-A010.webp',
-  'M-A011': '/intern-images/M-A011.webp',
-}
-
-// Simple helper to get profile image
+// Simple helper to get profile image (uses centralized getLocalProfileImage)
 const getProfileImageUrl = (url: string | undefined, name?: string, employeeId?: string): string => {
-  if (url) return url
-  // Check local intern images fallback
-  if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -103,7 +98,15 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const { signIn } = useEmployeeAuth()
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768)
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +114,7 @@ function LoginForm() {
       toast.error('Please enter both Employee ID and Password')
       return
     }
-
+    
     setLoading(true)
     try {
       await signIn(employeeId, password)
@@ -131,11 +134,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.25) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 50%), #050507' }}>
+    <div className="min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 relative overflow-hidden" style={{ background: isMobile ? 'radial-gradient(ellipse at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 52%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.14) 0%, transparent 42%), linear-gradient(180deg, #0f172a 0%, #111827 100%)' : 'radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.25) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 50%), #050507' }}>
       {/* iOS 26 ambient blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-30 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.6) 0%, transparent 70%)' }} />
-      <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)' }} />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      <div className={`absolute top-[-20%] left-[-10%] ${isMobile ? 'w-[360px] h-[360px] opacity-18' : 'w-[600px] h-[600px] opacity-30'} rounded-full blur-3xl`} style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.6) 0%, transparent 70%)' }} />
+      <div className={`absolute bottom-[-10%] right-[-5%] ${isMobile ? 'w-[320px] h-[320px] opacity-12' : 'w-[500px] h-[500px] opacity-20'} rounded-full blur-3xl`} style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)' }} />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.018)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -143,21 +146,21 @@ function LoginForm() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <Link href="/" className="inline-block">
-            <motion.img
-              src="/logos/logo-dark.png"
-              alt="matriXO"
-              className="h-12 mx-auto mb-4"
+            <motion.img 
+              src="/logos/logo-dark.png" 
+              alt="matriXO" 
+              className="h-10 sm:h-12 mx-auto mb-3 sm:mb-4"
               whileHover={{ scale: 1.05 }}
             />
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Employee Portal</h1>
-          <p className="text-neutral-400">Access your attendance dashboard</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Employee Portal</h1>
+          <p className="text-sm sm:text-base text-neutral-300 sm:text-neutral-400">Access your attendance dashboard</p>
         </div>
 
-        <div className="rounded-3xl p-8 shadow-2xl" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-3xl p-5 sm:p-8 shadow-2xl" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
                 <FaIdCard className="text-primary-400" />
@@ -168,7 +171,7 @@ function LoginForm() {
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 placeholder="e.g., M-01 or M-A001"
-                className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-400"
+                className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-base text-white placeholder-neutral-400"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}
               />
             </div>
@@ -184,19 +187,15 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-white placeholder-neutral-400 pr-12"
+                  className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-base text-white placeholder-neutral-400 pr-12"
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}
                 />
-                {/* right-2 + p-2 keeps the icon at the same optical position as
-                    right-4 did, while growing the hit area past the 24px minimum. */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  aria-pressed={showPassword}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center p-2 text-neutral-400 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
                 >
-                  <span aria-hidden="true">{showPassword ? '🙈' : '👁️'}</span>
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               <p className="text-xs text-neutral-500 mt-2 flex items-start gap-1">
@@ -214,7 +213,7 @@ function LoginForm() {
             >
               {loading ? (
                 <>
-                  <FaSpinner className="animate-spin" />
+                  <XOLoader size={16} />
                   Signing In...
                 </>
               ) : (
@@ -228,7 +227,7 @@ function LoginForm() {
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-neutral-400 hover:text-primary-400 transition-colors">
-              ← Back to matriXO Website
+              ? Back to matriXO Website
             </Link>
           </div>
         </div>
@@ -237,7 +236,7 @@ function LoginForm() {
           <span className="flex items-center gap-1">
             <FaLock className="text-green-500" /> Secure Login
           </span>
-          <span>•</span>
+          <span>.</span>
           <span>256-bit Encryption</span>
         </div>
       </motion.div>
@@ -250,26 +249,29 @@ function LoginForm() {
 // ============================================
 
 const navigationItems = [
-  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck },
+  { id: 'attendance', label: 'Attendance', icon: FaCalendarCheck, adminHidden: true },
   { id: 'dashboard', label: 'Dashboard', icon: FaChartLine },
   { id: 'history', label: 'History', icon: FaHistory },
   { id: 'calendar', label: 'Calendar', icon: FaCalendarAlt },
+  { id: 'todo-list', label: 'To-Do List', icon: FaListAlt },
   { id: 'tasks', label: 'Tasks', icon: FaTasks },
   { id: 'meetings', label: 'Meetings', icon: FaVideo },
   { id: 'discussions', label: 'Discussions', icon: FaComments },
-  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode, mobileOnly: true },
+  { id: 'event-checkin', label: 'Event QR', icon: FaQrcode },
   { id: 'profile', label: 'My Profile', icon: FaUserCircle },
   { id: 'job-postings', label: 'Careers', icon: FaBriefcase, adminOnly: true },
+  // Beta: premium subscription verification (manual UPI -> active).
+  { id: 'subscriptions', label: 'Payments', icon: FaReceipt, adminOnly: true },
 ]
 
 // ============================================
 // TOP NAVIGATION BAR
 // ============================================
 
-function TopNavbar({
-  activeTab,
-  setActiveTab
-}: {
+function TopNavbar({ 
+  activeTab, 
+  setActiveTab 
+}: { 
   activeTab: string
   setActiveTab: (tab: string) => void
 }) {
@@ -281,7 +283,7 @@ function TopNavbar({
   const [mounted, setMounted] = useState(false)
   const userMenuButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuDropdownRef = useRef<HTMLDivElement>(null)
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   // Track pending application count for Careers badge (admin only)
   const [pendingAppCount, setPendingAppCount] = useState(0)
@@ -290,7 +292,7 @@ function TopNavbar({
     const q = query(collection(db, 'applications'), where('status', '==', 'pending'))
     const unsub = onSnapshot(q, (snap) => {
       setPendingAppCount(snap.docs.length)
-    }, () => { })
+    }, () => {})
     return () => unsub()
   }, [isAdmin])
 
@@ -298,6 +300,55 @@ function TopNavbar({
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  /**
+   * The desktop nav row scrolls sideways when it is wider than the space
+   * between the logo and the right-hand controls, and its scrollbar is hidden.
+   * Without an affordance the tabs past the right edge -- Careers is the last
+   * one -- simply look like they do not exist. These arrows appear only when
+   * there is something to scroll to.
+   */
+  const navScrollRef = useRef<HTMLDivElement>(null)
+  const [navOverflow, setNavOverflow] = useState({ left: false, right: false })
+
+  const syncNavOverflow = useCallback(() => {
+    const el = navScrollRef.current
+    if (!el) return
+    const max = el.scrollWidth - el.clientWidth
+    setNavOverflow({ left: el.scrollLeft > 4, right: el.scrollLeft < max - 4 })
+  }, [])
+
+  useEffect(() => {
+    const el = navScrollRef.current
+    if (!el) return
+    syncNavOverflow()
+    el.addEventListener('scroll', syncNavOverflow, { passive: true })
+    const observer = new ResizeObserver(syncNavOverflow)
+    observer.observe(el)
+    return () => {
+      el.removeEventListener('scroll', syncNavOverflow)
+      observer.disconnect()
+    }
+  }, [syncNavOverflow, isAdmin])
+
+  const scrollNav = (direction: -1 | 1) => {
+    navScrollRef.current?.scrollBy({ left: direction * 240, behavior: 'smooth' })
+  }
+
+  // Keep the selected tab visible -- scrollBy on the container only, so the
+  // page itself never jumps the way scrollIntoView would.
+  useEffect(() => {
+    const container = navScrollRef.current
+    const button = container?.querySelector<HTMLElement>(`[data-nav-id="${activeTab}"]`)
+    if (!container || !button) return
+    const c = container.getBoundingClientRect()
+    const b = button.getBoundingClientRect()
+    if (b.left >= c.left && b.right <= c.right) return
+    container.scrollBy({
+      left: (b.left + b.width / 2) - (c.left + c.width / 2),
+      behavior: 'smooth',
+    })
+  }, [activeTab, isAdmin])
 
   // Close user menu on ESC and outside click
   useEffect(() => {
@@ -336,7 +387,7 @@ function TopNavbar({
   const handleUserMenuClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-
+    
     if (!userMenuOpen && userMenuButtonRef.current) {
       const rect = userMenuButtonRef.current.getBoundingClientRect()
       const isMobile = window.innerWidth < 640
@@ -360,99 +411,111 @@ function TopNavbar({
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 overflow-x-hidden"
+      className="fixed top-0 left-0 right-0 overflow-x-hidden bg-[#FFFFFF] dark:bg-[#081423] transition-colors duration-200"
       style={{
         zIndex: 9000,
-        background: darkMode
-          ? 'rgba(10,10,15,0.65)'
-          : 'rgba(255,255,255,0.72)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        borderBottom: darkMode
-          ? '1px solid rgba(255,255,255,0.07)'
-          : '1px solid rgba(0,0,0,0.08)',
-        boxShadow: darkMode
-          ? '0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-          : '0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+        paddingTop: 'env(safe-area-inset-top)',
+        borderBottom: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(15,23,42,0.08)',
+        boxShadow: darkMode ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 4px 20px rgba(15,23,42,0.05)'
       }}
     >
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600" />
-
-      <div className="max-w-[100vw] px-4 md:px-6 mx-auto">
-        <div className="flex items-center justify-between h-16 gap-2 md:gap-4 overflow-hidden">
+      
+      <div className="max-w-[100vw] px-3 sm:px-4 md:px-6 mx-auto">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-1.5 sm:gap-2 md:gap-4 overflow-hidden">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
-            <img src={darkMode ? "/logos/logo-dark.png" : "/logos/logo-light.png"} onError={(e) => { (e.target as HTMLImageElement).src = '/logos/logo-dark.png' }} alt="matriXO" className="h-8 md:h-9 group-hover:scale-105 transition-transform" />
+            <img src={darkMode ? "/logos/logo-dark.png" : "/logos/logo-light.png"} onError={(e) => { (e.target as HTMLImageElement).src = '/logos/logo-dark.png' }} alt="matriXO" className="h-7 sm:h-8 md:h-9 w-auto group-hover:scale-105 transition-transform" />
             <div className="hidden sm:flex flex-col">
               <span className={`font-bold text-sm leading-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>Employee</span>
               <span className="text-primary-500 text-xs font-medium leading-tight">Portal</span>
             </div>
           </Link>
 
-          {/* Desktop Navigation - Centered */}
-          <div className="hidden xl:flex items-center justify-center flex-1 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-1">
-              {navigationItems.filter(item => !item.mobileOnly && (!item.adminOnly || isAdmin)).map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`
-                    relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
-                    ${activeTab === item.id
-                      ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/30'
-                      : darkMode
-                        ? 'text-neutral-400 hover:text-white hover:bg-white/8'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-black/6'
-                    }
-                  `}
-                >
-                  <item.icon className="text-sm shrink-0" />
-                  <span>{item.label}</span>
-                  {item.id === 'job-postings' && pendingAppCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {pendingAppCount > 99 ? '99+' : pendingAppCount}
-                    </span>
-                  )}
-                </button>
-              ))}
+          {/* Desktop Navigation - Centered (Scrollable on overflow) */}
+          <div className="hidden lg:flex relative items-center flex-1 min-w-0">
+            <div
+              ref={navScrollRef}
+              className="flex items-center w-full min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="flex-1 min-w-0 shrink"></div>
+              <div className="flex items-center gap-0.5 px-2 shrink-0">
+                {navigationItems.filter(item => !item.adminOnly && !(item.adminHidden && employee?.role === 'admin')).map((item) => (
+                  <button
+                    key={item.id}
+                    data-nav-id={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`
+                      relative flex items-center gap-1.5 px-3 py-2 rounded-[14px] transition-all duration-150 font-medium text-xs whitespace-nowrap
+                      ${activeTab === item.id
+                        ? 'cta-glass'
+                        : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#EEF3F8] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] dark:hover:bg-[#152542]'
+                      }
+                    `}
+                  >
+                    <item.icon className="text-xs shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
 
-              {isAdmin && (
-                <>
-                  <div className="w-px h-6 bg-white/10 mx-1" />
-                  <button
-                    onClick={() => setActiveTab('subscriptions')}
-                    className={`
-                      flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
-                      ${activeTab === 'subscriptions'
-                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                        : 'text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-500/10'
-                      }
-                    `}
-                  >
-                    <FaReceipt className="text-sm shrink-0" />
-                    <span>Payments</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('admin')}
-                    className={`
-                      flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm whitespace-nowrap
-                      ${activeTab === 'admin'
-                        ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10'
-                      }
-                    `}
-                  >
-                    <FaUserShield className="text-sm shrink-0" />
-                    <span>Admin</span>
-                  </button>
-                </>
-              )}
+                {isAdmin && employee?.role !== 'admin' && employee?.role !== 'sub-admin' && (
+                  // The count badge lives on a wrapper, not inside the button:
+                  // when this tab is active it uses .cta-glass, whose
+                  // `overflow: hidden` (there to contain the gradient sweep)
+                  // would clip a badge that hangs outside the button's box.
+                  <div className="relative shrink-0">
+                    <button
+                      data-nav-id="job-postings"
+                      onClick={() => setActiveTab('job-postings')}
+                      className={`
+                        relative flex items-center gap-1.5 px-3 py-2 rounded-[14px] transition-all duration-150 font-medium text-xs whitespace-nowrap
+                        ${activeTab === 'job-postings'
+                          ? 'cta-glass'
+                          : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#EEF3F8] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] dark:hover:bg-[#152542]'
+                        }
+                      `}
+                    >
+                      <FaBriefcase className="text-xs shrink-0" />
+                      <span>Careers</span>
+                    </button>
+                    {pendingAppCount > 0 && (
+                      <span className="pointer-events-none absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 shrink"></div>
             </div>
+
+            {navOverflow.left && (
+              <button
+                onClick={() => scrollNav(-1)}
+                aria-label="Scroll navigation left"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 rounded-full text-[#475569] hover:text-[#0F172A] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] bg-[#FFFFFF]/90 dark:bg-[#0B1220]/90 shadow-md backdrop-blur-sm"
+              >
+                <FaChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {navOverflow.right && (
+              <button
+                onClick={() => scrollNav(1)}
+                aria-label="Scroll navigation right"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 rounded-full text-[#475569] hover:text-[#0F172A] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] bg-[#FFFFFF]/90 dark:bg-[#0B1220]/90 shadow-md backdrop-blur-sm"
+              >
+                <FaChevronRight className="w-3.5 h-3.5" />
+                {pendingAppCount > 0 && activeTab !== 'job-postings' && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+            )}
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Notification Bell */}
             <NotificationBell onNavigate={setActiveTab} darkMode={darkMode} />
 
@@ -461,7 +524,7 @@ function TopNavbar({
               onClick={toggleTheme}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
-              className="relative p-2.5 rounded-xl transition-all duration-300 overflow-hidden"
+              className="relative p-1.5 sm:p-2.5 rounded-xl transition-all duration-300 overflow-hidden"
               title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               style={{
                 background: darkMode
@@ -484,7 +547,7 @@ function TopNavbar({
                     exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <FaSun className="text-amber-400" size={16} />
+                    <FaSun className="text-amber-400" size={14} />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -494,7 +557,7 @@ function TopNavbar({
                     exit={{ rotate: -90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <FaMoon className="text-indigo-600" size={16} />
+                    <FaMoon className="text-indigo-600" size={14} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -506,7 +569,7 @@ function TopNavbar({
                 ref={userMenuButtonRef}
                 onClick={handleUserMenuClick}
                 type="button"
-                className="flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
                   background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
                   border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
@@ -515,7 +578,7 @@ function TopNavbar({
                 <img
                   src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
                   alt={employee?.name}
-                  className="w-8 h-8 rounded-xl object-cover ring-2 ring-primary-500/50"
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/50"
                   onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
                 />
                 <span className={`font-medium hidden md:block text-sm ${darkMode ? 'text-white' : 'text-gray-800'}`}>{employee?.name?.split(' ')[0]}</span>
@@ -526,7 +589,7 @@ function TopNavbar({
               {mounted && userMenuOpen && createPortal(
                 <div
                   ref={userMenuDropdownRef}
-                  style={{
+                  style={{ 
                     position: 'fixed',
                     top: userMenuPosition.top,
                     right: userMenuPosition.isMobile ? 8 : userMenuPosition.right,
@@ -569,6 +632,29 @@ function TopNavbar({
                         <FaUserCircle />
                         <span>My Profile</span>
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => { setActiveTab('job-postings'); setUserMenuOpen(false) }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'text-neutral-300 hover:bg-white/8' : 'text-gray-700 hover:bg-black/5'}`}
+                        >
+                          <FaBriefcase />
+                          <span>Careers &amp; Applications</span>
+                          {pendingAppCount > 0 && (
+                            <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                              {pendingAppCount > 99 ? '99+' : pendingAppCount}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => { setActiveTab('admin'); setUserMenuOpen(false) }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'text-neutral-300 hover:bg-white/8' : 'text-gray-700 hover:bg-black/5'}`}
+                        >
+                          <FaUserShield />
+                          <span>Admin Panel</span>
+                        </button>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
@@ -586,7 +672,7 @@ function TopNavbar({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`xl:hidden p-2.5 rounded-xl transition-all ${darkMode ? 'text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900 bg-black/5 hover:bg-black/10'}`}
+                  className={`lg:hidden p-2 rounded-xl transition-all ${darkMode ? 'text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900 bg-black/5 hover:bg-black/10'}`}
             >
               {mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
             </button>
@@ -600,18 +686,21 @@ function TopNavbar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="xl:hidden py-4"
+              className="lg:hidden py-3 sm:py-4"
               style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}
             >
               <div className="grid grid-cols-2 gap-2">
-                {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => (
+                {navigationItems.filter(item => {
+                  const isExcludedCareers = item.id === 'job-postings' && (employee?.role === 'admin' || employee?.role === 'sub-admin');
+                  return (!item.adminOnly || isAdmin) && !(item.adminHidden && employee?.role === 'admin') && !isExcludedCareers;
+                }).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false) }}
                     className={`
                       relative flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
-                      ${activeTab === item.id
-                        ? 'bg-primary-500/20 text-primary-500 border border-primary-500/20'
+                      ${activeTab === item.id 
+                        ? 'bg-primary-500/20 text-primary-500 border border-primary-500/20' 
                         : darkMode
                           ? 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-black/5 border border-transparent'
@@ -627,31 +716,14 @@ function TopNavbar({
                     )}
                   </button>
                 ))}
-
-                {isAdmin && (
-                  <button
-                    onClick={() => { setActiveTab('subscriptions'); setMobileMenuOpen(false) }}
-                    className={`
-                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
-                      ${activeTab === 'subscriptions'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
-                        : darkMode
-                          ? 'text-emerald-400/70 hover:text-emerald-400 hover:bg-emerald-500/10 border border-transparent'
-                          : 'text-emerald-600/80 hover:text-emerald-600 hover:bg-emerald-500/10 border border-transparent'
-                      }
-                    `}
-                  >
-                    <FaReceipt />
-                    Payments
-                  </button>
-                )}
+                
                 {isAdmin && (
                   <button
                     onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false) }}
                     className={`
-                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm
-                      ${activeTab === 'admin'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20'
+                      flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-medium text-sm col-span-2
+                      ${activeTab === 'admin' 
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' 
                         : darkMode
                           ? 'text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent'
                           : 'text-amber-600/80 hover:text-amber-600 hover:bg-amber-500/10 border border-transparent'
@@ -675,21 +747,22 @@ function TopNavbar({
 // DASHBOARD OVERVIEW (for Dashboard tab)
 // ============================================
 
-function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void }) {
-  const { employee, getAttendanceRecords, tasks = [], personalTodos = [], addPersonalTodo, updatePersonalTodo, deletePersonalTodo } = useEmployeeAuth()
+function DashboardOverview({ onTaskClick, onShowMyTasks, onOpenTodoList }: { onTaskClick?: (taskId: string) => void; onShowMyTasks?: () => void; onOpenTodoList?: () => void }) {
+  const { employee, getAttendanceRecords, getMonthlyAttendanceStats, tasks = [], personalTodos = [] } = useEmployeeAuth()
   const { darkMode } = useTheme()
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [newTodoTitle, setNewTodoTitle] = useState('')
-  const [addingTodo, setAddingTodo] = useState(false)
 
   useEffect(() => {
     const fetchAttendance = async () => {
       setLoading(true)
       try {
-        const startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        const records = await getAttendanceRecords(startDate, new Date())
+        // Fetch current month's attendance records
+        const now = new Date()
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+        const records = await getAttendanceRecords(startDate, endDate)
         setAttendanceRecords(records || [])
       } catch (error) {
         console.error('Error fetching attendance:', error)
@@ -701,14 +774,11 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     fetchAttendance()
   }, [getAttendanceRecords])
 
-  const presentDays = attendanceRecords.filter(r => r.status === 'P').length
-  const absentDays = attendanceRecords.filter(r => r.status === 'A').length
-  const onDutyDays = attendanceRecords.filter(r => r.status === 'O').length
-  const totalDays = attendanceRecords.length
-  // FIXED: Match Admin formula - (present + onDuty) / total
-  const attendancePercentage = totalDays > 0
-    ? Math.round(((presentDays + onDutyDays) / totalDays) * 100)
-    : 0
+  // Monthly attendance calculation
+  const monthlyStats = getMonthlyAttendanceStats(attendanceRecords)
+  const attendancePercentage = monthlyStats.attendanceRate
+  const presentDays = monthlyStats.presentDays
+  const absentDays = monthlyStats.absentDays
 
   // Safely filter tasks - handle both array and string for assignedTo
   const myTasks = (tasks || []).filter(t => {
@@ -724,49 +794,16 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
   })
 
   // Helpers for todo list
-  const handleAddTodo = async () => {
-    if (!newTodoTitle.trim()) return
-    setAddingTodo(true)
-    try {
-      await addPersonalTodo(newTodoTitle.trim())
-      setNewTodoTitle('')
-      toast.success('Todo added')
-    } catch (error: any) {
-      console.error('Todo add error:', error)
-      toast.error(error?.message || 'Failed to add todo')
-    } finally {
-      setAddingTodo(false)
-    }
-  }
-
-  const handleToggleTodo = async (id: string, currentStatus: 'pending' | 'completed') => {
-    try {
-      await updatePersonalTodo(id, { status: currentStatus === 'pending' ? 'completed' : 'pending' })
-    } catch (error) {
-      toast.error('Failed to update todo')
-    }
-  }
-
-  const handleDeleteTodo = async (id: string) => {
-    try {
-      await deletePersonalTodo(id)
-      toast.success('Todo deleted')
-    } catch (error) {
-      toast.error('Failed to delete todo')
-    }
-  }
 
   // Filter: pending first, then completed
-  const sortedTodos = [...personalTodos].sort((a, b) => {
-    if (a.status === 'pending' && b.status === 'completed') return -1
-    if (a.status === 'completed' && b.status === 'pending') return 1
-    return 0
-  })
+  // Only the open count is needed now that the list itself lives on the
+  // To-Do List page.
+  const openTodoCount = personalTodos.filter((t) => t.status !== 'completed').length
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <FaSpinner className="animate-spin text-4xl text-primary-500" />
+        <XOLoader size={16} />
       </div>
     )
   }
@@ -775,30 +812,23 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
     <div className="space-y-6">
       {/* Welcome Banner */}
       <div
-        className="rounded-2xl p-4 sm:p-6"
-        style={{
-          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' : '0 8px 24px rgba(124,58,237,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
-        }}
+        className="rounded-[20px] p-4 sm:p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
       >
         <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={getProfileImageUrl(employee?.profileImage, employee?.name, employee?.employeeId)}
             alt={employee?.name}
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-primary-500"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-[#2563EB]"
             onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR }}
           />
-          <div className="min-w-0 flex-1">
-            <h2 className={`text-lg sm:text-2xl font-bold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Welcome back, {employee?.name?.split(' ')[0]}!
-            </h2>
-            <p className={`text-sm sm:text-base truncate ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
-              {employee?.department} • {employee?.designation}
-            </p>
-          </div>
+            <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-2xl font-bold truncate text-[#0F172A] dark:text-[#F8FAFC]">
+                Welcome back, {employee?.name?.split(' ')[0]}!
+              </h2>
+              <p className="text-sm sm:text-base truncate text-[#475569] dark:text-[#94A3B8]">
+                {employee?.department} . {employee?.designation}
+              </p>
+            </div>
         </div>
       </div>
 
@@ -823,44 +853,35 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           color="bg-red-500"
         />
         <StatCard
-          title="Pending Tasks"
-          value={myTasks.length}
+          title="Working Days"
+          value={monthlyStats.totalWorkingDays}
           icon={FaTasks}
-          color="bg-primary-500"
-          onClick={onShowMyTasks}
+          color="bg-indigo-500"
         />
       </div>
 
       {/* My Tasks & Holidays */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div
-          className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
-          style={{
-            background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
-            backdropFilter: 'blur(30px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-            border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-            boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
-          }}
+          className="rounded-[20px] p-4 sm:p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
         >
-          <h3 className={`text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            <FaTasks className="text-primary-500" />
+          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-[#0F172A] dark:text-[#F8FAFC]">
+            <FaTasks className="text-[#2563EB]" />
             My Pending Tasks
           </h3>
           {myTasks.length === 0 ? (
-            <p className={`text-center py-4 text-sm sm:text-base ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No pending tasks</p>
+            <p className="text-center py-4 text-sm sm:text-base text-[#64748B] dark:text-[#94A3B8]">No pending tasks</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {myTasks.slice(0, 4).map((task) => (
-                <div
-                  key={task.id}
-                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-colors gap-2 ${darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/4 hover:bg-black/8'}`}
-                  style={{ border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)' }}
+                <div 
+                  key={task.id} 
+                  className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-colors gap-2 bg-[#F5F7FB] hover:bg-[#EEF3F8] dark:bg-[#152542] dark:hover:bg-[#1E3A8A] border border-[rgba(15,23,42,0.04)] dark:border-[rgba(255,255,255,0.04)]"
                   onClick={() => onTaskClick?.(task.id!)}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className={`font-medium text-sm sm:text-base truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>{task.title}</p>
-                    <p className={`text-xs ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
+                    <p className="font-medium text-sm sm:text-base truncate text-[#0F172A] dark:text-[#F8FAFC]">{task.title}</p>
+                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                       Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
                     </p>
                   </div>
@@ -868,8 +889,8 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
                     px-2 py-1 text-xs rounded-full font-medium flex-shrink-0
                     ${task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
                       task.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
-                        task.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-neutral-500/20 text-neutral-400'}
+                      task.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-neutral-500/20 text-neutral-400'}
                   `}>
                     {task.priority}
                   </span>
@@ -879,94 +900,46 @@ function DashboardOverview({ onTaskClick, onShowMyTasks }: { onTaskClick?: (task
           )}
         </div>
 
+        {/* Personal to-dos now live on the dedicated To-Do List page (which also
+            hosts Project Work). This card is a summary + entry point so the
+            dashboard keeps its two-column layout without duplicating the
+            management UI. */}
         <div
-          className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
-          style={{
-            background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
-            backdropFilter: 'blur(30px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-            border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-            boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
-          }}
+          className="rounded-[20px] p-4 sm:p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] flex flex-col"
         >
-          <h3 className={`text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            <FaListAlt className="text-primary-500" />
-            My Todo List
+          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-[#0F172A] dark:text-[#F8FAFC]">
+            <FaListAlt className="text-[#2563EB]" />
+            My To-Dos
           </h3>
 
-          {/* Add Todo Input */}
-          <div className="flex gap-2 mb-3 sm:mb-4">
-            <input
-              type="text"
-              value={newTodoTitle}
-              onChange={(e) => setNewTodoTitle(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
-              placeholder="Add a new todo..."
-              className={`flex-1 px-3 py-2 rounded-lg sm:rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 min-w-0 transition-all ${darkMode ? 'placeholder-neutral-500 text-white' : 'placeholder-gray-400 text-gray-900'}`}
-              style={{
-                background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-                border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
-              }}
-            />
-            <button
-              onClick={handleAddTodo}
-              disabled={addingTodo || !newTodoTitle.trim()}
-              className="px-3 py-2 bg-primary-500 hover:bg-primary-400 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-lg sm:rounded-xl transition-colors flex-shrink-0"
-            >
-              {addingTodo ? <FaSpinner className="animate-spin" /> : <FaPlus />}
-            </button>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-bold text-[#0F172A] dark:text-white">{openTodoCount}</span>
+            <span className="text-sm text-[#64748B] dark:text-[#94A3B8]">
+              open item{openTodoCount === 1 ? '' : 's'}
+            </span>
           </div>
+          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mb-4">
+            {openTodoCount === 0
+              ? 'Nothing outstanding right now.'
+              : 'Open the To-Do List to work through them.'}
+          </p>
 
-          {sortedTodos.length === 0 ? (
-            <p className={`text-center py-4 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No todos yet. Add one above!</p>
-          ) : (
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {sortedTodos.slice(0, 6).map((todo) => (
-                <div
-                  key={todo.id}
-                  className={`flex items-center justify-between p-3 rounded-xl transition-all ${todo.status === 'completed'
-                      ? darkMode ? 'bg-white/3' : 'bg-black/3'
-                      : darkMode ? 'bg-white/7' : 'bg-black/5'
-                    }`}
-                  style={{ border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)' }}
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <button
-                      onClick={() => todo.id && handleToggleTodo(todo.id, todo.status)}
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${todo.status === 'completed'
-                          ? 'bg-green-500 border-green-500 text-white'
-                          : darkMode ? 'border-neutral-500 hover:border-primary-500' : 'border-gray-400 hover:border-primary-500'
-                        }`}
-                    >
-                      {todo.status === 'completed' && <FaCheckCircle className="text-xs" />}
-                    </button>
-                    <span className={`text-sm truncate ${todo.status === 'completed'
-                        ? darkMode ? 'text-neutral-500 line-through' : 'text-gray-400 line-through'
-                        : darkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                      {todo.title}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => todo.id && handleDeleteTodo(todo.id)}
-                    className="text-neutral-500 hover:text-red-400 transition-colors ml-2"
-                  >
-                    <FaTrash className="text-xs" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <button
+            onClick={onOpenTodoList}
+            className="mt-auto w-full px-4 py-2.5 rounded-xl text-sm font-semibold cta-glass"
+          >
+            Open To-Do List
+          </button>
         </div>
       </div>
 
       {/* Attendance Warning */}
       {attendancePercentage < 80 && (
-        <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-          <FaExclamationTriangle className="text-red-400 mt-1 flex-shrink-0" />
+        <div className="rounded-xl p-4 flex items-start gap-3 bg-red-500/10 border border-red-500/25">
+          <FaExclamationTriangle className="text-red-500 dark:text-red-400 mt-1 flex-shrink-0" />
           <div>
-            <p className="text-red-400 font-medium">Low Attendance Warning</p>
-            <p className={`text-sm mt-1 ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+            <p className="text-red-600 dark:text-red-400 font-medium">Low Attendance Warning</p>
+            <p className="text-sm mt-1 text-red-500/80 dark:text-red-400/80">
               Your attendance is below the minimum required 80%. Please improve your attendance to avoid any issues.
             </p>
           </div>
@@ -1019,38 +992,27 @@ function HistoryTab() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div
-        className="rounded-xl sm:rounded-2xl p-4 sm:p-6"
-        style={{
-          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.06)',
-        }}
+        className="rounded-[20px] p-4 sm:p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <h2 className={`text-lg sm:text-xl font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            <FaHistory className="text-primary-500" />
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-[#0F172A] dark:text-[#F8FAFC]">
+            <FaHistory className="text-[#2563EB]" />
             Attendance History
           </h2>
           <input
             type="month"
             value={`${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`}
             onChange={(e) => setSelectedMonth(new Date(e.target.value))}
-            className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 ${darkMode ? 'text-white' : 'text-gray-900'}`}
-            style={{
-              background: darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-              border: darkMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.09)',
-            }}
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-[#2563EB] text-[#0F172A] dark:text-[#F8FAFC] bg-[#F5F7FB] dark:bg-[rgba(255,255,255,0.05)] border border-[rgba(15,23,42,0.08)] dark:border-[rgba(255,255,255,0.12)]"
           />
         </div>
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <FaSpinner className="animate-spin text-3xl text-primary-500" />
+            <XOLoader size={16} />
           </div>
         ) : records.length === 0 ? (
-          <p className={`text-center py-8 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>No attendance records for this month</p>
+          <p className="text-center py-8 text-[#64748B] dark:text-[#94A3B8]">No attendance records for this month</p>
         ) : (
           <div className="space-y-2 sm:space-y-3">
             {records.map((record) => {
@@ -1059,18 +1021,14 @@ function HistoryTab() {
               return (
                 <div
                   key={record.id}
-                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl gap-3"
-                  style={{
-                    background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                    border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
-                  }}
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl gap-3 bg-[#F8FAFC] dark:bg-[rgba(255,255,255,0.03)] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)]"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                     <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${config.color} flex items-center justify-center flex-shrink-0`}>
                       <StatusIcon className="text-white text-sm sm:text-base" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`font-medium text-sm sm:text-base truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      <p className="font-medium text-sm sm:text-base truncate text-[#0F172A] dark:text-[#F8FAFC]">
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleDateString('en-US', {
@@ -1080,7 +1038,7 @@ function HistoryTab() {
                           })
                         })()}
                       </p>
-                      <p className={`text-xs truncate ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
+                      <p className="text-xs truncate text-[#64748B] dark:text-[#94A3B8]">
                         {(() => {
                           const timestamp = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp)
                           return timestamp.toLocaleTimeString('en-US', {
@@ -1088,7 +1046,7 @@ function HistoryTab() {
                             minute: '2-digit'
                           })
                         })()}
-                        {record.notes && <span className="hidden sm:inline"> • {record.notes}</span>}
+                        {record.notes && <span className="hidden sm:inline"> . {record.notes}</span>}
                       </p>
                     </div>
                   </div>
@@ -1125,7 +1083,7 @@ function ProfileTab() {
 
   if (!employee) return null
 
-  const displayImage = localImageUrl || employee.profileImage || (employee.employeeId && localProfileImages[employee.employeeId]) || ''
+  const displayImage = localImageUrl || getLocalProfileImage(employee.profileImage, employee.employeeId)
 
   const infoRows = [
     { label: 'Employee ID', value: employee.employeeId },
@@ -1140,20 +1098,13 @@ function ProfileTab() {
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Card */}
       <div
-        className="rounded-2xl p-6"
-        style={{
-          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-          boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.08)',
-        }}
+        className="rounded-[20px] p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
       >
         {/* Avatar + name row */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-28 h-28 rounded-xl overflow-hidden ring-4 ring-blue-500/40 bg-gradient-to-br from-blue-500 to-purple-600">
+            <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-blue-500/40 bg-gradient-to-br from-blue-500 to-purple-600">
               {displayImage ? (
                 <img
                   src={displayImage}
@@ -1181,14 +1132,14 @@ function ProfileTab() {
 
           {/* Name + role + upload button */}
           <div className="text-center sm:text-left flex-1">
-            <h2 className={`text-2xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-2xl font-bold mb-1 text-[#0F172A] dark:text-[#F8FAFC]">
               {employee.name}
             </h2>
-            <p className="gradient-text font-medium text-base mb-1">
+            <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium text-base mb-1">
               {employee.designation || employee.role}
             </p>
             {employee.department && (
-              <p className={`text-sm mb-4 ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+              <p className="text-sm mb-4 text-[#64748B] dark:text-[#94A3B8]">
                 {employee.department}
               </p>
             )}
@@ -1208,16 +1159,12 @@ function ProfileTab() {
             value ? (
               <div
                 key={label}
-                className="rounded-xl px-4 py-3"
-                style={{
-                  background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                  border: darkMode ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
-                }}
+                className="rounded-xl px-4 py-3 bg-[#F8FAFC] dark:bg-[rgba(255,255,255,0.03)] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)]"
               >
-                <p className={`text-xs font-medium mb-0.5 ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
+                <p className="text-xs font-medium mb-0.5 text-[#64748B] dark:text-[#94A3B8]">
                   {label}
                 </p>
-                <p className={`text-sm font-medium break-all ${darkMode ? 'text-neutral-200' : 'text-gray-800'}`}>
+                <p className="text-sm font-medium break-all text-[#0F172A] dark:text-[#F8FAFC]">
                   {value}
                 </p>
               </div>
@@ -1228,19 +1175,15 @@ function ProfileTab() {
 
       {/* Photo guidelines note */}
       <div
-        className="rounded-xl px-5 py-4 text-sm"
-        style={{
-          background: darkMode ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)',
-          border: darkMode ? '1px solid rgba(59,130,246,0.2)' : '1px solid rgba(59,130,246,0.15)',
-        }}
+        className="rounded-xl px-5 py-4 text-sm bg-blue-500/10 border border-blue-500/20"
       >
-        <p className={`font-medium mb-1 ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+        <p className="font-medium mb-1 text-blue-700 dark:text-blue-400">
           Profile Photo Guidelines
         </p>
-        <ul className={`space-y-0.5 list-disc list-inside text-xs ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>
+        <ul className="space-y-0.5 list-disc list-inside text-xs text-[#64748B] dark:text-[#94A3B8]">
           <li>Accepted formats: JPEG, PNG, WebP</li>
           <li>Maximum file size: 3MB</li>
-          <li>Photos are automatically cropped to a square (512×512) and optimized</li>
+          <li>Photos are automatically cropped to a square (512&times;512) and optimized</li>
           <li>Your photo appears on the public Team page and in the employee portal</li>
         </ul>
       </div>
@@ -1252,32 +1195,23 @@ function ProfileTab() {
 // STAT CARD COMPONENT
 // ============================================
 
-function StatCard({ title, value, icon: Icon, color, onClick }: {
+function StatCard({ title, value, icon: Icon, color, onClick }: { 
   title: string
   value: string | number
   icon: any
   color: string
   onClick?: () => void
 }) {
-  const { darkMode } = useTheme()
   return (
     <motion.div
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 ${onClick ? 'cursor-pointer' : ''}`}
-      style={{
-        background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.65)',
-        backdropFilter: 'blur(30px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-        border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.8)',
-        boxShadow: darkMode ? '0 8px 24px rgba(0,0,0,0.25)' : '0 6px 20px rgba(124,58,237,0.06)',
-        transition: 'box-shadow 0.2s, transform 0.2s',
-      }}
+      className={`rounded-[20px] p-4 sm:p-6 bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] shadow-[0_4px_20px_rgba(15,23,42,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-all ${onClick ? 'cursor-pointer hover:border-[rgba(15,23,42,0.15)] dark:hover:border-[rgba(255,255,255,0.12)]' : ''}`}
     >
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className={`text-xs sm:text-sm truncate ${darkMode ? 'text-neutral-400' : 'text-gray-500'}`}>{title}</p>
-          <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{value}</p>
+          <p className="text-xs sm:text-sm truncate text-[#475569] dark:text-[#94A3B8]">{title}</p>
+          <p className="text-xl sm:text-3xl font-bold mt-1 sm:mt-2 text-[#0F172A] dark:text-[#F8FAFC]">{value}</p>
         </div>
         <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
           <Icon className="text-lg sm:text-xl text-white" />
@@ -1296,14 +1230,9 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('attendance')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false)
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ep-theme')
-      return saved ? saved === 'dark' : true
-    }
-    return true
-  })
-  const isAdmin = employee?.role === 'admin'
+  // Same resolution the loading screen uses, so the two never disagree.
+  const [darkMode, setDarkMode] = useState(resolvePortalTheme)
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const toggleTheme = () => {
     setDarkMode(prev => {
@@ -1339,7 +1268,7 @@ function Dashboard() {
     }
   }, [activeTab])
 
-  // 🔔 AUTO-REQUEST NOTIFICATION PERMISSION + REGISTER PUSH ON FIRST LOAD
+  // Auto-request notification permission and register push on first load
   useEffect(() => {
     const setupPushNotifications = async () => {
       if (typeof window === 'undefined' || !('Notification' in window)) return
@@ -1355,7 +1284,7 @@ function Dashboard() {
         if (Notification.permission === 'granted') {
           await registerServiceWorker()
           await subscribeToPush(employee.employeeId)
-          console.log('🔔 Push notifications set up successfully')
+          console.log('Push notifications set up successfully')
         }
       } catch (error) {
         console.error('Failed to set up push notifications:', error)
@@ -1364,12 +1293,12 @@ function Dashboard() {
     setupPushNotifications()
   }, [employee?.employeeId])
 
-  // 🔄 BACKGROUND SYNC: Meeting tasks → Main Tasks collection
+  // Background sync: Meeting tasks -> Main Tasks collection
   // Runs once on portal load so meeting tasks appear on Tasks page regardless of which tab is active
   const meetingSyncRef = useRef(false)
   useEffect(() => {
     if (!employee?.employeeId || meetingSyncRef.current) return
-
+    
     const syncMeetingTasksBackground = async () => {
       try {
         // 1. Fetch meetings from Fathom API
@@ -1429,17 +1358,17 @@ function Dashboard() {
           const primary = group[0]
           const mergedIds = new Set<string>(primary.data.assignedTo || [])
           const mergedNames = new Map<string, string>()
-            ; (primary.data.assignedTo || []).forEach((id: string, idx: number) => {
-              mergedNames.set(id, (primary.data.assignedToNames || [])[idx] || id)
-            })
+          ;(primary.data.assignedTo || []).forEach((id: string, idx: number) => {
+            mergedNames.set(id, (primary.data.assignedToNames || [])[idx] || id)
+          })
           for (let j = 1; j < group.length; j++) {
             const dup = group[j]
-              ; (dup.data.assignedTo || []).forEach((id: string, idx: number) => {
-                if (!mergedIds.has(id)) {
-                  mergedIds.add(id)
-                  mergedNames.set(id, (dup.data.assignedToNames || [])[idx] || id)
-                }
-              })
+            ;(dup.data.assignedTo || []).forEach((id: string, idx: number) => {
+              if (!mergedIds.has(id)) {
+                mergedIds.add(id)
+                mergedNames.set(id, (dup.data.assignedToNames || [])[idx] || id)
+              }
+            })
             // Delete duplicate
             await deleteDoc(doc(db, 'tasks', dup.id))
             existingIds.delete(dup.id)
@@ -1498,7 +1427,7 @@ function Dashboard() {
               if (item.assignee) {
                 const matched = allEmployees.find(
                   (emp: any) => (item.assignee.email && emp.email?.toLowerCase() === item.assignee.email.toLowerCase()) ||
-                    (item.assignee.name && emp.name?.toLowerCase() === item.assignee.name.toLowerCase())
+                         (item.assignee.name && emp.name?.toLowerCase() === item.assignee.name.toLowerCase())
                 )
                 if (matched && !addedIds.has(matched.employeeId)) {
                   assigneeIds.push(matched.employeeId)
@@ -1512,7 +1441,7 @@ function Dashboard() {
             if (assigneeIds.length === 0 && meeting.recorded_by) {
               const recorder = allEmployees.find(
                 (emp: any) => emp.email?.toLowerCase() === (meeting.recorded_by?.email || '').toLowerCase() ||
-                  emp.name?.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
+                       emp.name?.toLowerCase() === (meeting.recorded_by?.name || '').toLowerCase()
               )
               if (recorder) {
                 assigneeIds.push(recorder.employeeId)
@@ -1556,7 +1485,7 @@ function Dashboard() {
             title: 'Meeting Tasks Synced',
             message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings added to Tasks.`,
             relatedEntityId: 'meeting-sync',
-            targetUrl: '#tasks',
+            targetUrl: '/employee-portal#tasks',
             createdBy: employee.employeeId,
             createdByName: employee.name,
             createdByRole: employee.role
@@ -1573,60 +1502,56 @@ function Dashboard() {
     // Small delay to not block initial render
     const timer = setTimeout(syncMeetingTasksBackground, 2000)
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employee?.employeeId])
 
   return (
     <PortalThemeContext.Provider value={{ darkMode, toggleTheme }}>
-      <div
-        data-portal-theme={darkMode ? 'dark' : 'light'}
-        className="min-h-screen overflow-x-hidden max-w-[100vw] transition-colors duration-500"
-        style={{
-          background: darkMode
-            ? 'radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.12) 0%, transparent 50%), #06060a'
-            : 'radial-gradient(ellipse at 20% 10%, rgba(167,139,250,0.12) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(196,181,253,0.1) 0%, transparent 50%), #f5f3ff',
-        }}
+    <div
+      data-portal-theme={darkMode ? 'dark' : 'light'}
+      className={`min-h-screen overflow-x-hidden max-w-[100vw] transition-colors duration-200 ${darkMode ? 'dark bg-[#07111F]' : 'bg-[#F5F7FB]'}`}
+    >
+      {/* Top Navigation */}
+      <TopNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+      {/* Main Content - pt-20 compensates for fixed navbar height */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pt-[calc(4.75rem+env(safe-area-inset-top))] sm:pt-20">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="w-full"
+          >
+            {activeTab === 'attendance' && employee?.role !== 'admin' && <Attendance />}
+            {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} onShowMyTasks={handleShowMyTasks} onOpenTodoList={() => setActiveTab('todo-list')} />}
+            {activeTab === 'history' && <HistoryTab />}
+            {activeTab === 'calendar' && <Calendar />}
+            {activeTab === 'todo-list' && <TodoList />}
+            {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
+            {activeTab === 'discussions' && <Discussions />}
+            {activeTab === 'meetings' && <Meetings />}
+            {activeTab === 'event-checkin' && <EventQRScanner />}
+            {activeTab === 'profile' && <ProfileTab />}
+            {activeTab === 'job-postings' && isAdmin && <JobPostings />}
+            {activeTab === 'subscriptions' && isAdmin && <SubscriptionAdmin />}
+            {activeTab === 'admin' && isAdmin && <AdminPanel />}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      {/* Footer */}
+      <footer
+        className="py-4 sm:py-6 mt-auto px-4"
+        style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)' }}
       >
-        {/* Top Navigation */}
-        <TopNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {/* Main Content - pt-20 compensates for fixed navbar height */}
-        <main className="max-w-7xl mx-auto px-4 py-6 pt-20">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="w-full"
-            >
-              {activeTab === 'attendance' && <Attendance />}
-              {activeTab === 'dashboard' && <DashboardOverview onTaskClick={handlePendingTaskClick} onShowMyTasks={handleShowMyTasks} />}
-              {activeTab === 'history' && <HistoryTab />}
-              {activeTab === 'calendar' && <Calendar />}
-              {activeTab === 'tasks' && <Tasks selectedTaskId={selectedTaskId} onTaskOpened={() => setSelectedTaskId(null)} showOnlyMyTasks={showOnlyMyTasks} />}
-              {activeTab === 'discussions' && <Discussions />}
-              {activeTab === 'meetings' && <Meetings />}
-              {activeTab === 'event-checkin' && <EventQRScanner />}
-              {activeTab === 'profile' && <ProfileTab />}
-              {activeTab === 'job-postings' && isAdmin && <JobPostings />}
-              {activeTab === 'subscriptions' && isAdmin && <SubscriptionAdmin />}
-              {activeTab === 'admin' && isAdmin && <AdminPanel />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-
-        {/* Footer */}
-        <footer
-          className="py-6 mt-auto"
-          style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)' }}
-        >
-          <p className={`text-center text-sm ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
-            © {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
-          </p>
-        </footer>
-      </div>
+        <p className={`text-center text-sm ${darkMode ? 'text-neutral-500' : 'text-gray-400'}`}>
+          &copy; {new Date().getFullYear()} matriXO Employee Portal. All rights reserved.
+        </p>
+      </footer>
+    </div>
     </PortalThemeContext.Provider>
   )
 }
@@ -1638,12 +1563,32 @@ function Dashboard() {
 function EmployeePortalContent() {
   const { user, loading } = useEmployeeAuth()
 
+  // This screen renders before PortalThemeContext.Provider exists, so it reads
+  // the stored preference directly. Without this it always painted dark, which
+  // is what made a light-mode refresh flash a black page.
+  const [isDark, setIsDark] = useState(true)
+  useEffect(() => {
+    setIsDark(resolvePortalTheme())
+  }, [])
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.2) 0%, transparent 60%), #06060a' }}>
-        <div className="text-center p-10 rounded-3xl" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <FaSpinner className="animate-spin text-5xl text-primary-500 mx-auto mb-4" />
-          <p className="text-neutral-400">Loading...</p>
+      <div
+        className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
+          isDark ? 'bg-[#07111F]' : 'bg-[#F5F7FB]'
+        }`}
+      >
+        <div
+          className={`text-center p-10 rounded-3xl backdrop-blur-2xl border ${
+            isDark
+              ? 'bg-white/[0.05] border-white/10'
+              : 'bg-white/70 border-[rgba(15,23,42,0.08)]'
+          }`}
+        >
+          <XOLoader size={20} />
+          <p className={`mt-3 text-sm ${isDark ? 'text-neutral-400' : 'text-[#64748B]'}`}>
+            Loading...
+          </p>
         </div>
       </div>
     )
@@ -1664,3 +1609,4 @@ export default function EmployeePortalPage() {
     </EmployeeAuthProvider>
   )
 }
+

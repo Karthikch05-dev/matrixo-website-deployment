@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { FaUser, FaIdCard, FaPhone, FaEnvelope, FaUniversity, FaGraduationCap, FaCodeBranch, FaArrowRight, FaSpinner, FaAt, FaCheck, FaTimes, FaCamera } from 'react-icons/fa'
+import { FaUser, FaIdCard, FaPhone, FaEnvelope, FaUniversity, FaGraduationCap, FaCodeBranch, FaArrowRight, FaSpinner, FaAt, FaCheck, FaTimes, FaCamera, FaChevronDown } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile, DEFAULT_PRIVACY } from '@/lib/ProfileContext'
 import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
@@ -12,6 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { compressImage } from '@/lib/imageUtils'
 import { storage } from '@/lib/firebaseConfig'
 import Image from 'next/image'
+import XOLoader from '@/components/XOLoader'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -20,8 +21,8 @@ const BRANCH_OPTIONS = [
 ]
 
 export default function ProfileSetupPage() {
-  const { user } = useAuth()
-  const { createProfile, profileExists, checkUsernameAvailable } = useProfile()
+  const { user, loading: authLoading } = useAuth()
+  const { createProfile, profileExists, checkUsernameAvailable, loading: profileLoading } = useProfile()
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -47,12 +48,48 @@ export default function ProfileSetupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const [step, setStep] = useState(1)
-
-  const redirectTarget = profileExists ? '/' : (!user ? '/auth' : null)
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false)
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false)
+  const yearDropdownRef = useRef<HTMLDivElement>(null)
+  const branchDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (redirectTarget) return
+    if (!yearDropdownOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
+        setYearDropdownOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setYearDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [yearDropdownOpen])
 
+  useEffect(() => {
+    if (!branchDropdownOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(e.target as Node)) {
+        setBranchDropdownOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBranchDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [branchDropdownOpen])
+
+  useEffect(() => {
     const username = formData.username.trim().toLowerCase()
     if (!username || username.length < 3) {
       setUsernameStatus('idle')
@@ -70,22 +107,29 @@ export default function ProfileSetupPage() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [formData.username, checkUsernameAvailable, redirectTarget])
+  }, [formData.username, checkUsernameAvailable])
 
+  // Handle redirects in useEffect to avoid side-effects during render
   useEffect(() => {
-    if (!redirectTarget) return
-    router.replace(redirectTarget)
-  }, [redirectTarget, router])
+    if (authLoading || profileLoading) return
 
-  if (redirectTarget) {
+    if (!user) {
+      router.replace('/auth')
+    } else if (profileExists) {
+      router.replace('/')
+    }
+  }, [authLoading, profileLoading, profileExists, user, router])
+
+  if (authLoading || (user && profileLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
-        <div className="flex flex-col items-center gap-3">
-          <FaSpinner className="animate-spin text-3xl text-purple-500" />
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Redirecting...</p>
-        </div>
+      <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center">
+        <XOLoader size={20} />
       </div>
     )
+  }
+
+  if (!user || profileExists) {
+    return null
   }
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,9 +151,6 @@ export default function ProfileSetupPage() {
       const reader = new FileReader()
       reader.onloadend = () => setProfilePhotoPreview(reader.result as string)
       reader.readAsDataURL(compressedBlob)
-      if (errors.profilePhoto) {
-        setErrors(prev => ({ ...prev, profilePhoto: '' }))
-      }
     } catch {
       toast.error('Failed to process image. Please try another photo.')
     }
@@ -118,8 +159,6 @@ export default function ProfileSetupPage() {
   const validateStep1 = (): boolean => {
     const newErrors: Record<string, string> = {}
     const username = formData.username.trim().toLowerCase()
-
-    if (!profilePhotoFile) newErrors.profilePhoto = 'Profile picture is required'
 
     if (!username) newErrors.username = 'Username is required'
     else if (username.length < 3) newErrors.username = 'Username must be at least 3 characters'
@@ -142,6 +181,9 @@ export default function ProfileSetupPage() {
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
     else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Enter a valid 10-digit phone number'
 
+    if (!location.country) newErrors.country = 'Please select your country'
+    if (!location.state) newErrors.state = 'Please select your state'
+    if (!location.district) newErrors.district = 'Please select your district.'
     if (!location.collegeId) newErrors.college = 'Please select your college'
     if (!formData.year) newErrors.year = 'Select your year'
     if (formData.year === 'Graduate' && !formData.graduationYear.trim()) {
@@ -180,19 +222,34 @@ export default function ProfileSetupPage() {
         profilePhotoUrl = await getDownloadURL(photoRef)
       }
 
-      await createProfile({
+      // Explicitly attach required fields
+      const profilePayload: Parameters<typeof createProfile>[0] = {
         username: formData.username.trim().toLowerCase(),
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim().toUpperCase(),
         phone: formData.phone.trim(),
+        college: location.collegeName || location.collegeId,
         collegeId: location.collegeId,
+        country: location.country,
+        state: location.state,
+        district: location.district,
         year: formData.year,
         branch: formData.branch,
-        graduationYear: formData.year === 'Graduate' ? formData.graduationYear.trim() : '',
-        bio: formData.bio.trim(),
-        profilePhoto: profilePhotoUrl || undefined,
         privacy: DEFAULT_PRIVACY,
-      })
+      }
+
+      // Optional fields: only attach when defined and non-empty
+      if (profilePhotoUrl) {
+        profilePayload.profilePhoto = profilePhotoUrl
+      }
+      if (formData.bio.trim()) {
+        profilePayload.bio = formData.bio.trim()
+      }
+      if (formData.year === 'Graduate' && formData.graduationYear.trim()) {
+        profilePayload.graduationYear = formData.graduationYear.trim()
+      }
+
+      await createProfile(profilePayload)
       toast.success('Profile created successfully!')
       router.push('/')
     } catch (error: any) {
@@ -213,7 +270,7 @@ export default function ProfileSetupPage() {
     `w-full py-3 px-4 bg-white/5 dark:bg-white/[0.06] border ${errors[field] ? 'border-red-500' : 'border-white/10 dark:border-white/[0.1]'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500`
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center px-4 py-24">
+    <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center px-4 py-12 sm:py-16">
       {/* BG decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />
@@ -225,8 +282,10 @@ export default function ProfileSetupPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-lg"
       >
-        <div className="rounded-3xl p-5 sm:p-8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
-          <div className="h-1 -mx-5 sm:-mx-8 -mt-5 sm:-mt-8 mb-5 sm:mb-8 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
+        <div className="rounded-3xl p-5 sm:p-8" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+          <div className="overflow-hidden rounded-t-3xl -mx-5 sm:-mx-8 -mt-5 sm:-mt-8 mb-5 sm:mb-8">
+            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
+          </div>
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 dark:bg-white/[0.06] text-gray-500'}`}>1</div>
@@ -249,7 +308,7 @@ export default function ProfileSetupPage() {
               {/* Profile Photo */}
               <div className="flex flex-col items-center mb-2">
                 <label htmlFor="photo-upload" className="cursor-pointer group">
-                  <div className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed ${errors.profilePhoto ? 'border-red-500' : 'border-white/20 dark:border-white/[0.12] group-hover:border-blue-400/50 dark:group-hover:border-blue-400/30'} transition-colors`}>
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 dark:border-white/[0.12] group-hover:border-blue-400/50 dark:group-hover:border-blue-400/30 transition-colors">
                     {profilePhotoPreview ? (
                       <Image src={profilePhotoPreview} alt="Profile" fill className="object-cover" />
                     ) : (
@@ -261,9 +320,7 @@ export default function ProfileSetupPage() {
                   </div>
                 </label>
                 <input id="photo-upload" type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-                <p className={`text-xs mt-2 ${errors.profilePhoto ? 'text-red-500' : 'text-gray-400'}`}>
-                  {errors.profilePhoto ? errors.profilePhoto : 'Required · Max 2MB'}
-                </p>
+                <p className="text-xs text-gray-400 mt-2">Optional · Max 2MB</p>
               </div>
 
               {/* Username */}
@@ -336,7 +393,7 @@ export default function ProfileSetupPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full py-3 px-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 mt-2 cta-glass"
               >
                 <span>Continue</span>
                 <FaArrowRight className="text-sm" />
@@ -380,36 +437,95 @@ export default function ProfileSetupPage() {
                   onChange={setLocation}
                   disabled={loading}
                 />
+                {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
                 {errors.college && <p className="text-red-500 text-xs mt-1">{errors.college}</p>}
               </div>
 
               {/* Year & Branch */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="relative min-w-0" ref={yearDropdownRef}>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     <FaGraduationCap className="text-blue-400 text-xs" /> Year
                   </label>
-                  <select
-                    name="year" value={formData.year} onChange={handleChange}
-                    className={`${inputClass('year')} appearance-none`}
-                  >
-                    <option value="">Select</option>
-                    {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => { setYearDropdownOpen(!yearDropdownOpen); setBranchDropdownOpen(false) }}
+                      className={`${inputClass('year')} appearance-none text-left flex items-center justify-between`}
+                    >
+                      <span className={formData.year ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
+                        {formData.year || 'Select'}
+                      </span>
+                      <FaChevronDown className={`text-gray-400 text-xs flex-shrink-0 ml-2 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {yearDropdownOpen && (
+                      <div className="relative w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div className="max-h-[260px] overflow-y-auto p-1">
+                          <button
+                            type="button"
+                            onClick={() => { setFormData(prev => ({ ...prev, year: '' })); setYearDropdownOpen(false) }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${!formData.year ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                          >
+                            Select
+                          </button>
+                          {YEAR_OPTIONS.map(y => (
+                            <button
+                              key={y}
+                              type="button"
+                              onClick={() => { setFormData(prev => ({ ...prev, year: y })); setYearDropdownOpen(false) }}
+                              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${formData.year === y ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                            >
+                              {y}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
                 </div>
 
-                <div>
+                <div className="relative min-w-0" ref={branchDropdownRef}>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     <FaCodeBranch className="text-blue-400 text-xs" /> Branch
                   </label>
-                  <select
-                    name="branch" value={formData.branch} onChange={handleChange}
-                    className={`${inputClass('branch')} appearance-none`}
-                  >
-                    <option value="">Select</option>
-                    {BRANCH_OPTIONS.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
+                  <div className="relative min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => { setBranchDropdownOpen(!branchDropdownOpen); setYearDropdownOpen(false) }}
+                      className={`${inputClass('branch')} appearance-none text-left flex items-center justify-between`}
+                    >
+                      <span className={formData.branch ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
+                        {formData.branch || 'Select'}
+                      </span>
+                      <FaChevronDown className={`text-gray-400 text-xs flex-shrink-0 ml-2 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {branchDropdownOpen && (
+                      <div className="relative w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div className="max-h-[260px] overflow-y-auto p-1">
+                          <button
+                            type="button"
+                            onClick={() => { setFormData(prev => ({ ...prev, branch: '' })); setBranchDropdownOpen(false) }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${!formData.branch ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                          >
+                            Select
+                          </button>
+                          {BRANCH_OPTIONS.map(b => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => { setFormData(prev => ({ ...prev, branch: b })); setBranchDropdownOpen(false) }}
+                              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${formData.branch === b ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                            >
+                              {b}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch}</p>}
                 </div>
               </div>
@@ -440,7 +556,7 @@ export default function ProfileSetupPage() {
                 </button>
                 <button
                   type="submit" disabled={loading}
-                  className="flex-1 py-3 px-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cta-glass"
                 >
                   {loading ? (
                     <FaSpinner className="animate-spin text-xl" />

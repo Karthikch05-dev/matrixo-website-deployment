@@ -1,7 +1,7 @@
 'use client'
 
 import { collection, addDoc, Timestamp, getDocs, query, where } from 'firebase/firestore'
-import { db } from './firebaseConfig'
+import { auth, db } from './firebaseConfig'
 
 // ============================================
 // NOTIFICATION TYPES
@@ -36,59 +36,31 @@ async function sendPushToRecipients(
   try {
     if (recipientIds.length === 0) return
 
-    // Fetch all push subscriptions for these recipients
-    // Firestore 'in' query supports up to 30 items per query
-    const allSubscriptions: any[] = []
-    const batchSize = 30
+    // /api/push/send is staff-only: it verifies this ID token server-side and
+    // looks the subscriptions up itself with the Admin SDK.
+    const idToken = await auth?.currentUser?.getIdToken()
+    if (!idToken) return
 
-    for (let i = 0; i < recipientIds.length; i += batchSize) {
-      const batch = recipientIds.slice(i, i + batchSize)
-      const subsRef = collection(db, 'pushSubscriptions')
-      const q = query(subsRef, where('employeeId', 'in', batch))
-      const snapshot = await getDocs(q)
-      
-      snapshot.docs.forEach(doc => {
-        allSubscriptions.push(doc.data())
-      })
-    }
-
-    if (allSubscriptions.length === 0) {
-      console.log('[Push] No push subscriptions found for recipients')
-      return
-    }
-
-    console.log(`[Push] Found ${allSubscriptions.length} push subscriptions, sending...`)
-
-    // Call the push API endpoint
-    const response = await fetch('/api/push/send', {
+    await fetch('/api/push/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
       body: JSON.stringify({
-        subscriptions: allSubscriptions,
+        recipientIds,
         payload: {
           title: payload.title,
           body: payload.message,
+          url: payload.targetUrl?.startsWith('/') ? payload.targetUrl : '/employee-portal',
+          type: payload.type,
           tag: `${payload.type || 'notification'}-${Date.now()}`,
-          data: {
-            url: payload.targetUrl || '/employee-portal',
-            type: payload.type
-          }
-        }
-      })
+        },
+      }),
     })
-
-    const result = await response.json()
-    console.log('[Push] Send result:', result)
-
-    // Clean up expired subscriptions if any
-    if (result.expiredEmployees && result.expiredEmployees.length > 0) {
-      console.log('[Push] Cleaning up expired subscriptions for:', result.expiredEmployees)
-      // We could delete them here but it's not critical - they'll fail silently next time
-    }
-
   } catch (error) {
+    // Push failure must never block the notification itself.
     console.error('[Push] Error sending push notifications:', error)
-    // Don't throw - push failure shouldn't block the notification creation
   }
 }
 
@@ -119,6 +91,12 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       return false
     }
 
+    // Sanitize title: strip any mojibake / corrupted emoji prefixes before storing
+    const sanitizedTitle = params.title
+      .replace(/^[\u0080-\u00ff\u00c0-\u00ff\u2018-\u201f\u2039\u203a]+\s*/g, '')
+      .trim() || params.title.trim()
+    const sanitizedParams = { ...params, title: sanitizedTitle }
+
     const notificationsRef = collection(db, 'userNotifications')
     const addPromises: Promise<any>[] = []
     const recipientIds: string[] = []
@@ -127,6 +105,9 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       const empData = empDoc.data()
       const recipientId = empData.employeeId
       const recipientRole = empData.role
+
+      // Skip corrupt/incomplete employee records
+      if (!recipientId || !empData.name) return
       
       console.log('🔔 Checking employee:', empData.name, 'ID:', recipientId, 'Role:', recipientRole, 'vs Creator:', params.createdBy)
       
@@ -155,7 +136,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
       recipientIds.push(recipientId)
       addPromises.push(
         addDoc(notificationsRef, {
-          ...params,
+          ...sanitizedParams,
           recipientId: recipientId,
           read: false,
           createdAt: Timestamp.now()
@@ -168,7 +149,7 @@ export async function createGlobalNotification(params: CreateNotificationParams)
 
     // Send Web Push notifications to all recipients
     await sendPushToRecipients(recipientIds, {
-      title: params.title,
+      title: sanitizedTitle,
       message: params.message,
       targetUrl: params.targetUrl,
       type: params.type
@@ -192,6 +173,8 @@ export async function createGlobalNotification(params: CreateNotificationParams)
  * Employees collection is also publicly readable.
  */
 export async function notifyAdminsOfNewApplication(params: {
+  /** Id of the `applications` doc just created; the server alert is keyed on it. */
+  applicationId: string
   applicantName: string
   roleTitle: string
   roleId?: string | null
@@ -212,7 +195,6 @@ export async function notifyAdminsOfNewApplication(params: {
 
     const notificationsRef = collection(db, 'userNotifications')
     const addPromises: Promise<any>[] = []
-    const recipientIds: string[] = []
 
     const title = params.isGeneralApplication
       ? 'New General Application'
@@ -226,7 +208,6 @@ export async function notifyAdminsOfNewApplication(params: {
       const recipientId = empData.employeeId
 
       console.log('✅ Creating application notification for admin:', empData.name, recipientId)
-      recipientIds.push(recipientId)
 
       addPromises.push(
         addDoc(notificationsRef, {
@@ -248,13 +229,13 @@ export async function notifyAdminsOfNewApplication(params: {
     await Promise.all(addPromises)
     console.log(`✅ Created ${addPromises.length} application notifications for all admins`)
 
-    // Send Web Push notifications to all admin recipients
-    await sendPushToRecipients(recipientIds, {
-      title,
-      message,
-      targetUrl: '/employee-portal',
-      type: 'application'
-    })
+    // Applicants aren't signed in, so the push goes through a constrained
+    // server route that reads the application itself and alerts admins once.
+    fetch('/api/push/application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicationId: params.applicationId }),
+    }).catch(() => {})
 
     return true
   } catch (error) {

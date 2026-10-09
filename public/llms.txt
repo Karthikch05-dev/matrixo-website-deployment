@@ -1,0 +1,31 @@
+# matriXO
+
+> matriXO runs hands-on technical workshops, hackathons, bootcamps and career programs for students in India, and builds StudentVault, a directory of free tools and offers for students.
+
+Contact: hello@matrixo.in
+
+## Programs
+
+- [Events](https://matrixo.in/events): All upcoming and past events. Supports `?q=` search, e.g. https://matrixo.in/events?q=hackathon
+- [Event pages](https://matrixo.in/events/devagentic-2-0): Each event has its own page with date, venue, agenda, pricing and registration.
+- [Services](https://matrixo.in/services): Workshops, hackathons, bootcamps and career events matriXO runs for colleges.
+
+## StudentVault
+
+- [StudentVault](https://matrixo.in/studentvault): Free and discounted tools for students (developer packs, cloud credits, software), with eligibility and how to claim.
+
+## Company
+
+- [Why matriXO](https://matrixo.in/home): What matriXO does and who it is for.
+- [About](https://matrixo.in/about): Story and mission.
+- [Team](https://matrixo.in/team): The people behind matriXO.
+- [Careers](https://matrixo.in/careers): Open roles and internships, with an application form.
+- [Contact](https://matrixo.in/contact): Contact form for students, colleges and partners.
+- [Brand kit](https://matrixo.in/brand): Logos, colours and usage guidelines, downloadable.
+
+## Policies
+
+- [Privacy](https://matrixo.in/privacy)
+- [Terms](https://matrixo.in/terms)
+- [Refunds](https://matrixo.in/refund)
+- [Data protection](https://matrixo.in/data-protection)

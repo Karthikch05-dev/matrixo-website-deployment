@@ -1,26 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaUser, FaIdCard, FaPhone, FaEnvelope, FaUniversity,
   FaGraduationCap, FaCodeBranch, FaEdit, FaSave, FaTimes, FaSpinner,
   FaArrowLeft, FaShieldAlt, FaShareAlt, FaCamera, FaCopy, FaCheck,
-  FaLinkedin, FaGithub, FaGlobe, FaLink, FaEye, FaEyeSlash
+  FaLinkedin, FaGithub, FaGlobe, FaLink, FaEye, FaEyeSlash, FaChevronDown
 } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile, DEFAULT_PRIVACY, PrivacySettings } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebaseConfig'
+import { compressImage, getValidImageUrl } from '@/lib/imageUtils'
 import Link from 'next/link'
-import Image from 'next/image'
-import ImageCropModal from '@/components/shared/ImageCropModal'
 import { getCollegeName } from '@/lib/colleges'
+import StudentVaultDashboardCard from '@/components/studentvault/DashboardCard'
 import { LocationSelection, LocationSelectionState } from '@/components/location/LocationSelection'
-import FeatureSidebar from '@/components/features/FeatureSidebar'
-import { storeRedirectAfterLogin } from '@/lib/authRedirect'
+import XOLoader from '@/components/XOLoader'
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate']
 const BRANCH_OPTIONS = [
@@ -59,12 +58,6 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
   const [isDark, setIsDark] = useState(false)
-  
-  // Crop modal states
-  const [photoCropModalOpen, setPhotoCropModalOpen] = useState(false)
-  const [coverCropModalOpen, setCoverCropModalOpen] = useState(false)
-  const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null)
-  const [tempCoverUrl, setTempCoverUrl] = useState<string | null>(null)
   const [editData, setEditData] = useState({
     fullName: '', phone: '', year: '', branch: '',
     graduationYear: '', bio: '', linkedin: '', github: '', portfolio: '',
@@ -84,9 +77,46 @@ export default function ProfilePage() {
   const [newUsername, setNewUsername] = useState('')
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const [savingUsername, setSavingUsername] = useState(false)
-  const wrapWithSidebar = (content: JSX.Element) => (
-    <FeatureSidebar>{content}</FeatureSidebar>
-  )
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false)
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false)
+  const yearDropdownRef = useRef<HTMLDivElement>(null)
+  const branchDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!yearDropdownOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
+        setYearDropdownOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setYearDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [yearDropdownOpen])
+
+  useEffect(() => {
+    if (!branchDropdownOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(e.target as Node)) {
+        setBranchDropdownOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBranchDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [branchDropdownOpen])
 
   // Detect dark mode
   useEffect(() => {
@@ -161,56 +191,24 @@ export default function ProfilePage() {
     } finally { setSavingUsername(false) }
   }
 
-  if (!user) {
-    return wrapWithSidebar(
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8 max-w-md w-full text-center"
-        >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white text-2xl">
-            <FaShieldAlt />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Sign in required</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">Please sign in to view and edit your profile.</p>
-          <Link
-            href="/auth"
-            onClick={() => storeRedirectAfterLogin('/profile')}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all w-full"
-          >
-            <FaUser /> Continue to sign in
-          </Link>
-        </motion.div>
-      </div>
-    )
-  }
+  if (!user) { router.replace('/auth'); return null }
 
   if (profileLoading) {
-    return wrapWithSidebar(
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black flex items-center justify-center">
-        <FaSpinner className="animate-spin text-4xl text-blue-400" />
+    return (
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
+        <XOLoader size={20} />
       </div>
     )
   }
 
-  if (!profileExists) {
-    router.replace('/profile/setup')
-    return wrapWithSidebar(
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
-        <div className="flex flex-col items-center gap-3">
-          <FaSpinner className="animate-spin text-3xl text-purple-500" />
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Redirecting to profile setup...</p>
-        </div>
-      </div>
-    )
-  }
+  if (!profileExists) { router.replace('/profile/setup'); return null }
 
   const validate = (): boolean => {
     const e: Record<string, string> = {}
     if (!editData.fullName.trim()) e.fullName = 'Required'
     if (!editData.phone.trim()) e.phone = 'Required'
     else if (!/^[6-9]\d{9}$/.test(editData.phone.trim())) e.phone = 'Enter valid 10-digit number'
+    if (!location.district) e.district = 'Please select your district.'
     if (!location.collegeId) e.college = 'Please select your college'
     if (!editData.year) e.year = 'Required'
     if (!editData.branch) e.branch = 'Required'
@@ -266,7 +264,7 @@ export default function ProfilePage() {
               })
             }
           })
-          .catch(() => {})
+          .catch(() => { })
       }
     }
     setErrors({})
@@ -282,71 +280,52 @@ export default function ProfilePage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be <5MB'); return }
     if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
-    
-    // Open crop modal
-    const objectUrl = URL.createObjectURL(file)
-    setTempPhotoUrl(objectUrl)
-    setPhotoCropModalOpen(true)
-    
-    // Reset input
-    e.target.value = ''
-  }
-
-  const handlePhotoCropComplete = async (croppedBlob: Blob) => {
-    if (!user) return
+    if (file.size > 10 * 1024 * 1024) { toast.error('Photo must be less than 10MB'); return }
     setUploadingPhoto(true)
     try {
-      const photoRef = ref(storage, `profile-photos/${user.uid}.jpg`)
-      const metadata = { contentType: 'image/jpeg' }
-      await uploadBytes(photoRef, croppedBlob, metadata)
+      // Compress image client-side for faster upload & smaller storage
+      const compressedBlob = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 })
+      const photoRef = ref(storage, `profile-photos/${user.uid}`)
+      await uploadBytes(photoRef, compressedBlob, { contentType: 'image/jpeg' })
       const url = await getDownloadURL(photoRef)
       await updateProfile({ profilePhoto: url })
-      toast.success('Profile photo updated!')
-    } catch (err) {
+      toast.success('Photo updated!')
+    } catch (err: any) {
       console.error('Photo upload error:', err)
-      toast.error('Failed to upload photo')
-    } finally {
-      setUploadingPhoto(false)
-      if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl)
-      setTempPhotoUrl(null)
-    }
+      if (err?.code === 'storage/unauthorized') {
+        toast.error('Upload permission denied. Please try signing out and back in.')
+      } else if (err?.code === 'storage/canceled') {
+        toast.error('Upload was cancelled')
+      } else {
+        toast.error('Failed to upload photo. Please try again.')
+      }
+    } finally { setUploadingPhoto(false) }
   }
 
+  // Handle cover image upload with compression
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 5 * 1024 * 1024) { toast.error('Cover photo must be <5MB'); return }
     if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
-    
-    // Open crop modal
-    const objectUrl = URL.createObjectURL(file)
-    setTempCoverUrl(objectUrl)
-    setCoverCropModalOpen(true)
-    
-    // Reset input
-    e.target.value = ''
-  }
-
-  const handleCoverCropComplete = async (croppedBlob: Blob) => {
-    if (!user) return
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be less than 10MB'); return }
     setUploadingCover(true)
     try {
-      const coverRef = ref(storage, `cover-photos/${user.uid}.jpg`)
-      const metadata = { contentType: 'image/jpeg' }
-      await uploadBytes(coverRef, croppedBlob, metadata)
+      // Compress cover image (wider aspect, max 1200x400)
+      const compressedBlob = await compressImage(file, { maxWidth: 1200, maxHeight: 400, quality: 0.8, maxSizeKB: 100 })
+      const coverRef = ref(storage, `cover-photos/${user.uid}`)
+      await uploadBytes(coverRef, compressedBlob, { contentType: 'image/jpeg' })
       const url = await getDownloadURL(coverRef)
       await updateProfile({ coverPhoto: url })
-      toast.success('Cover photo updated!')
-    } catch (err) {
+      toast.success('Cover image updated!')
+    } catch (err: any) {
       console.error('Cover upload error:', err)
-      toast.error('Failed to upload cover photo')
-    } finally {
-      setUploadingCover(false)
-      if (tempCoverUrl) URL.revokeObjectURL(tempCoverUrl)
-      setTempCoverUrl(null)
-    }
+      if (err?.code === 'storage/unauthorized') {
+        toast.error('Upload permission denied. Please try signing out and back in.')
+      } else {
+        toast.error('Failed to upload cover image. Please try again.')
+      }
+    } finally { setUploadingCover(false) }
   }
 
   const handleCopyLink = () => {
@@ -390,14 +369,14 @@ export default function ProfilePage() {
         <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       </div>
       <button onClick={() => onChange(!checked)}
-        className={`relative w-11 h-6 rounded-full transition-colors ${checked ? 'bg-blue-500' : 'bg-gray-300 dark:bg-white/10'}`}>
+        className={`relative w-11 h-6 rounded-full transition-colors ${checked ? 'cta-glass' : 'bg-gray-300 dark:bg-white/10'}`}>
         <span className={`absolute top-0.5 ${checked ? 'left-[22px]' : 'left-0.5'} w-5 h-5 bg-white rounded-full transition-all shadow-sm`} />
       </button>
     </div>
   )
 
-  return wrapWithSidebar(
-    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black px-4 py-24">
+  return (
+    <div className="min-h-screen bg-canvas-subtle dark:bg-canvas px-4 py-12 sm:py-16">
       {/* BG decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />
@@ -410,89 +389,98 @@ export default function ProfilePage() {
           <FaArrowLeft className="text-sm" /><span>Back</span>
         </Link>
 
-        {/* Header Card */}
+        {/* Header Card with Cover Image */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl overflow-hidden mb-4" style={cardStyle}>
-          {/* Cover Photo */}
-          <div className="relative h-32 sm:h-40 overflow-hidden rounded-t-3xl group/cover">
-            {profile?.coverPhoto ? (
-              <Image src={profile.coverPhoto} alt="Cover" fill className="object-cover" unoptimized />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-500 to-indigo-600" />
-            )}
-            <div className="absolute inset-0 bg-black/10" />
-            <label htmlFor="cover-upload-profile" className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/cover:opacity-100 transition-opacity cursor-pointer">
-              {uploadingCover ? (
-                <FaSpinner className="animate-spin text-white text-xl" />
+          {/* Cover Image Section */}
+          <div className="relative">
+            {/* Cover Image */}
+            <div className="relative w-full aspect-[3/1] overflow-hidden group" style={{ background: 'linear-gradient(135deg, #0A2747 0%, #0A6FD6 58%, #86BDF9 100%)' }}>
+              {profile?.coverPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={getValidImageUrl(profile.coverPhoto)} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium">
-                  <FaCamera /> {profile?.coverPhoto ? 'Change Cover' : 'Add Cover Photo'}
-                </div>
+                <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #0A2747 0%, #0A6FD6 58%, #86BDF9 100%)' }} />
               )}
-              <input id="cover-upload-profile" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
-            </label>
-          </div>
-          <div className="p-6 sm:p-8 -mt-10 relative">
-            <div className="flex items-end gap-5 mb-4">
-              {/* Photo - Square with rounded corners */}
-              <div className="relative group flex-shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.1]">
+
+              {/* Cover Edit Button */}
+              <label htmlFor="cover-change" className="absolute top-3 right-3 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-xl cursor-pointer transition-all opacity-0 group-hover:opacity-100">
+                {uploadingCover ? <FaSpinner className="animate-spin text-white text-sm" /> : <FaCamera className="text-white text-sm" />}
+              </label>
+              <input id="cover-change" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+            </div>
+
+            {/* Profile Photo - Overlapping Cover */}
+            <div className="absolute -bottom-12 left-6 sm:left-8">
+              <div className="relative group">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-gray-800 border-4 border-white dark:border-gray-900 shadow-xl">
                   {profile?.profilePhoto ? (
-                    <Image src={profile.profilePhoto} alt={profile.fullName} fill className="object-cover rounded-xl" unoptimized />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={getValidImageUrl(profile.profilePhoto)} alt={profile.fullName} className="object-cover w-full h-full" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl">
+                    <div className="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600">
                       {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
-                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
-                  {uploadingPhoto ? <FaSpinner className="animate-spin text-white" /> : <FaCamera className="text-white" />}
+                {/* Profile Photo Edit Button */}
+                <label htmlFor="photo-change" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  {uploadingPhoto ? <FaSpinner className="animate-spin text-white text-xl" /> : <FaCamera className="text-white text-xl" />}
                 </label>
                 <input id="photo-change" type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-              </div>
-
-              {/* Name + Username */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profile?.fullName}</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {editingUsername ? (
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">@</span>
-                          <input type="text" value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                            className="w-full py-1.5 pl-7 pr-8 bg-white/10 dark:bg-white/[0.08] border border-white/20 dark:border-white/[0.15] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                            placeholder="username" autoFocus />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                            {usernameStatus === 'checking' && <FaSpinner className="animate-spin text-gray-400 text-xs" />}
-                            {usernameStatus === 'available' && <FaCheck className="text-green-400 text-xs" />}
-                            {usernameStatus === 'taken' && <FaTimes className="text-red-400 text-xs" />}
-                          </div>
-                        </div>
-                        <button onClick={handleSaveUsername} disabled={savingUsername || usernameStatus !== 'available'}
-                          className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50">
-                          {savingUsername ? <FaSpinner className="animate-spin text-xs" /> : <FaCheck className="text-xs" />}
-                        </button>
-                        <button onClick={() => { setEditingUsername(false); setNewUsername(profile?.username || '') }}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
-                          <FaTimes className="text-xs" />
-                        </button>
-                      </div>
-                      {usernameStatus === 'taken' && <p className="text-red-400 text-xs mt-1">Username taken</p>}
-                      {usernameStatus === 'available' && newUsername !== profile?.username && <p className="text-green-400 text-xs mt-1">Available!</p>}
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-gray-500 text-sm">{profile?.username ? `@${profile.username}` : 'No username set'}</p>
-                      <button onClick={() => { setEditingUsername(true); setNewUsername(profile?.username || '') }}
-                        className="p-1 rounded-md hover:bg-white/10 transition-colors" title={profile?.username ? 'Change username' : 'Set username'}>
-                        <FaEdit className="text-gray-500 hover:text-blue-400 text-xs transition-colors" />
-                      </button>
-                    </>
-                  )}
+                {/* Edit Badge */}
+                <div className="absolute bottom-0 right-0 p-1.5 bg-blue-600 rounded-full border-2 border-white dark:border-gray-900 shadow-lg cursor-pointer hover:bg-blue-700 transition-colors">
+                  <label htmlFor="photo-change" className="cursor-pointer">
+                    <FaCamera className="text-white text-xs" />
+                  </label>
                 </div>
-                {profile?.bio && <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 line-clamp-2">{profile.bio}</p>}
               </div>
+            </div>
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="pt-16 px-6 sm:px-8 pb-6">
+            {/* Name + Username */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profile?.fullName}</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                {editingUsername ? (
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1 max-w-xs">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">@</span>
+                        <input type="text" value={newUsername}
+                          onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          className="w-full py-1.5 pl-7 pr-8 bg-white/10 dark:bg-white/[0.08] border border-white/20 dark:border-white/[0.15] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                          placeholder="username" autoFocus />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          {usernameStatus === 'checking' && <FaSpinner className="animate-spin text-gray-400 text-xs" />}
+                          {usernameStatus === 'available' && <FaCheck className="text-green-400 text-xs" />}
+                          {usernameStatus === 'taken' && <FaTimes className="text-red-400 text-xs" />}
+                        </div>
+                      </div>
+                      <button onClick={handleSaveUsername} disabled={savingUsername || usernameStatus !== 'available'}
+                        className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50">
+                        {savingUsername ? <FaSpinner className="animate-spin text-xs" /> : <FaCheck className="text-xs" />}
+                      </button>
+                      <button onClick={() => { setEditingUsername(false); setNewUsername(profile?.username || '') }}
+                        className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                        <FaTimes className="text-xs" />
+                      </button>
+                    </div>
+                    {usernameStatus === 'taken' && <p className="text-red-400 text-xs mt-1">Username taken</p>}
+                    {usernameStatus === 'available' && newUsername !== profile?.username && <p className="text-green-400 text-xs mt-1">Available!</p>}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-500 text-sm">{profile?.username ? `@${profile.username}` : 'No username set'}</p>
+                    <button onClick={() => { setEditingUsername(true); setNewUsername(profile?.username || '') }}
+                      className="p-1 rounded-md hover:bg-white/10 transition-colors" title={profile?.username ? 'Change username' : 'Set username'}>
+                      <FaEdit className="text-gray-500 hover:text-blue-400 text-xs transition-colors" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {profile?.bio && <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 line-clamp-2">{profile.bio}</p>}
             </div>
 
             {/* Social Links */}
@@ -511,8 +499,8 @@ export default function ProfilePage() {
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setIsEditing(false) }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5'
+                ? 'cta-glass'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5'
                 }`}>
               <tab.icon className="text-xs" />{tab.label}
             </button>
@@ -561,23 +549,87 @@ export default function ProfilePage() {
                         onChange={setLocation}
                         disabled={saving}
                       />
+                      {errors.district && <p className="text-red-400 text-xs mt-1">{errors.district}</p>}
                       {errors.college && <p className="text-red-400 text-xs mt-1">{errors.college}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                      <div className="relative z-20 min-w-0" ref={yearDropdownRef}>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Year</label>
-                        <select name="year" value={editData.year} onChange={handleChange} className={`${inputCls('year')} appearance-none`}>
-                          <option value="">Select</option>
-                          {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
+                        <div className="relative min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => { setYearDropdownOpen(!yearDropdownOpen); setBranchDropdownOpen(false) }}
+                            className={`${inputCls('year')} text-left flex justify-between items-center w-full appearance-none`}
+                          >
+                            <span className={editData.year ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
+                              {editData.year || 'Select'}
+                            </span>
+                            <FaChevronDown className={`text-gray-500 text-xs transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {yearDropdownOpen && (
+                            <div className="relative w-full mt-1 bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+                              <div className="max-h-[260px] overflow-y-auto p-1.5 relative z-50">
+                                <button
+                                  type="button"
+                                  onClick={() => { setEditData(prev => ({ ...prev, year: '' })); setYearDropdownOpen(false) }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${!editData.year ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                >
+                                  Select
+                                </button>
+                                {YEAR_OPTIONS.map(y => (
+                                  <button
+                                    key={y}
+                                    type="button"
+                                    onClick={() => { setEditData(prev => ({ ...prev, year: y })); setYearDropdownOpen(false) }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${editData.year === y ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                  >
+                                    {y}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         {errors.year && <p className="text-red-400 text-xs mt-1">{errors.year}</p>}
                       </div>
-                      <div>
+                      
+                      <div className="relative z-20 min-w-0" ref={branchDropdownRef}>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Branch</label>
-                        <select name="branch" value={editData.branch} onChange={handleChange} className={`${inputCls('branch')} appearance-none`}>
-                          <option value="">Select</option>
-                          {BRANCH_OPTIONS.map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
+                        <div className="relative min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => { setBranchDropdownOpen(!branchDropdownOpen); setYearDropdownOpen(false) }}
+                            className={`${inputCls('branch')} text-left flex justify-between items-center w-full appearance-none`}
+                          >
+                            <span className={editData.branch ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
+                              {editData.branch || 'Select'}
+                            </span>
+                            <FaChevronDown className={`text-gray-500 text-xs transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {branchDropdownOpen && (
+                            <div className="relative w-full mt-1 bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+                              <div className="max-h-[260px] overflow-y-auto p-1.5 relative z-50">
+                                <button
+                                  type="button"
+                                  onClick={() => { setEditData(prev => ({ ...prev, branch: '' })); setBranchDropdownOpen(false) }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${!editData.branch ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                >
+                                  Select
+                                </button>
+                                {BRANCH_OPTIONS.map(b => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    onClick={() => { setEditData(prev => ({ ...prev, branch: b })); setBranchDropdownOpen(false) }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${editData.branch === b ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                                  >
+                                    {b}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         {errors.branch && <p className="text-red-400 text-xs mt-1">{errors.branch}</p>}
                       </div>
                     </div>
@@ -598,7 +650,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button onClick={handleCancel} className="flex-1 py-3 px-4 border border-white/10 dark:border-white/[0.1] text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-white/5 transition-all flex items-center justify-center gap-2"><FaTimes /> Cancel</button>
-                      <button onClick={handleSave} disabled={saving} className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                      <button onClick={handleSave} disabled={saving} className="flex-1 py-3 px-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2 cta-glass">
                         {saving ? <><FaSpinner className="animate-spin" /> Saving...</> : <><FaSave /> Save</>}
                       </button>
                     </div>
@@ -609,10 +661,10 @@ export default function ProfilePage() {
                     <InfoRow icon={FaIdCard} label="Roll Number" value={profile?.rollNumber || ''} />
                     <InfoRow icon={FaPhone} label="Phone" value={profile?.phone ? `+91 ${profile.phone}` : ''} />
                     <InfoRow icon={FaEnvelope} label="Email" value={profile?.email || ''} />
-                    <InfoRow icon={FaUniversity} label="College" value={profile?.collegeId ? getCollegeName(profile.collegeId) : ''} />
+                    <InfoRow icon={FaUniversity} label="College" value={profile?.collegeId ? getCollegeName(profile.collegeId) : (profile?.college || '')} />
                     <InfoRow icon={FaGraduationCap} label="Year" value={profile?.year || ''} />
                     <InfoRow icon={FaCodeBranch} label="Branch" value={profile?.branch || ''} />
-                    <button onClick={() => setIsEditing(true)} className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"><FaEdit /> Edit Profile</button>
+                    <button onClick={() => setIsEditing(true)} className="w-full mt-6 py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 cta-glass"><FaEdit /> Edit Profile</button>
                   </div>
                 )}
               </div>
@@ -630,8 +682,8 @@ export default function ProfilePage() {
                     {(['public', 'private'] as const).map(opt => (
                       <button key={opt} onClick={() => setPrivacyData(p => ({ ...p, profileVisibility: opt }))}
                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${privacyData.profileVisibility === opt
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
-                            : 'bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.08] text-gray-600 dark:text-gray-400'
+                          ? 'cta-glass'
+                          : 'bg-white/5 dark:bg-white/[0.06] border border-white/10 dark:border-white/[0.08] text-gray-600 dark:text-gray-400'
                           }`}>
                         {opt === 'public' ? <FaEye className="text-xs" /> : <FaEyeSlash className="text-xs" />}
                         {opt.charAt(0).toUpperCase() + opt.slice(1)}
@@ -646,10 +698,10 @@ export default function ProfilePage() {
                   <PrivacyToggle label="Year" description="Show your academic year" checked={privacyData.showYear} onChange={v => setPrivacyData(p => ({ ...p, showYear: v }))} />
                   <PrivacyToggle label="Branch" description="Show your branch" checked={privacyData.showBranch} onChange={v => setPrivacyData(p => ({ ...p, showBranch: v }))} />
                   <PrivacyToggle label="Roll Number" description="Show your roll number" checked={privacyData.showRollNumber} onChange={v => setPrivacyData(p => ({ ...p, showRollNumber: v }))} />
-                  <PrivacyToggle label="SkillDNA" description="Share your SkillDNA" checked={privacyData.showSkillDNA} onChange={v => setPrivacyData(p => ({ ...p, showSkillDNA: v }))} />
+
                 </div>
                 <button onClick={handleSavePrivacy} disabled={saving}
-                  className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-400 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                  className="w-full mt-6 py-3 px-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2 cta-glass">
                   {saving ? <><FaSpinner className="animate-spin" /> Saving...</> : <><FaSave /> Save Privacy Settings</>}
                 </button>
               </div>
@@ -675,7 +727,7 @@ export default function ProfilePage() {
                       {profileUrl || 'Set a username to get your link'}
                     </div>
                     <button onClick={handleCopyLink} disabled={!profile?.username}
-                      className="p-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-400 transition-all flex-shrink-0 disabled:opacity-50 shadow-lg shadow-blue-500/20">
+                      className="p-2.5 rounded-lg flex-shrink-0 disabled:opacity-50 cta-glass">
                       {copied ? <FaCheck /> : <FaCopy />}
                     </button>
                   </div>
@@ -684,7 +736,7 @@ export default function ProfilePage() {
                 {profile?.username && (
                   <div className="mb-6">
                     <Link href={`/u/${profile.username}`}
-                      className="group relative w-full py-4 px-5 rounded-2xl font-semibold transition-all flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-[1.02]">
+                      className="group relative w-full py-4 px-5 rounded-2xl font-semibold flex items-center justify-center gap-3 overflow-hidden cta-glass">
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <FaEye className="relative z-10 text-lg" />
                       <span className="relative z-10 text-base">Preview Your Profile</span>
@@ -698,11 +750,12 @@ export default function ProfilePage() {
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Quick Preview</p>
                   <div className="p-5 rounded-2xl bg-white/5 dark:bg-white/[0.06] border border-white/[0.08]">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0">
                         {profile?.profilePhoto ? (
-                          <Image src={profile.profilePhoto} alt={profile.fullName} width={56} height={56} className="object-cover w-full h-full rounded-lg" unoptimized />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={getValidImageUrl(profile.profilePhoto)} alt={profile.fullName} className="object-cover w-full h-full" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400 rounded-lg">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
+                          <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">{profile?.fullName?.charAt(0)?.toUpperCase()}</div>
                         )}
                       </div>
                       <div className="min-w-0">
@@ -713,7 +766,7 @@ export default function ProfilePage() {
                     </div>
                     {(privacyData.showCollege || privacyData.showBranch || privacyData.showYear) && (
                       <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap gap-2">
-                        {privacyData.showCollege && profile?.collegeId && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{getCollegeName(profile.collegeId)}</span>}
+                        {privacyData.showCollege && (profile?.collegeId || profile?.college) && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile?.collegeId ? getCollegeName(profile.collegeId) : profile.college}</span>}
                         {privacyData.showBranch && profile?.branch && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile.branch}</span>}
                         {privacyData.showYear && profile?.year && <span className="text-xs bg-white/5 dark:bg-white/[0.08] text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full border border-white/[0.06]">{profile.year}</span>}
                       </div>
@@ -728,47 +781,17 @@ export default function ProfilePage() {
                     <FaLink className="text-sm" /> Open in New Tab
                   </Link>
                 )}
+
+                {/* StudentVault */}
+                <div className="mt-6">
+                  <StudentVaultDashboardCard />
+                </div>
               </div>
             )}
 
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Crop Modals */}
-      {tempPhotoUrl && (
-        <ImageCropModal
-          isOpen={photoCropModalOpen}
-          imageSrc={tempPhotoUrl}
-          aspectRatio={1}
-          onClose={() => {
-            setPhotoCropModalOpen(false)
-            if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl)
-            setTempPhotoUrl(null)
-          }}
-          onComplete={handlePhotoCropComplete}
-          title="Crop Profile Photo"
-          cropShape="rect"
-          darkMode={isDark}
-        />
-      )}
-
-      {tempCoverUrl && (
-        <ImageCropModal
-          isOpen={coverCropModalOpen}
-          imageSrc={tempCoverUrl}
-          aspectRatio={820 / 360}
-          onClose={() => {
-            setCoverCropModalOpen(false)
-            if (tempCoverUrl) URL.revokeObjectURL(tempCoverUrl)
-            setTempCoverUrl(null)
-          }}
-          onComplete={handleCoverCropComplete}
-          title="Crop Cover Photo (820x360)"
-          cropShape="rect"
-          darkMode={isDark}
-        />
-      )}
     </div>
   )
 }

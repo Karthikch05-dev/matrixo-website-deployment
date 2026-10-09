@@ -21,6 +21,7 @@ import {
   PersonalityAnswers,
   SkillLevel,
 } from '@/lib/skilldna/types';
+import XOLoader from '@/components/XOLoader';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => Promise<void>;
@@ -423,7 +424,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
                   className="flex-1 p-3 rounded-xl border-2 border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:border-purple-500 transition-all"
                   placeholder="Add an achievement"
                 />
-                <button type="button" onClick={addAchievement} className="px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors flex-shrink-0">+</button>
+                <button type="button" onClick={addAchievement} className="px-4 py-3 rounded-xl flex-shrink-0 cta-glass">+</button>
               </div>
               {(academic.achievements || []).length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -799,11 +800,11 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold rounded-2xl hover:shadow-xl hover:shadow-purple-200 dark:hover:shadow-purple-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
+                className="w-full py-4 font-bold rounded-2xl hover:shadow-purple-200 dark:hover:shadow-purple-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg cta-glass"
               >
                 {isSubmitting ? (
                   <>
-                    <FaSpinner className="animate-spin" />
+                    <XOLoader size={16} />
                     AI is analyzing your SkillDNA...
                   </>
                 ) : (
@@ -861,7 +862,7 @@ export default function OnboardingFlow({ onComplete, userName }: OnboardingFlowP
           {currentStep !== 'review' && (
             <button
               onClick={goNext}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all font-medium"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium cta-glass"
             >
               Next <FaArrowRight />
             </button>

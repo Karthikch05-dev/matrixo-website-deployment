@@ -89,6 +89,7 @@ export function LocationSelection({ value, onChange, disabled }: LocationSelecti
           value={value.collegeId}
           onChange={handleCollegeChange}
           district={value.district}
+          state={value.state}
           disabled={disabled}
           onNotFound={() => setShowNotFoundForm(true)}
           showNotFoundOption={true}

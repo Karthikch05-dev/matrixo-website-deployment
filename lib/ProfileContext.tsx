@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { db } from '@/lib/firebaseConfig'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
+import { loadFirestore } from '@/lib/firebase/lazyFirestore'
 
 export interface PrivacySettings {
   showEmail: boolean
@@ -34,8 +33,11 @@ export interface UserProfile {
   rollNumber: string
   phone: string
   email: string
-  college?: string // Deprecated - remove in migration
-  collegeId?: string // New normalized college ID (optional during transition)
+  college: string
+  collegeId?: string
+  country?: string
+  state?: string
+  district?: string
   year: string
   branch: string
   graduationYear?: string
@@ -88,6 +90,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
+      const { db, doc, getDoc } = await loadFirestore()
       const docRef = doc(db, 'UserProfiles', user.uid)
       const docSnap = await getDoc(docRef)
 
@@ -115,24 +118,49 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const createProfile = async (data: Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'updatedAt'>) => {
     if (!user) throw new Error('User not authenticated')
 
-    if (!data.profilePhoto) {
-      throw new Error('Profile picture is required')
-    }
-
     // Verify username is still available
     const usernameAvailable = await checkUsernameAvailable(data.username)
     if (!usernameAvailable) {
       throw new Error('Username is already taken')
     }
 
-    const profileData: UserProfile = {
-      ...data,
+    const { db, doc, getDoc, setDoc, serverTimestamp } = await loadFirestore()
+
+    // Explicitly construct Firestore document payload with guaranteed required fields
+    const rawProfileData: Record<string, any> = {
       uid: user.uid,
       email: user.email || '',
+      username: data.username,
+      fullName: data.fullName,
+      rollNumber: data.rollNumber,
+      phone: data.phone,
+      college: data.college,
+      year: data.year,
+      branch: data.branch,
       privacy: data.privacy || DEFAULT_PRIVACY,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }
+
+    // Required location fields when provided
+    if (data.collegeId) rawProfileData.collegeId = data.collegeId
+    if (data.country) rawProfileData.country = data.country
+    if (data.state) rawProfileData.state = data.state
+    if (data.district) rawProfileData.district = data.district
+
+    // Optional fields: only attach when defined and non-empty
+    if (data.profilePhoto) rawProfileData.profilePhoto = data.profilePhoto
+    if (data.coverPhoto) rawProfileData.coverPhoto = data.coverPhoto
+    if (data.bio) rawProfileData.bio = data.bio
+    if (data.graduationYear) rawProfileData.graduationYear = data.graduationYear
+    if (data.linkedin) rawProfileData.linkedin = data.linkedin
+    if (data.github) rawProfileData.github = data.github
+    if (data.portfolio) rawProfileData.portfolio = data.portfolio
+
+    // Omit any undefined values so setDoc never encounters unsupported undefined
+    const profileData = Object.fromEntries(
+      Object.entries(rawProfileData).filter(([_, v]) => v !== undefined)
+    ) as unknown as UserProfile
 
     const docRef = doc(db, 'UserProfiles', user.uid)
     
@@ -156,13 +184,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('User not authenticated')
     if (!profileExists) throw new Error('Profile does not exist')
 
+    const { db, doc, updateDoc, serverTimestamp } = await loadFirestore()
+
+    // Omit any undefined values so updateDoc never encounters unsupported undefined
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined)
+    )
+
     const docRef = doc(db, 'UserProfiles', user.uid)
     await updateDoc(docRef, {
-      ...data,
+      ...cleanData,
       updatedAt: serverTimestamp(),
     })
 
-    setProfile(prev => prev ? { ...prev, ...data, updatedAt: new Date() } : null)
+    setProfile(prev => prev ? { ...prev, ...cleanData, updatedAt: new Date() } : null)
   }
 
   const setUsername = async (username: string) => {
@@ -173,6 +208,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const available = await checkUsernameAvailable(username)
     if (!available) throw new Error('Username is already taken')
+
+    const { db, doc, deleteDoc, setDoc, updateDoc, serverTimestamp } = await loadFirestore()
 
     // Delete old username mapping if user had one
     if (profile?.username && profile.username.toLowerCase() !== username.toLowerCase()) {
@@ -196,6 +233,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const checkUsernameAvailable = async (username: string): Promise<boolean> => {
     if (!username || username.length < 3) return false
+    const { db, doc, getDoc } = await loadFirestore()
     const usernameRef = doc(db, 'Usernames', username.toLowerCase())
     const snap = await getDoc(usernameRef)
     if (!snap.exists()) return true
@@ -206,6 +244,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const getProfileByUsername = async (username: string): Promise<UserProfile | null> => {
     try {
+      const { db, doc, getDoc } = await loadFirestore()
       const usernameRef = doc(db, 'Usernames', username.toLowerCase())
       const usernameSnap = await getDoc(usernameRef)
       if (!usernameSnap.exists()) return null

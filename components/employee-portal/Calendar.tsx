@@ -19,7 +19,7 @@ import {
   FaTrash,
   FaBriefcase
 } from 'react-icons/fa'
-import { useEmployeeAuth, Holiday, CalendarEvent } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, Holiday, CalendarEvent, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Alert } from './ui'
 import { toast } from 'sonner'
 
@@ -283,10 +283,10 @@ function AddEventModal({
         <Select
           label="Event Type"
           options={[
-            { value: 'event', label: '⭐ Event' },
-            { value: 'deadline', label: '🚩 Deadline' },
-            { value: 'meeting', label: '👥 Meeting' },
-            { value: 'announcement', label: '📢 Announcement' }
+            { value: 'event', label: '? Event' },
+            { value: 'deadline', label: 'Deadline' },
+            { value: 'meeting', label: 'Meeting' },
+            { value: 'announcement', label: 'Announcement' }
           ]}
           value={form.type}
           onChange={(value) => setForm({ ...form, type: value as 'event' | 'deadline' | 'meeting' | 'announcement' })}
@@ -329,7 +329,7 @@ export function Calendar() {
   const [panelSelectedDay, setPanelSelectedDay] = useState<CalendarDay | null>(null)
   const [togglingWorkingDay, setTogglingWorkingDay] = useState(false)
 
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   // Helper to get local date string without UTC conversion
   const getLocalDateString = (date: Date) => {
@@ -554,20 +554,20 @@ export function Calendar() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-            <FaCalendarAlt className="text-primary-500" />
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-[#F8FAFC] flex items-center gap-2">
+            <FaCalendarAlt className="text-[#2563EB]" />
             Calendar
           </h2>
-          <p className="text-neutral-400 text-sm sm:text-base mt-1">View holidays, events, and deadlines</p>
+          <p className="text-[#64748B] dark:text-[#94A3B8] text-sm sm:text-base mt-1">View holidays, events, and deadlines</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* View Toggle */}
-          <div className="flex items-center bg-neutral-800 rounded-lg p-1">
+          <div className="flex items-center bg-[#F1F5F9] dark:bg-[#152542] rounded-lg p-1">
             <button
               onClick={() => setViewMode('month')}
               className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'month' ? 'bg-primary-600 text-white' : 'text-neutral-400 hover:text-white'
+                viewMode === 'month' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC]'
               }`}
             >
               Month
@@ -575,7 +575,7 @@ export function Calendar() {
             <button
               onClick={() => setViewMode('list')}
               className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-neutral-400 hover:text-white'
+                viewMode === 'list' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC]'
               }`}
             >
               Upcoming
@@ -601,7 +601,7 @@ export function Calendar() {
           <Card padding="md" className="xl:w-[40%] flex-shrink-0">
             {/* Month Navigation */}
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-white">
+              <h3 className="text-base sm:text-lg font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
                 {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h3>
               <div className="flex items-center gap-0.5 sm:gap-1">
@@ -618,10 +618,10 @@ export function Calendar() {
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-px bg-neutral-800 rounded-lg overflow-hidden">
+            <div className="grid grid-cols-7 gap-px bg-[rgba(15,23,42,0.06)] dark:bg-[rgba(255,255,255,0.06)] rounded-lg overflow-hidden border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)]">
               {/* Weekday Headers */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="bg-neutral-900 py-2 text-center text-xs font-medium text-neutral-400">
+                <div key={day} className="bg-[#F8FAFC] dark:bg-[#101C30] py-2 text-center text-xs font-medium text-[#64748B] dark:text-[#94A3B8]">
                   {day}
                 </div>
               ))}
@@ -634,18 +634,18 @@ export function Calendar() {
                   whileHover={{ scale: 1.02 }}
                   className={`
                     min-h-[50px] sm:min-h-[70px] p-1 sm:p-1.5 text-left transition-colors relative
-                    ${day.isCurrentMonth ? 'bg-neutral-900' : 'bg-neutral-900/50'}
-                    ${day.isToday ? 'ring-2 ring-primary-500 ring-inset' : ''}
+                    ${day.isCurrentMonth ? 'bg-[#FFFFFF] dark:bg-[#101C30]' : 'bg-[#F8FAFC] dark:bg-[#0B172A] opacity-75'}
+                    ${day.isToday ? 'ring-2 ring-[#2563EB] ring-inset' : ''}
                     ${day.holiday ? 'bg-amber-500/10' : ''}
-                    ${panelSelectedDay?.dateString === day.dateString ? 'bg-primary-500/20' : ''}
-                    hover:bg-neutral-800
+                    ${panelSelectedDay?.dateString === day.dateString ? 'bg-[#2563EB]/10' : ''}
+                    hover:bg-[#F5F7FB] dark:hover:bg-[#152542]
                   `}
                 >
                   <span className={`
                     inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium
-                    ${day.isToday ? 'bg-primary-600 text-white' : ''}
-                    ${day.isWeekend && !day.isToday ? 'text-neutral-500' : ''}
-                    ${!day.isCurrentMonth ? 'text-neutral-600' : 'text-neutral-300'}
+                    ${day.isToday ? 'bg-[#2563EB] text-white' : ''}
+                    ${day.isWeekend && !day.isToday ? 'text-[#94A3B8] dark:text-[#64748B]' : ''}
+                    ${!day.isCurrentMonth ? 'text-[#94A3B8] dark:text-[#64748B]' : 'text-[#0F172A] dark:text-[#E2E8F0]'}
                   `}>
                     {day.date.getDate()}
                   </span>
@@ -668,12 +668,12 @@ export function Calendar() {
                       style={{ backgroundColor: event.color || '#6366f1' }}
                     >
                       <span className="hidden sm:inline">{event.title}</span>
-                      <span className="sm:hidden">•</span>
+                      <span className="sm:hidden">???</span>
                     </div>
                   ))}
                   
                   {day.events.length > 1 && (
-                    <div className="mt-0.5 text-[8px] sm:text-[10px] text-neutral-400">
+                    <div className="mt-0.5 text-[8px] sm:text-[10px] text-[#64748B] dark:text-[#94A3B8]">
                       +{day.events.length - 1}
                     </div>
                   )}
@@ -682,17 +682,17 @@ export function Calendar() {
             </div>
 
             {/* Legend */}
-            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-neutral-800 text-xs text-neutral-400">
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] text-xs text-[#64748B] dark:text-[#94A3B8]">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 bg-amber-500/50 rounded" />
                 <span>Holiday</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 bg-primary-600 rounded" />
+                <div className="w-2.5 h-2.5 bg-[#2563EB] rounded" />
                 <span>Event</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 ring-2 ring-primary-500 rounded" />
+                <div className="w-2.5 h-2.5 ring-2 ring-[#2563EB] rounded" />
                 <span>Today</span>
               </div>
             </div>
@@ -703,9 +703,9 @@ export function Calendar() {
             {panelDisplayDay ? (
               <div className="h-full flex flex-col">
                 {/* Panel Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 pb-3 border-b border-neutral-800 gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 pb-3 border-b border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] gap-2">
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-white">
+                    <h3 className="text-base sm:text-lg font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
                       <span className="hidden sm:inline">{panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
                       <span className="sm:hidden">{panelDisplayDay.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                     </h3>
@@ -767,19 +767,19 @@ export function Calendar() {
                   {/* Holiday Section */}
                   {panelDisplayDay.holiday && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-neutral-400 mb-2">Holiday</h4>
+                      <h4 className="text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mb-2">Holiday</h4>
                       <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                         <div className="p-2 bg-amber-500/20 rounded-lg">
-                          <FaUmbrellaBeach className="text-amber-400" />
+                          <FaUmbrellaBeach className="text-amber-500 dark:text-amber-400" />
                         </div>
                         <div className="flex-1">
-                          <h5 className="font-semibold text-white">{panelDisplayDay.holiday.name}</h5>
+                          <h5 className="font-semibold text-[#0F172A] dark:text-[#F8FAFC]">{panelDisplayDay.holiday.name}</h5>
                           <Badge variant="warning" size="sm" className="mt-1">
                             {panelDisplayDay.holiday.type === 'public' ? 'Public Holiday' : 
                              panelDisplayDay.holiday.type === 'company' ? 'Company Holiday' : 'Optional'}
                           </Badge>
                           {panelDisplayDay.holiday.description && (
-                            <p className="text-neutral-400 text-sm mt-2">{panelDisplayDay.holiday.description}</p>
+                            <p className="text-[#64748B] dark:text-[#94A3B8] text-sm mt-2">{panelDisplayDay.holiday.description}</p>
                           )}
                         </div>
                         {isAdmin && panelDisplayDay.holiday.id && !panelDisplayDay.holiday.isAutoHoliday && (
@@ -810,17 +810,17 @@ export function Calendar() {
                   {/* Events Section */}
                   {panelDisplayDay.events.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-neutral-400 mb-2">Events & Tasks</h4>
+                      <h4 className="text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mb-2">Events & Tasks</h4>
                       <div className="space-y-2">
                         {panelDisplayDay.events.map(event => (
                           <div
                             key={event.id}
-                            className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg"
+                            className="p-3 bg-[#F8FAFC] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.06)] dark:border-neutral-700 rounded-lg"
                             style={{ borderLeftWidth: '4px', borderLeftColor: event.color || '#6366f1' }}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h5 className="font-medium text-white">{event.title}</h5>
+                                <h5 className="font-medium text-[#0F172A] dark:text-[#F8FAFC]">{event.title}</h5>
                                 <div className="flex flex-wrap items-center gap-2 mt-1">
                                   <Badge size="sm" variant="info">{event.type.charAt(0).toUpperCase() + event.type.slice(1)}</Badge>
                                   <Badge size="sm" variant="default">
@@ -828,8 +828,8 @@ export function Calendar() {
                                   </Badge>
                                 </div>
                                 {(event.startTime || event.endTime) && (
-                                  <p className="text-neutral-400 text-xs mt-1.5 flex items-center gap-1">
-                                    <FaClock className="text-neutral-500 text-[10px]" />
+                                  <p className="text-[#64748B] dark:text-[#94A3B8] text-xs mt-1.5 flex items-center gap-1">
+                                    <FaClock className="text-[#94A3B8] dark:text-[#64748B] text-[10px]" />
                                     {event.startTime && event.endTime
                                       ? `${event.startTime} - ${event.endTime}`
                                       : event.startTime
@@ -839,15 +839,15 @@ export function Calendar() {
                                   </p>
                                 )}
                                 {event.description && (
-                                  <p className="text-neutral-400 text-sm mt-2">{event.description}</p>
+                                  <p className="text-[#64748B] dark:text-[#94A3B8] text-sm mt-2">{event.description}</p>
                                 )}
                                 {event.endDate && event.endDate !== event.date && (
-                                  <p className="text-neutral-500 text-xs mt-2 flex items-center gap-1">
-                                    <FaClock className="text-neutral-600" />
+                                  <p className="text-[#94A3B8] dark:text-[#64748B] text-xs mt-2 flex items-center gap-1">
+                                    <FaClock className="text-[#94A3B8] dark:text-[#64748B]" />
                                     Until {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                   </p>
                                 )}
-                                <p className="text-neutral-500 text-xs mt-1">
+                                <p className="text-[#94A3B8] dark:text-[#64748B] text-xs mt-1">
                                   By {event.createdByName}
                                 </p>
                               </div>
@@ -882,8 +882,8 @@ export function Calendar() {
                   {/* Empty State */}
                   {!panelDisplayDay.holiday && panelDisplayDay.events.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <FaCalendarAlt className="text-4xl text-neutral-600 mb-4" />
-                      <p className="text-neutral-300 font-medium">
+                      <FaCalendarAlt className="text-4xl text-[#CBD5E1] dark:text-[#475569] mb-4" />
+                      <p className="text-[#64748B] dark:text-[#94A3B8] font-medium">
                         No extra tasks for today, all the best for your work.
                       </p>
                     </div>
@@ -892,8 +892,8 @@ export function Calendar() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center h-full">
-                <FaCalendarAlt className="text-4xl text-neutral-600 mb-4" />
-                <p className="text-neutral-300 font-medium">
+                <FaCalendarAlt className="text-4xl text-[#CBD5E1] dark:text-[#475569] mb-4" />
+                <p className="text-[#64748B] dark:text-[#94A3B8] font-medium">
                   No extra tasks for today, all the best for your work.
                 </p>
               </div>
@@ -903,10 +903,10 @@ export function Calendar() {
       ) : (
         /* List View */
         <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Upcoming Events & Holidays</h3>
+          <h3 className="text-lg font-semibold text-[#0F172A] dark:text-[#F8FAFC] mb-4">Upcoming Events & Holidays</h3>
           
           {upcomingEvents.length === 0 ? (
-            <div className="text-center py-8 text-neutral-400">
+            <div className="text-center py-8 text-[#64748B] dark:text-[#94A3B8]">
               <FaCalendarAlt className="text-3xl mx-auto mb-2 opacity-50" />
               <p>No upcoming events or holidays</p>
             </div>
@@ -922,31 +922,31 @@ export function Calendar() {
                     flex items-start gap-4 p-4 rounded-lg border
                     ${item.type === 'holiday' 
                       ? 'bg-amber-500/10 border-amber-500/30' 
-                      : 'bg-neutral-800/50 border-neutral-700'
+                      : 'bg-[#F8FAFC] dark:bg-neutral-800/50 border-[rgba(15,23,42,0.06)] dark:border-neutral-700'
                     }
                   `}
                 >
                   <div className={`
                     p-2 rounded-lg flex-shrink-0
-                    ${item.type === 'holiday' ? 'bg-amber-500/20' : 'bg-primary-500/20'}
+                    ${item.type === 'holiday' ? 'bg-amber-500/20' : 'bg-[#2563EB]/10 dark:bg-primary-500/20'}
                   `}>
                     {item.type === 'holiday' ? (
-                      <FaUmbrellaBeach className="text-amber-400" />
+                      <FaUmbrellaBeach className="text-amber-500 dark:text-amber-400" />
                     ) : (
-                      <FaStar className="text-primary-400" />
+                      <FaStar className="text-[#2563EB] dark:text-primary-400" />
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-medium text-white">
+                        <h4 className="font-medium text-[#0F172A] dark:text-[#F8FAFC]">
                           {item.type === 'holiday' 
                             ? (item.item as Holiday).name 
                             : (item.item as CalendarEvent).title
                           }
                         </h4>
-                        <p className="text-sm text-neutral-400 mt-0.5">
+                        <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-0.5">
                           {new Date(item.date).toLocaleDateString('en-US', { 
                             weekday: 'long',
                             month: 'long', 
@@ -957,6 +957,7 @@ export function Calendar() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Badge 
+
                           variant={item.type === 'holiday' ? 'warning' : 'info'}
                           size="sm"
                         >
@@ -974,7 +975,7 @@ export function Calendar() {
                     </div>
                     
                     {item.type === 'event' && (item.item as CalendarEvent).description && (
-                      <p className="text-sm text-neutral-500 mt-2">
+                      <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-2">
                         {(item.item as CalendarEvent).description}
                       </p>
                     )}
@@ -1011,3 +1012,4 @@ export function Calendar() {
 }
 
 export default Calendar
+

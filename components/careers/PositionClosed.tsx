@@ -71,7 +71,7 @@ export default function PositionClosed({ reason, roleTitle }: PositionClosedProp
           <Link href="/careers">
             <motion.button
               whileHover={{ x: -3 }}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold cta-glass"
             >
               <FaArrowLeft className="text-sm" />
               Browse Open Positions
