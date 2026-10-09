@@ -1046,3 +1046,93 @@ body.scroll-locked {
 body.printing-profile .min-h-screen {
     background: #ffffff !important;
 }
+
+/* ==========================================================================
+   Long-form documents (legal pages)
+   ========================================================================== */
+.legal-prose {
+    color: rgb(var(--muted));
+    font-size: 16px;
+    line-height: 1.75;
+}
+
+.legal-prose section {
+    margin-bottom: 2.5rem;
+}
+
+.legal-prose h2 {
+    margin: 0 0 0.75rem;
+    color: rgb(var(--ink));
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+.legal-prose h3 {
+    margin: 1.5rem 0 0.5rem;
+    color: rgb(var(--ink));
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.legal-prose p {
+    margin: 0 0 1rem;
+}
+
+.legal-prose ul,
+.legal-prose ol {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+}
+
+.legal-prose ul {
+    list-style: disc;
+}
+
+.legal-prose ol {
+    list-style: decimal;
+}
+
+.legal-prose li {
+    margin: 0.35rem 0;
+    padding-left: 0.25rem;
+}
+
+.legal-prose li::marker {
+    color: rgb(var(--subtle));
+}
+
+.legal-prose strong {
+    color: rgb(var(--ink));
+    font-weight: 600;
+}
+
+.legal-prose a {
+    color: rgb(var(--accent));
+    text-underline-offset: 3px;
+}
+
+.legal-prose a:hover {
+    text-decoration: underline;
+}
+
+.legal-prose table {
+    width: 100%;
+    margin: 0 0 1.25rem;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.legal-prose th,
+.legal-prose td {
+    border-bottom: 1px solid rgb(var(--line));
+    padding: 0.6rem 0.5rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.legal-prose th {
+    color: rgb(var(--ink));
+    font-weight: 600;
+}

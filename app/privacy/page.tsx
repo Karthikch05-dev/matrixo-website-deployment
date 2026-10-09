@@ -1,26 +1,16 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - matriXO',
-  description: 'Learn how matriXO collects, uses, and protects your personal information. Read our complete privacy policy.',
-  openGraph: {
-    title: 'Privacy Policy - matriXO',
-    description: 'How matriXO handles your personal data and privacy.',
-    url: 'https://matrixo.in/privacy',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Privacy policy',
+  description: 'How matriXO collects, uses and protects your personal information.',
+  alternates: { canonical: '/privacy' },
+  openGraph: { url: '/privacy' },
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
-          Privacy Policy
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: October 9, 2025</p>
+    <LegalPage title="Privacy policy" updated="October 9, 2025" path="/privacy">
           
           <section className="mb-8">
             <p className="mb-4">
@@ -192,8 +182,6 @@ export default function PrivacyPage() {
               to maintaining the highest standards of privacy and data security.
             </p>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }

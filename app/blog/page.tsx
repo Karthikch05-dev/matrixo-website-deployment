@@ -1,27 +1,29 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import { ButtonLink } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
-  title: 'Blog - matriXO',
-  description: 'Latest news, updates, and insights from matriXO.',
+  title: 'Blog',
+  description: 'Stories, event recaps and guides from matriXO. Coming soon.',
+  // Placeholder until the first posts are published.
+  robots: { index: false, follow: true },
 }
 
 export default function BlogPage() {
   return (
-    <div className="min-h-screen pt-20">
-      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
-        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="container-custom px-6 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Blog & <span className="gradient-text">News</span>
-            </h1>
-            <p className="text-2xl text-gray-600 dark:text-gray-300">
-              Coming Soon
-            </p>
-          </div>
-        </div>
-      </section>
-    </div>
+    <section className="mx-auto flex min-h-[70vh] max-w-2xl flex-col justify-center px-6 py-20 text-center">
+      <p className="eyebrow">Blog</p>
+      <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] text-ink sm:text-[56px]">Stories are on the way.</h1>
+      <p className="mx-auto mt-5 max-w-md text-[17px] leading-relaxed text-muted">
+        Event recaps, build guides and notes from the team. Until the first posts land, see what’s coming up next.
+      </p>
+      <div className="mt-9 flex flex-wrap justify-center gap-3">
+        <ButtonLink href="/events" size="lg">
+          Explore events
+        </ButtonLink>
+        <ButtonLink href="/notifications" size="lg" variant="secondary">
+          Get updates
+        </ButtonLink>
+      </div>
+    </section>
   )
 }

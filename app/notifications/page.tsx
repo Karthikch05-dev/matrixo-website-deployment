@@ -1,187 +1,131 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { FaCheckDouble, FaGift, FaCalendarAlt, FaBullhorn, FaGraduationCap, FaArrowRight, FaBell } from 'react-icons/fa'
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, Bell, CheckCheck } from 'lucide-react'
 import { usePublicNotifications } from '@/hooks/usePublicNotifications'
-import { NotificationCategory, PublicNotification } from '@/lib/publicNotifications'
+import type { NotificationCategory, PublicNotification } from '@/lib/publicNotifications'
+import { NotificationIcon, relativeTime } from '@/components/site/NotificationCenter'
+import { Button } from '@/components/ui/Button'
+import { SegmentedControl } from '@/components/ui/Controls'
+import { Skeleton } from '@/components/ui/Feedback'
+import { cn } from '@/lib/cn'
 
-function getRelativeTime(dateStr: string) {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diffInSeconds < 60) return 'Just now'
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-  
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-function getIconForCategory(category: string, type: string) {
-  if (category === 'STUDENTVAULT') return <FaGift className="text-blue-500" />
-  if (type === 'NEW_HACKATHON') return <FaGraduationCap className="text-purple-500" />
-  if (category === 'EVENTS') return <FaCalendarAlt className="text-pink-500" />
-  return <FaBullhorn className="text-orange-500" />
-}
+type Tab = 'ALL' | NotificationCategory
 
 export default function NotificationsPage() {
-  const { 
-    notifications, 
-    readIds, 
-    isLoading, 
-    hasMore, 
-    fetchNotifications, 
-    markAsRead, 
-    markAllAsRead 
-  } = usePublicNotifications()
+  const router = useRouter()
+  const { notifications, readIds, isLoading, hasMore, error, unreadCount, fetchNotifications, markAsRead, markAllAsRead } =
+    usePublicNotifications()
+  const [tab, setTab] = useState<Tab>('ALL')
 
-  const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
+  const counts = useMemo(() => {
+    const by = (c: string) => notifications.filter((n) => n.category === c).length
+    return { ALL: notifications.length, EVENTS: by('EVENTS'), STUDENTVAULT: by('STUDENTVAULT'), PLATFORM: by('PLATFORM') }
+  }, [notifications])
 
-  const filteredNotifications = notifications.filter(n => 
-    activeTab === 'ALL' ? true : n.category === activeTab
-  )
+  const shown = notifications.filter((n) => tab === 'ALL' || n.category === tab)
 
-  const handleNotificationClick = (notification: PublicNotification) => {
-    if (!readIds.has(notification.id)) {
-      markAsRead([notification.id])
-    }
-    if (notification.targetUrl) {
-      window.location.href = notification.targetUrl
-    }
+  const open = (n: PublicNotification) => {
+    if (!readIds.has(n.id)) markAsRead([n.id])
+    if (n.targetUrl) router.push(n.targetUrl)
   }
 
-  const tabs = [
-    { id: 'ALL', label: 'All' },
-    { id: 'EVENTS', label: 'Events' },
-    { id: 'STUDENTVAULT', label: 'StudentVault' },
-    { id: 'PLATFORM', label: 'Platform' }
-  ]
-
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0F2C] pt-24 pb-12 transition-colors duration-300">
-      <div className="container-custom max-w-4xl mx-auto px-4">
-        
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Notifications</h1>
-            <p className="text-gray-600 dark:text-gray-400">Stay updated on the latest events and offers.</p>
+    <div className="mx-auto max-w-3xl px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[36px] font-semibold tracking-[-0.035em] text-ink sm:text-[44px]">Notifications</h1>
+          <p className="mt-1 text-[16px] text-muted">
+            {unreadCount > 0 ? `${unreadCount} unread` : 'New events, hackathons and StudentVault offers.'}
+          </p>
+        </div>
+        <Button variant="secondary" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0} leadingIcon={<CheckCheck aria-hidden="true" className="h-4 w-4" />}>
+          Mark all read
+        </Button>
+      </div>
+
+      <SegmentedControl<Tab>
+        label="Filter notifications"
+        value={tab}
+        onChange={setTab}
+        className="mt-8"
+        segments={[
+          { value: 'ALL', label: 'All', count: counts.ALL },
+          { value: 'EVENTS', label: 'Events', count: counts.EVENTS },
+          { value: 'STUDENTVAULT', label: 'StudentVault', count: counts.STUDENTVAULT },
+          { value: 'PLATFORM', label: 'Updates', count: counts.PLATFORM },
+        ]}
+      />
+
+      <div className="mt-6 overflow-hidden rounded-card border border-line bg-surface">
+        {isLoading && notifications.length === 0 ? (
+          <ul aria-busy="true" aria-label="Loading notifications">
+            {[0, 1, 2, 3].map((i) => (
+              <li key={i} className="flex gap-4 border-b border-line p-5 last:border-0">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-2 pt-1">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3.5 w-5/6" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : error && notifications.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <p className="text-[17px] font-semibold text-ink">Couldn’t load notifications</p>
+            <p className="mt-1 text-[15px] text-muted">Check your connection and try again.</p>
+            <Button variant="secondary" className="mt-5" onClick={() => fetchNotifications()}>
+              Try again
+            </Button>
           </div>
-          
-          <button 
-            onClick={() => markAllAsRead()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 dark:bg-white/[0.05] dark:text-gray-300 dark:border-white/10 dark:hover:bg-white/10 transition-colors shadow-sm"
-          >
-            <FaCheckDouble /> Mark all as read
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-6 pb-2">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 dark:bg-white/5 dark:text-gray-300 dark:border-white/10 dark:hover:bg-white/10'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* List */}
-        <div className="glass-card-elevated rounded-2xl overflow-hidden min-h-[400px]">
-          {isLoading && notifications.length === 0 ? (
-            <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            </div>
-          ) : filteredNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
-                <FaBell size={24} className="text-gray-400 dark:text-gray-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No notifications found</h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-sm">
-                We'll let you know when there's something new for you in this category.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100 dark:divide-white/10">
-              {filteredNotifications.map((notification, index) => {
-                const isUnread = !readIds.has(notification.id)
-                return (
-                  <motion.div
-                    key={notification.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}
+        ) : shown.length === 0 ? (
+          <div className="flex flex-col items-center px-6 py-16 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-canvas-subtle text-subtle">
+              <Bell aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
+            </span>
+            <p className="mt-4 text-[17px] font-semibold text-ink">Nothing here yet</p>
+            <p className="mt-1 max-w-sm text-[15px] text-muted">We’ll let you know when there’s something new in this category.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-line">
+            {shown.map((n) => {
+              const unread = !readIds.has(n.id)
+              return (
+                <li key={n.id}>
+                  <button
+                    type="button"
+                    onClick={() => open(n)}
+                    className={cn('group flex w-full gap-4 p-5 text-left transition-colors hover:bg-ink/[0.03] sm:p-6', unread && 'bg-accent-soft/40')}
                   >
-                    <button
-                      onClick={() => handleNotificationClick(notification)}
-                      className={`w-full text-left p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors flex flex-col sm:flex-row gap-4 sm:gap-6 group relative ${
-                        isUnread ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                      }`}
-                    >
-                      {isUnread && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 dark:bg-blue-500 rounded-r"></div>
+                    <NotificationIcon notification={n} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start justify-between gap-3">
+                        <span className={cn('text-[16px] leading-snug', unread ? 'font-semibold text-ink' : 'font-medium text-ink/80')}>{n.title}</span>
+                        <span className="shrink-0 pt-0.5 text-[12px] tabular-nums text-subtle">{relativeTime(n.publishedAt)}</span>
+                      </span>
+                      <span className="mt-1 block text-[15px] leading-relaxed text-muted">{n.message}</span>
+                      {n.targetUrl && (
+                        <span className="mt-3 inline-flex items-center gap-1 text-[14px] font-medium text-accent">
+                          View details <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                        </span>
                       )}
-                      
-                      <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 group-hover:scale-110 transition-transform duration-300">
-                        {getIconForCategory(notification.category, notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-1">
-                          <h3 className={`text-base sm:text-lg truncate font-semibold ${isUnread ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                            {notification.title}
-                          </h3>
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                            {getRelativeTime(notification.publishedAt)}
-                          </span>
-                        </div>
-                        
-                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                          {notification.message}
-                        </p>
-                        
-                        {notification.targetUrl && (
-                          <div className="flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                            View details <FaArrowRight className="ml-1.5 group-hover:translate-x-1 transition-transform" />
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
-          
-          {hasMore && !isLoading && (
-            <div className="p-6 text-center border-t border-gray-100 dark:border-white/10">
-              <button
-                onClick={() => fetchNotifications(true)}
-                className="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm dark:bg-white/5 dark:text-gray-300 dark:border-white/10 dark:hover:bg-white/10 transition-all duration-200"
-              >
-                Load older notifications
-              </button>
-            </div>
-          )}
-          
-          {isLoading && notifications.length > 0 && (
-            <div className="p-6 text-center border-t border-gray-100 dark:border-white/10">
-              <div className="animate-pulse text-gray-500 dark:text-gray-400 text-sm">Loading more...</div>
-            </div>
-          )}
-        </div>
+                    </span>
+                    {unread && <span aria-label="Unread" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        {hasMore && (
+          <div className="border-t border-line p-4 text-center">
+            <Button variant="ghost" onClick={() => fetchNotifications(true)} loading={isLoading}>
+              Load older notifications
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
-
-

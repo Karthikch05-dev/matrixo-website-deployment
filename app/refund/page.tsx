@@ -1,26 +1,16 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Refund Policy - matriXO',
-  description: 'matriXO cancellation and refund policy for event tickets and registrations. 7-day refund window with transparent processing.',
-  openGraph: {
-    title: 'Refund & Cancellation Policy - matriXO',
-    description: 'Cancellation and refund policy for matriXO event registrations.',
-    url: 'https://matrixo.in/refund',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Cancellations and refunds',
+  description: 'When and how you can cancel a matriXO registration and get a refund.',
+  alternates: { canonical: '/refund' },
+  openGraph: { url: '/refund' },
 }
 
 export default function RefundPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
-          Cancellations and Refunds Policy
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: September 7, 2026</p>
+    <LegalPage title="Cancellations and refunds" updated="September 7, 2026" path="/refund">
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">1. General Refund Policy</h2>
@@ -132,8 +122,6 @@ export default function RefundPage() {
               matriXO is an An Ed-Tech Startup committed to providing quality technical education and transparent business practices. This policy is subject to change, and any updates will be communicated via email to registered users.
             </p>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }
