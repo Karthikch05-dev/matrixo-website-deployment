@@ -84,6 +84,12 @@ const nextConfig = {
         destination: '/events/tedxkprit-2025-break-the-loop',
         permanent: false,
       },
+      {
+        source: '/events/devagents',
+        destination: '/events/devagents-1-0',
+        permanent: true,
+      },
+      { source: '/talk-with-us', destination: '/contact', permanent: true },
     ]
   },
 }
