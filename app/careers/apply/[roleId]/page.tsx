@@ -33,14 +33,14 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
           description: role.description?.slice(0, 160) || `Join our ${role.team} team.`,
           url: `https://matrixo.in/careers/apply/${params.roleId}`,
           siteName: 'matriXO',
-          images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630, alt: `${role.title} - matriXO` }],
+          images: [{ url: 'https://matrixo.in/brand/og-default.png', width: 1200, height: 630, alt: `${role.title} - matriXO` }],
           type: 'website',
         },
         twitter: {
           card: 'summary_large_image',
           title: `${role.title} - Apply at matriXO`,
           description: role.description?.slice(0, 160) || `Join our ${role.team} team.`,
-          images: ['https://matrixo.in/logos/matrixo logo wide.png'],
+          images: ['https://matrixo.in/brand/og-default.png'],
         },
       }
     }

@@ -52,8 +52,8 @@ export function sendBrowserNotification(
   try {
     const notification = new Notification(title, {
       body,
-      icon: icon || '/logos/logo-dark.png',
-      badge: '/logos/logo-dark.png',
+      icon: icon || '/brand/matrixo-app-icon-192.png',
+      badge: '/brand/matrixo-app-icon-192.png',
       tag: 'employee-portal-notification',
       requireInteraction: false,
       silent: false
