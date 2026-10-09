@@ -11,7 +11,7 @@ const suggestions = [
   { label: 'Upcoming events', href: '/events', note: 'Workshops, hackathons and bootcamps' },
   { label: 'StudentVault', href: '/studentvault', note: 'Free tools and offers for students' },
   { label: 'Why matriXO', href: '/home', note: 'What we do and who it’s for' },
-  { label: 'Contact us', href: '/contact', note: 'We usually reply within a day' },
+  { label: 'Contact us', href: '/contact', note: 'Questions, partnerships and support' },
 ]
 
 export default function NotFound() {

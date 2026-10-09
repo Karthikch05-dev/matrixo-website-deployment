@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FaBriefcase, FaMapMarkerAlt, FaClock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
+import { ArrowRight, Briefcase, CheckCircle2, Clock, MapPin } from 'lucide-react'
 import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
 import { notifyAdminsOfNewApplication } from '@/lib/notificationUtils'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import XOLoader from '@/components/XOLoader'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Field'
+import { Skeleton } from '@/components/ui/Feedback'
+import { Badge } from '@/components/ui/Badge'
 
 interface Role {
   id: string
@@ -162,321 +164,141 @@ export default function CareersContent() {
     }
   }
 
+  const interestForm = submitted ? (
+    <div className="flex flex-col items-center rounded-[28px] border border-line bg-surface px-6 py-14 text-center shadow-card">
+      <CheckCircle2 aria-hidden="true" className="h-12 w-12 text-success" strokeWidth={1.6} />
+      <h3 className="mt-5 text-[22px] font-semibold tracking-[-0.02em] text-ink">Thanks, we’ve got your details</h3>
+      <p className="mt-2 max-w-sm text-[15px] text-muted">We’ll reach out when a role that fits opens up.</p>
+    </div>
+  ) : (
+    <form onSubmit={handleGeneralSubmit} noValidate className="rounded-[28px] border border-line bg-surface p-6 shadow-card sm:p-9">
+      <h3 className="text-[21px] font-semibold tracking-[-0.02em] text-ink">Tell us about yourself</h3>
+      <p className="mt-1 text-[15px] text-muted">We’ll keep your details on file and contact you when something fits.</p>
+      <div className="mt-7 grid gap-5 sm:grid-cols-2">
+        <Input label="Full name" name="fullName" autoComplete="name" value={formData.fullName} onChange={handleInputChange} error={errors.fullName} required />
+        <Input label="Email" type="email" name="email" autoComplete="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+        <Input label="Phone" type="tel" name="phone" autoComplete="tel" inputMode="numeric" value={formData.phone} onChange={handleInputChange} error={errors.phone} hint="10-digit mobile number" required />
+        <Input label="College or organisation" name="college" value={formData.college} onChange={handleInputChange} error={errors.college} required />
+        <Input label="Year of study or experience" name="yearOrExperience" value={formData.yearOrExperience} onChange={handleInputChange} error={errors.yearOrExperience} placeholder="e.g. 3rd year, or 2 years" required />
+        <Input label="Role you’re interested in" name="interestedRole" value={formData.interestedRole} onChange={handleInputChange} error={errors.interestedRole} placeholder="e.g. Full-stack developer" required />
+      </div>
+      <Button type="submit" size="lg" className="mt-7 w-full sm:w-auto" loading={submitting}>
+        Submit details
+      </Button>
+    </form>
+  )
+
   return (
-    <div className="min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white py-20 overflow-hidden">
-        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="container-custom px-4 sm:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-              Careers
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
-              Join matriXO and help shape the future of technical education
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
-              We're building innovative solutions that empower students and educational institutions. 
-              Be part of a team that's making a real difference in how people learn and grow.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+    <>
+      <div className="mx-auto max-w-site px-4 pb-12 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <p className="eyebrow">Careers</p>
+        <h1 className="mt-4 max-w-3xl text-[42px] font-semibold leading-[1.03] tracking-[-0.04em] text-ink sm:text-[64px]">
+          Help students learn by building.
+        </h1>
+        <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-muted sm:text-[19px]">
+          We’re a small team running workshops, hackathons and products for students across India. If that sounds like your
+          kind of work, we’d like to hear from you.
+        </p>
+      </div>
 
-      {/* Open Roles Section */}
-      <section className="py-20 bg-transparent">
-        <div className="container-custom px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-              Open Positions
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              Discover opportunities that match your skills and passion
-            </p>
-            {roles.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-6 max-w-2xl mx-auto"
-              >
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                    📝 Due to the high volume of applications we're receiving, our team is working diligently to review each submission. 
-                    Please allow some time for us to get back to you. We appreciate your patience and interest in joining matriXO!
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <XOLoader size={16} />
-            </div>
-          ) : roles.length === 0 ? (
-            <div className="max-w-4xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-12"
-              >
-                <FaBriefcase className="text-6xl text-gray-400 mx-auto mb-6" />
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                  No Open Positions Right Now
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  We don't have any openings at the moment, but we're always looking for talented individuals.
-                </p>
-                <p className="text-cyan-600 dark:text-cyan-400 font-semibold text-lg">
-                  Submit your information below and we'll contact you when a suitable position opens up!
-                </p>
-              </motion.div>
-
-              {submitted ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="glass-card p-12 text-center"
-                >
-                  <FaCheckCircle className="text-6xl text-green-500 mx-auto mb-6" />
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Application Submitted!
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Thank you for your interest. We'll review your information and contact you when a suitable position opens up.
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="glass-card p-8"
-                >
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    Express Your Interest
-                  </h3>
-
-                  <form onSubmit={handleGeneralSubmit} className="space-y-6">
-                    {/* Full Name */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="Enter your full name"
-                      />
-                      {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="your.email@example.com"
-                      />
-                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="1234567890"
-                      />
-                      {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-                    </div>
-
-                    {/* College/Organization */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        College / Organization *
-                      </label>
-                      <input
-                        type="text"
-                        name="college"
-                        value={formData.college}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="Your institution name"
-                      />
-                      {errors.college && <p className="text-red-500 text-sm mt-1">{errors.college}</p>}
-                    </div>
-
-                    {/* Year/Experience */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Year / Experience *
-                      </label>
-                      <input
-                        type="text"
-                        name="yearOrExperience"
-                        value={formData.yearOrExperience}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="e.g., 3rd Year B.Tech or 2 years experience"
-                      />
-                      {errors.yearOrExperience && <p className="text-red-500 text-sm mt-1">{errors.yearOrExperience}</p>}
-                    </div>
-
-                    {/* Interested Role */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Role You're Interested In *
-                      </label>
-                      <input
-                        type="text"
-                        name="interestedRole"
-                        value={formData.interestedRole}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200/30 dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="e.g., Full Stack Developer, Marketing Manager, etc."
-                      />
-                      {errors.interestedRole && <p className="text-red-500 text-sm mt-1">{errors.interestedRole}</p>}
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full py-4 rounded-lg font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed cta-glass"
-                    >
-                      {submitting ? 'Submitting...' : 'Submit Application'}
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-              {roles.map((role, index) => (
-                <motion.div
-                  key={role.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="glass-card p-6 hover-lift hover-glow group"
-                >
-                  <div className="mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-cyan-500 transition-colors">
-                      {role.title}
-                    </h3>
-                    <p className="text-cyan-600 dark:text-cyan-400 font-medium mb-4">
-                      {role.team}
-                    </p>
-                  </div>
-
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-3">
-                    {role.description}
-                  </p>
-
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <FaMapMarkerAlt className="mr-2 text-cyan-500" />
-                      {role.location}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <FaClock className="mr-2 text-cyan-500" />
-                      {role.type}
-                    </div>
-                  </div>
-
-                  <Link href={`/careers/apply/${role.id}`}>
-                    <button className="w-full py-3 rounded-lg font-semibold flex items-center justify-center group cta-glass">
-                      Apply Now
-                      <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+      <section aria-labelledby="roles-heading" className="mx-auto max-w-site px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-t border-line pt-8">
+          <h2 id="roles-heading" className="text-[28px] font-semibold tracking-[-0.03em] text-ink">
+            Open roles
+          </h2>
+          {!loading && roles.length > 0 && (
+            <span className="text-[14px] text-muted">
+              {roles.length} {roles.length === 1 ? 'opening' : 'openings'}
+            </span>
           )}
         </div>
+
+        {loading ? (
+          <ul className="mt-6 divide-y divide-line border-y border-line" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="py-6">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="mt-3 h-4 w-2/3" />
+              </li>
+            ))}
+          </ul>
+        ) : roles.length === 0 ? (
+          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+            <div>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-canvas-subtle text-subtle">
+                <Briefcase aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+              <h3 className="mt-5 text-[22px] font-semibold tracking-[-0.02em] text-ink">No open roles right now</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted">
+                We hire as we grow. Leave your details and we’ll contact you when a role that fits opens up.
+              </p>
+            </div>
+            {interestForm}
+          </div>
+        ) : (
+          <>
+            <p className="mt-4 max-w-2xl text-[14px] text-subtle">
+              We read every application. With the volume we receive, replies can take a little while. Thanks for your
+              patience.
+            </p>
+            <ul className="mt-6 divide-y divide-line border-y border-line">
+              {roles.map((role) => (
+                <li key={role.id}>
+                  <Link href={`/careers/apply/${role.id}`} className="group flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-[19px] font-semibold tracking-[-0.02em] text-ink group-hover:text-accent">{role.title}</h3>
+                        {role.team && <Badge>{role.team}</Badge>}
+                      </div>
+                      {role.description && <p className="mt-1.5 line-clamp-2 max-w-2xl text-[15px] text-muted">{role.description}</p>}
+                      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-subtle">
+                        {role.location && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <MapPin aria-hidden="true" className="h-3.5 w-3.5" /> {role.location}
+                          </span>
+                        )}
+                        {role.type && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock aria-hidden="true" className="h-3.5 w-3.5" /> {role.type}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[15px] font-medium text-accent">
+                      Apply <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-16 grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+              <div>
+                <h3 className="text-[22px] font-semibold tracking-[-0.02em] text-ink">Don’t see your role?</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted">Send a general application and we’ll keep you in mind for what’s next.</p>
+              </div>
+              {interestForm}
+            </div>
+          </>
+        )}
       </section>
 
-      {/* Why Join Section */}
-      <section className="py-20 bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
-        <div className="container-custom px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-              Why Join matriXO?
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <section className="border-t border-line bg-canvas-subtle py-16 sm:py-24">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <h2 className="text-[28px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Why people join</h2>
+          <ul className="mt-10 grid gap-8 md:grid-cols-3">
             {[
-              {
-                title: 'Impact at Scale',
-                description: 'Work on products that directly impact thousands of students and educational institutions.',
-                icon: '🚀',
-              },
-              {
-                title: 'Innovation First',
-                description: 'Be at the forefront of EdTech innovation with AI, blockchain, and cutting-edge technologies.',
-                icon: '💡',
-              },
-              {
-                title: 'Growth & Learning',
-                description: 'Continuous learning opportunities, mentorship, and career development programs.',
-                icon: '📈',
-              },
-            ].map((benefit, index) => (
-              <motion.div
-                key={benefit.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="glass-card p-8 text-center"
-              >
-                <div className="text-5xl mb-4">{benefit.icon}</div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  {benefit.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {benefit.description}
-                </p>
-              </motion.div>
+              { title: 'Real impact', body: 'What you ship reaches students and colleges quickly, and you see it used.' },
+              { title: 'Room to grow', body: 'Own a problem end to end, with mentorship from people who’ve done it before.' },
+              { title: 'Small team', body: 'Fast decisions, real responsibility and your name on the work.' },
+            ].map((item) => (
+              <li key={item.title} className="border-t border-line pt-6">
+                <h3 className="text-[19px] font-semibold tracking-[-0.02em] text-ink">{item.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted">{item.body}</p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
-    </div>
+    </>
   )
 }
