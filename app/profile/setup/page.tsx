@@ -122,7 +122,7 @@ export default function ProfileSetupPage() {
 
   if (authLoading || (user && profileLoading)) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center">
+      <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center">
         <XOLoader size={20} />
       </div>
     )
@@ -270,7 +270,7 @@ export default function ProfileSetupPage() {
     `w-full py-3 px-4 bg-white/5 dark:bg-white/[0.06] border ${errors[field] ? 'border-red-500' : 'border-white/10 dark:border-white/[0.1]'} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500`
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center px-4 py-24">
+    <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center px-4 py-12 sm:py-16">
       {/* BG decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />

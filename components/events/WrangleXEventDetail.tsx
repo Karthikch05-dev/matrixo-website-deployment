@@ -317,7 +317,7 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
           <div className="space-y-12">
             {subEvents.map((subEvent: any, index: number) => (
               <motion.div
-                key={subEvent.id}
+                key={subEvent.id ?? subEvent.name ?? index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -330,13 +330,13 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
                   <div className="relative w-full lg:w-2/5 h-64 lg:h-auto min-h-[280px]">
                     <Image
                       src={subEvent.image}
-                      alt={subEvent.title}
+                      alt={subEvent.title ?? subEvent.name ?? ""}
                       fill
                       className="object-cover"
                     />
                     {/* Category badge */}
                     <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-gray-900 dark:text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {subEvent.category.toUpperCase()}
+                      {String(subEvent.category ?? "").toUpperCase()}
                     </div>
                   </div>
 
@@ -344,15 +344,17 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
                   <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
                     <div>
                       <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-blue-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">
-                        {subEvent.title}
+                        {subEvent.title ?? subEvent.name}
                       </h3>
                       <p className="text-purple-400/80 text-base mb-4">{subEvent.tagline}</p>
 
                       {/* Date */}
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-4">
-                        <FaCalendar className="text-purple-400" />
-                        <span>{format(new Date(subEvent.date), 'MMMM dd, yyyy • hh:mm a')}</span>
-                      </div>
+                      {subEvent.date && !Number.isNaN(new Date(subEvent.date).getTime()) && (
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-4">
+                          <FaCalendar className="text-purple-400" />
+                          <span>{format(new Date(subEvent.date), 'MMMM dd, yyyy • hh:mm a')}</span>
+                        </div>
+                      )}
 
                       {/* Description */}
                       <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line mb-6 line-clamp-6">
@@ -361,7 +363,7 @@ export default function WrangleXEventDetail({ event }: { event: any }) {
 
                       {/* Pricing */}
                       <div className="flex flex-wrap gap-3 mb-6">
-                        {subEvent.tickets.map((ticket: any, i: number) => (
+                        {(subEvent.tickets ?? []).map((ticket: any, i: number) => (
                           <div key={i} className="bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2">
                             <span className="text-gray-500 dark:text-gray-400 text-xs block">{ticket.name}</span>
                             <span className="text-gray-900 dark:text-white font-bold text-lg">₹{ticket.price}</span>

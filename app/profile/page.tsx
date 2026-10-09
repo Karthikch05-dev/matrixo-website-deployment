@@ -195,7 +195,7 @@ export default function ProfilePage() {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <XOLoader size={20} />
       </div>
     )
@@ -376,7 +376,7 @@ export default function ProfilePage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-black px-4 py-24">
+    <div className="min-h-screen bg-canvas-subtle dark:bg-canvas px-4 py-12 sm:py-16">
       {/* BG decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 -left-32 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />
@@ -394,12 +394,12 @@ export default function ProfilePage() {
           {/* Cover Image Section */}
           <div className="relative">
             {/* Cover Image */}
-            <div className="relative w-full aspect-[3/1] overflow-hidden group" style={{ background: 'linear-gradient(135deg, #2563EB, #FFFFFF)' }}>
+            <div className="relative w-full aspect-[3/1] overflow-hidden group" style={{ background: 'linear-gradient(135deg, #0A2747 0%, #0A6FD6 58%, #86BDF9 100%)' }}>
               {profile?.coverPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={getValidImageUrl(profile.coverPhoto)} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2563EB, #FFFFFF)' }} />
+                <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #0A2747 0%, #0A6FD6 58%, #86BDF9 100%)' }} />
               )}
 
               {/* Cover Edit Button */}

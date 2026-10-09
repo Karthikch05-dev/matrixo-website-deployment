@@ -222,10 +222,11 @@
         color: rgb(var(--muted));
     }
 
-    /* Was a blue→violet gradient; now a single brand colour. */
+    /* Was a blue→violet gradient. It's almost always applied to whole
+       headlines, so it now renders as plain ink like every other heading. */
     .gradient-text,
     .premium-gradient {
-        color: rgb(var(--accent));
+        color: rgb(var(--ink));
         background: none;
         -webkit-text-fill-color: currentColor;
     }
