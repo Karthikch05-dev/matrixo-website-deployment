@@ -359,6 +359,15 @@ export default function EventRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Registrations are written to the event sheet through Apps Script. If
+    // that isn't configured, stop before anyone pays for a ticket we can't record.
+    if (!process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL) {
+      toast.error(
+        "Registrations for this event are paused for a moment. Please email hello@matrixo.in and we'll register you.",
+      );
+      return;
+    }
+
     if (breakdown.isFree) {
       await submitRegistration();
       return;
