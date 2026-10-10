@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'ImpactVault - Institutional Intelligence Dashboard | matriXO',
+  title: 'ImpactVault — institutional analytics',
   description: 'ImpactVault institutional analytics dashboard - real-time student skill analytics, department insights, placement readiness, and SkillDNA intelligence for colleges.',
   openGraph: {
     title: 'ImpactVault - Institutional Intelligence Dashboard | matriXO',

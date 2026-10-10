@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
     if (!db) {
       console.warn('[careers] Firestore not initialized (missing Firebase config). Using fallback metadata.')
       return {
-        title: 'Apply - Careers | matriXO',
+        title: 'Apply · Careers',
         description: 'Submit your application to join the matriXO team.',
       }
     }
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
     if (roleDoc.exists()) {
       const role = roleDoc.data()
       return {
-        title: `${role.title} - Apply | matriXO`,
+        title: `Apply: ${role.title}`,
         description: role.description?.slice(0, 160) || `Apply for ${role.title} at matriXO. ${role.team} team, ${role.location}, ${role.type}.`,
         openGraph: {
           title: `${role.title} - Careers at matriXO`,
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: { roleId: string } 
     console.error('Error generating metadata:', e)
   }
   return {
-    title: 'Apply - Careers | matriXO',
+    title: 'Apply · Careers',
     description: 'Submit your application to join the matriXO team.',
   }
 }

@@ -4,7 +4,7 @@ import { BETA_PRODUCTS_ENABLED } from '@/lib/site'
 export const metadata: Metadata = {
   // Beta product: kept out of search on matrixo.in, indexable on beta.
   robots: BETA_PRODUCTS_ENABLED ? undefined : { index: false, follow: false },
-  title: 'GrowGrid - Career Growth Tracker | matriXO',
+  title: 'GrowGrid — career growth tracker',
   description: 'Track your career growth journey with GrowGrid by matriXO. Set goals, track milestones, and accelerate your professional development.',
   openGraph: {
     title: 'GrowGrid - Career Growth Tracker | matriXO',
