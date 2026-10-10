@@ -1,49 +1,63 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { FlaskConical, X } from 'lucide-react'
+import { BETA_PRODUCTS_ENABLED, SITE } from '@/lib/site'
 
+const DISMISS_KEY = 'mx-beta-notice-dismissed-at'
+const DISMISS_DAYS = 14
+
+/**
+ * Beta-only notice under the navbar: says this is the testing site and offers
+ * a one-click feedback email. Rendered on the server (no layout shift for new
+ * visitors); dismissing hides it for two weeks.
+ */
 export default function BetaBanner() {
-  const [isVisible, setIsVisible] = useState(true)
-  const [isBeta, setIsBeta] = useState(false)
+  const pathname = usePathname() || '/'
+  const [hidden, setHidden] = useState(false)
+  const [href, setHref] = useState(`mailto:${SITE.email}?subject=${encodeURIComponent('Beta feedback')}`)
 
   useEffect(() => {
-    // Check if we're on beta site
-    const checkBeta = window.location.hostname === 'beta.matrixo.in'
-    setIsBeta(checkBeta)
+    try {
+      const at = Number(localStorage.getItem(DISMISS_KEY) || 0)
+      if (at && Date.now() - at < DISMISS_DAYS * 86_400_000) setHidden(true)
+    } catch {}
   }, [])
 
-  if (!isBeta || !isVisible) return null
+  // Include the page they were on so feedback is actionable.
+  useEffect(() => {
+    const body = `Page: ${window.location.href}\nDevice: ${navigator.userAgent}\n\nWhat happened / what would you change?\n`
+    setHref(`mailto:${SITE.email}?subject=${encodeURIComponent('Beta feedback')}&body=${encodeURIComponent(body)}`)
+  }, [pathname])
+
+  if (!BETA_PRODUCTS_ENABLED || hidden || pathname.startsWith('/employee-portal')) return null
 
   return (
-    <AnimatePresence>
-      <motion.div
-        data-beta-banner="true"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -100, opacity: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white shadow-lg"
-      >
-        <div className="container-custom px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="bg-white text-purple-600 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-              BETA
-            </span>
-            <p className="text-sm md:text-base font-medium">
-              🚀 You're testing the next generation of matriXO! New features, early access, your feedback shapes the future.
-            </p>
-          </div>
-          <button
-            onClick={() => setIsVisible(false)}
-            className="text-white hover:text-gray-200 transition-colors ml-4"
-            aria-label="Close banner"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+    <div data-beta-banner="true" className="border-b border-accent/15 bg-accent-soft">
+      <div className="mx-auto flex max-w-site items-center gap-3 px-4 py-2.5 text-[13px] sm:px-6 lg:px-8">
+        <FlaskConical className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+        <p className="min-w-0 flex-1 text-ink">
+          <span className="font-semibold">You’re on the matriXO beta.</span>{' '}
+          <span className="text-muted">New features land here first and may change or break.</span>{' '}
+          <a href={href} className="font-medium text-accent underline-offset-2 hover:underline">
+            Send feedback
+          </a>
+        </p>
+        <button
+          type="button"
+          aria-label="Hide beta notice"
+          onClick={() => {
+            setHidden(true)
+            try {
+              localStorage.setItem(DISMISS_KEY, String(Date.now()))
+            } catch {}
+          }}
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted hover:bg-ink/[0.06] hover:text-ink"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   )
 }

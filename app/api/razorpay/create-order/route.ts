@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getRazorpayInstance } from '@/lib/razorpay'
 import { getPaymentBreakdown } from '@/lib/payments'
 import { getProduct } from '@/lib/products'
+import { getAuthedUser } from '@/lib/studentvault/auth'
+import { getLivePrice } from '@/lib/studentvault/pricing'
+import { STUDENTVAULT_PRODUCT_ID } from '@/lib/studentvault/grant'
 import eventsData from '@/data/events.json'
 
 export const dynamic = 'force-dynamic'
@@ -26,10 +29,54 @@ function resolveCatalogPrice(eventId?: string, ticketId?: string): number | null
   return ticket.price
 }
 
-export async function POST(request: Request) {
+/**
+ * StudentVault orders: the buyer must be signed in, the price comes from the
+ * live founding/regular tier, there is no platform fee, and the order carries
+ * the buyer's uid so the webhook can grant access even if the tab is closed.
+ */
+async function createStudentVaultOrder(request: NextRequest) {
+  const user = await getAuthedUser(request)
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to buy the StudentVault pass.' }, { status: 401 })
+  }
+
+  const price = await getLivePrice()
+  const order = await getRazorpayInstance().orders.create({
+    amount: price.amount * 100,
+    currency: 'INR',
+    receipt: `sv_${user.uid.slice(0, 12)}_${Date.now()}`.slice(0, 40),
+    notes: {
+      productId: STUDENTVAULT_PRODUCT_ID,
+      priceTier: price.tier,
+      uid: user.uid,
+      email: user.email ?? '',
+    },
+  })
+
+  return NextResponse.json({
+    order_id: order.id,
+    amount: order.amount,
+    currency: order.currency,
+    basePrice: price.amount,
+    platformFee: 0,
+    total: price.amount,
+    priceTier: price.tier,
+  })
+}
+
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { eventId, ticketId, productId, currency, receipt, notes } = body
+
+    if (productId === STUDENTVAULT_PRODUCT_ID) {
+      try {
+        return await createStudentVaultOrder(request)
+      } catch (error) {
+        console.error('Razorpay create-order (StudentVault) error:', error)
+        return NextResponse.json({ error: 'Payment gateway is unavailable. Please try again.' }, { status: 503 })
+      }
+    }
 
     // Two catalogs, both server-side: events (data/events.json) and products
     // (lib/products.ts). The client never supplies a price.

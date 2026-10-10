@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFirestore } from '@/lib/firebaseAdmin'
 import { requireEmployee } from '@/lib/studentvault/auth'
-import { getAllOffers, OFFERS_COLLECTION, slugExists } from '@/lib/studentvault/data'
+import { getAllOffers, OFFERS_COLLECTION, setOfferLink, slugExists } from '@/lib/studentvault/data'
 import { validateOffer } from '@/lib/studentvault/validation'
 import { createPublicNotification } from '@/lib/publicNotifications'
 
@@ -44,34 +44,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Publishing requires an explicit verification confirmation (§28). Without
-    // it the offer is stored as a draft and stays invisible to the public.
+    // Offers can go live before a staff check (they show as "researched");
+    // confirmVerified additionally stamps them as verified today.
     const publishRequested = body.publish === true
     const confirmedVerified = body.confirmVerified === true
     const now = new Date()
-
-    if (publishRequested && !confirmedVerified) {
-      return NextResponse.json(
-        {
-          error:
-            'Confirm you have verified this offer against the provider\'s official source before publishing.',
-        },
-        { status: 400 }
-      )
-    }
+    const { officialUrl, ...publicFields } = value
 
     const doc = await getAdminFirestore()
       .collection(OFFERS_COLLECTION)
       .add({
-        ...value,
+        ...publicFields,
         expiresOn: value.expiresOn ? new Date(value.expiresOn) : null,
         publishState: publishRequested ? 'published' : 'draft',
-        lastVerifiedAt: publishRequested ? now : null,
-        verifiedBy: publishRequested ? auth.employee.name || auth.employee.email : '',
+        lastVerifiedAt: confirmedVerified ? now : null,
+        verifiedBy: confirmedVerified ? auth.employee.name || auth.employee.email : '',
+        researchedAt: now,
         createdAt: now,
         updatedAt: now,
         createdBy: auth.employee.employeeId || auth.employee.uid,
       })
+    // The claim link is private — only unlocked buyers can read it.
+    await setOfferLink(doc.id, officialUrl)
 
     // ── Auto-generate public notification on publish (non-fatal) ─────
     if (publishRequested) {

@@ -2,16 +2,31 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { PublicNotification } from '@/lib/publicNotifications'
+import type { PublicNotification } from '@/lib/publicNotifications'
 
 const LOCAL_STORAGE_KEY = 'matrixo_public_read_notifications'
 
-export function usePublicNotifications() {
+export interface NotificationsPage {
+  notifications: PublicNotification[]
+  hasMore: boolean
+}
+
+interface Options {
+  /** Server-rendered first page; skips the initial request entirely. */
+  initial?: NotificationsPage | null
+  /**
+   * Wait for the page to go idle before the first request. Right for the nav
+   * bell (never competes with page content); wrong for /notifications itself.
+   */
+  deferInitial?: boolean
+}
+
+export function usePublicNotifications({ initial = null, deferInitial = true }: Options = {}) {
   const { user } = useAuth()
-  const [notifications, setNotifications] = useState<PublicNotification[]>([])
+  const [notifications, setNotifications] = useState<PublicNotification[]>(initial?.notifications ?? [])
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasMore, setHasMore] = useState(false)
+  const [isLoading, setIsLoading] = useState(!initial)
+  const [hasMore, setHasMore] = useState(initial?.hasMore ?? false)
   const [error, setError] = useState<string | null>(null)
 
   // Helper to get local read IDs
@@ -24,7 +39,7 @@ export function usePublicNotifications() {
     }
   }
 
-  const lastNotificationIdRef = useRef<string>('')
+  const lastNotificationIdRef = useRef<string>(initial?.notifications[initial.notifications.length - 1]?.id ?? '')
 
   // Load notifications from API
   const fetchNotifications = useCallback(async (loadMore = false) => {
@@ -50,7 +65,7 @@ export function usePublicNotifications() {
       setHasMore(data.hasMore)
       setError(null)
     } catch (err: any) {
-      console.error(err)
+      console.warn('[notifications]', err?.message || err)
       setError(err.message || 'Error fetching notifications')
     } finally {
       setIsLoading(false)
@@ -81,13 +96,28 @@ export function usePublicNotifications() {
     setReadIds(new Set(getLocalReadIds()))
   }, [user])
 
-  // Initial load & lightweight polling
+  // First load waits until the page has painted and settled, so the badge
+  // request never competes with the page's own content. Polling pauses while
+  // the tab is hidden.
   useEffect(() => {
-    fetchNotifications()
+    let cancelled = false
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }
+    const start = () => !cancelled && fetchNotifications()
+    let idle: number | undefined
+    if (!initial) {
+      if (!deferInitial) start()
+      else idle = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 4000 }) : window.setTimeout(start, 2000)
+    }
+
     const interval = setInterval(() => {
-      fetchNotifications()
-    }, 60000) // Poll every 60 seconds
-    return () => clearInterval(interval)
+      if (document.visibilityState === 'visible') fetchNotifications()
+    }, 60000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      if (idle !== undefined && !w.requestIdleCallback) window.clearTimeout(idle)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications])
 
   // Load read state initially and on user change

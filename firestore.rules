@@ -231,9 +231,12 @@ service cloud.firestore {
     // ================================================
     // PUSH SUBSCRIPTIONS COLLECTION (Web Push)
     // ================================================
+    // Staff devices only. Pushes are sent server-side (Admin SDK), so no
+    // client ever needs to read someone else's endpoint. Legacy name-keyed
+    // Employees docs are covered by the portalRole claim the server mirrors.
     match /pushSubscriptions/{subscriptionId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read, write: if isEmployee() ||
+        (isAuthenticated() && 'portalRole' in request.auth.token);
     }
 
     // ================================================
@@ -480,6 +483,117 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
+
+    // ================================================================
+    // BETA PRODUCTS (GrowGrid, PlayCred, MentorMatrix, ImpactVault,
+    // dashboard tickets, premium subscriptions). Both deployments share
+    // this Firebase project, so main and beta keep one identical ruleset.
+    // ================================================================
+
+    // ================================================
+    // SUBSCRIPTIONS COLLECTION (premium entitlements)
+    // Manual-UPI + verification model:
+    //   - a user may CREATE a claim for THEMSELVES, and only in the
+    //     'pending' state (they cannot self-grant 'active')
+    //   - a user may READ their own subscriptions
+    //   - only employees may update (verify -> active/rejected)
+    //   - no deletes (audit trail)
+    // ================================================
+    match /subscriptions/{subId} {
+      // Owner reads their own; employees read all (to verify payments).
+      allow read: if isEmployee()
+                  || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow update, delete: if isEmployee();
+    }
+
+
+    // ================================================
+    // GROWGRID PROGRESS COLLECTION (owner-only)
+    // Doc id == user uid. Only the owner may read or write their
+    // learning progress. XP/level are derived client-side but are not
+    // security-sensitive (no entitlement is granted from this doc).
+    // ================================================
+    match /growgrid_progress/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+
+    // ================================================
+    // PLAYCRED CREDENTIALS COLLECTION
+    // Public read so anyone can verify a credential via its link.
+    // A user may create only their OWN credential (userId match) and
+    // credentials are immutable (no update/delete) so the integrity
+    // hash always reflects the issued record.
+    // NOTE: issuance is currently client-side; the documented hardening
+    // is to move minting to an Admin-SDK server route that validates
+    // GrowGrid completion and signs the credential.
+    // ================================================
+    match /playcred_credentials/{credId} {
+      allow read: if true;
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+
+    // ================================================
+    // MENTORMATRIX SESSIONS COLLECTION
+    // A user creates & reads their own session requests. Employees
+    // (and mentors, admin-side) may update status to confirm/complete.
+    // Users may cancel their own request; no hard deletes (audit).
+    // ================================================
+    match /mentormatrix_sessions/{sessionId} {
+      allow read: if isEmployee()
+                  || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'requested';
+      // Owner may only move their own session to 'cancelled'; employees
+      // may set any status.
+      allow update: if isEmployee()
+                    || (isAuthenticated()
+                        && resource.data.userId == request.auth.uid
+                        && request.resource.data.status == 'cancelled');
+      allow delete: if false;
+    }
+
+
+    // ================================================
+    // EVENT TICKETS COLLECTION (surfaced in the user dashboard)
+    // Owner reads their own tickets; employees read all (check-in/admin).
+    // A user may create their own ticket; status changes (confirm/cancel)
+    // are employee-side; no deletes (audit).
+    // ================================================
+    match /event_tickets/{ticketId} {
+      allow read: if isEmployee()
+                  || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid;
+      allow update: if isEmployee();
+      allow delete: if false;
+    }
+
+
+    // ================================================
+    // IMPACTVAULT ACCESS COLLECTION (RBAC for the analytics dashboard)
+    // A user may read their OWN access record (to resolve their role);
+    // only employees/admins may grant or change access.
+    //
+    // ARCHITECTURE NOTE: institution-wide analytics aggregate many
+    // students' skillDNA_users docs, which are (correctly) owner-only for
+    // privacy. Client-side aggregation therefore CANNOT read other
+    // students' SkillDNA. Full ImpactVault aggregation must run
+    // server-side via the Admin SDK (privileged, privacy-preserving) —
+    // do NOT relax the skillDNA_users rules to enable it.
+    // ================================================
+    match /impactvault_access/{userId} {
+      allow read: if isEmployee() || (isAuthenticated() && request.auth.uid == userId);
+      allow write: if isEmployee();
+    }
   }
 }
-

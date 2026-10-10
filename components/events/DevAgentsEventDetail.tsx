@@ -740,13 +740,12 @@ export default function DevAgentsEventDetail({ event }: { event: any }) {
             className="flex flex-col items-center gap-4 justify-center mb-10"
           >
             {event?.status === 'sold-out' ? (
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl w-full max-w-lg bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-red-500 backdrop-blur-md text-center">
-                <span className="text-4xl mb-2 block">🎉</span>
-                <span className="text-2xl md:text-3xl font-black text-red-600 dark:text-red-400 tracking-tight">
-                  SOLD OUT!
+              <div className="flex w-full max-w-lg flex-col items-center justify-center rounded-[22px] border border-line bg-surface px-6 py-5 text-center shadow-card">
+                <span className="inline-flex items-center rounded-full bg-ink px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-canvas">
+                  Sold out
                 </span>
-                <p className="text-gray-700 dark:text-gray-300 font-medium mt-1">
-                  🎊 All tickets have been claimed. 🎊
+                <p className="mt-3 text-[15px] text-muted">
+                  Every ticket was claimed. Thank you for the response — turn on notifications to hear about the next one first.
                 </p>
               </div>
             ) : (

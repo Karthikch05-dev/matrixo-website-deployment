@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { FaUserShield } from 'react-icons/fa'
+import { ShieldCheck } from 'lucide-react'
+import { ButtonLink } from '@/components/ui/Button'
 import { useAuth } from '@/lib/AuthContext'
 
 /**
@@ -40,12 +40,8 @@ export default function ManageLink() {
   if (!isEmployee) return null
 
   return (
-    <Link
-      href="/studentvault/manage"
-      className="btn-secondary inline-flex items-center gap-2"
-    >
-      <FaUserShield className="text-sm" aria-hidden="true" />
-      Manage offers
-    </Link>
+    <ButtonLink href="/studentvault/manage" variant="ghost" size="sm" leadingIcon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />}>
+      Manage StudentVault
+    </ButtonLink>
   )
 }

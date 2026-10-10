@@ -1,26 +1,16 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - matriXO',
-  description: 'Read the Terms and Conditions for using matriXO services, events, and platform. Last updated September 2026.',
-  openGraph: {
-    title: 'Terms of Service - matriXO',
-    description: 'Terms and Conditions for matriXO services and events.',
-    url: 'https://matrixo.in/terms',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Terms and conditions',
+  description: 'The terms that apply when you use matrixo.in and register for matriXO events and programs.',
+  alternates: { canonical: '/terms' },
+  openGraph: { url: '/terms' },
 }
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
-          Terms and Conditions
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: September 7, 2026</p>
+    <LegalPage title="Terms and conditions" updated="September 7, 2026" path="/terms">
           
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">1. Acceptance of Terms</h2>
@@ -244,8 +234,6 @@ export default function TermsPage() {
               to providing quality technical education and maintaining transparent business practices.
             </p>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFirestore } from '@/lib/firebaseAdmin'
 import { requireEmployee } from '@/lib/studentvault/auth'
-import { PUBLIC_NOTIFICATIONS_COLLECTION } from '@/lib/publicNotifications'
+import { PUBLIC_NOTIFICATIONS_COLLECTION, revalidateNotifications } from '@/lib/publicNotifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +47,7 @@ export async function DELETE(
 
     // ── 2. Actual Deletion ───────────────────────────────────────────
     await docRef.delete()
+    revalidateNotifications()
 
     return NextResponse.json({
       success: true,

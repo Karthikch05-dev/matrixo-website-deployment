@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import RoleManagement from '@/components/careers/RoleManagement'
 
 export const metadata: Metadata = {
-  title: 'Role Management - Careers | matriXO',
+  title: 'Role management · Careers',
   description: 'Manage career roles and postings.',
 }
 

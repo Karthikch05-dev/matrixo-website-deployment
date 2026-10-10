@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Your Profile | matriXO',
+  title: 'Your profile',
   description: 'Manage your matriXO profile, view your event registrations, and update your personal information.',
   robots: { index: false, follow: false },
 }

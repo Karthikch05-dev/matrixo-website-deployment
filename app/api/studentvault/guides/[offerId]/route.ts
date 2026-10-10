@@ -1,35 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFirestore } from '@/lib/firebaseAdmin'
-import { getAuthedUser, requireEmployee } from '@/lib/studentvault/auth'
-import {
-  getGuide,
-  GUIDES_COLLECTION,
-  hasStudentVaultAccess,
-} from '@/lib/studentvault/data'
+import { requireEmployee } from '@/lib/studentvault/auth'
+import { getGuide, GUIDES_COLLECTION } from '@/lib/studentvault/data'
+import { requireUnlocked } from '@/lib/studentvault/verifyInput'
 
 export const dynamic = 'force-dynamic'
 
 type Params = { params: { offerId: string } }
 
 /**
- * Paid guide content. Returned only to users with an active entitlement — it is
+ * Paid guide content. Returned only to buyers who are verified students — it is
  * never sent to the browser and hidden with CSS, and the Firestore rules deny
  * client reads of this collection entirely.
  */
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const user = await getAuthedUser(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
-    }
-
-    const entitled = await hasStudentVaultAccess(user.uid)
-    if (!entitled) {
-      return NextResponse.json(
-        { error: 'StudentVault access required.', locked: true },
-        { status: 403 }
-      )
-    }
+    const gate = await requireUnlocked(request)
+    if (!gate.ok) return gate.response
 
     const guide = await getGuide(params.offerId)
     if (!guide) {

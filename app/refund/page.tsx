@@ -1,26 +1,16 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Refund Policy - matriXO',
-  description: 'matriXO cancellation and refund policy for event tickets and registrations. 7-day refund window with transparent processing.',
-  openGraph: {
-    title: 'Refund & Cancellation Policy - matriXO',
-    description: 'Cancellation and refund policy for matriXO event registrations.',
-    url: 'https://matrixo.in/refund',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Cancellations and refunds',
+  description: 'When and how you can cancel a matriXO registration and get a refund.',
+  alternates: { canonical: '/refund' },
+  openGraph: { url: '/refund' },
 }
 
 export default function RefundPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 gradient-text">
-          Cancellations and Refunds Policy
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: September 7, 2026</p>
+    <LegalPage title="Cancellations and refunds" updated="October 11, 2026" path="/refund">
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">1. General Refund Policy</h2>
@@ -36,8 +26,18 @@ export default function RefundPage() {
           </section>
 
           <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">StudentVault pass</h2>
+            <ul className="list-disc pl-6 mb-4">
+              <li><strong>7-day full refund:</strong> email hello@matrixo.in within 7 days of buying the StudentVault pass and we refund the full amount you paid, no questions asked</li>
+              <li>The StudentVault pass has <strong>no platform fee</strong>, so nothing is deducted from a StudentVault refund</li>
+              <li>Once refunded, your pass is deactivated and the claim links and guides are locked again</li>
+              <li>After 7 days the pass is non-refundable, except where matriXO stops offering StudentVault</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">2. Platform Fee</h2>
-            <p className="mb-4">A <strong>platform fee of ₹5</strong> is added to every paid registration and is shown separately at checkout before you pay (for example, a ₹499 ticket is charged as ₹504).</p>
+            <p className="mb-4">A <strong>platform fee of ₹5</strong> is added to every paid event registration (not to the StudentVault pass) and is shown separately at checkout before you pay (for example, a ₹499 ticket is charged as ₹504).</p>
             <ul className="list-disc pl-6 mb-4">
               <li>The platform fee covers payment gateway charges and registration platform costs that we incur the moment a payment is processed</li>
               <li>It is <strong>non-refundable</strong> on participant-initiated cancellations, and is deducted in addition to any applicable processing fee</li>
@@ -132,8 +132,6 @@ export default function RefundPage() {
               matriXO is an An Ed-Tech Startup committed to providing quality technical education and transparent business practices. This policy is subject to change, and any updates will be communicated via email to registered users.
             </p>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }

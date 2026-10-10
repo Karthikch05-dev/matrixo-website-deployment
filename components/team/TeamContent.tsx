@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FaLinkedin, FaEnvelope } from 'react-icons/fa'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query } from 'firebase/firestore'
+import { Linkedin, Mail } from 'lucide-react'
 import { db } from '@/lib/firebaseConfig'
-import Link from 'next/link'
-import XOLoader from '@/components/XOLoader'
+import { ButtonLink } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Feedback'
 
 interface TeamMember {
   employeeId: string
@@ -164,146 +163,106 @@ export default function TeamContent() {
   }, [])
 
   return (
-    <div className="min-h-screen pt-0">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-900 dark:text-white section-padding overflow-hidden">
-        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 -left-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="container-custom px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-5xl md:text-6xl font-display font-bold mb-6">
-              Meet Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Team</span>
-            </h1>
-            <p className="text-2xl text-gray-600 dark:text-gray-300">
-              The passionate individuals building the future of technical education
-            </p>
-          </motion.div>
-        </div>
-      </section>
+    <>
+      <div className="mx-auto max-w-site px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8">
+        <p className="eyebrow">Team</p>
+        <h1 className="mt-4 max-w-3xl text-[42px] font-semibold leading-[1.03] tracking-[-0.04em] text-ink sm:text-[64px]">
+          The people behind matriXO.
+        </h1>
+        <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-muted sm:text-[19px]">
+          Students, engineers and organisers who’d rather build things than talk about them.
+        </p>
+      </div>
 
-      {/* Team Grid */}
-      <section className="section-padding bg-transparent">
-        <div className="container-custom px-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <XOLoader size={16} />
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-              {teamMembers.map((member, index) => (
-                <motion.div
-                  key={member.employeeId}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.08, duration: 0.5 }}
-                  className="glass-card p-8 hover-lift hover-glow text-center"
-                >
-                  {/* Avatar - Image with fallback to initials */}
-                  <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden 
-                                bg-gradient-to-br from-blue-500 to-purple-600">
-                    {member.profileImage ? (
-                      <img 
-                        src={member.profileImage} 
+      <section aria-label="Team members" className="mx-auto max-w-site px-4 pb-20 sm:px-6 lg:px-8">
+        {loading ? (
+          <ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-busy="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <li key={i}>
+                <Skeleton className="aspect-[4/5] w-full rounded-card" />
+                <Skeleton className="mt-4 h-5 w-2/3" />
+                <Skeleton className="mt-2 h-4 w-1/2" />
+              </li>
+            ))}
+          </ul>
+        ) : teamMembers.length === 0 ? (
+          <p className="rounded-card border border-dashed border-line-strong px-6 py-16 text-center text-[15px] text-muted">
+            We couldn’t load the team right now. Please refresh in a moment.
+          </p>
+        ) : (
+          <ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {teamMembers.map((member) => {
+              const initials = member.name
+                .split(' ')
+                .map((n) => n.charAt(0))
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()
+              return (
+                <li key={member.employeeId} className="group">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-card bg-canvas-subtle ring-1 ring-line">
+                    <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-[44px] font-semibold tracking-[-0.03em] text-subtle">
+                      {initials}
+                    </span>
+                    {member.profileImage && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={member.profileImage}
                         alt={member.name}
                         loading="lazy"
-                        className="w-full h-full object-cover"
+                        decoding="async"
+                        className="relative h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
-                          const parent = e.currentTarget.parentElement
-                          if (parent && !parent.querySelector('.initials-fallback')) {
-                            const fallback = document.createElement('div')
-                            fallback.className = 'initials-fallback absolute inset-0 flex items-center justify-center text-white text-4xl font-bold'
-                            fallback.textContent = member.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()
-                            parent.appendChild(fallback)
-                          }
                         }}
                       />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-white text-4xl font-bold">
-                        {member.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
-                      </div>
                     )}
                   </div>
-
-                  {/* Info */}
-                  <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                    {member.name}
-                  </h3>
-                  <p className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 font-medium mb-2">
-                    {getDisplayRole(member)}
-                  </p>
-                  {member.department && (
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                      {member.department}
-                    </p>
-                  )}
-
-                  {/* Social Links */}
-                  <div className="flex justify-center space-x-4 mt-4">
-                    {member.linkedin && (
-                      <a
-                        href={member.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-10 h-10 glass-chip flex items-center justify-center 
-                                 hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
-                                 transition-all duration-300"
-                      >
-                        <FaLinkedin size={20} />
-                      </a>
-                    )}
-                    {member.email && (
-                      <a
-                        href={`mailto:${member.email}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.location.href = `mailto:${member.email}`;
-                        }}
-                        className="w-10 h-10 glass-chip flex items-center justify-center 
-                                 hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-600 hover:text-white 
-                                 transition-all duration-300"
-                      >
-                        <FaEnvelope size={20} />
-                      </a>
-                    )}
+                  <div className="mt-4 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-[17px] font-semibold tracking-[-0.01em] text-ink">{member.name}</h2>
+                      <p className="mt-0.5 text-[14px] text-muted">{getDisplayRole(member)}</p>
+                      {member.department && <p className="mt-0.5 text-[13px] text-subtle">{member.department}</p>}
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      {member.linkedin && (
+                        <a
+                          href={member.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${member.name} on LinkedIn`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-subtle transition-colors hover:bg-ink/[0.06] hover:text-ink"
+                        >
+                          <Linkedin aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+                        </a>
+                      )}
+                      {member.email && (
+                        <a
+                          href={`mailto:${member.email}`}
+                          aria-label={`Email ${member.name}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-subtle transition-colors hover:bg-ink/[0.06] hover:text-ink"
+                        >
+                          <Mail aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* Join Us CTA */}
-      <section className="section-padding bg-white/30 dark:bg-white/[0.01] backdrop-blur-sm">
-        <div className="container-custom px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center glass-card p-12 max-w-3xl mx-auto"
-          >
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6 gradient-text">
-              Want to Join Our Team?
-            </h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
-              We&apos;re always looking for talented individuals who share our passion for education and technology.
-            </p>
-            <Link href="/careers">
-              <button className="btn-primary">
-                View Open Positions
-              </button>
-            </Link>
-          </motion.div>
+      <section className="border-t border-line bg-canvas-subtle py-16 sm:py-24">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <h2 className="text-[32px] font-semibold leading-[1.06] tracking-[-0.03em] text-ink sm:text-[44px]">Want to build with us?</h2>
+          <p className="mx-auto mt-4 max-w-md text-[17px] text-muted">We hire interns and full-timers who care about students and like shipping.</p>
+          <ButtonLink href="/careers" size="lg" className="mt-8">
+            See open roles
+          </ButtonLink>
         </div>
       </section>
-    </div>
+    </>
   )
 }

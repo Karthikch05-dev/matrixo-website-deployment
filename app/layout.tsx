@@ -1,81 +1,88 @@
 import './globals.css'
-import type { Metadata } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Suspense } from 'react'
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
+import { Toaster } from 'sonner'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import SiteChrome from '@/components/site/SiteChrome'
+import RouteProgress from '@/components/site/RouteProgress'
+import ThirdPartyScripts from '@/components/site/ThirdPartyScripts'
+import ThemeProvider from '@/components/ThemeProvider'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ProfileProvider } from '@/lib/ProfileContext'
-import ProfileGuard from '@/components/ProfileGuard'
-import ThemeProvider from '@/components/ThemeProvider'
-import CtaDirection from '@/components/CtaDirection'
-import { Toaster } from 'sonner'
-import Script from 'next/script'
-import { headers } from 'next/headers'
+import { SITE } from '@/lib/site'
 
+// One variable font for everything (UI, headings, body). Dropping the second
+// display face saves a font download on every page.
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
 })
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-})
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FBFBFD' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://matrixo.in'),
+  metadataBase: new URL(SITE.url),
   title: {
-    default: 'matriXO - Technical Workshops, Events & Bootcamps for Students',
-    template: '%s | matriXO'
+    default: 'matriXO — Workshops, hackathons and career programs for students',
+    template: '%s · matriXO',
   },
-  description: 'matriXO — Your gateway to technical excellence. Workshops, hackathons, bootcamps, and career-focused events designed for students. An Ed-Tech Startup.',
-  keywords: 'matriXO, technical workshops, hackathons, bootcamps, student events, career development, tech events, coding workshops, student training',
-  authors: [{ name: 'matriXO Team' }],
+  description: SITE.description,
+  applicationName: 'matriXO',
+  keywords: [
+    'matriXO',
+    'technical workshops',
+    'hackathons',
+    'bootcamps',
+    'student events',
+    'career programs',
+    'coding workshops',
+    'StudentVault',
+    'student developer pack India',
+  ],
+  authors: [{ name: 'matriXO', url: SITE.url }],
   creator: 'matriXO',
   publisher: 'matriXO',
+  category: 'education',
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/brand/matrixo-app-icon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [{ url: '/brand/apple-touch-icon.png', sizes: '180x180' }],
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'matriXO',
+    statusBarStyle: 'default',
+  },
+  formatDetection: { telephone: false },
   openGraph: {
     type: 'website',
-    locale: 'en_IN',
-    url: 'https://matrixo.in',
-    siteName: 'matriXO',
-    title: 'matriXO - Technical Workshops & Career-Focused Events',
-    description: 'Technical workshops, hackathons, and bootcamps for student career growth. Join our events and accelerate your tech journey.',
-    images: [
-      {
-        url: 'https://matrixo.in/logos/matrixo logo wide.png',
-        width: 1200,
-        height: 630,
-        alt: 'matriXO - Technical Workshops & Events',
-        type: 'image/png',
-      },
-      {
-        url: 'https://matrixo.in/logos/logo-dark.png',
-        width: 1080,
-        height: 1080,
-        alt: 'matriXO Logo',
-        type: 'image/png',
-      },
-    ],
+    locale: SITE.locale,
+    url: SITE.url,
+    siteName: SITE.name,
+    title: 'matriXO — Workshops, hackathons and career programs for students',
+    description: SITE.description,
+    images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: 'matriXO' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'matriXO - Technical Workshops & Career-Focused Events',
-    description: 'Technical workshops, hackathons, and bootcamps for student career growth.',
-    images: ['https://matrixo.in/logos/matrixo logo wide.png'],
-    creator: '@matrixo',
-  },
-  other: {
-    'instagram:card': 'summary_large_image',
-    'instagram:title': 'matriXO - Technical Workshops & Career-Focused Events',
-    'instagram:description': 'Technical workshops, hackathons, and bootcamps for student career growth. Join our events!',
-    'instagram:image': 'https://matrixo.in/logos/matrixo logo wide.png',
+    title: 'matriXO — Workshops, hackathons and career programs for students',
+    description: SITE.description,
+    images: [SITE.ogImage],
   },
   robots: {
     index: true,
@@ -90,90 +97,70 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const headersList = await headers()
-  const initialPathname = headersList.get('x-pathname') || ''
-  const host = headersList.get('host') || ''
-  const isEmployeePortal = host.includes('team-auth') || initialPathname.includes('/employee-portal')
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE.url}/#organization`,
+      name: SITE.name,
+      url: SITE.url,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE.url}/brand/matrixo-app-icon-512.png`,
+        width: 512,
+        height: 512,
+      },
+      description: SITE.description,
+      email: SITE.email,
+      sameAs: [SITE.social.instagram, SITE.social.linkedin],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: SITE.email,
+        url: `${SITE.url}/contact`,
+        availableLanguage: ['English', 'Hindi', 'Telugu'],
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE.url}/#website`,
+      url: SITE.url,
+      name: SITE.name,
+      inLanguage: 'en-IN',
+      publisher: { '@id': `${SITE.url}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${SITE.url}/events?q={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+}
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
-      <head>
-        {/* Warm up the connections that sit on the critical path. */}
-        <link rel="preconnect" href="https://matrixo-in-auth.firebaseapp.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fundingchoicesmessages.google.com" />
-
+    <html lang="en-IN" className={inter.variable} suppressHydrationWarning>
+      <body className="font-sans antialiased">
         <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2402360356645801"
-          crossOrigin="anonymous"
+          type="application/ld+json"
+          // Static, trusted content generated above.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
-
-        {/* iOS PWA Configuration - Required for location & other permissions in standalone mode */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="matriXO Team Auth" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
-
-        {/* Theme color for PWA */}
-        <meta name="theme-color" content="#0a0a0a" />
-
-        {/* Dark Mode Script - Default to LIGHT mode */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                // Apply dark mode only if it was explicitly saved
-                if (localStorage.getItem('theme') === 'dark') {
-                  document.documentElement.classList.add('dark')
-                } else {
-                  document.documentElement.classList.remove('dark')
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
-      </head>
-      <body className="font-sans antialiased overflow-x-hidden max-w-full">
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-KFF7KV3Z11"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-KFF7KV3Z11');
-          `}
-        </Script>
-
-
-        {/* Gives every .cta-glass button the home-page directional hover sweep. */}
-        <CtaDirection />
-
-        <ThemeProvider defaultTheme="light" enableSystem={false}>
+        <ThemeProvider defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <AuthProvider>
             <ProfileProvider>
-              {!isEmployeePortal && <Navbar />}
-              <main className={isEmployeePortal ? 'min-h-screen overflow-x-hidden' : 'min-h-screen pt-24 overflow-x-hidden site-ambient'}>
-                {isEmployeePortal ? children : <ProfileGuard>{children}</ProfileGuard>}
-              </main>
-              {!isEmployeePortal && <Footer />}
+              <Suspense fallback={null}>
+                <RouteProgress />
+              </Suspense>
+              <SiteChrome header={<Navbar />} footer={<Footer />}>
+                {children}
+              </SiteChrome>
             </ProfileProvider>
           </AuthProvider>
         </ThemeProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-center" richColors closeButton />
+        <ThirdPartyScripts />
       </body>
     </html>
   )

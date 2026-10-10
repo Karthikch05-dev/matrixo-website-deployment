@@ -15,50 +15,43 @@ import {
 } from "react-icons/fa";
 import EventRegistrationForm from "./EventRegistrationForm";
 import Confetti from "../Confetti";
-import VibeCodeEventDetail from "./VibeCodeEventDetail";
-import WrangleXEventDetail from "./WrangleXEventDetail";
-import DevAgentsEventDetail from "./DevAgentsEventDetail";
-import DevAgents2EventDetail from "./DevAgents2EventDetail";
+import dynamic from "next/dynamic";
+
+// Each branded event page is its own chunk, so an event page only downloads
+// the design it actually renders (DevAgents alone is ~2,400 lines).
+const eventLoading = () => (
+  <div className="flex min-h-[70vh] items-center justify-center">
+    <XOLoader size={20} />
+  </div>
+);
+const VibeCodeEventDetail = dynamic(() => import("./VibeCodeEventDetail"), { loading: eventLoading });
+const WrangleXEventDetail = dynamic(() => import("./WrangleXEventDetail"), { loading: eventLoading });
+const DevAgentsEventDetail = dynamic(() => import("./DevAgentsEventDetail"), { loading: eventLoading });
+const DevAgents2EventDetail = dynamic(() => import("./DevAgents2EventDetail"), { loading: eventLoading });
 import { useEventVisibility } from "@/lib/eventVisibility";
 import XOLoader from '@/components/XOLoader';
 
 export default function EventDetail({ event }: { event: any }) {
+  // Visibility is resolved on the server; this client check only catches an
+  // event hidden in the last minute, and never blocks the page from rendering.
   const { visibilityMap, loading } = useEventVisibility();
-  const isHidden = visibilityMap[event.slug]?.hidden === true;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black px-4">
-        <div className="text-center space-y-3">
-          <XOLoader size={20} />
-          <p className="text-gray-700 dark:text-gray-300 font-medium">
-            Checking event visibility…
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const isHidden = !loading && visibilityMap[event.slug]?.hidden === true;
 
   if (isHidden) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-black px-4">
-        <div className="max-w-md w-full text-center glass-card p-8 sm:p-10 border border-gray-200/40 dark:border-white/[0.08]">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500">
-            <FaLock className="text-2xl" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
-            Event hidden by admin
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            This event has been hidden from the public event pages. If you’re an
-            admin, manage it from the employee portal.
-          </p>
-        </div>
-      </div>
+      <section className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center px-6 py-20 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-canvas-subtle text-subtle">
+          <FaLock aria-hidden="true" className="text-xl" />
+        </span>
+        <h1 className="mt-5 text-[28px] font-semibold tracking-[-0.03em] text-ink">This event isn’t available</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-muted">It’s been taken down for now. Have a look at what else is coming up.</p>
+        <Link href="/events" className="mt-8 inline-flex h-11 items-center rounded-full bg-accent-solid px-5 text-[15px] font-medium text-accent-fg">
+          See all events
+        </Link>
+      </section>
     );
   }
 
-  // Check if this is a VibeCode event - render dedicated component
   if (event.isVibeCodeEvent) {
     return <VibeCodeEventDetail event={event} />;
   }
@@ -227,13 +220,13 @@ function DefaultEventDetail({ event }: { event: any }) {
             {event.featured && (
               <div className="flex flex-wrap items-center gap-3 mb-4">
                 {event.status === "sold-out" && (
-                  <span className="relative inline-block bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white px-6 py-3 rounded-full text-sm font-bold animate-celebrate animate-shine shadow-lg shadow-red-600/50">
-                    🎉 SOLD OUT - ALL {event.totalCapacity} TICKETS CLAIMED! 🎊
+                  <span className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-black">
+                    Sold out · all {event.totalCapacity} tickets claimed
                   </span>
                 )}
                 {isTEDxEvent && (
-                  <span className="inline-block bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold">
-                    🔴 IDEAS WORTH SPREADING
+                  <span className="inline-flex items-center rounded-full bg-[#E62B1E] px-4 py-2 text-[13px] font-semibold text-white">
+                    Ideas worth spreading
                   </span>
                 )}
                 <span
@@ -825,24 +818,14 @@ function DefaultEventDetail({ event }: { event: any }) {
 
                   {/* Sold Out Notice */}
                   {event.status === "sold-out" && (
-                    <div className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/30 dark:via-orange-900/30 dark:to-yellow-900/30 border-2 border-red-500 rounded-xl p-6 text-center relative overflow-hidden">
-                      {/* The sweep gradient now lives in `.animate-shine::after`; keeping
-                          one here too would leave a static white band down the middle. */}
-                      <div className="absolute inset-0 animate-shine"></div>
-                      <div className="text-5xl mb-3 animate-celebrate">🎉</div>
-                      <h3 className="text-3xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-3">
-                        SOLD OUT!
-                      </h3>
-                      <p className="text-base text-gray-700 dark:text-gray-300 mb-2 font-semibold">
-                        All{" "}
-                        <strong className="text-red-600 dark:text-red-400">
-                          {event.totalCapacity}
-                        </strong>{" "}
-                        tickets have been claimed! 🎊
+                    <div className="rounded-[20px] border border-line bg-canvas-subtle p-6 text-center">
+                      <span className="inline-flex items-center rounded-full bg-ink px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-canvas">
+                        Sold out
+                      </span>
+                      <p className="mt-3 text-[15px] font-medium text-ink">
+                        All {event.totalCapacity} tickets have been claimed.
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Thank you for the overwhelming response!
-                      </p>
+                      <p className="mt-1 text-[14px] text-muted">Thank you for the response. Turn on notifications to hear about the next one first.</p>
                     </div>
                   )}
 
@@ -924,7 +907,7 @@ function DefaultEventDetail({ event }: { event: any }) {
                         >
                           <span className="flex items-center justify-center gap-2">
                             {event.status === "sold-out"
-                              ? "🔴 SOLD OUT"
+                              ? "Sold out"
                               : "🎟️ Book Now"}
                           </span>
                         </button>

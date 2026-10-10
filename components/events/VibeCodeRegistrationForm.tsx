@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/AuthContext'
+import { useProfilePrefill } from '@/lib/useProfilePrefill'
 import { useRazorpayCheckout } from '@/hooks/useRazorpayCheckout'
 import { getPaymentBreakdown } from '@/lib/payments'
 import XOLoader from '@/components/XOLoader'
@@ -125,6 +126,19 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       }
     }
   }, [user?.email])
+
+  // Fill from the saved profile; only empty fields are touched.
+  const { offerSave } = useProfilePrefill((saved) =>
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || saved.fullName,
+      rollNumber: prev.rollNumber || saved.rollNumber,
+      phone: prev.phone || saved.phone,
+      branch: prev.branch || saved.branch,
+      college: prev.college || saved.college,
+      year: saved.year || prev.year,
+    }))
+  )
 
   // Auto-fill user email when logged in
   useEffect(() => {
@@ -294,6 +308,14 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         localStorage.setItem('vibecode_registrations', JSON.stringify(registeredEmails))
       }
       setHasRegistered(true)
+      offerSave({
+        fullName: formData.name,
+        rollNumber: formData.rollNumber,
+        phone: formData.phone,
+        branch: formData.branch,
+        college: formData.college,
+        year: formData.year,
+      })
 
       toast.success('🎉 Registration Complete! Check your email at ' + formData.email + ' for confirmation.')
       

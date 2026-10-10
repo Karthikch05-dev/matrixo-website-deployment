@@ -1,77 +1,22 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useRef, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-// Ordered routes matching navbar tab positions
-const routeOrder = [
-    '/',
-    '/events',
-    '/services',
-    '/about',
-    '/team',
-    '/contact',
-    '/careers',
-    // Beta features (positioned after main nav)
-    '/growgrid',
-    '/playcred',
-    '/mentormatrix',
-    '/impactvault',
-    '/profile',
-]
+// True once the first page has mounted. Module scope, so it survives the
+// template remounting on every navigation.
+let hasNavigated = false
 
-function getRouteIndex(pathname: string): number {
-    const exact = routeOrder.indexOf(pathname)
-    if (exact !== -1) return exact
-    for (let i = routeOrder.length - 1; i >= 0; i--) {
-        if (routeOrder[i] !== '/' && pathname.startsWith(routeOrder[i])) return i
-    }
-    return Math.floor(routeOrder.length / 2)
-}
-
-// Store previous route index globally so it persists across template re-renders
-let prevRouteIndex = -1
-
-const SLIDE_DISTANCE = 60
-
+/**
+ * Route transition: a short fade-and-rise on client-side navigations only.
+ * The first page load renders without it so content paints immediately
+ * (an opacity-0 start would push back Largest Contentful Paint).
+ */
 export default function Template({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname()
-    const currIndex = getRouteIndex(pathname)
+  const animate = hasNavigated
 
-    // Calculate direction
-    let direction = 0
-    if (prevRouteIndex !== -1 && prevRouteIndex !== currIndex) {
-        direction = currIndex > prevRouteIndex ? 1 : -1
-    }
+  useEffect(() => {
+    hasNavigated = true
+  }, [])
 
-    // Update stored index after calculating direction
-    useEffect(() => {
-        prevRouteIndex = currIndex
-    }, [currIndex])
-
-    // On the very first load there is no previous route to slide from, so skip the
-    // enter animation entirely. This keeps the server-rendered markup visible at
-    // first paint instead of holding it at opacity:0 until framer-motion hydrates
-    // (which otherwise pushes LCP out by seconds). Client-side route changes still
-    // get the identical slide + fade below.
-    const isFirstLoad = prevRouteIndex === -1
-
-    return (
-        <motion.div
-            key={pathname}
-            initial={isFirstLoad ? false : { x: direction * SLIDE_DISTANCE, opacity: 0 }}
-            animate={{
-                x: 0,
-                opacity: 1,
-                transition: {
-                    x: { type: 'spring', stiffness: 260, damping: 26, mass: 0.7 },
-                    opacity: { duration: 0.25, ease: 'easeOut' },
-                },
-            }}
-            className="will-change-transform"
-        >
-            {children}
-        </motion.div>
-    )
+  return <div className={animate ? 'animate-route-in' : undefined}>{children}</div>
 }

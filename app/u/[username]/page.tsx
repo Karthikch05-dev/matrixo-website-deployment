@@ -155,7 +155,7 @@ export default function PublicProfilePage() {
   // --- Loading ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a12] flex items-center justify-center">
+      <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={glassCard(isDark)}>
             <FaDna className="text-purple-500 text-xl animate-pulse" />
@@ -169,7 +169,7 @@ export default function PublicProfilePage() {
   // --- Not Found ---
   if (notFound || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a12] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-canvas-subtle dark:bg-canvas flex items-center justify-center px-4">
         <motion.div {...fadeUp} className="text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center" style={glassCard(isDark)}>
             <FaLock className="text-gray-400 text-2xl" />
@@ -207,7 +207,7 @@ export default function PublicProfilePage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a12] transition-colors duration-300">
+    <div className="min-h-screen bg-canvas-subtle dark:bg-canvas transition-colors duration-300">
       {/* ── Background orbs ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden print:hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-purple-500/[0.03] dark:bg-purple-500/[0.06] rounded-full blur-3xl animate-float" />

@@ -50,6 +50,18 @@ export interface RazorpaySuccess {
   basePrice: number
   platformFee: number
   total: number
+  /** Whatever the verify endpoint returned (e.g. StudentVault access state). */
+  verifyData?: Record<string, unknown>
+}
+
+/** ID token of the signed-in user, if any — loaded lazily so guests pay nothing for it. */
+async function currentIdToken(): Promise<string | undefined> {
+  try {
+    const { auth } = await import('@/lib/firebase/client')
+    return (await auth?.currentUser?.getIdToken()) ?? undefined
+  } catch {
+    return undefined
+  }
 }
 
 export interface StartCheckoutOptions {
@@ -95,12 +107,20 @@ export function useRazorpayCheckout() {
     setIsProcessing(true)
 
     try {
-      await loadCheckoutScript()
+      const [, token] = await Promise.all([loadCheckoutScript(), authToken ? Promise.resolve(authToken) : currentIdToken()])
+      const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+      // Guests: keep the checkout email on the order so the payment can be
+      // matched to their account later (purchase history).
+      const orderNotes = {
+        ...(notes || {}),
+        ...(prefill?.email ? { email: prefill.email } : {}),
+        ...(description ? { description: description.slice(0, 120) } : {}),
+      }
 
       const orderResponse = await fetch('/api/razorpay/create-order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ticketId, productId, notes }),
+        headers: { 'Content-Type': 'application/json', ...authHeader },
+        body: JSON.stringify({ eventId, ticketId, productId, notes: orderNotes }),
       })
 
       const orderData = await orderResponse.json()
@@ -128,10 +148,7 @@ export function useRazorpayCheckout() {
           try {
             const verifyResponse = await fetch(verifyPath, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-              },
+              headers: { 'Content-Type': 'application/json', ...authHeader },
               body: JSON.stringify(payment),
             })
 
@@ -148,6 +165,7 @@ export function useRazorpayCheckout() {
               basePrice: orderData.basePrice,
               platformFee: orderData.platformFee,
               total: orderData.total,
+              verifyData,
             })
           } catch (error) {
             const message =
@@ -163,7 +181,7 @@ export function useRazorpayCheckout() {
             onDismiss?.()
           },
         },
-        theme: { color: '#6366f1' },
+        theme: { color: '#0A6FD6' },
       })
 
       razorpay.on('payment.failed', (response: unknown) => {

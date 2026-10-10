@@ -28,6 +28,10 @@ export interface Offer {
   slug: string
   name: string
   category: OfferCategory | string
+  /**
+   * Claim link. Empty on every public read — links are served only to
+   * unlocked buyers (see LINKS_COLLECTION in data.ts).
+   */
   officialUrl: string
   summary: string
   whatYouGet: string[]
@@ -47,6 +51,8 @@ export interface Offer {
   lastVerifiedAt: string | null
   /** Display name of the employee who last verified. */
   verifiedBy: string
+  /** When the offer was researched (catalog import). Shown until a staff check. */
+  researchedAt: string | null
   publishState: OfferPublishState
   createdAt: string
   updatedAt: string
@@ -83,6 +89,7 @@ export interface StudentVaultEntitlement {
   razorpayPaymentId: string
   razorpayOrderId: string
   amountPaid: number
+  priceTier: 'founding' | 'regular' | null
 }
 
 export const OFFER_STATUSES: OfferStatus[] = ['live', 'changed', 'ended']
