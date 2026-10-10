@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import { cn } from '@/lib/cn'
 
 const IMAGE_URL = /^https:\/\/[^\s]+\.(png|jpe?g|svg|webp|gif|avif)(\?[^\s]*)?$/i
@@ -27,7 +30,9 @@ export default function PerkLogo({
   className?: string
 }) {
   const radius = Math.round(size * 0.28)
-  if (logoUrl && IMAGE_URL.test(logoUrl)) {
+  // A dead or blocked logo URL falls back to the monogram instead of an empty tile.
+  const [failed, setFailed] = useState(false)
+  if (logoUrl && IMAGE_URL.test(logoUrl) && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -37,6 +42,7 @@ export default function PerkLogo({
         height={size}
         loading="lazy"
         decoding="async"
+        onError={() => setFailed(true)}
         className={cn('shrink-0 border border-line bg-white object-contain p-1.5', className)}
         style={{ width: size, height: size, borderRadius: radius }}
       />
