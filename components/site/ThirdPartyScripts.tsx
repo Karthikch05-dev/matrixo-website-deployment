@@ -29,6 +29,9 @@ const NO_ADS_PREFIXES = [
 const adsAllowed = (pathname: string) =>
   !NO_ADS_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
+/** Load anyway this long after the page finishes loading, if nobody interacts. */
+const FALLBACK_DELAY_MS = 12000
+
 const ADSENSE_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`
 
 type IdleWindow = Window & {
@@ -50,10 +53,10 @@ function injectScript(src: string, attrs: Record<string, string> = {}) {
  * Analytics and ads, loaded only after the page is interactive.
  *
  * Google Analytics and AdSense together were ~450 KB and ~600 ms of main-thread
- * work during load. They now wait for the first user interaction, or for the
- * browser to go idle after load (with a timeout), whichever comes first, so
- * they never compete with the page's own content. Page views are still
- * recorded, just a moment later.
+ * work during load. They now wait for the visitor's first scroll, tap or key
+ * press (or FALLBACK_DELAY_MS after load), so they never compete with the
+ * page's own content. A visitor who leaves within that window without
+ * interacting is not counted in Analytics.
  *
  * AdSense (including Auto ads) loads on content pages only — see
  * NO_ADS_PREFIXES.
@@ -88,9 +91,15 @@ export default function ThirdPartyScripts() {
 
     events.forEach((e) => window.addEventListener(e, load, { once: true, passive: true }))
 
+    // Most visitors scroll or tap within a few seconds, which loads these
+    // straight away. For anyone who doesn't, fall back to a timer well after
+    // the page has settled.
+    let timer = 0
     const onLoad = () => {
-      const delay = () => (w.requestIdleCallback ? w.requestIdleCallback(load, { timeout: 5000 }) : window.setTimeout(load, 3500))
-      window.setTimeout(delay, 2500)
+      timer = window.setTimeout(() => {
+        if (w.requestIdleCallback) w.requestIdleCallback(load, { timeout: 3000 })
+        else load()
+      }, FALLBACK_DELAY_MS)
     }
     if (document.readyState === 'complete') onLoad()
     else window.addEventListener('load', onLoad, { once: true })
@@ -98,6 +107,7 @@ export default function ThirdPartyScripts() {
     return () => {
       events.forEach((e) => window.removeEventListener(e, load))
       window.removeEventListener('load', onLoad)
+      window.clearTimeout(timer)
     }
   }, [])
 
