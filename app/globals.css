@@ -28,8 +28,8 @@
         --accent-solid: 10 111 214;     /* filled buttons */
         --accent-solid-hover: 8 88 174;
         --accent-fg: 255 255 255;       /* text on accent-solid */
-        --success: 36 138 61;
-        --warning: 178 110 0;
+        --success: 28 115 50;
+        --warning: 150 90 0;
         --danger: 215 48 39;
 
         --radius-card: 22px;

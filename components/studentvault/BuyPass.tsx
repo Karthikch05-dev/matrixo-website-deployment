@@ -127,11 +127,11 @@ export function StickyBuyBar({ price, totalValueLabel, watchId }: { price: Stude
   return createPortal(
     <div
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 backdrop-blur-xl transition-transform duration-300 ease-out supports-[backdrop-filter]:bg-surface/75',
-        show ? 'translate-y-0' : 'pointer-events-none translate-y-full'
+        'fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 backdrop-blur-xl transition-[transform,visibility] duration-300 ease-out supports-[backdrop-filter]:bg-surface/75',
+        // `invisible` (not aria-hidden) also takes the buttons out of the tab order.
+        show ? 'visible translate-y-0' : 'pointer-events-none invisible translate-y-full'
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      aria-hidden={!show}
     >
       <div className="mx-auto flex max-w-site items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
         <div className="min-w-0 flex-1">
