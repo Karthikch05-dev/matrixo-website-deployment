@@ -365,6 +365,14 @@ export default function Navbar() {
           <Link href="/" aria-label="matriXO home" className="-ml-1 flex shrink-0 items-center rounded-lg px-1 py-1 text-ink">
             <Logo height={24} title="" className="sm:h-[26px] sm:w-auto" />
           </Link>
+          {BETA_PRODUCTS_ENABLED && (
+            <span
+              title="You’re on the beta site — features here are still being tested"
+              className="ml-1 inline-flex h-[22px] items-center rounded-full border border-accent/25 bg-accent-soft px-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-accent"
+            >
+              Beta
+            </span>
+          )}
 
           <nav aria-label="Main" className="ml-6 hidden flex-1 items-center gap-1 lg:flex">
             {PRIMARY_NAV.map((link) => {

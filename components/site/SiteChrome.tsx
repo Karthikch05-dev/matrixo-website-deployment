@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import OnboardingGate from '@/components/profile/OnboardingGate'
 import GoogleOneTap from '@/components/auth/GoogleOneTap'
+import BetaBanner from '@/components/BetaBanner'
 
 /**
  * Wraps every page in the public header and footer, except the employee
@@ -33,6 +34,7 @@ export default function SiteChrome({
     <>
       {header}
       <main id="main" className="min-h-[60vh] pt-[var(--nav-height)]">
+        <BetaBanner />
         {children}
       </main>
       {footer}
