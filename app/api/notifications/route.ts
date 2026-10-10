@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   getActivePublicNotifications,
-  createPublicNotification,
+  getCachedFirstPage,
   type NotificationCategory,
 } from '@/lib/publicNotifications'
-import { getPublishedOffers } from '@/lib/studentvault/data'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,25 +18,23 @@ const VALID_CATEGORIES: NotificationCategory[] = ['EVENTS', 'STUDENTVAULT', 'PLA
  *   ?limit=N       — max results (1–50, default 20)
  *   ?category=X    — filter by EVENTS | STUDENTVAULT | PLATFORM
  *   ?after=ID      — cursor-based pagination (pass the last notification ID)
+ *
+ * Read-only by design: notifications are created when content is published
+ * (offer publish, catalog import, event announce), never while serving reads.
+ * The first page is served from a tag-invalidated cache and the CDN.
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
 
-    // ── Parse limit ──────────────────────────────────────────────────
     const rawLimit = searchParams.get('limit')
-    const limit = rawLimit ? parseInt(rawLimit, 10) : undefined
-    if (rawLimit && (Number.isNaN(limit) || (limit !== undefined && limit < 1))) {
-      return NextResponse.json(
-        { error: 'limit must be a positive integer.' },
-        { status: 400 }
-      )
+    const parsed = rawLimit ? parseInt(rawLimit, 10) : 20
+    if (Number.isNaN(parsed) || parsed < 1) {
+      return NextResponse.json({ error: 'limit must be a positive integer.' }, { status: 400 })
     }
+    const limit = Math.min(parsed, 50)
 
-    // ── Parse category filter ────────────────────────────────────────
-    const rawCategory = searchParams.get('category')?.toUpperCase() as
-      | NotificationCategory
-      | undefined
+    const rawCategory = searchParams.get('category')?.toUpperCase() as NotificationCategory | undefined
     if (rawCategory && !VALID_CATEGORIES.includes(rawCategory)) {
       return NextResponse.json(
         { error: `category must be one of: ${VALID_CATEGORIES.join(', ')}` },
@@ -45,47 +42,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // ── Cursor ───────────────────────────────────────────────────────
     const afterId = searchParams.get('after') || undefined
 
-    // ── Self-Healing Sync: Ensure existing StudentVault offers have notifications ──
-    try {
-      // Fetch published offers; this fails gracefully if Firebase isn't configured
-      const publishedOffers = await getPublishedOffers()
-      
-      // We limit synchronization to only un-paginated requests or first page loads
-      // to avoid repeatedly checking this on every infinite scroll request.
-      if (!afterId && publishedOffers.length > 0) {
-        // Run checks concurrently; createPublicNotification uses deduplication logic.
-        await Promise.allSettled(
-          publishedOffers.map(offer => 
-            createPublicNotification({
-              type: 'STUDENTVAULT_OFFER',
-              category: 'STUDENTVAULT',
-              title: `New StudentVault Offer: ${offer.name}`,
-              message: offer.summary?.slice(0, 120) || `${offer.name} is now available on StudentVault.`,
-              targetUrl: `/studentvault/${offer.slug}`,
-              source: 'STUDENTVAULT',
-              sourceId: offer.id,
-              version: '1',
-              expiresAt: offer.expiresOn ? new Date(offer.expiresOn) : null,
-            })
-          )
-        )
-      }
-    } catch (syncError) {
-      console.error('[Notifications API] Auto-sync of StudentVault offers failed:', syncError)
-    }
-
-    // ── Fetch active public notifications ────────────────────────────
-    const result = await getActivePublicNotifications({
-      limit,
-      category: rawCategory,
-      afterId,
-    })
+    const result = afterId
+      ? await getActivePublicNotifications({ limit, category: rawCategory, afterId })
+      : await getCachedFirstPage(limit, rawCategory ?? null)
 
     // Strip internal fields — only return public-safe data
-    const safeNotifications = result.notifications.map((n) => ({
+    const notifications = result.notifications.map((n) => ({
       id: n.id,
       type: n.type,
       category: n.category,
@@ -96,15 +60,12 @@ export async function GET(request: NextRequest) {
       createdAt: n.createdAt,
     }))
 
-    return NextResponse.json({
-      notifications: safeNotifications,
-      hasMore: result.hasMore,
-    })
+    return NextResponse.json(
+      { notifications, hasMore: result.hasMore },
+      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300' } }
+    )
   } catch (error) {
     console.error('[Notifications API] GET failed:', error)
-    return NextResponse.json(
-      { error: 'Could not load notifications.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Could not load notifications.' }, { status: 500 })
   }
 }
