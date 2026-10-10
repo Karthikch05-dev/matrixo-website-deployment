@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
 import { getPaymentBreakdown } from "@/lib/payments";
+import { useProfilePrefill } from "@/lib/useProfilePrefill";
 
 interface EventRegistrationFormProps {
   event: any;
@@ -55,6 +56,21 @@ export default function EventRegistrationForm({
     wantTransport: "no",
     hearAboutEvent: "",
   });
+
+  // Fill from the signed-in user's profile; only empty fields are touched.
+  const { offerSave } = useProfilePrefill((saved) =>
+    setFormData((prev) => ({
+      ...prev,
+      fullName: prev.fullName || saved.fullName,
+      email: prev.email || saved.email,
+      contactNumber: prev.contactNumber || saved.phone,
+      studentId: prev.studentId || saved.rollNumber,
+      collegeName: prev.collegeName || saved.college,
+      department: prev.department || saved.branch,
+      year: prev.year || saved.year,
+      graduationYear: prev.graduationYear || saved.graduationYear,
+    })),
+  );
 
   useEffect(() => {
     isSubmittingRef.current = isSubmitting;
@@ -282,6 +298,16 @@ export default function EventRegistrationForm({
         "✅ Registration confirmed! Your confirmation email is on its way.",
       );
 
+      offerSave({
+        fullName: formData.fullName,
+        phone: formData.contactNumber,
+        rollNumber: formData.studentId,
+        college: formData.collegeName,
+        branch: formData.department,
+        year: formData.year,
+        graduationYear: formData.graduationYear,
+      });
+
       // Reset form
       setFormData({
         fullName: "",
@@ -332,6 +358,15 @@ export default function EventRegistrationForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Registrations are written to the event sheet through Apps Script. If
+    // that isn't configured, stop before anyone pays for a ticket we can't record.
+    if (!process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL) {
+      toast.error(
+        "Registrations for this event are paused for a moment. Please email hello@matrixo.in and we'll register you.",
+      );
+      return;
+    }
 
     if (breakdown.isFree) {
       await submitRegistration();

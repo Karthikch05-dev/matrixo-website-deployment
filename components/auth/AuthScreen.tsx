@@ -13,7 +13,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Field'
 import { Avatar, SegmentedControl } from '@/components/ui/Controls'
 import { Notice } from '@/components/ui/Feedback'
-import { GoogleGlyph } from '@/components/events/EventsListing'
+import GoogleButton from '@/components/auth/GoogleButton'
 
 type Mode = 'login' | 'register'
 
@@ -219,35 +219,26 @@ export default function AuthScreen() {
           {isLogin ? 'Pick up where you left off.' : 'Register for events, save offers and build your profile.'}
         </p>
 
-        <div className="mt-7 flex justify-center">
-          <SegmentedControl<Mode>
-            label="Choose sign in or create account"
-            value={mode}
-            onChange={switchMode}
-            segments={[
-              { value: 'login', label: 'Sign in' },
-              { value: 'register', label: 'Create account' },
-            ]}
-          />
-        </div>
-
-        <Button
-          variant="secondary"
-          size="lg"
-          fullWidth
-          className="mt-7"
-          onClick={google}
-          loading={busy === 'google'}
-          disabled={busy !== null}
-          leadingIcon={<GoogleGlyph />}
-        >
-          Continue with Google
-        </Button>
+        <GoogleButton className="mt-7" onClick={google} loading={busy === 'google'} disabled={busy !== null} />
+        <p className="mt-2.5 text-center text-[13px] text-subtle">Fastest way in — no password, and your profile fills itself.</p>
 
         <div className="my-6 flex items-center gap-3 text-[13px] text-subtle">
           <span className="h-px flex-1 bg-line" />
           or use email
           <span className="h-px flex-1 bg-line" />
+        </div>
+
+        <div className="mb-5 flex justify-center">
+          <SegmentedControl<Mode>
+            label="Choose sign in or create account"
+            value={mode}
+            onChange={switchMode}
+            size="sm"
+            segments={[
+              { value: 'login', label: 'Sign in' },
+              { value: 'register', label: 'Create account' },
+            ]}
+          />
         </div>
 
         <form onSubmit={submit} className="space-y-4" noValidate={false}>
@@ -287,8 +278,8 @@ export default function AuthScreen() {
 
           {error && <Notice tone="danger">{error}</Notice>}
 
-          <Button type="submit" size="lg" fullWidth loading={busy === 'email'} disabled={busy !== null}>
-            {isLogin ? 'Sign in' : 'Create account'}
+          <Button type="submit" variant="secondary" size="lg" fullWidth loading={busy === 'email'} disabled={busy !== null}>
+            {isLogin ? 'Sign in with email' : 'Create account'}
           </Button>
         </form>
 

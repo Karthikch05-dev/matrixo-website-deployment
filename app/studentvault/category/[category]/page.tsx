@@ -1,8 +1,12 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { Container } from '@/components/ui/Section'
 import { getPublishedOffers } from '@/lib/studentvault/data'
-import OfferCard from '@/components/studentvault/OfferCard'
+import { getDisplayPrice } from '@/lib/studentvault/pricing'
+import PerkGrid from '@/components/studentvault/PerkGrid'
+import { BuyPassButton } from '@/components/studentvault/BuyPass'
 
 export const revalidate = 3600
 
@@ -16,79 +20,50 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = decodeURIComponent(params.category)
-  const url = `https://matrixo.in/studentvault/category/${params.category}`
-
   return {
-    title: `${category} — free student offers in India`,
-    description: `Verified ${category.toLowerCase()} offers, credits and discounts available free to students in India. Every listing links to the official provider.`,
-    alternates: { canonical: url },
+    title: `${category}: free student perks in India`,
+    description: `${category} perks, credits and discounts for students in India — what you get, who qualifies and how to claim.`,
+    alternates: { canonical: `/studentvault/category/${params.category}` },
   }
 }
 
 export default async function CategoryPage({ params }: Props) {
   const category = decodeURIComponent(params.category)
-  const all = await getPublishedOffers()
-  const offers = all.filter((o) => o.category === category)
-
+  const [all, price] = await Promise.all([getPublishedOffers(), getDisplayPrice()])
+  const offers = all.filter((o) => o.category === category && o.status !== 'ended')
   if (offers.length === 0) notFound()
 
   const totalValue = offers.reduce((sum, o) => sum + (o.valueInr || 0), 0)
-
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'StudentVault',
-        item: 'https://matrixo.in/studentvault',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: category,
-        item: `https://matrixo.in/studentvault/category/${params.category}`,
-      },
+      { '@type': 'ListItem', position: 1, name: 'StudentVault', item: 'https://matrixo.in/studentvault' },
+      { '@type': 'ListItem', position: 2, name: category, item: `https://matrixo.in/studentvault/category/${params.category}` },
     ],
   }
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container-custom px-4 sm:px-6 lg:px-8">
-          <nav aria-label="Breadcrumb" className="mb-6 text-sm">
-            <Link
-              href="/studentvault"
-              className="text-gray-500 dark:text-gray-400 hover:underline"
-            >
-              ← All StudentVault offers
-            </Link>
-          </nav>
-
-          <h1 className="text-3xl md:text-4xl font-display font-bold gradient-text mb-4">
-            {category} for students in India
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl">
-            {offers.length} verified {category.toLowerCase()} offer
-            {offers.length === 1 ? '' : 's'} available to Indian students
-            {totalValue > 0
-              ? `, worth approximately ₹${totalValue.toLocaleString('en-IN')} in total.`
-              : '.'}{' '}
-            Each one links directly to the official provider.
-          </p>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {offers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} />
-            ))}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Container className="pb-24 pt-10 sm:pt-14">
+        <Link href="/studentvault" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All perks
+        </Link>
+        <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[48px]">{category}</h1>
+            <p className="mt-3 text-[17px] text-muted">
+              {offers.length} perk{offers.length === 1 ? '' : 's'} for students in India
+              {totalValue > 0 ? `, worth about ₹${totalValue.toLocaleString('en-IN')} together.` : '.'}
+            </p>
           </div>
+          <BuyPassButton price={price} size="md" className="lg:w-72" fullWidth />
         </div>
-      </div>
+        <div className="mt-10">
+          <PerkGrid offers={offers} />
+        </div>
+      </Container>
     </>
   )
 }

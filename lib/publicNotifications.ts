@@ -9,6 +9,7 @@
  * Firestore rules.
  */
 
+import { revalidateTag, unstable_cache } from 'next/cache'
 import { getAdminFirestore } from '@/lib/firebaseAdmin'
 
 // ════════════════════════════════════════════════════════════════════
@@ -17,6 +18,17 @@ import { getAdminFirestore } from '@/lib/firebaseAdmin'
 
 export const PUBLIC_NOTIFICATIONS_COLLECTION = 'publicNotifications'
 export const READ_STATE_COLLECTION = 'publicNotificationReadState'
+/** Cache tag for the first page of notifications (bell + /notifications). */
+export const NOTIFICATIONS_TAG = 'public-notifications'
+
+/** Call after creating or deleting a notification so readers see it at once. */
+export function revalidateNotifications() {
+  try {
+    revalidateTag(NOTIFICATIONS_TAG)
+  } catch {
+    // Outside a request scope (scripts, tests) there is nothing to revalidate.
+  }
+}
 
 // ════════════════════════════════════════════════════════════════════
 // TYPES
@@ -162,6 +174,7 @@ export async function createPublicNotification(
     console.log(
       `[PublicNotification] Created: ${params.type} for ${params.source}/${params.sourceId} → ${doc.id}`
     )
+    revalidateNotifications()
 
     return { id: doc.id }
   } catch (error) {
@@ -229,6 +242,18 @@ export async function getActivePublicNotifications(
 
   return { notifications, hasMore }
 }
+
+/**
+ * First page, cached for a minute and invalidated whenever a notification is
+ * created or deleted. Almost every request is a first page (the bell and the
+ * /notifications page), so this turns a Firestore query into a cache hit.
+ */
+export const getCachedFirstPage = unstable_cache(
+  async (limit: number, category: NotificationCategory | null) =>
+    getActivePublicNotifications({ limit, category: category ?? undefined }),
+  ['public-notifications-first-page'],
+  { revalidate: 60, tags: [NOTIFICATIONS_TAG] }
+)
 
 // ════════════════════════════════════════════════════════════════════
 // READ STATE (logged-in users)

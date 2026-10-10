@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { FieldValue } from 'firebase-admin/firestore'
 import { getAdminFirestore } from '@/lib/firebaseAdmin'
 import { requireEmployee } from '@/lib/studentvault/auth'
-import { getOfferById, OFFERS_COLLECTION, slugExists } from '@/lib/studentvault/data'
+import { getOfferById, OFFERS_COLLECTION, setOfferLink, slugExists } from '@/lib/studentvault/data'
 import { validateOffer } from '@/lib/studentvault/validation'
 import { createPublicNotification } from '@/lib/publicNotifications'
 
@@ -60,23 +61,25 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       })
     }
 
-    // ── Publish / unpublish ────────────────────────────────────────────
+    // ── Back to "researched, not verified" ─────────────────────────────
+    if (action === 'unverify') {
+      await getAdminFirestore()
+        .collection(OFFERS_COLLECTION)
+        .doc(params.id)
+        .update({ lastVerifiedAt: null, verifiedBy: '', updatedAt: new Date() })
+      return NextResponse.json({ success: true, lastVerifiedAt: null })
+    }
+
+    // ── Publish / unpublish (hide) ─────────────────────────────────────
+    // Publishing no longer requires a staff check: unchecked offers show as
+    // "researched". confirmVerified also stamps the verification date.
     if (action === 'publish' || action === 'unpublish') {
-      if (action === 'publish' && body.confirmVerified !== true) {
-        return NextResponse.json(
-          {
-            error:
-              'Confirm you have verified this offer against the provider’s official source before publishing.',
-          },
-          { status: 400 }
-        )
-      }
       const now = new Date()
       const update: Record<string, unknown> = {
         publishState: action === 'publish' ? 'published' : 'draft',
         updatedAt: now,
       }
-      if (action === 'publish') {
+      if (action === 'publish' && body.confirmVerified === true) {
         update.lastVerifiedAt = now
         update.verifiedBy = auth.employee.name || auth.employee.email || 'matriXO employee'
       }
@@ -113,15 +116,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       )
     }
 
+    const { officialUrl, ...publicFields } = value
     await getAdminFirestore()
       .collection(OFFERS_COLLECTION)
       .doc(params.id)
       .update({
-        ...value,
+        ...publicFields,
+        // Links never live on the public document.
+        officialUrl: FieldValue.delete(),
         expiresOn: value.expiresOn ? new Date(value.expiresOn) : null,
         updatedAt: new Date(),
         updatedBy: auth.employee.employeeId || auth.employee.uid,
       })
+    await setOfferLink(params.id, officialUrl)
 
     return NextResponse.json({ success: true })
   } catch (error) {
