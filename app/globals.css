@@ -18,8 +18,8 @@
         --surface: 255 255 255;         /* cards */
         --elevated: 255 255 255;        /* menus, sheets, popovers */
         --ink: 29 29 31;                /* primary text */
-        --muted: 110 110 115;           /* secondary text */
-        --subtle: 134 134 139;          /* tertiary text, placeholders */
+        --muted: 81 81 84;              /* secondary text */
+        --subtle: 110 110 115;          /* tertiary text (≥4.5:1 on canvas and canvas-subtle) */
         --line: 229 229 234;            /* hairlines */
         --line-strong: 210 210 215;     /* input borders */
         --accent: 10 111 214;           /* links, primary actions */
@@ -92,8 +92,8 @@
         --surface: 22 22 24;
         --elevated: 30 30 32;
         --ink: 245 245 247;
-        --muted: 161 161 166;
-        --subtle: 110 110 115;
+        --muted: 174 174 178;
+        --subtle: 142 142 147;
         --line: 44 44 46;
         --line-strong: 58 58 60;
         --accent: 75 163 245;

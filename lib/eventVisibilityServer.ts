@@ -14,3 +14,16 @@ export async function isEventHiddenServer(slug: string): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Slugs an admin has hidden, read once for the whole listing. Fails open (an
+ * empty set) so a Firestore hiccup never empties the events page.
+ */
+export async function getHiddenEventSlugs(): Promise<Set<string>> {
+  try {
+    const snap = await getAdminFirestore().collection('eventVisibility').where('hidden', '==', true).get()
+    return new Set(snap.docs.map((doc) => (doc.data()?.eventSlug as string | undefined) || doc.id))
+  } catch {
+    return new Set()
+  }
+}

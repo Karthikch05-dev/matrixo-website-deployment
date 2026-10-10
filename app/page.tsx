@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import EventsListing from '@/components/events/EventsListing'
 import { getListedEvents } from '@/lib/events'
+import { getHiddenEventSlugs } from '@/lib/eventVisibilityServer'
 
-// Rebuild hourly so event status and visibility stay fresh between deploys.
-export const revalidate = 3600
+// Re-render every five minutes so event status and admin visibility stay fresh.
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: { absolute: 'matriXO — Workshops, hackathons and career programs for students' },
@@ -17,6 +18,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default function HomePage() {
-  return <EventsListing events={getListedEvents()} />
+export default async function HomePage() {
+  // Hidden events are dropped on the server so the grid never reflows after load.
+  const hidden = await getHiddenEventSlugs()
+  return <EventsListing events={getListedEvents().filter((e) => !hidden.has(e.slug))} />
 }

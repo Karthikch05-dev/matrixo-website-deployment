@@ -363,11 +363,19 @@ export default function EventsListing({ events }: { events: EventSummary[] }) {
                 Know more about matriXO
                 <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
-              {!user && !authResolving && (
-                <Link href="/auth" className="text-[14px] font-medium text-accent hover:underline lg:hidden">
-                  Sign in to register faster
-                </Link>
-              )}
+              {/* Always occupies its line, so the events below never jump when
+                  the session resolves (that jump was the page's layout shift). */}
+              <Link
+                href={user ? '/profile' : '/auth'}
+                aria-hidden={authResolving || undefined}
+                tabIndex={authResolving ? -1 : undefined}
+                className={cn(
+                  'text-[14px] font-medium text-accent hover:underline lg:hidden',
+                  authResolving && 'invisible'
+                )}
+              >
+                {user ? 'Go to your profile' : 'Sign in to register faster'}
+              </Link>
             </div>
           </div>
 

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import EventsListing from '@/components/events/EventsListing'
 import { getListedEvents } from '@/lib/events'
+import { getHiddenEventSlugs } from '@/lib/eventVisibilityServer'
 
-export const revalidate = 3600
+// Re-render every five minutes so event status and admin visibility stay fresh.
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Events',
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function EventsPage() {
-  return <EventsListing events={getListedEvents()} />
+export default async function EventsPage() {
+  const hidden = await getHiddenEventSlugs()
+  return <EventsListing events={getListedEvents().filter((e) => !hidden.has(e.slug))} />
 }
