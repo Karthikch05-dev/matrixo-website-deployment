@@ -1,8 +1,13 @@
 {
+  "regions": ["bom1"],
   "crons": [
     {
       "path": "/api/cron/process-emails",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/studentvault/verify/cleanup",
+      "schedule": "30 21 * * *"
     }
   ]
 }

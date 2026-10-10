@@ -870,6 +870,18 @@
     box-shadow: 0 0 8px rgb(var(--accent) / 0.5);
 }
 
+/* StudentVault perk monogram: one hue per perk, tuned for both themes. */
+.perk-logo {
+    background: hsl(var(--perk-h) 80% 95%);
+    color: hsl(var(--perk-h) 55% 36%);
+    box-shadow: inset 0 0 0 1px hsl(var(--perk-h) 50% 50% / 0.12);
+}
+
+.dark .perk-logo {
+    background: hsl(var(--perk-h) 30% 17%);
+    color: hsl(var(--perk-h) 75% 78%);
+}
+
 .skeleton {
     position: relative;
     overflow: hidden;

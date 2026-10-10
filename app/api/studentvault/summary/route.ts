@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthedUser } from '@/lib/studentvault/auth'
-import {
-  getClaims,
-  getPublishedOffers,
-  hasStudentVaultAccess,
-} from '@/lib/studentvault/data'
+import { getClaims, getPublishedOffers } from '@/lib/studentvault/data'
+import { getStudentVaultAccess } from '@/lib/studentvault/access'
 import { daysUntil } from '@/lib/studentvault/types'
 
 export const dynamic = 'force-dynamic'
@@ -17,10 +14,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
     }
 
-    const [active, offers] = await Promise.all([
-      hasStudentVaultAccess(user.uid),
+    const [access, offers] = await Promise.all([
+      getStudentVaultAccess(user.uid),
       getPublishedOffers(),
     ])
+    const active = access.paid
 
     const liveOffers = offers.filter((o) => o.status !== 'ended')
 
@@ -32,6 +30,7 @@ export async function GET(request: NextRequest) {
         claimedCount: 0,
         claimedValue: 0,
         nextExpiring: null,
+        access,
       })
     }
 
@@ -60,6 +59,7 @@ export async function GET(request: NextRequest) {
       nextExpiring: upcoming
         ? { name: upcoming.offer.name, slug: upcoming.offer.slug, days: upcoming.days }
         : null,
+      access,
     })
   } catch (error) {
     console.error('[StudentVault] summary failed:', error)

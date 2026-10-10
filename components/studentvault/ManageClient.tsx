@@ -1,11 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
-import { FaSpinner, FaLock } from 'react-icons/fa'
+import { Lock } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
+import { ButtonLink } from '@/components/ui/Button'
+import { EmptyState, Skeleton } from '@/components/ui/Feedback'
 import EmployeeConsole from './EmployeeConsole'
-import XOLoader from '@/components/XOLoader'
 
 export default function ManageClient() {
   const { user, loading } = useAuth()
@@ -15,7 +15,6 @@ export default function ManageClient() {
 
   useEffect(() => {
     let cancelled = false
-
     async function check() {
       if (!user) {
         setIsEmployee(false)
@@ -23,16 +22,13 @@ export default function ManageClient() {
       }
       try {
         const token = await user.getIdToken()
-        const res = await fetch('/api/studentvault/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await fetch('/api/studentvault/me', { headers: { Authorization: `Bearer ${token}` } })
         const data = await res.json()
         if (!cancelled) setIsEmployee(data.isEmployee === true)
       } catch {
         if (!cancelled) setIsEmployee(false)
       }
     }
-
     if (!loading) check()
     return () => {
       cancelled = true
@@ -41,47 +37,35 @@ export default function ManageClient() {
 
   if (loading || isEmployee === null) {
     return (
-      <div className="flex justify-center py-20" aria-live="polite">
-        <XOLoader size={16} />
-        <span className="sr-only">Checking your access…</span>
+      <div className="space-y-3" aria-busy="true">
+        <Skeleton className="h-10 w-80 rounded-full" />
+        <Skeleton className="h-16 rounded-2xl" />
+        <Skeleton className="h-16 rounded-2xl" />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="glass-card p-8 text-center max-w-lg mx-auto">
-        <FaLock className="mx-auto mb-3 text-2xl text-gray-400 dark:text-gray-500" aria-hidden="true" />
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Sign in required</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Sign in with your matriXO employee account to manage the catalog.
-        </p>
-        <Link
-          href="/auth?returnUrl=/studentvault/manage"
-          className="inline-flex rounded-xl px-4 py-2 text-sm font-semibold cta-glass"
-        >
-          Sign in
-        </Link>
-      </div>
+      <EmptyState
+        icon={<Lock className="h-5 w-5" />}
+        title="Sign in required"
+        description="Sign in with your matriXO team account to manage StudentVault."
+        action={<ButtonLink href="/auth?returnUrl=/studentvault/manage">Sign in</ButtonLink>}
+        className="rounded-card border border-line bg-surface"
+      />
     )
   }
 
   if (!isEmployee) {
     return (
-      <div className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-8 text-center max-w-lg mx-auto">
-        <FaLock className="mx-auto mb-3 text-2xl text-red-500 dark:text-red-400" aria-hidden="true" />
-        <h2 className="font-semibold text-red-700 dark:text-red-300 mb-1">Not authorized</h2>
-        <p className="text-sm text-red-600 dark:text-red-200/80 mb-4">
-          Catalog management is limited to matriXO employees. You are signed in as{' '}
-          {user.email}.
-        </p>
-        <Link
-          href="/studentvault"
-          className="inline-flex rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/10 px-4 py-2 text-sm font-semibold text-gray-800 dark:text-white hover:bg-white dark:hover:bg-white/20"
-        >
-          Back to StudentVault
-        </Link>
-      </div>
+      <EmptyState
+        icon={<Lock className="h-5 w-5" />}
+        title="Team members only"
+        description={`StudentVault management is limited to the matriXO team. You’re signed in as ${user.email}.`}
+        action={<ButtonLink href="/studentvault" variant="secondary">Back to StudentVault</ButtonLink>}
+        className="rounded-card border border-line bg-surface"
+      />
     )
   }
 

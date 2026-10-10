@@ -1,19 +1,15 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FaExternalLinkAlt, FaExclamationTriangle } from 'react-icons/fa'
-import {
-  getPublishedOfferBySlug,
-  getPublishedOffers,
-} from '@/lib/studentvault/data'
-import { getProductBreakdown } from '@/lib/products'
-import {
-  CardRequiredBadge,
-  DeadlineBadge,
-  StatusBadge,
-  VerifiedBadge,
-} from '@/components/studentvault/OfferBadges'
-import OfferCard from '@/components/studentvault/OfferCard'
+import { AlertTriangle, ArrowLeft, Check, Info } from 'lucide-react'
+import { Container } from '@/components/ui/Section'
+import { Badge } from '@/components/ui/Badge'
+import { getPublishedOfferBySlug, getPublishedOffers } from '@/lib/studentvault/data'
+import { getDisplayPrice } from '@/lib/studentvault/pricing'
+import { daysUntil } from '@/lib/studentvault/types'
+import PerkLogo from '@/components/studentvault/PerkLogo'
+import ClaimBox from '@/components/studentvault/ClaimBox'
+import { TrustBadge, formatShortDate } from '@/components/studentvault/perkMeta'
 
 export const revalidate = 3600
 
@@ -26,54 +22,40 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const offer = await getPublishedOfferBySlug(params.slug)
-  if (!offer) return { title: 'Offer not found — StudentVault' }
-
-  const url = `https://matrixo.in/studentvault/${offer.slug}`
-
+  if (!offer) return { title: 'Perk not found' }
+  const path = `/studentvault/${offer.slug}`
   return {
-    title: `${offer.name} for students in India — how to claim it`,
+    title: `${offer.name} for students in India`,
     description: offer.summary.slice(0, 158),
-    alternates: { canonical: url },
+    alternates: { canonical: path },
     openGraph: {
-      title: `${offer.name} — student offer explained`,
+      title: `${offer.name} — student perk explained`,
       description: offer.summary.slice(0, 158),
-      url,
-      siteName: 'matriXO',
+      url: path,
       type: 'article',
       modifiedTime: offer.lastVerifiedAt ?? offer.updatedAt ?? undefined,
     },
   }
 }
 
-function formatDate(iso: string | null): string | null {
+function longDate(iso: string | null): string | null {
   if (!iso) return null
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
 }
 
 export default async function OfferPage({ params }: Props) {
   const offer = await getPublishedOfferBySlug(params.slug)
   if (!offer) notFound()
 
-  const all = await getPublishedOffers()
-  const breakdown = getProductBreakdown('studentvault')
-
-  const related = all
-    .filter((o) => o.slug !== offer.slug && o.category === offer.category)
-    .slice(0, 3)
-
+  const [all, price] = await Promise.all([getPublishedOffers(), getDisplayPrice()])
+  const related = all.filter((o) => o.slug !== offer.slug && o.category === offer.category && o.status !== 'ended').slice(0, 3)
   const dependencies = offer.dependsOn
     .map((slug) => all.find((o) => o.slug === slug))
     .filter((o): o is NonNullable<typeof o> => Boolean(o))
-
+  const days = daysUntil(offer.expiresOn)
   const url = `https://matrixo.in/studentvault/${offer.slug}`
-  const verifiedOn = formatDate(offer.lastVerifiedAt)
-  const expiresOnLabel = formatDate(offer.expiresOn)
 
   const jsonLd = [
     {
@@ -94,34 +76,16 @@ export default async function OfferPage({ params }: Props) {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
       mainEntity: [
-        {
-          '@type': 'Question',
-          name: `Is ${offer.name} free for students in India?`,
-          acceptedAnswer: { '@type': 'Answer', text: offer.summary },
-        },
+        { '@type': 'Question', name: `Is ${offer.name} free for students in India?`, acceptedAnswer: { '@type': 'Answer', text: offer.summary } },
         ...(offer.eligibility.length
-          ? [
-              {
-                '@type': 'Question',
-                name: `Who is eligible for ${offer.name}?`,
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: offer.eligibility.join(' '),
-                },
-              },
-            ]
+          ? [{ '@type': 'Question', name: `Who is eligible for ${offer.name}?`, acceptedAnswer: { '@type': 'Answer', text: offer.eligibility.join(' ') } }]
           : []),
         ...(offer.requiresCard
           ? [
               {
                 '@type': 'Question',
-                name: `Does ${offer.name} require a card?`,
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text:
-                    offer.autoChargeNote ||
-                    'Yes — a payment method is required. Check the auto-charge terms before claiming.',
-                },
+                name: `Does ${offer.name} need a card?`,
+                acceptedAnswer: { '@type': 'Answer', text: offer.autoChargeNote || 'Yes — a payment method is required. Check the renewal terms before claiming.' },
               },
             ]
           : []),
@@ -129,208 +93,161 @@ export default async function OfferPage({ params }: Props) {
     },
   ]
 
+  const facts = [
+    offer.valueInr > 0 && { label: 'Indicative value', value: `≈ ₹${offer.valueInr.toLocaleString('en-IN')}` },
+    offer.expiresOn && { label: 'Deadline', value: longDate(offer.expiresOn) },
+    { label: 'Category', value: offer.category },
+    {
+      label: offer.lastVerifiedAt ? 'Checked by matriXO' : 'Researched',
+      value: longDate(offer.lastVerifiedAt ?? offer.researchedAt) ?? '—',
+    },
+  ].filter(Boolean) as { label: string; value: string }[]
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Container size="narrow" className="pb-24 pt-10 sm:pt-14">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-[14px] text-muted">
+          <Link href="/studentvault" className="inline-flex items-center gap-1 hover:text-ink">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> StudentVault
+          </Link>
+          <span aria-hidden="true">/</span>
+          <Link href={`/studentvault/category/${encodeURIComponent(offer.category)}`} className="hover:text-ink">
+            {offer.category}
+          </Link>
+        </nav>
 
-      <div className="min-h-screen pt-24 pb-20">
-        <div className="container-custom px-4 sm:px-6 lg:px-8 max-w-4xl">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-6 text-sm">
-            <ol className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
-              <li>
-                <Link href="/studentvault" className="hover:underline">
-                  StudentVault
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <Link
-                  href={`/studentvault/category/${encodeURIComponent(offer.category)}`}
-                  className="hover:underline"
-                >
-                  {offer.category}
-                </Link>
-              </li>
-            </ol>
-          </nav>
-
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-4">
-            {offer.name} for students in India
-          </h1>
-
-          {/* Direct answer within the first 60 words */}
-          <p className="text-lg text-gray-700 dark:text-gray-300 mb-5">{offer.summary}</p>
-
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <StatusBadge status={offer.status} />
-            <VerifiedBadge
-              lastVerifiedAt={offer.lastVerifiedAt}
-              verifiedBy={offer.verifiedBy}
-            />
-            <DeadlineBadge expiresOn={offer.expiresOn} />
-            <CardRequiredBadge requiresCard={offer.requiresCard} />
-          </div>
-
-          {offer.statusNote && (
-            <div className="glass-card p-4 mb-6 border-l-4 border-l-amber-500">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>Status note:</strong> {offer.statusNote}
-              </p>
+        <header className="mt-6 flex items-start gap-4">
+          <PerkLogo name={offer.name} slug={offer.slug} logoUrl={offer.logoUrl} size={60} />
+          <div className="min-w-0">
+            <h1 className="text-[30px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[40px]">{offer.name}</h1>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <TrustBadge offer={offer} />
+              {days !== null && days >= 0 && (
+                <Badge tone={days <= 14 ? 'danger' : days <= 60 ? 'warning' : 'neutral'}>
+                  {days === 0 ? 'Ends today' : `${days} days left`}
+                </Badge>
+              )}
+              {offer.requiresCard && <Badge tone="warning">Card needed</Badge>}
             </div>
-          )}
-
-          {/* Official link — always free and visible */}
-          <a
-            href={offer.officialUrl}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="btn-primary inline-flex items-center gap-2 mb-8"
-          >
-            Go to the official {offer.name} page
-            <FaExternalLinkAlt className="text-xs" aria-hidden="true" />
-          </a>
-
-          <div className="grid gap-6 sm:grid-cols-2 mb-8">
-            {offer.whatYouGet.length > 0 && (
-              <section className="glass-card p-5">
-                <h2 className="font-semibold text-gray-900 dark:text-white mb-3">
-                  What you get
-                </h2>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 list-disc pl-5">
-                  {offer.whatYouGet.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {offer.eligibility.length > 0 && (
-              <section className="glass-card p-5">
-                <h2 className="font-semibold text-gray-900 dark:text-white mb-3">
-                  Eligibility
-                </h2>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 list-disc pl-5">
-                  {offer.eligibility.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
           </div>
+        </header>
 
-          <dl className="glass-card p-5 mb-8 grid gap-4 sm:grid-cols-2 text-sm">
-            {offer.valueInr > 0 && (
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400">Estimated value</dt>
-                <dd className="font-semibold text-gray-900 dark:text-white">
-                  ≈ ₹{offer.valueInr.toLocaleString('en-IN')}
-                </dd>
-              </div>
-            )}
-            {expiresOnLabel && (
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400">Deadline</dt>
-                <dd className="font-semibold text-gray-900 dark:text-white">
-                  {expiresOnLabel}
-                </dd>
-              </div>
-            )}
-            {verifiedOn && (
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400">Last verified</dt>
-                <dd className="font-semibold text-gray-900 dark:text-white">
-                  {verifiedOn}
-                  {offer.verifiedBy ? ` · ${offer.verifiedBy}` : ''}
-                </dd>
-              </div>
-            )}
-            <div>
-              <dt className="text-gray-500 dark:text-gray-400">Category</dt>
-              <dd className="font-semibold text-gray-900 dark:text-white">
-                {offer.category}
-              </dd>
+        <p className="mt-6 text-[19px] leading-relaxed text-ink">{offer.summary}</p>
+
+        {offer.statusNote && (
+          <div className="mt-6 flex gap-3 rounded-2xl border border-warning/25 bg-warning/10 p-4 text-[15px] text-ink">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+            <p>{offer.statusNote}</p>
+          </div>
+        )}
+
+        <dl className="mt-8 grid grid-cols-2 gap-4 rounded-card border border-line bg-surface p-5 sm:grid-cols-4">
+          {facts.map((f) => (
+            <div key={f.label}>
+              <dt className="text-[12px] text-subtle">{f.label}</dt>
+              <dd className="mt-0.5 text-[15px] font-medium text-ink">{f.value}</dd>
             </div>
-          </dl>
+          ))}
+        </dl>
 
-          {offer.indiaNote && (
-            <section className="glass-card p-5 mb-8">
-              <h2 className="font-semibold text-gray-900 dark:text-white mb-2">
-                For students in India
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{offer.indiaNote}</p>
-            </section>
-          )}
-
-          {offer.requiresCard && (
-            <section className="glass-card p-5 mb-8 border-l-4 border-l-amber-500">
-              <h2 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white mb-2">
-                <FaExclamationTriangle
-                  className="text-amber-600 dark:text-amber-400"
-                  aria-hidden="true"
-                />
-                Auto-charge warning
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {offer.autoChargeNote ||
-                  'This offer requires a payment method. Check the provider’s renewal terms before you claim it.'}
-              </p>
-            </section>
-          )}
-
-          {dependencies.length > 0 && (
-            <section className="glass-card p-5 mb-8">
-              <h2 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Claim these first
-              </h2>
-              <ul className="space-y-2 text-sm">
-                {dependencies.map((dep) => (
-                  <li key={dep.slug}>
-                    <Link
-                      href={`/studentvault/${dep.slug}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {dep.name}
-                    </Link>
+        <div className="mt-10 grid gap-8 sm:grid-cols-2">
+          {offer.whatYouGet.length > 0 && (
+            <section>
+              <h2 className="text-[17px] font-semibold text-ink">What you get</h2>
+              <ul className="mt-3 space-y-2.5">
+                {offer.whatYouGet.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-[15px] leading-relaxed text-muted">
+                    <Check className="mt-1 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                    {item}
                   </li>
                 ))}
               </ul>
             </section>
           )}
-
-          {/* Paid CTA — content itself is never sent to the client */}
-          <section className="glass-card-elevated p-6 mb-8">
-            <h2 className="font-display font-semibold text-lg text-gray-900 dark:text-white mb-2">
-              Need the step-by-step claim walkthrough?
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              The facts above are free and always will be. StudentVault members get the
-              detailed claim walkthrough for {offer.name}, the India verification
-              playbook, rejection recovery steps, deadline alerts and a personal
-              tracker.
-            </p>
-            <Link href="/studentvault/unlock" className="btn-primary inline-flex">
-              Unlock for ₹{breakdown?.total ?? 104} (one-time)
-            </Link>
-          </section>
-
-          {related.length > 0 && (
+          {offer.eligibility.length > 0 && (
             <section>
-              <h2 className="font-display font-semibold text-lg text-gray-900 dark:text-white mb-4">
-                Related offers in {offer.category}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {related.map((o) => (
-                  <OfferCard key={o.id} offer={o} />
+              <h2 className="text-[17px] font-semibold text-ink">Who’s eligible</h2>
+              <ul className="mt-3 space-y-2.5">
+                {offer.eligibility.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-[15px] leading-relaxed text-muted">
+                    <Check className="mt-1 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                    {item}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
           )}
         </div>
-      </div>
+
+        {offer.indiaNote && (
+          <section className="mt-10 rounded-card bg-canvas-subtle p-5 sm:p-6">
+            <h2 className="text-[17px] font-semibold text-ink">For students in India</h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">{offer.indiaNote}</p>
+          </section>
+        )}
+
+        {offer.requiresCard && (
+          <section className="mt-6 flex gap-3 rounded-card border border-warning/25 bg-warning/10 p-5">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+            <div>
+              <h2 className="text-[16px] font-semibold text-ink">Watch out for auto-charge</h2>
+              <p className="mt-1 text-[15px] leading-relaxed text-muted">
+                {offer.autoChargeNote || 'This perk needs a payment method. Check the renewal terms before you claim it.'}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {dependencies.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-[17px] font-semibold text-ink">Claim these first</h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {dependencies.map((dep) => (
+                <li key={dep.slug}>
+                  <Link
+                    href={`/studentvault/${dep.slug}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-1.5 pr-4 text-[14px] font-medium text-ink hover:border-line-strong"
+                  >
+                    <PerkLogo name={dep.name} slug={dep.slug} logoUrl={dep.logoUrl} size={26} />
+                    {dep.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div className="mt-12">
+          <ClaimBox offerId={offer.id} slug={offer.slug} name={offer.name} price={price} />
+        </div>
+
+        {related.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-[19px] font-semibold text-ink">More in {offer.category}</h2>
+            <ul className="mt-4 divide-y divide-line rounded-card border border-line bg-surface">
+              {related.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/studentvault/${o.slug}`} className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-canvas-subtle">
+                    <PerkLogo name={o.name} slug={o.slug} logoUrl={o.logoUrl} size={36} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-medium text-ink">{o.name}</span>
+                      <span className="block truncate text-[13px] text-muted">{o.summary}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <p className="mt-12 text-[13px] leading-relaxed text-subtle">
+          {offer.lastVerifiedAt
+            ? `Checked against the provider’s official page on ${formatShortDate(offer.lastVerifiedAt)}.`
+            : 'Compiled from the provider’s public pages; our team re-checks every perk.'}{' '}
+          Offers change — always confirm the terms on the provider’s page. matriXO isn’t affiliated with {offer.name.split(' ')[0]}.
+        </p>
+      </Container>
     </>
   )
 }

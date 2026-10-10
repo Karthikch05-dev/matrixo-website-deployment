@@ -13,7 +13,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Field'
 import { Avatar, SegmentedControl } from '@/components/ui/Controls'
 import { Notice } from '@/components/ui/Feedback'
-import { GoogleGlyph } from '@/components/events/EventsListing'
+import { GoogleGlyph } from '@/components/brand/GoogleGlyph'
 
 type Mode = 'login' | 'register'
 
