@@ -8,7 +8,7 @@ import { AlertTriangle, CalendarClock, CheckCircle2, Clock3, CreditCard, Hourgla
 import { Button } from '@/components/ui/Button'
 import { Notice, Skeleton } from '@/components/ui/Feedback'
 import { SegmentedControl } from '@/components/ui/Controls'
-import { GoogleGlyph } from '@/components/brand/GoogleGlyph'
+import GoogleButton from '@/components/auth/GoogleButton'
 import { useAuth } from '@/lib/AuthContext'
 import { formatAccessDate, daysLeft } from '@/lib/studentvault/eligibility'
 import { daysUntil, type ClaimItem, type ClaimStatus, type Offer } from '@/lib/studentvault/types'
@@ -60,13 +60,9 @@ function SignInPanel() {
       </span>
       <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Sign in to open your vault</h2>
       <p className="mt-2 text-[15px] text-muted">Your pass, verification and claim tracker live with your matriXO account.</p>
-      <Button
+      <GoogleButton
         className="mt-6"
-        fullWidth
-        size="lg"
         loading={busy}
-        leadingIcon={<GoogleGlyph />}
-        variant="secondary"
         onClick={async () => {
           setBusy(true)
           try {
@@ -77,9 +73,7 @@ function SignInPanel() {
             setBusy(false)
           }
         }}
-      >
-        Continue with Google
-      </Button>
+      />
       <Link href="/auth?returnUrl=/studentvault/vault" className="mt-4 inline-block text-[14px] text-accent hover:underline">
         Other ways to sign in
       </Link>

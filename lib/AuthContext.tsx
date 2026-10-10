@@ -14,6 +14,7 @@ import {
   updateProfile,
   sendEmailVerification,
   getRedirectResult,
+  signInWithCredential,
   browserPopupRedirectResolver
 } from 'firebase/auth'
 import { auth, firebaseReady } from '@/lib/firebase/client'
@@ -30,6 +31,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName?: string) => Promise<User>
   logout: () => Promise<void>
   signInWithGoogle: () => Promise<'popup' | 'redirect'>
+  /** Google One Tap / Sign in with Google credential (an ID token). */
+  signInWithGoogleIdToken: (idToken: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   resendVerificationEmail: () => Promise<void>
 }
@@ -143,6 +146,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithGoogleIdToken = async (idToken: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured.')
+    await signInWithCredential(auth, GoogleAuthProvider.credential(idToken))
+  }
+
   const resetPassword = async (email: string) => {
     if (!firebaseReady) throw new Error('Firebase is not configured.')
     await sendPasswordResetEmail(auth, email)
@@ -163,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     logout,
     signInWithGoogle,
+    signInWithGoogleIdToken,
     resetPassword,
     resendVerificationEmail
   }

@@ -23,6 +23,7 @@ import { Avatar, SegmentedControl } from '@/components/ui/Controls'
 import { Skeleton } from '@/components/ui/Feedback'
 import { cn } from '@/lib/cn'
 import { GoogleGlyph } from '@/components/brand/GoogleGlyph'
+import GoogleButton from '@/components/auth/GoogleButton'
 
 type Filter = 'all' | 'upcoming' | 'past'
 
@@ -83,9 +84,7 @@ function SignInCard() {
       <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-ink">Sign in</h2>
       <p className="mt-1 text-[14px] text-muted">Register for events and track your tickets.</p>
 
-      <Button variant="secondary" fullWidth className="mt-5" onClick={handleGoogle} loading={busy === 'google'} disabled={busy !== null} leadingIcon={<GoogleGlyph />}>
-        Continue with Google
-      </Button>
+      <GoogleButton size="md" className="mt-5" onClick={handleGoogle} loading={busy === 'google'} disabled={busy !== null} />
 
       <div className="my-4 flex items-center gap-3 text-[12px] text-subtle">
         <span className="h-px flex-1 bg-line" />

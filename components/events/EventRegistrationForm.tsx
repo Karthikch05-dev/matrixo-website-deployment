@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
 import { getPaymentBreakdown } from "@/lib/payments";
+import { useProfilePrefill } from "@/lib/useProfilePrefill";
 
 interface EventRegistrationFormProps {
   event: any;
@@ -55,6 +56,21 @@ export default function EventRegistrationForm({
     wantTransport: "no",
     hearAboutEvent: "",
   });
+
+  // Fill from the signed-in user's profile; only empty fields are touched.
+  const { offerSave } = useProfilePrefill((saved) =>
+    setFormData((prev) => ({
+      ...prev,
+      fullName: prev.fullName || saved.fullName,
+      email: prev.email || saved.email,
+      contactNumber: prev.contactNumber || saved.phone,
+      studentId: prev.studentId || saved.rollNumber,
+      collegeName: prev.collegeName || saved.college,
+      department: prev.department || saved.branch,
+      year: prev.year || saved.year,
+      graduationYear: prev.graduationYear || saved.graduationYear,
+    })),
+  );
 
   useEffect(() => {
     isSubmittingRef.current = isSubmitting;
@@ -281,6 +297,16 @@ export default function EventRegistrationForm({
       toast.success(
         "✅ Registration confirmed! Your confirmation email is on its way.",
       );
+
+      offerSave({
+        fullName: formData.fullName,
+        phone: formData.contactNumber,
+        rollNumber: formData.studentId,
+        college: formData.collegeName,
+        branch: formData.department,
+        year: formData.year,
+        graduationYear: formData.graduationYear,
+      });
 
       // Reset form
       setFormData({
