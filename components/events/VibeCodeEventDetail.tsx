@@ -24,34 +24,30 @@ import {
   FaBolt
 } from 'react-icons/fa'
 import { useAuth } from '@/lib/AuthContext'
-import { storeRedirectAfterLogin } from '@/lib/authRedirect'
-import HeadingHighlight from '@/components/HeadingHighlight'
+import { toast } from 'sonner'
 // @ts-ignore - Import error is a VS Code cache issue, file exists
 import VibeCodeRegistrationForm from './VibeCodeRegistrationForm'
+import { PLATFORM_FEE } from '@/lib/payments'
 
 export default function VibeCodeEventDetail({ event }: { event: any }) {
   const { user } = useAuth()
   const [showRegistration, setShowRegistration] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-  const ticketSectionRef = useRef<HTMLDivElement>(null)
   const scheduleSectionRef = useRef<HTMLDivElement>(null)
 
   const handleRegisterNow = (ticket: any) => {
+    if (event.googleFormLink) {
+      window.open(event.googleFormLink, '_blank', 'noopener,noreferrer')
+      return
+    }
     if (!user) {
-      storeRedirectAfterLogin()
-      window.location.href = '/auth'
+      const currentUrl = window.location.pathname
+      window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
       return
     }
     setSelectedTicket(ticket)
     setShowRegistration(true)
-  }
-
-  const scrollToTickets = () => {
-    ticketSectionRef.current?.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
-    })
   }
 
   const scrollToSchedule = () => {
@@ -71,13 +67,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0f1c] via-[#0d1529] to-[#0a0f1c]">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-[#0a0f1c] via-white dark:via-[#0d1529] to-gray-50 dark:to-[#0a0f1c]">
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           {/* Dark navy gradient base */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1c] via-[#0d1830] to-[#0a0f1c]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-50 dark:from-[#0a0f1c] via-white dark:via-[#0d1830] to-gray-50 dark:to-[#0a0f1c]" />
           
           {/* Animated grid pattern */}
           <div className="absolute inset-0 opacity-20">
@@ -126,9 +122,27 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <span className="text-cyan-400 text-sm font-medium">Organized by matriXO</span>
             </motion.div>
 
+            {/* 1st Year Only Badge */}
+            {event.firstYearOnly && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex justify-center mb-6"
+              >
+                <div className="inline-flex items-center gap-2 bg-orange-500/15 border border-orange-500/40 rounded-full px-5 py-2">
+                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                  <span className="text-orange-300 text-sm font-semibold">Only for 1st Year Students</span>
+                </div>
+              </motion.div>
+            )}
+
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
-              <HeadingHighlight text="VibeCode IRL" solidClassName="text-white" />
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(0,200,255,0.5)]">
+                VibeCode
+              </span>
+              <span className="text-gray-900 dark:text-white"> IRL</span>
             </h1>
 
             {/* Tagline */}
@@ -138,36 +152,34 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
 
             {/* Icon Highlights */}
             <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-10">
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-full px-4 py-2">
                 <FaClock className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">Full Day Event</span>
+                <span className="text-gray-900 dark:text-white text-sm md:text-base">Full Day Event</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-full px-4 py-2">
                 <FaMapMarkerAlt className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">KPRIT, Hyderabad</span>
+                <span className="text-gray-900 dark:text-white text-sm md:text-base">KPRIT, Hyderabad</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-full px-4 py-2">
                 <FaUser className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">Individual Event</span>
+                <span className="text-gray-900 dark:text-white text-sm md:text-base">Individual Event</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-full px-4 py-2">
                 <FaRobot className="text-cyan-400" />
-                <span className="text-white text-sm md:text-base">AI-Powered</span>
+                <span className="text-gray-900 dark:text-white text-sm md:text-base">AI-Powered</span>
               </div>
             </div>
 
-            {/* CTA Buttons */}
+              {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
-                onClick={scrollToTickets}
+                onClick={() => handleRegisterNow(event.googleFormLink ? null : event.tickets[0])}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="group relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg text-white
-                         shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300
-                         overflow-hidden"
+                className="group relative px-8 py-4 rounded-full font-bold text-lg overflow-hidden cta-glass"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Register Now – ₹69 Only
+                  {event.googleFormLink ? 'Register Now' : 'Register Now – ₹69 Only'}
                   <FaBolt className="group-hover:animate-pulse" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -206,11 +218,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              <HeadingHighlight text="What is VibeCode IRL?" highlightWords={2} solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              What is <span className="text-cyan-400">VibeCode IRL</span>?
             </h2>
             
-            <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
+            <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
               <p>
                 VibeCode IRL isn't just another workshop. It's a <span className="text-cyan-400 font-semibold">full-day event</span> where 
                 you learn to leverage cutting-edge AI tools to supercharge your coding workflow.
@@ -254,10 +266,10 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Why Join?" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Why <span className="text-cyan-400">Join</span>?
             </h2>
-            <p className="text-gray-400 text-lg">More than just code. Real value.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">More than just code. Real value.</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -267,17 +279,14 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="group p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 
-                       rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
+              className="group p-6 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
             >
               <div className="w-14 h-14 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaCertificate className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                <HeadingHighlight text="Certificates" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Certificates</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 All participants receive physical certificates of participation from matriXO (distributed at the venue).
               </p>
             </motion.div>
@@ -288,17 +297,14 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="group p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 
-                       rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
+              className="group p-6 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
             >
               <div className="w-14 h-14 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaTrophy className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                <HeadingHighlight text="Hands-On Learning" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Hands-On Learning</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Practical workshop with real coding exercises. Learn by doing, not just watching.
               </p>
             </motion.div>
@@ -309,17 +315,14 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="group p-6 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 
-                       rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
+              className="group p-6 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all duration-300"
             >
               <div className="w-14 h-14 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 
                             group-hover:bg-cyan-500/20 transition-colors">
                 <FaNetworkWired className="text-2xl text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                <HeadingHighlight text="Industry Exposure" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Industry Exposure</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Connect with tech mentors, get feedback, and expand your network.
               </p>
             </motion.div>
@@ -337,9 +340,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              <HeadingHighlight text="Event Schedule" />
+              Event <span className="text-cyan-500 dark:text-cyan-400">Schedule</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. Feb 12 & 13. Choose your day!</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Two sessions. {format(new Date(event.date), 'MMM d')} & {format(new Date(event.endDate), 'MMM d')}. Choose your day!</p>
           </motion.div>
 
           {/* Single Session Schedule */}
@@ -354,9 +357,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 <FaClock className="text-2xl text-cyan-500 dark:text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  <HeadingHighlight text="Full Day Event" />
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Full Day Event</h3>
                 <p className="text-gray-500 dark:text-gray-400">Workshop, Quiz, Competition & Certificates</p>
               </div>
             </div>
@@ -381,7 +382,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
       </section>
 
       {/* PRICING & REGISTRATION RULES */}
-      <section ref={ticketSectionRef} className="py-20 px-6 bg-gradient-to-b from-transparent via-cyan-950/20 to-transparent" id="pricing">
+      <section className="py-20 px-6 bg-gradient-to-b from-transparent via-cyan-950/20 to-transparent" id="pricing">
         <div className="container mx-auto max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -389,88 +390,139 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Pricing & Registration" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Pricing & <span className="text-cyan-400">Registration</span>
             </h2>
           </motion.div>
 
-          {/* Pricing Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
-          >
-            {/* Price Display */}
-            <div className="mb-8">
-              <div className="flex items-center justify-center gap-4 mb-2">
-                <span className="text-2xl text-gray-500 line-through">₹99</span>
-                <span className="text-5xl md:text-6xl font-black gradient-text">
-                  ₹69
-                </span>
-              </div>
-              <p className="text-gray-400">Per person</p>
-              <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
-                <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
-              </div>
-            </div>
-
-            {/* Rules */}
-            <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">
-                    <HeadingHighlight text="Individual Registration" solidClassName="text-white" />
-                  </h4>
-                  <p className="text-gray-400 text-sm">Each person registers individually. No team required.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">
-                    <HeadingHighlight text="Full-Day Event Access" solidClassName="text-white" />
-                  </h4>
-                  <p className="text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">
-                    <HeadingHighlight text="Physical Certificate Included" solidClassName="text-white" />
-                  </h4>
-                  <p className="text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-semibold">
-                    <HeadingHighlight text="Limited Seats" solidClassName="text-white" />
-                  </h4>
-                  <p className="text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Register Button */}
-            <motion.button
-              onClick={() => handleRegisterNow(event.tickets[0])}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full 
-                       font-bold text-lg text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 
-                       transition-all duration-300"
+          {event.googleFormLink ? (
+            /* Google Form Registration Card */
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
             >
-              Register Now
-            </motion.button>
-          </motion.div>
+              {event.firstYearOnly && (
+                <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
+                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                  <span className="text-orange-300 font-semibold text-sm">Only for 1st Year Students</span>
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Interactive Workshop</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Hands-on AI-assisted coding session for 1st year students.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Team-Based Challenge</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Compete in teams and win exciting prizes.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Participation Certificate</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Every participant receives a certificate from matriXO.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Swags & Prizes</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Win exciting swags and prizes for top performers.</p>
+                  </div>
+                </div>
+              </div>
+              <motion.button
+                onClick={() => handleRegisterNow(null)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg cta-glass"
+              >
+                Register Now
+              </motion.button>
+              <p className="text-gray-500 text-sm mt-4">Opens Google Form in a new tab</p>
+            </motion.div>
+          ) : (
+            /* Default Pricing Card */
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border-2 border-cyan-500/30 rounded-3xl p-8 md:p-12 text-center"
+            >
+              {/* Price Display */}
+              <div className="mb-8">
+                <div className="flex items-center justify-center gap-4 mb-2">
+                  <span className="text-2xl text-gray-500 line-through">₹99</span>
+                  <span className="text-5xl md:text-6xl font-black text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">
+                    ₹69
+                  </span>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">Per person</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  + ₹{PLATFORM_FEE} platform fee at checkout (₹{69 + PLATFORM_FEE} total)
+                </p>
+                <div className="inline-block mt-4 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
+                  <span className="text-orange-400 font-semibold text-sm">Early Bird Discount Active</span>
+                </div>
+              </div>
+
+              {/* Rules */}
+              <div className="grid md:grid-cols-2 gap-6 text-left mb-10">
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Individual Registration</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Each person registers individually. No team required.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Full-Day Event Access</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Workshop, quiz, competition, lunch & certificates.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Physical Certificate Included</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">₹69 includes full day access, lunch, and certificate.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-gray-900 dark:text-white font-semibold">Limited Seats</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Only 144 participants per day. Register early to secure your spot.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Register Button */}
+              <motion.button
+                onClick={() => handleRegisterNow(event.tickets[0])}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg cta-glass"
+              >
+                Register Now
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </section>
 
-      {/* REGISTRATION FORM INFO */}
+      {/* REGISTRATION FORM INFO & PAYMENT — hidden when using Google Form */}
+      {!event.googleFormLink && (
+        <>
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <motion.div
@@ -479,17 +531,17 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Registration Fields" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Registration <span className="text-cyan-400">Fields</span>
             </h2>
-            <p className="text-gray-400 text-lg">What you'll need to register</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">What you'll need to register</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8"
+            className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8"
           >
             <div className="grid md:grid-cols-2 gap-4">
               {[
@@ -504,15 +556,15 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                   <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center">
                     <span className="text-cyan-400 text-sm font-bold">{index + 1}</span>
                   </div>
-                  <span className="text-gray-300">{field}</span>
+                  <span className="text-gray-600 dark:text-gray-300">{field}</span>
                 </div>
               ))}
             </div>
 
             <div className="mt-6 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
               <p className="text-cyan-400 text-sm text-center">
-                After form submission, you'll be redirected to your UPI app to complete payment. 
-                Payment confirmation is mandatory to secure your spot.
+                After filling the form, you&apos;ll complete payment in a secure Razorpay
+                checkout window. Your spot is confirmed as soon as payment succeeds.
               </p>
             </div>
           </motion.div>
@@ -528,8 +580,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Secure Payment" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Secure <span className="text-cyan-400">Payment</span>
             </h2>
           </motion.div>
 
@@ -537,24 +589,28 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8 text-center"
+            className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl p-8 text-center"
           >
             <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <FaRupeeSign className="text-3xl text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">
-              <HeadingHighlight text="Secure UPI Payment" solidClassName="text-white" />
-            </h3>
-            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-              All payments are completed via UPI. After submitting the registration form, you'll be redirected 
-              to your UPI app to complete payment. Payment confirmation is mandatory to secure your spot.
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Secure Online Payment</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-lg mx-auto">
+              Payments are processed by Razorpay, our PCI-DSS compliant payment gateway.
+              Pay by UPI, credit/debit card, net banking or wallet — your spot is confirmed
+              the moment payment succeeds. A ₹{PLATFORM_FEE} platform fee is added at checkout.
             </p>
-            <div className="flex justify-center">
-              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">UPI Payment</span>
+            <div className="flex justify-center flex-wrap gap-3">
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">UPI</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Cards</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Net Banking</span>
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full text-purple-300 text-lg font-semibold">Wallets</span>
             </div>
           </motion.div>
         </div>
       </section>
+        </>
+      )}
 
       {/* CERTIFICATES & DELIVERABLES */}
       <section className="py-20 px-6">
@@ -565,8 +621,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="What You'll Get" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              What You'll <span className="text-cyan-400">Get</span>
             </h2>
           </motion.div>
 
@@ -576,13 +632,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
+              className="text-center p-8 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaCertificate className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">
-                <HeadingHighlight text="Participation Certificate" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400">Physical certificate for everyone who participated</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Participation Certificate</h3>
+              <p className="text-gray-500 dark:text-gray-400">Physical certificate for everyone who participated</p>
             </motion.div>
 
             <motion.div
@@ -590,13 +644,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
+              className="text-center p-8 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaGift className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">
-                <HeadingHighlight text="Swags" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400">Exciting swags for top 3 quiz competition winners</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Swags</h3>
+              <p className="text-gray-500 dark:text-gray-400">Exciting swags for top 3 quiz competition winners</p>
             </motion.div>
 
             <motion.div
@@ -604,13 +656,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="text-center p-8 bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
+              className="text-center p-8 bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl hover:border-cyan-500/50 transition-all"
             >
               <FaTrophy className="text-5xl text-cyan-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">
-                <HeadingHighlight text="Merit Certificate" solidClassName="text-white" />
-              </h3>
-              <p className="text-gray-400">Special merit certificates for top 3 competition winners</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Merit Certificate</h3>
+              <p className="text-gray-500 dark:text-gray-400">Special merit certificates for top 3 competition winners</p>
             </motion.div>
           </div>
         </div>
@@ -625,8 +675,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Venue & Location" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Venue & <span className="text-cyan-400">Location</span>
             </h2>
           </motion.div>
 
@@ -634,7 +684,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-2xl overflow-hidden"
+            className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-2xl overflow-hidden"
           >
             <div className="p-8">
               <div className="flex items-start gap-4">
@@ -642,11 +692,9 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                   <FaMapMarkerAlt className="text-2xl text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    <HeadingHighlight text="Auditorium, D-Block" solidClassName="text-white" />
-                  </h3>
-                  <p className="text-gray-300 mb-1">Kommuri Pratap Reddy Institute of Technology (KPRIT)</p>
-                  <p className="text-gray-400">Ghatkesar, Hyderabad, Telangana</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Auditorium, D-Block</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-1">Kommuri Pratap Reddy Institute of Technology (KPRIT)</p>
+                  <p className="text-gray-500 dark:text-gray-400">Ghatkesar, Hyderabad, Telangana</p>
                   <a 
                     href="https://maps.app.goo.gl/phYNNYQyWgacvBA59"
                     target="_blank"
@@ -687,8 +735,8 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              <HeadingHighlight text="Frequently Asked Questions" solidClassName="text-white" />
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Frequently Asked <span className="text-cyan-400">Questions</span>
             </h2>
           </motion.div>
 
@@ -700,13 +748,13 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-gradient-to-br from-[#0d1830] to-[#0a1525] border border-cyan-500/20 rounded-xl overflow-hidden"
+                className="bg-gradient-to-br from-gray-50 dark:from-[#0d1830] to-gray-50 dark:to-[#0a1525] border border-cyan-500/20 rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => toggleFaq(index)}
                   className="w-full flex items-center justify-between p-5 text-left"
                 >
-                  <span className="text-white font-semibold pr-4">{faq.question}</span>
+                  <span className="text-gray-900 dark:text-white font-semibold pr-4">{faq.question}</span>
                   {expandedFaq === index ? (
                     <FaChevronUp className="text-cyan-400 flex-shrink-0" />
                   ) : (
@@ -722,7 +770,7 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <p className="px-5 pb-5 text-gray-400">{faq.answer}</p>
+                      <p className="px-5 pb-5 text-gray-500 dark:text-gray-400">{faq.answer}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -747,11 +795,11 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
               <span className="text-orange-400 font-medium text-sm">Seats are limited to 144 per day</span>
             </div>
 
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              <HeadingHighlight text="Ready to Learn & Level Up?" highlightWords={4} solidClassName="text-white" />
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              Ready to <span className="text-cyan-400">Learn & Level Up</span>?
             </h2>
 
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               This is your chance to master AI-assisted coding. Join us for 3 hours. 
               Transform your workflow. Level up your skills.
             </p>
@@ -761,12 +809,10 @@ export default function VibeCodeEventDetail({ event }: { event: any }) {
                 onClick={() => handleRegisterNow(event.tickets[0])}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full 
-                         font-bold text-xl text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 
-                         transition-all duration-300 overflow-hidden"
+                className="group relative px-10 py-5 rounded-full font-bold text-xl overflow-hidden cta-glass"
               >
                 <span className="relative z-10 flex items-center gap-3">
-                  Register Now – ₹69 Only
+                  {event.googleFormLink ? 'Register Now' : 'Register Now – ₹69 Only'}
                   <FaLaptopCode className="group-hover:rotate-12 transition-transform" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />

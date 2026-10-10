@@ -1,27 +1,16 @@
-import { Metadata } from 'next'
-import HeadingHighlight from '@/components/HeadingHighlight'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - matriXO',
-  description: 'Learn how matriXO collects, uses, and protects your personal information. Read our complete privacy policy.',
-  openGraph: {
-    title: 'Privacy Policy - matriXO',
-    description: 'How matriXO handles your personal data and privacy.',
-    url: 'https://matrixo.in/privacy',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Privacy policy',
+  description: 'How matriXO collects, uses and protects your personal information.',
+  alternates: { canonical: '/privacy' },
+  openGraph: { url: '/privacy' },
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8">
-          <HeadingHighlight text="Privacy Policy" />
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: October 9, 2025</p>
+    <LegalPage title="Privacy policy" updated="October 11, 2026" path="/privacy">
           
           <section className="mb-8">
             <p className="mb-4">
@@ -42,6 +31,15 @@ export default function PrivacyPage() {
               <li><strong>Payment Information:</strong> Processed securely through Razorpay (we don't store card details)</li>
               <li><strong>Educational Information:</strong> College/university name, year of study, course</li>
               <li><strong>Professional Information:</strong> Company, job title (for bootcamps)</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">StudentVault student verification</h3>
+            <p className="mb-4">To confirm you are a student, StudentVault asks for your college, graduation year and either a college email address (we email it a one-time code) or a photo of a student document such as your ID card, bonafide certificate or fee receipt. At re-verification we also ask whether you are still studying and, if you have graduated, what you are doing now.</p>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Documents are stored privately and are visible only to the matriXO team members who review them, through links that expire after 15 minutes</li>
+              <li>We use them only to confirm student status — never for marketing, and never shared with the providers listed in StudentVault</li>
+              <li>One-time codes are stored only as a secure hash and expire after 10 minutes</li>
+              <li>You can ask us to delete your document at any time by emailing hello@matrixo.in; we delete documents within 90 days of a review decision</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Automatically Collected Information</h3>
@@ -140,6 +138,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 mb-4">
               <li>Account data: Until you request deletion or account closure</li>
               <li>Transaction records: 7 years (legal requirement)</li>
+              <li>StudentVault verification documents: up to 90 days after review</li>
               <li>Marketing data: Until you unsubscribe</li>
               <li>Analytics data: 24-36 months</li>
             </ul>
@@ -193,8 +192,6 @@ export default function PrivacyPage() {
               to maintaining the highest standards of privacy and data security.
             </p>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }

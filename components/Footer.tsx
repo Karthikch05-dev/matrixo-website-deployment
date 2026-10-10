@@ -1,111 +1,66 @@
 import Link from 'next/link'
-import { FaLinkedin, FaInstagram, FaEnvelope } from 'react-icons/fa'
+import Logo from '@/components/brand/Logo'
+import { FOOTER_NAV, LEGAL_NAV } from '@/lib/navigation'
+import { SITE } from '@/lib/site'
+
+const isExternal = (href: string) => /^(https?:|mailto:)/.test(href)
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
+  const year = new Date().getFullYear()
 
   return (
-    <footer className="mt-auto mx-4 md:mx-8 mb-6 md:mb-8 px-6 md:px-10 py-10 sm:py-12 rounded-[24px] md:rounded-[32px] bg-transparent border border-gray-200/80 dark:border-white/[0.15] text-gray-700 dark:text-gray-300">
-      <div className="container-custom">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10 sm:mb-12 items-start">
-          {/* Brand */}
-          <div>
-            <div className="relative h-10 w-auto mb-4">
-              {/* Light Mode Logo (Black) */}
-              <img 
-                src="/logos/logo-light.png" 
-                alt="matriXO" 
-                className="h-10 w-auto rounded-lg block dark:hidden"
-              />
-              {/* Dark Mode Logo (White) */}
-              <img 
-                src="/logos/logo-dark.png" 
-                alt="matriXO" 
-                className="h-10 w-auto rounded-lg absolute top-0 left-0 hidden dark:block"
-              />
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed max-w-xs">
-              Technical workshops, hackathons, and career-focused events for students.
+    <footer data-site-chrome className="border-t border-line bg-canvas-subtle text-[14px] dark:bg-canvas">
+      <div className="mx-auto max-w-site px-4 pb-10 pt-14 sm:px-6 lg:px-8">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+          <div className="max-w-xs">
+            <Link href="/" aria-label="matriXO home" className="inline-flex text-ink">
+              <Logo height={26} title="" />
+            </Link>
+            <p className="mt-4 leading-relaxed text-muted">
+              Workshops, hackathons and career programs that help students build real skills and show them.
             </p>
+            <a href={`mailto:${SITE.email}`} className="mt-4 inline-block font-medium text-ink hover:text-accent">
+              {SITE.email}
+            </a>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-gray-900 dark:text-white font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-3">
-              <li><Link href="/about" className="hover:text-gray-900 dark:hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/events" className="hover:text-gray-900 dark:hover:text-white transition-colors">Events</Link></li>
-              <li><Link href="/services" className="hover:text-gray-900 dark:hover:text-white transition-colors">Services</Link></li>
-              <li><Link href="/team" className="hover:text-gray-900 dark:hover:text-white transition-colors">Team</Link></li>
-              <li><Link href="/careers" className="hover:text-gray-900 dark:hover:text-white transition-colors">Careers</Link></li>
-              <li><Link href="/blog" className="hover:text-gray-900 dark:hover:text-white transition-colors">Blog</Link></li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h4 className="text-gray-900 dark:text-white font-semibold mb-4">Services</h4>
-            <ul className="space-y-3">
-              <li><Link href="/services#workshops" className="hover:text-gray-900 dark:hover:text-white transition-colors">Technical Workshops</Link></li>
-              <li><Link href="/services#hackathons" className="hover:text-gray-900 dark:hover:text-white transition-colors">Hackathons</Link></li>
-              <li><Link href="/services#bootcamps" className="hover:text-gray-900 dark:hover:text-white transition-colors">Bootcamps</Link></li>
-              <li><Link href="/services#events" className="hover:text-gray-900 dark:hover:text-white transition-colors">Career Events</Link></li>
-            </ul>
-          </div>
-
-          {/* Socials */}
-          <div>
-            <h4 className="text-gray-900 dark:text-white font-semibold mb-4">Socials</h4>
-            <ul className="space-y-3 text-gray-400">
-              <li>
-                <a
-                  href="mailto:hello@matrixo.in"
-                  className="flex items-center gap-2 hover:text-white transition-colors"
-                >
-                  <FaEnvelope className="text-gray-500 dark:text-gray-400" />
-                  hello@matrixo.in
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.instagram.com/matrixo_in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-white transition-colors"
-                >
-                  <FaInstagram className="text-gray-500 dark:text-gray-400" />
-                  Instagram
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://linkedin.com/company/matrixo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-white transition-colors"
-                >
-                  <FaLinkedin className="text-gray-500 dark:text-gray-400" />
-                  LinkedIn
-                </a>
-              </li>
-            </ul>
-          </div>
+          {FOOTER_NAV.map((group) => (
+            <nav key={group.label} aria-label={group.label}>
+              <h2 className="text-[13px] font-semibold text-ink">{group.label}</h2>
+              <ul className="mt-3 space-y-2.5">
+                {group.items.map((item) => (
+                  <li key={item.href}>
+                    {isExternal(item.href) ? (
+                      <a
+                        href={item.href}
+                        className="text-muted transition-colors hover:text-ink"
+                        {...(item.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link href={item.href} className="text-muted transition-colors hover:text-ink">
+                        {item.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-200/30 dark:border-white/[0.06] pt-8 mt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-500 dark:text-gray-500 text-sm">
-              © {currentYear} matriXO - An Ed-Tech Startup. All rights reserved.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms & Conditions</Link>
-              <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="/refund" className="hover:text-gray-900 dark:hover:text-white transition-colors">Cancellations & Refunds</Link>
-              <Link href="/data-protection" className="hover:text-gray-900 dark:hover:text-white transition-colors">Data Protection</Link>
-              <Link href="/contact" className="hover:text-gray-900 dark:hover:text-white transition-colors">Contact Us</Link>
-            </div>
-          </div>
+        <div className="mt-12 flex flex-col gap-4 border-t border-line pt-6 text-[13px] text-subtle md:flex-row md:items-center md:justify-between">
+          <p>© {year} matriXO. All rights reserved.</p>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {LEGAL_NAV.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href} className="transition-colors hover:text-ink">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </footer>

@@ -1,30 +1,29 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { QRCodeSVG } from 'qrcode.react'
-import { 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
-  FaGraduationCap, 
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaGraduationCap,
   FaUniversity,
   FaTimes,
   FaSpinner,
   FaCheckCircle,
   FaIdCard,
   FaLaptop,
-  FaCopy,
-  FaMobileAlt,
-  FaCodeBranch,
-  FaUpload,
-  FaImage
+  FaLock,
+  FaCodeBranch
 } from 'react-icons/fa'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/AuthContext'
-import { storeRedirectAfterLogin } from '@/lib/authRedirect'
+import { useProfilePrefill } from '@/lib/useProfilePrefill'
+import { useRazorpayCheckout } from '@/hooks/useRazorpayCheckout'
+import { getPaymentBreakdown } from '@/lib/payments'
+import XOLoader from '@/components/XOLoader'
 
 interface VibeCodeRegistrationFormProps {
   event: any
@@ -35,15 +34,14 @@ interface VibeCodeRegistrationFormProps {
 export default function VibeCodeRegistrationForm({ event, ticket, onClose }: VibeCodeRegistrationFormProps) {
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [showPaymentInfo, setShowPaymentInfo] = useState(false)
-  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null)
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [hasRegistered, setHasRegistered] = useState(false)
-  const [checkingRegistration, setCheckingRegistration] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false)
-  
+  const [mounted, setMounted] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
+  const isSubmittingRef = useRef(false)
+  const { startCheckout, isProcessing } = useRazorpayCheckout()
+  const breakdown = getPaymentBreakdown(ticket.price)
+
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
     rollNumber: '',
@@ -55,17 +53,69 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     hasLaptop: ''
   })
 
-  // UPI Payment details
-  const UPI_ID = 'vutukurikishan.8@okaxis'
-  const generateUniqueCode = () => {
-    const timestamp = Date.now()
-    const random = Math.floor(Math.random() * 10000)
-    return `VIBECODE-${timestamp}-${random}`
-  }
-  
-  // UPI Payment Link with price locked and unique transaction code
-  const transactionCode = generateUniqueCode()
-  const UPI_PAYMENT_LINK = `upi://pay?pa=${UPI_ID}&pn=MatriXO&am=${ticket.price}&cu=INR&tn=${encodeURIComponent(`VibeCode IRL - ${transactionCode}`)}`
+  useEffect(() => {
+    isSubmittingRef.current = isSubmitting
+  }, [isSubmitting])
+
+  const requestClose = useCallback(() => {
+    if (isSubmittingRef.current) return
+
+    setIsOpen(false)
+
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current)
+    }
+
+    closeTimerRef.current = window.setTimeout(() => {
+      onClose()
+    }, 220)
+  }, [onClose])
+
+  useEffect(() => {
+    setMounted(true)
+    setIsOpen(true)
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    const previousBodyStyles = {
+      overflow: document.body.style.overflow,
+      paddingRight: document.body.style.paddingRight,
+      overscrollBehavior: document.body.style.overscrollBehavior,
+    }
+    const previousDocumentStyles = {
+      overflow: document.documentElement.style.overflow,
+      overscrollBehavior: document.documentElement.style.overscrollBehavior,
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+    document.documentElement.style.overflow = 'hidden'
+    document.documentElement.style.overscrollBehavior = 'none'
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        requestClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current)
+        closeTimerRef.current = null
+      }
+      document.body.style.overflow = previousBodyStyles.overflow
+      document.body.style.paddingRight = previousBodyStyles.paddingRight
+      document.body.style.overscrollBehavior = previousBodyStyles.overscrollBehavior
+      document.documentElement.style.overflow = previousDocumentStyles.overflow
+      document.documentElement.style.overscrollBehavior = previousDocumentStyles.overscrollBehavior
+    }
+  }, [requestClose])
 
   // Check if user has already registered (using localStorage)
   useEffect(() => {
@@ -77,76 +127,29 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     }
   }, [user?.email])
 
+  // Fill from the saved profile; only empty fields are touched.
+  const { offerSave } = useProfilePrefill((saved) =>
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || saved.fullName,
+      rollNumber: prev.rollNumber || saved.rollNumber,
+      phone: prev.phone || saved.phone,
+      branch: prev.branch || saved.branch,
+      college: prev.college || saved.college,
+      year: saved.year || prev.year,
+    }))
+  )
+
   // Auto-fill user email when logged in
   useEffect(() => {
     if (user?.email) {
       setFormData(prev => ({
         ...prev,
-        email: user.email || prev.email,
+        email: user.email!,
         name: user.displayName || prev.name
       }))
     }
   }, [user])
-
-  // Detect mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor
-      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
-      setIsMobile(isMobileDevice || window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Copy UPI ID to clipboard
-  const copyUpiId = () => {
-    navigator.clipboard.writeText(UPI_ID)
-    toast.success('UPI ID copied to clipboard!')
-  }
-
-  // Handle screenshot upload
-  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFileDialogOpen(false)
-    const file = e.target.files?.[0]
-    if (file) {
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload an image file')
-        return
-      }
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB')
-        return
-      }
-      setPaymentScreenshot(file)
-      // Create preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setScreenshotPreview(reader.result as string)
-        toast.success('Screenshot uploaded successfully!')
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  // Handle file input click
-  const handleUploadClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsFileDialogOpen(true)
-    // Add a focus listener to detect when file dialog closes
-    const handleFocus = () => {
-      setTimeout(() => {
-        setIsFileDialogOpen(false)
-      }, 300)
-      window.removeEventListener('focus', handleFocus)
-    }
-    window.addEventListener('focus', handleFocus)
-    fileInputRef.current?.click()
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -214,39 +217,12 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
+    if (!user) {
+      toast.error('Please login to register')
       return
     }
 
-    setIsSubmitting(true)
-
-    try {
-      // Don't send to Google Sheet yet - wait for payment screenshot
-      toast.success('Please proceed to payment')
-      
-      // Handle payment based on device
-      if (isMobile) {
-        // On mobile, try to open UPI app
-        toast.info('Opening UPI app for payment...')
-        setTimeout(() => {
-          window.location.href = UPI_PAYMENT_LINK
-        }, 1000)
-      } else {
-        // On desktop, show payment info modal
-        setShowPaymentInfo(true)
-        setIsSubmitting(false)
-      }
-
-    } catch (error: any) {
-      console.error('Registration error:', error)
-      toast.error(error.message || 'Registration failed. Please try again.')
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleFinalSubmit = async () => {
-    if (!user) {
-      toast.error('Please login to register')
+    if (!validateForm()) {
       return
     }
 
@@ -264,23 +240,45 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
       return
     }
 
-    if (!paymentScreenshot) {
-      toast.error('Please upload payment screenshot')
-      return
-    }
+    await startCheckout({
+      eventId: event.id,
+      ticketId: ticket.id,
+      description: `${event.title} — ${ticket.name}`,
+      prefill: {
+        name: formData.name,
+        email: formData.email,
+        contact: formData.phone,
+      },
+      onSuccess: async (result) => {
+        toast.success('Payment successful! Saving your registration…')
+        await submitRegistration(result)
+      },
+      onFailure: (message) => toast.error(message),
+      onDismiss: () => toast.info('Payment cancelled — you have not been charged.'),
+    })
+  }
 
+  const submitRegistration = async (payment: {
+    paymentId: string
+    orderId: string
+    total: number
+    platformFee: number
+  }) => {
     setIsSubmitting(true)
 
     try {
-      // Prepare data for Google Sheet with screenshot
       const registrationData = {
         timestamp: new Date().toISOString(),
         eventId: event.id,
         eventTitle: event.title,
         ticketType: ticket.name,
         price: ticket.price,
-        transactionCode: transactionCode, // Add unique transaction code
-        
+        platformFee: payment.platformFee,
+        amountPaid: payment.total,
+        transactionCode: payment.orderId,
+        razorpayPaymentId: payment.paymentId,
+        razorpayOrderId: payment.orderId,
+
         // Participant Info
         name: formData.name,
         rollNumber: formData.rollNumber,
@@ -291,13 +289,15 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         year: formData.year,
         github: '', // Not collected but expected by script
         hasLaptop: formData.hasLaptop,
-        paymentScreenshot: screenshotPreview || '', // Base64 image
-        
-        status: 'Pending Verification'
+        // Existing sheet column for payment proof now carries the Razorpay
+        // payment ID, which is the verifiable reference for the transaction.
+        paymentScreenshot: payment.paymentId,
+
+        status: 'Paid'
       }
 
       toast.info('Submitting registration...')
-      
+
       // Send to Google Sheet (which triggers email)
       await sendToGoogleSheet(registrationData)
 
@@ -308,12 +308,20 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         localStorage.setItem('vibecode_registrations', JSON.stringify(registeredEmails))
       }
       setHasRegistered(true)
+      offerSave({
+        fullName: formData.name,
+        rollNumber: formData.rollNumber,
+        phone: formData.phone,
+        branch: formData.branch,
+        college: formData.college,
+        year: formData.year,
+      })
 
       toast.success('🎉 Registration Complete! Check your email at ' + formData.email + ' for confirmation.')
       
       // Close modal after delay to let user see the success message
       setTimeout(() => {
-        onClose()
+        requestClose()
       }, 3000)
 
     } catch (error: any) {
@@ -323,49 +331,38 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
     }
   }
 
-  // Handle modal close - prevent closing when file dialog is open
-  const handleModalBackdropClick = (e: React.MouseEvent) => {
-    if (isFileDialogOpen) {
-      e.stopPropagation()
-      return
-    }
-    onClose()
+  if (!mounted) {
+    return null
   }
 
-  // Portal the modal to document.body so that `fixed inset-0` is relative to
-  // the viewport — not the template.tsx motion.div whose `willChange: transform`
-  // would otherwise create a new containing block, and so the z-index escapes
-  // the `isolation: isolate` stacking context of `.site-ambient`.
-  if (typeof document === 'undefined') return null
-
-  return createPortal(
+  return (
+    createPortal(
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-      onClick={handleModalBackdropClick}
+      animate={{ opacity: isOpen ? 1 : 0 }}
+      transition={{ duration: 0.22, ease: 'easeOut' }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+      onClick={requestClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: isOpen ? 1 : 0.95, opacity: isOpen ? 1 : 0 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-2xl max-h-[90vh] ${showPaymentInfo ? 'overflow-hidden' : 'overflow-y-auto'} bg-gradient-to-b from-[#0a1525] to-[#0d1830] 
-                   border border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-500/20`}
+        className="relative w-full max-w-[700px] max-h-[90vh] overflow-y-auto bg-gradient-to-b from-gray-50 dark:from-[#0a1525] to-gray-50 dark:to-[#0d1830] border border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-500/20"
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all z-10"
+          onClick={requestClose}
+          className="absolute top-6 right-6 p-2 text-gray-500 dark:text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all z-10"
         >
           <FaTimes size={20} />
         </button>
 
         {/* Header */}
         <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-b border-cyan-500/30 p-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Register for {event.title}</h2>
-          <p className="text-gray-300">Fill in your details to secure your spot • ₹{ticket.price}</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Register for {event.title}</h2>
+          <p className="text-gray-600 dark:text-gray-300">Fill in your details to secure your spot • ₹{breakdown.total}</p>
         </div>
 
         {/* Check if user is logged in */}
@@ -373,16 +370,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           <div className="p-8 text-center">
             <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8">
               <FaTimes className="mx-auto text-red-400 text-5xl mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Login Required</h3>
-              <p className="text-gray-300 mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Required</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 You must be logged in to register for this event.
               </p>
               <button
                 onClick={() => {
-                  storeRedirectAfterLogin()
-                  window.location.href = '/auth'
+                  const currentUrl = window.location.pathname
+                  window.location.href = `/auth?returnUrl=${encodeURIComponent(currentUrl)}`
                 }}
-                className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
+                className="px-8 py-3 font-semibold rounded-xl cta-glass"
               >
                 Go to Login
               </button>
@@ -392,16 +389,16 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           <div className="p-8 text-center">
             <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-8">
               <FaCheckCircle className="mx-auto text-green-400 text-5xl mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Already Registered!</h3>
-              <p className="text-gray-300 mb-4">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Already Registered!</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 You have already registered for {event.title}.
               </p>
               <p className="text-cyan-300 text-sm mb-6">
                 Check your email for confirmation details. If you haven't received the email, please check your spam folder or contact us.
               </p>
               <button
-                onClick={onClose}
-                className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-all"
+                onClick={requestClose}
+                className="px-8 py-3 font-semibold rounded-xl cta-glass"
               >
                 Close
               </button>
@@ -412,7 +409,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
           <div className="space-y-6">
             {/* Full Name */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaUser className="text-cyan-400" />
                 Full Name <span className="text-red-400">*</span>
               </label>
@@ -422,15 +419,14 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter your full name"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Roll Number */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaIdCard className="text-cyan-400" />
                 Roll Number (Full Series) <span className="text-red-400">*</span>
               </label>
@@ -440,35 +436,33 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 value={formData.rollNumber}
                 onChange={handleChange}
                 placeholder="e.g., 22BD1A0501"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Email */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaEnvelope className="text-cyan-400" />
                 Email Address <span className="text-red-400">*</span>
-                <span className="text-xs text-gray-400">(from your account)</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">(from your account)</span>
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 placeholder="your.email@example.com"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 opacity-70 cursor-not-allowed"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 opacity-70 cursor-not-allowed"
                 disabled={true}
                 readOnly
               />
-              <p className="text-xs text-gray-400 mt-1">Using email from your logged-in account</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Using email from your logged-in account</p>
             </div>
 
             {/* Phone */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaPhone className="text-cyan-400" />
                 Phone Number (Preferably WhatsApp) <span className="text-red-400">*</span>
               </label>
@@ -478,27 +472,26 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="10-digit mobile number"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Year of Study - Fixed to 2nd Year */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaGraduationCap className="text-cyan-400" />
                 Year of Study
               </label>
               <div className="w-full px-4 py-3 bg-cyan-500/20 border border-cyan-500/50 rounded-xl text-cyan-400 font-medium">
                 2nd Year Only
               </div>
-              <p className="text-xs text-gray-400 mt-1">This workshop is exclusively for 2nd year students</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This workshop is exclusively for 2nd year students</p>
             </div>
 
             {/* Branch of Study */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-3">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-3">
                 <FaCodeBranch className="text-cyan-400" />
                 Branch of Study <span className="text-red-400">*</span>
               </label>
@@ -512,7 +505,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                     className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                       formData.branch === branch
                         ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
-                        : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                        : 'bg-white/5 text-gray-600 dark:text-gray-300 border border-cyan-500/30 hover:bg-white/10'
                     }`}
                   >
                     {branch}
@@ -523,7 +516,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
 
             {/* College */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-2">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-2">
                 <FaUniversity className="text-cyan-400" />
                 Name of College <span className="text-red-400">*</span>
               </label>
@@ -533,15 +526,14 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                 value={formData.college}
                 onChange={handleChange}
                 placeholder="Your college name"
-                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                         placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Do you have a laptop? */}
             <div>
-              <label className="flex items-center gap-2 text-white font-medium mb-3">
+              <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-3">
                 <FaLaptop className="text-cyan-400" />
                 Do You Have Laptop? <span className="text-red-400">*</span>
               </label>
@@ -553,7 +545,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                   className={`px-6 py-4 rounded-xl font-semibold transition-all ${
                     formData.hasLaptop === 'Yes'
                       ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
-                      : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-600 dark:text-gray-300 border border-cyan-500/30 hover:bg-white/10'
                   }`}
                 >
                   Yes
@@ -565,7 +557,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
                   className={`px-6 py-4 rounded-xl font-semibold transition-all ${
                     formData.hasLaptop === 'No'
                       ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
-                      : 'bg-white/5 text-gray-300 border border-cyan-500/30 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-600 dark:text-gray-300 border border-cyan-500/30 hover:bg-white/10'
                   }`}
                 >
                   No
@@ -580,33 +572,50 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
             </div>
           </div>
 
+          {/* Payment Summary */}
+          <div className="mt-8 p-5 bg-white/5 border border-cyan-500/30 rounded-2xl space-y-2">
+            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
+              <span>{ticket.name}</span>
+              <span>₹{breakdown.basePrice}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
+              <span>Platform fee</span>
+              <span>₹{breakdown.platformFee}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-cyan-500/20 text-lg font-bold text-gray-900 dark:text-white">
+              <span>Total payable</span>
+              <span>₹{breakdown.total}</span>
+            </div>
+            <p className="flex items-center justify-center gap-2 pt-1 text-xs text-gray-500 dark:text-gray-400">
+              <FaLock className="text-green-400" />
+              Secure payment via Razorpay — UPI, cards, net banking &amp; wallets
+            </p>
+          </div>
+
           {/* Submit Button */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               disabled={isSubmitting}
-              className="flex-1 px-6 py-4 bg-white/5 border border-cyan-500/30 rounded-xl text-white 
-                       font-semibold hover:bg-white/10 transition-all disabled:opacity-50"
+              className="flex-1 px-6 py-4 bg-white/5 border border-cyan-500/30 rounded-xl text-gray-900 dark:text-white font-semibold hover:bg-white/10 transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white 
-                       font-bold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all 
-                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={isSubmitting || isProcessing}
+              className="flex-1 px-6 py-4 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cta-glass"
             >
-              {isSubmitting ? (
+              {isSubmitting || isProcessing ? (
                 <>
-                  <FaSpinner className="animate-spin" />
+                  <XOLoader size={16} />
                   Processing...
                 </>
               ) : (
                 <>
                   <FaCheckCircle />
-                  Register & Pay ₹{ticket.price}
+                  Register &amp; Pay ₹{breakdown.total}
                 </>
               )}
             </button>
@@ -619,149 +628,7 @@ export default function VibeCodeRegistrationForm({ event, ticket, onClose }: Vib
         </form>
         )}
       </motion.div>
-
-      {/* Payment Info Modal for Desktop */}
-      {showPaymentInfo && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-sm rounded-3xl p-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div 
-            className="p-6 text-center max-w-md max-h-[90vh] overflow-y-auto bg-[#0d1830] rounded-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-2xl font-bold text-white mb-4">Complete Payment via UPI</h3>
-            
-            {/* QR Code - Dynamically Generated with Unique Code */}
-            <div className="bg-white rounded-2xl p-4 mb-4 inline-block">
-              <QRCodeSVG
-                value={UPI_PAYMENT_LINK}
-                size={200}
-                level="H"
-                includeMargin={true}
-                className="mx-auto"
-              />
-            </div>
-            
-            <p className="text-gray-300 mb-4 text-sm">
-              Scan this unique QR code (₹{ticket.price} locked) or pay using the UPI ID below:
-            </p>
-            
-            {/* Transaction Code Display */}
-            <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-3 mb-4">
-              <p className="text-blue-300 text-xs mb-1">Your Unique Transaction Code:</p>
-              <code className="text-blue-400 text-sm font-mono break-all">{transactionCode}</code>
-            </div>
-            
-            {/* UPI ID Box */}
-            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">
-              <p className="text-gray-400 text-sm mb-2">UPI ID</p>
-              <div className="flex items-center justify-center gap-3">
-                <code className="text-cyan-400 text-base font-mono break-all">{UPI_ID}</code>
-                <button
-                  onClick={copyUpiId}
-                  className="p-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg transition-all flex-shrink-0"
-                >
-                  <FaCopy className="text-cyan-400" />
-                </button>
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div className="bg-white/10 border border-cyan-500/30 rounded-xl p-4 mb-4">
-              <p className="text-gray-400 text-sm mb-1">Amount to Pay</p>
-              <p className="text-3xl font-bold text-white">₹{ticket.price}</p>
-            </div>
-
-            {/* Payment Screenshot Upload */}
-            <div className="mb-4">
-              <p className="text-gray-300 text-sm mb-3">
-                After payment, upload the screenshot:
-              </p>
-              
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleScreenshotChange}
-                onBlur={() => setIsFileDialogOpen(false)}
-                onClick={(e) => e.stopPropagation()}
-                className="hidden"
-              />
-              
-              {/* Upload button/preview area */}
-              {screenshotPreview ? (
-                <div className="relative">
-                  <img 
-                    src={screenshotPreview} 
-                    alt="Payment Screenshot" 
-                    className="w-full max-h-48 object-contain rounded-xl border border-green-500/50"
-                  />
-                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                    <FaCheckCircle size={10} />
-                    Uploaded
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleUploadClick}
-                    className="mt-2 w-full text-center text-cyan-400 text-sm hover:underline"
-                  >
-                    Change Screenshot
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleUploadClick}
-                  className="w-full border-2 border-dashed border-cyan-500/50 rounded-xl p-6 hover:bg-white/5 transition-all cursor-pointer"
-                >
-                  <FaUpload className="text-cyan-400 text-2xl mx-auto mb-2" />
-                  <p className="text-cyan-400 text-sm font-medium">Click to upload screenshot</p>
-                  <p className="text-gray-500 text-xs mt-1">PNG, JPG up to 5MB</p>
-                </button>
-              )}
-            </div>
-
-            <button
-              onClick={handleFinalSubmit}
-              disabled={!paymentScreenshot || isSubmitting}
-              className={`w-full px-6 py-4 rounded-xl text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
-                paymentScreenshot && !isSubmitting
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-cyan-500/30 hover:shadow-cyan-500/50 cursor-pointer' 
-                  : 'bg-gray-600 cursor-not-allowed opacity-50'
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <FaSpinner className="animate-spin" />
-                  Submitting Registration...
-                </>
-              ) : paymentScreenshot ? (
-                <>
-                  <FaCheckCircle />
-                  Complete Registration
-                </>
-              ) : (
-                <>
-                  <FaUpload />
-                  Please Upload Screenshot First
-                </>
-              )}
-            </button>
-            
-            {!paymentScreenshot && (
-              <p className="text-center text-gray-400 text-xs mt-2">
-                ⬆️ Upload your payment screenshot above to continue
-              </p>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </motion.div>,
-    document.body
+    </motion.div>
+    , document.body)
   )
 }

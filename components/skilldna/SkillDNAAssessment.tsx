@@ -138,7 +138,7 @@ export default function SkillDNAAssessment({ onComplete }: { onComplete?: (data:
                     onClick={() => handleAnswer(option.value)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="group relative p-6 rounded-2xl border-2 border-gray-200/30 dark:border-white/[0.06] hover:border-purple-500 dark:hover:border-purple-500 transition-all duration-300 text-left bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-xl"
+                    className="group relative p-6 rounded-2xl border-2 border-gray-200/30 dark:border-white/[0.06] hover:border-purple-500 dark:hover:border-purple-500 text-left from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 cta-glass"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">

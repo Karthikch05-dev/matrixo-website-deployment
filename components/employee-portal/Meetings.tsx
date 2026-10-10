@@ -29,8 +29,9 @@ import {
 } from 'react-icons/fa'
 import { useEmployeeAuth } from '@/lib/employeePortalContext'
 import type { EmployeeProfile } from '@/lib/employeePortalContext'
+import { isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { createGlobalNotification } from '@/lib/notificationUtils'
-import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal } from './ui'
+import { Card, Button, Badge, Spinner as SpinnerUI, EmptyState, Modal, getLocalProfileImage, Avatar } from './ui'
 import { toast } from 'sonner'
 import { db } from '@/lib/firebaseConfig'
 import {
@@ -46,6 +47,10 @@ import {
   where,
   Timestamp
 } from 'firebase/firestore'
+
+// ============================================
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
+// ============================================
 
 // ============================================
 // TYPES
@@ -135,20 +140,8 @@ function formatDuration(start?: string, end?: string): string {
 
 function getProfileImageUrl(url?: string, name?: string, employeeId?: string): string {
   if (name && isMatriXOAccount(name)) return MATRIXO_LOGO_URL
-  if (url) return url
-  // Check local intern images fallback
-  const localImages: Record<string, string> = {
-    'M-A001': '/intern-images/M-A001.webp',
-    'M-A005': '/intern-images/M-A005.webp',
-    'M-A006': '/intern-images/M-A006.webp',
-    'M-A008': '/intern-images/M-A008.jpeg',
-    'M-A009': '/intern-images/M-A009.jpg',
-    'M-A010': '/intern-images/M-A010.png',
-    'M-A011': '/intern-images/M-A011.png',
-    'M-A012': '/intern-images/M-A012.webp',
-    'M-A013': '/intern-images/M-A013.webp',
-  }
-  if (employeeId && localImages[employeeId]) return localImages[employeeId]
+  const localImage = getLocalProfileImage(url, employeeId)
+  if (localImage) return localImage
   if (name) {
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2)
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=7c3aed&color=fff&size=200`
@@ -158,13 +151,18 @@ function getProfileImageUrl(url?: string, name?: string, employeeId?: string): s
 
 function renderMarkdownClean(md: string): string {
   let html = md
-    // Strip markdown links: [text](url) → text
+    // Normalize bullet characters (., ?, ?, ?, ?)
+    .replace(/^[\u2022\u2023\u25E6\u2043\u2219]\s+/gm, '- ')
+    // Handle corrupted UTF-8 bullet (mojibake for .)
+    .replace(/^[\u00e2\u0080\u00a2]+\s+/gm, '- ')
+    .replace(/^\u00e2\u20ac\u00a2\s+/gm, '- ')
+    // Strip markdown links: [text](url) ? text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     // Strip bare URLs in parentheses: (https://...)
     .replace(/\(https?:\/\/[^)]+\)/g, '')
-    // Strip any remaining standalone URLs
+    // Strip remaining URLs
     .replace(/https?:\/\/\S+/g, '')
-    // Clean up double spaces
+    // Clean double spaces
     .replace(/ {2,}/g, ' ')
     .trim()
 
@@ -180,13 +178,13 @@ function renderMarkdownClean(md: string): string {
     if (/^## (.+)/.test(trimmed)) {
       if (inList) { result.push('</ul>'); inList = false }
       const match = trimmed.match(/^## (.+)/)
-      result.push(`<h3 class="text-base font-bold text-white mt-5 mb-2">${match![1]}</h3>`)
+      result.push(`<h3 class="text-base font-bold text-[#0F172A] dark:text-white mt-5 mb-2">${match![1]}</h3>`)
     }
     // Heading ###
     else if (/^### (.+)/.test(trimmed)) {
       if (inList) { result.push('</ul>'); inList = false }
       const match = trimmed.match(/^### (.+)/)
-      result.push(`<h4 class="text-sm font-semibold text-neutral-200 mt-4 mb-1.5">${match![1]}</h4>`)
+      result.push(`<h4 class="text-sm font-semibold text-[#1E293B] dark:text-neutral-200 mt-4 mb-1.5">${match![1]}</h4>`)
     }
     // List item
     else if (/^[-*] (.+)/.test(trimmed)) {
@@ -194,8 +192,8 @@ function renderMarkdownClean(md: string): string {
       const match = trimmed.match(/^[-*] (.+)/)
       let content = match![1]
       // Bold
-      content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-      result.push(`<li class="text-sm text-neutral-300 leading-relaxed pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-blue-400 before:font-bold">${content}</li>`)
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#0F172A] dark:text-white font-semibold">$1</strong>')
+      result.push(`<li class="text-sm text-[#475569] dark:text-neutral-300 leading-relaxed flex gap-2 items-start"><span class="text-[#2563EB] dark:text-blue-400 font-bold flex-shrink-0 select-none">&#x2022;</span><span>${content}</span></li>`)
     }
     // Empty line
     else if (trimmed === '') {
@@ -206,8 +204,8 @@ function renderMarkdownClean(md: string): string {
     else {
       if (inList) { result.push('</ul>'); inList = false }
       let content = trimmed
-      content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-      result.push(`<p class="text-sm text-neutral-300 leading-relaxed">${content}</p>`)
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#0F172A] dark:text-white font-semibold">$1</strong>')
+      result.push(`<p class="text-sm text-[#475569] dark:text-neutral-300 leading-relaxed">${content}</p>`)
     }
   }
   if (inList) result.push('</ul>')
@@ -351,8 +349,8 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
     >
       <span className={`text-xs px-2 py-0.5 rounded-full cursor-pointer transition-all ${
         matched
-          ? 'bg-blue-500/15 text-blue-400 border border-blue-500/25 hover:bg-blue-500/25'
-          : 'bg-neutral-700/50 text-neutral-400 border border-neutral-600/30'
+          ? 'bg-[#2563EB]/10 dark:bg-blue-500/15 text-[#2563EB] dark:text-blue-400 border border-[#2563EB]/20 dark:border-blue-500/25 hover:bg-[#2563EB]/20 dark:hover:bg-blue-500/25'
+          : 'bg-[#F8FAFC] dark:bg-neutral-700/50 text-[#64748B] dark:text-neutral-400 border border-[rgba(15,23,42,0.08)] dark:border-neutral-600/30'
       }`}>
         @{name}
       </span>
@@ -369,34 +367,36 @@ function EmployeeHoverCard({ name, employees }: { name: string; employees: Emplo
             onMouseEnter={handleEnter}
             onMouseLeave={handleLeave}
           >
-            <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-3 shadow-2xl shadow-black/50">
+            <div className="bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-xl p-3 shadow-2xl shadow-black/50">
               <div className="flex items-center gap-3">
-                <img
-                  src={getProfileImageUrl(matched.profileImage, matched.name, matched.employeeId)}
-                  alt={matched.name}
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/30"
-                  onError={(e) => { (e.target as HTMLImageElement).src = getProfileImageUrl(undefined, matched.name) }}
+                <Avatar
+                  src={matched.profileImage}
+                  name={matched.name}
+                  employeeId={matched.employeeId}
+                  size="md"
+                  showBorder={false}
+                  className="ring-2 ring-blue-500/30"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white truncate">{matched.name}</p>
+                  <p className="text-sm font-semibold text-[#0F172A] dark:text-white truncate">{matched.name}</p>
                   {matched.designation && (
-                    <p className="text-xs text-neutral-400 truncate">{matched.designation}</p>
+                    <p className="text-xs text-[#64748B] dark:text-neutral-400 truncate">{matched.designation}</p>
                   )}
                   {matched.department && (
-                    <p className="text-xs text-neutral-500 truncate">{matched.department}</p>
+                    <p className="text-xs text-[#94A3B8] dark:text-neutral-500 truncate">{matched.department}</p>
                   )}
                 </div>
               </div>
               {matched.role && (
                 <div className="mt-2 flex items-center gap-1.5">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    matched.role === 'admin'
+                    isAdminOrSubAdmin(matched.role)
                       ? 'bg-amber-500/15 text-amber-400'
-                      : matched.role === 'Intern'
+                      : (matched.role || '').toLowerCase().includes('intern')
                         ? 'bg-purple-500/15 text-purple-400'
                         : 'bg-blue-500/15 text-blue-400'
                   }`}>
-                    {matched.role}
+                    {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                   </span>
                   {matched.email && (
                     <span className="text-[10px] text-neutral-600 truncate">{matched.email}</span>
@@ -447,8 +447,8 @@ function MeetingCard({
       exit={{ opacity: 0, y: -8 }}
       layout
     >
-      <div className={`bg-neutral-900/70 border rounded-xl transition-all hover:border-neutral-600 ${
-        isHidden ? 'opacity-60 border-l-4 border-l-red-500/50 border-neutral-700/50' : 'border-neutral-800'
+      <div className={`bg-[#FFFFFF] dark:bg-neutral-900/70 border rounded-xl transition-all hover:border-[rgba(15,23,42,0.15)] dark:hover:border-neutral-600 ${
+        isHidden ? 'opacity-60 border-l-4 border-l-red-500/50 border-[rgba(15,23,42,0.08)] dark:border-neutral-700/50' : 'border-[rgba(15,23,42,0.08)] dark:border-neutral-800'
       }`}>
         <div className="p-3 sm:p-4">
           {/* Row 1: Title + actions */}
@@ -457,14 +457,14 @@ function MeetingCard({
               className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer group"
               onClick={() => onViewDetails(meeting)}
             >
-              <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                <FaVideo className="text-blue-400 text-sm" />
+              <div className="w-9 h-9 rounded-lg bg-[#2563EB]/10 dark:bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                <FaVideo className="text-[#2563EB] dark:text-blue-400 text-sm" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-white truncate group-hover:text-blue-400 transition-colors">
+                <h3 className="text-sm font-semibold text-[#0F172A] dark:text-white truncate group-hover:text-[#2563EB] dark:group-hover:text-blue-400 transition-colors">
                   {meeting.meeting_title || meeting.title}
                 </h3>
-                <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-0.5">
+                <div className="flex items-center gap-2 text-[11px] text-[#64748B] dark:text-neutral-500 mt-0.5">
                   <span className="flex items-center gap-1">
                     <FaCalendarAlt className="text-[9px]" />
                     {new Date(meeting.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -476,7 +476,7 @@ function MeetingCard({
                     </span>
                   )}
                   {meeting.recorded_by && (
-                    <span className="text-neutral-600 hidden sm:inline">by {meeting.recorded_by.name}</span>
+                    <span className="text-[#94A3B8] dark:text-neutral-600 hidden sm:inline">by {meeting.recorded_by.name}</span>
                   )}
                 </div>
               </div>
@@ -592,7 +592,7 @@ function MeetingDetailModal({
   onDeleteCustomTask: (meetingId: number, taskIndex: number) => void
 }) {
   const [activeSection, setActiveSection] = useState<'summary' | 'actions' | 'attendees'>('summary')
-  const isAdmin = employeeData?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employeeData?.role)
   
   // Admin edit state
   const [showAddTask, setShowAddTask] = useState(false)
@@ -622,14 +622,14 @@ function MeetingDetailModal({
       <div className="max-h-[80vh] overflow-y-auto -m-6 p-6">
         {/* Header */}
         <div className="flex items-start gap-3 mb-5">
-          <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-            <FaVideo className="text-lg text-blue-400" />
+          <div className="w-11 h-11 rounded-xl bg-[#2563EB]/10 dark:bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+            <FaVideo className="text-lg text-[#2563EB] dark:text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-white leading-tight">
+            <h2 className="text-lg font-bold text-[#0F172A] dark:text-white leading-tight">
               {meeting.meeting_title || meeting.title}
             </h2>
-            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-neutral-400">
+            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[#64748B] dark:text-neutral-400">
               <span className="flex items-center gap-1">
                 <FaCalendarAlt className="text-[10px]" />
                 {new Date(meeting.created_at).toLocaleDateString('en-IN', {
@@ -644,7 +644,7 @@ function MeetingDetailModal({
               )}
             </div>
             {meeting.recorded_by && (
-              <p className="text-[11px] text-neutral-500 mt-0.5">
+              <p className="text-[11px] text-[#94A3B8] dark:text-neutral-500 mt-0.5">
                 Recorded by {meeting.recorded_by.name}
               </p>
             )}
@@ -653,7 +653,7 @@ function MeetingDetailModal({
             href={meeting.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-all text-xs flex items-center gap-1.5 flex-shrink-0 font-medium"
+            className="px-3 py-1.5 rounded-lg bg-[#2563EB]/10 dark:bg-blue-500/15 text-[#2563EB] dark:text-blue-400 hover:bg-[#2563EB]/20 dark:hover:bg-blue-500/25 transition-all text-xs flex items-center gap-1.5 flex-shrink-0 font-medium"
           >
             <FaPlay className="text-[10px]" />
             Watch
@@ -661,7 +661,7 @@ function MeetingDetailModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-neutral-700/50 mb-4">
+        <div className="flex border-b border-[rgba(15,23,42,0.06)] dark:border-neutral-700/50 mb-4">
           {[
             { id: 'summary' as const, label: 'Summary & Next Steps', icon: FaClipboardList },
             { id: 'actions' as const, label: `Tasks (${allItems.length})`, icon: FaTasks },
@@ -672,8 +672,8 @@ function MeetingDetailModal({
               onClick={() => setActiveSection(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
                 activeSection === tab.id
-                  ? 'text-blue-400 border-blue-400'
-                  : 'text-neutral-500 border-transparent hover:text-neutral-300'
+                  ? 'text-[#2563EB] dark:text-blue-400 border-[#2563EB] dark:border-blue-400'
+                  : 'text-[#64748B] dark:text-neutral-500 border-transparent hover:text-[#0F172A] dark:hover:text-neutral-300'
               }`}
             >
               <tab.icon className="text-[10px]" />
@@ -708,19 +708,19 @@ function MeetingDetailModal({
             {isAdmin && (
               <div>
                 {showAddTask ? (
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl space-y-2">
+                  <div className="p-3 bg-[#2563EB]/5 dark:bg-blue-500/10 border border-[#2563EB]/20 dark:border-blue-500/30 rounded-xl space-y-2">
                     <input
                       type="text"
                       placeholder="Task description..."
                       value={newTaskDesc}
                       onChange={(e) => setNewTaskDesc(e.target.value)}
-                      className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:border-blue-500/40 outline-none"
+                      className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white text-sm placeholder:text-[#94A3B8] dark:placeholder:text-neutral-500 focus:border-[#2563EB]/40 dark:focus:border-blue-500/40 outline-none"
                     />
                     <div className="flex gap-2">
                       <select
                         value={newTaskAssignee}
                         onChange={(e) => setNewTaskAssignee(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                        className="flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white text-sm focus:border-[#2563EB]/40 dark:focus:border-blue-500/40 outline-none"
                       >
                         <option value="">Assign to...</option>
                         {employees.map(emp => (
@@ -744,13 +744,13 @@ function MeetingDetailModal({
                           setNewTaskAssignee('')
                           setShowAddTask(false)
                         }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
+                        className="px-4 py-2 text-sm rounded-lg cta-glass"
                       >
                         Add
                       </button>
                       <button
                         onClick={() => { setShowAddTask(false); setNewTaskDesc(''); setNewTaskAssignee('') }}
-                        className="px-3 py-2 bg-neutral-800 text-neutral-400 text-sm rounded-lg hover:bg-neutral-700 transition-colors"
+                        className="px-3 py-2 bg-[#F1F5F9] dark:bg-neutral-800 text-[#475569] dark:text-neutral-400 text-sm rounded-lg hover:bg-[#E2E8F0] dark:hover:bg-neutral-700 transition-colors"
                       >
                         Cancel
                       </button>
@@ -759,7 +759,7 @@ function MeetingDetailModal({
                 ) : (
                   <button
                     onClick={() => setShowAddTask(true)}
-                    className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/20 transition-all w-full justify-center"
+                    className="flex items-center gap-2 text-xs text-[#2563EB] dark:text-blue-400 hover:text-[#1D4ED8] dark:hover:text-blue-300 px-3 py-2 rounded-lg bg-[#2563EB]/5 dark:bg-blue-500/10 hover:bg-[#2563EB]/10 dark:hover:bg-blue-500/15 border border-[#2563EB]/20 dark:border-blue-500/20 transition-all w-full justify-center"
                   >
                     <FaPlus className="text-[9px]" />
                     Add New Task
@@ -793,13 +793,13 @@ function MeetingDetailModal({
                             type="text"
                             value={editTaskDesc}
                             onChange={(e) => setEditTaskDesc(e.target.value)}
-                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                            className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white text-sm focus:border-amber-500/40 outline-none"
                           />
                           <div className="flex gap-2">
                             <select
                               value={editTaskAssignee}
                               onChange={(e) => setEditTaskAssignee(e.target.value)}
-                              className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm focus:border-blue-500/40 outline-none"
+                              className="flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white text-sm focus:border-amber-500/40 outline-none"
                             >
                               <option value="">Assign to...</option>
                               {employees.map(emp => (
@@ -819,13 +819,13 @@ function MeetingDetailModal({
                                 }
                                 setEditingTaskIndex(null)
                               }}
-                              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors"
+                              className="px-4 py-2 text-sm rounded-lg cta-glass"
                             >
                               Save
                             </button>
                             <button
                               onClick={() => setEditingTaskIndex(null)}
-                              className="px-3 py-2 bg-neutral-800 text-neutral-400 text-sm rounded-lg hover:bg-neutral-700 transition-colors"
+                              className="px-3 py-2 bg-[#F1F5F9] dark:bg-neutral-800 text-[#475569] dark:text-neutral-400 text-sm rounded-lg hover:bg-[#E2E8F0] dark:hover:bg-neutral-700 transition-colors"
                             >
                               Cancel
                             </button>
@@ -837,19 +837,19 @@ function MeetingDetailModal({
                     return (
                       <div
                         key={originalIndex}
-                        className="group flex items-start gap-3 p-3 bg-neutral-800/40 rounded-xl border border-neutral-700/60 hover:border-amber-500/30 transition-all"
+                        className="group flex items-start gap-3 p-3 bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-xl border border-[rgba(15,23,42,0.06)] dark:border-neutral-700/60 hover:border-amber-500/30 transition-all"
                       >
                         {/* Complete button */}
                         <button
                           onClick={() => onToggleTaskComplete(meeting.recording_id, originalIndex, true)}
-                          className="mt-0.5 w-5 h-5 rounded-full border-2 border-neutral-600 hover:border-emerald-400 hover:bg-emerald-500/15 transition-all flex-shrink-0 flex items-center justify-center group/btn"
+                          className="mt-0.5 w-5 h-5 rounded-full border-2 border-[rgba(15,23,42,0.15)] dark:border-neutral-600 hover:border-emerald-500 dark:hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/15 transition-all flex-shrink-0 flex items-center justify-center group/btn"
                           title="Mark as complete"
                         >
-                          <FaCheck className="text-[8px] text-transparent group-hover/btn:text-emerald-400 transition-colors" />
+                          <FaCheck className="text-[8px] text-transparent group-hover/btn:text-emerald-500 dark:group-hover/btn:text-emerald-400 transition-colors" />
                         </button>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-neutral-200 leading-relaxed">{item?.description || 'No description'}</p>
+                          <p className="text-sm text-[#0F172A] dark:text-neutral-200 leading-relaxed">{item?.description || 'No description'}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">
                             {assignee?.name && (
                               <EmployeeHoverCard name={assignee.name} employees={employees} />
@@ -859,14 +859,14 @@ function MeetingDetailModal({
                                 href={item.recording_playback_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[11px] text-neutral-500 hover:text-blue-400 transition-colors flex items-center gap-1"
+                                className="text-[11px] text-[#64748B] dark:text-neutral-500 hover:text-[#2563EB] dark:hover:text-blue-400 transition-colors flex items-center gap-1"
                               >
                                 <FaPlay className="text-[7px]" />
                                 Jump to moment
                               </a>
                             )}
                             {isCustomTask && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">Manual</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2563EB]/10 dark:bg-blue-500/15 text-[#2563EB] dark:text-blue-400">Manual</span>
                             )}
                           </div>
                         </div>
@@ -929,20 +929,20 @@ function MeetingDetailModal({
                     return (
                       <div
                         key={originalIndex}
-                        className="flex items-start gap-3 p-2.5 bg-neutral-800/20 rounded-lg border border-neutral-800/50"
+                        className="flex items-start gap-3 p-2.5 bg-[#F8FAFC] dark:bg-neutral-800/20 rounded-lg border border-[rgba(15,23,42,0.06)] dark:border-neutral-800/50"
                       >
                         <button
                           onClick={() => isLocalComplete ? onToggleTaskComplete(meeting.recording_id, originalIndex, false) : undefined}
-                          className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex-shrink-0 flex items-center justify-center"
+                          className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border-2 border-emerald-500/30 dark:border-emerald-500/40 flex-shrink-0 flex items-center justify-center"
                           title={isLocalComplete ? 'Undo' : 'Completed'}
                           disabled={!isLocalComplete}
                         >
-                          <FaCheck className="text-[8px] text-emerald-400" />
+                          <FaCheck className="text-[8px] text-emerald-500 dark:text-emerald-400" />
                         </button>
                         <div className="flex-1">
-                          <p className="text-sm text-neutral-500 line-through">{item?.description || 'No description'}</p>
+                          <p className="text-sm text-[#94A3B8] dark:text-neutral-500 line-through">{item?.description || 'No description'}</p>
                           {item?.assignee?.name && (
-                            <span className="text-[11px] text-neutral-600 mt-0.5 inline-block">@{item.assignee.name}</span>
+                            <span className="text-[11px] text-[#94A3B8] dark:text-neutral-600 mt-0.5 inline-block">@{item.assignee.name}</span>
                           )}
                         </div>
                       </div>
@@ -954,8 +954,8 @@ function MeetingDetailModal({
 
             {allItems.length === 0 && (
               <div className="text-center py-8">
-                <FaTasks className="text-2xl text-neutral-600 mx-auto mb-2" />
-                <p className="text-neutral-500 text-sm">No action items from this meeting</p>
+                <FaTasks className="text-2xl text-[#94A3B8] dark:text-neutral-600 mx-auto mb-2" />
+                <p className="text-[#64748B] dark:text-neutral-500 text-sm">No action items from this meeting</p>
               </div>
             )}
           </div>
@@ -970,32 +970,34 @@ function MeetingDetailModal({
                 return (
                   <div
                     key={i}
-                    className="flex items-center gap-3 p-3 bg-neutral-800/40 rounded-xl border border-neutral-700/50 hover:border-neutral-600/50 transition-all"
+                    className="flex items-center gap-3 p-3 bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-xl border border-[rgba(15,23,42,0.06)] dark:border-neutral-700/50 hover:border-[rgba(15,23,42,0.15)] dark:hover:border-neutral-600/50 transition-all"
                   >
-                    <img
-                      src={getProfileImageUrl(matched?.profileImage, att.name, matched?.employeeId)}
-                      alt={att.name}
-                      className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/20"
-                      onError={(e) => { (e.target as HTMLImageElement).src = getProfileImageUrl(undefined, att.name) }}
+                    <Avatar
+                      src={matched?.profileImage}
+                      name={att.name}
+                      employeeId={matched?.employeeId}
+                      size="sm"
+                      showBorder={false}
+                      className="!w-9 !h-9 ring-2 ring-blue-500/20"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-200 font-medium truncate">{att.name}</p>
+                      <p className="text-sm text-[#0F172A] dark:text-neutral-200 font-medium truncate">{att.name}</p>
                       <div className="flex items-center gap-2">
-                        {att.email && <p className="text-xs text-neutral-500 truncate">{att.email}</p>}
+                        {att.email && <p className="text-xs text-[#64748B] dark:text-neutral-500 truncate">{att.email}</p>}
                         {matched?.designation && (
-                          <span className="text-[10px] text-neutral-600">• {matched.designation}</span>
+                          <span className="text-[10px] text-[#94A3B8] dark:text-neutral-600">&#x2022; {matched.designation}</span>
                         )}
                       </div>
                     </div>
                     {matched?.role && (
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        matched.role === 'admin'
+                        isAdminOrSubAdmin(matched.role)
                           ? 'bg-amber-500/15 text-amber-400'
-                          : matched.role === 'Intern'
+                          : (matched.role || '').toLowerCase().includes('intern')
                             ? 'bg-purple-500/15 text-purple-400'
                             : 'bg-blue-500/15 text-blue-400'
                       }`}>
-                        {matched.role}
+                        {isAdminOrSubAdmin(matched.role) ? 'Admin' : matched.role}
                       </span>
                     )}
                     {att.isExternal && (
@@ -1006,7 +1008,7 @@ function MeetingDetailModal({
               })
             ) : (
               <div className="text-center py-8">
-                <p className="text-neutral-500 text-sm">No attendee information available</p>
+                <p className="text-[#64748B] dark:text-neutral-500 text-sm">No attendee information available</p>
               </div>
             )}
           </div>
@@ -1022,7 +1024,7 @@ function MeetingDetailModal({
 
 export function Meetings() {
   const { employee, getAllEmployees } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const [meetings, setMeetings] = useState<FathomMeeting[]>([])
   const [loading, setLoading] = useState(true)
@@ -1249,7 +1251,7 @@ export function Meetings() {
 
       if (newMeetings.length === 0) return
 
-      console.log(`🔔 Found ${newMeetings.length} new meetings to notify about`)
+      console.log(`Found ${newMeetings.length} new meetings to notify about`)
 
       for (const meeting of newMeetings) {
         // Mark as notified immediately to prevent duplicates
@@ -1275,10 +1277,10 @@ export function Meetings() {
         await createGlobalNotification({
           type: 'meeting',
           action: 'created',
-          title: `📋 Meeting Summary Ready: ${meetingTitle}`,
+          title: `Meeting Summary Ready: ${meetingTitle}`,
           message: `The MoM for "${meetingTitle}" is ready with ${taskCount} action item${taskCount !== 1 ? 's' : ''}. Check your tasks!`,
           relatedEntityId: String(meeting.recording_id),
-          targetUrl: '#meetings',
+          targetUrl: '/employee-portal#meetings',
           createdBy: employee.employeeId,
           createdByName: employee.name,
           createdByRole: employee.role
@@ -1293,7 +1295,7 @@ export function Meetings() {
           recipientCount: matchedEmployeeIds.length
         })
 
-        console.log(`✅ Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
+        console.log(`?o. Notified ${matchedEmployeeIds.length} people about: ${meetingTitle}`)
       }
     } catch (err) {
       console.error('Error auto-notifying meetings:', err)
@@ -1400,7 +1402,7 @@ export function Meetings() {
             title: 'Meeting Tasks Synced',
             message: `${newTaskCount} new task${newTaskCount > 1 ? 's' : ''} from meetings have been added to Tasks.`,
             relatedEntityId: 'meeting-sync',
-            targetUrl: '#tasks',
+            targetUrl: '/employee-portal#tasks',
             createdBy: employee.employeeId,
             createdByName: employee.name,
             createdByRole: employee.role
@@ -1545,7 +1547,7 @@ export function Meetings() {
         title: `Meeting Task: ${meeting.meeting_title || meeting.title}`,
         message: `${employee.name} assigned you a task: ${actionItem.description || 'Task assigned'}`,
         relatedEntityId: String(meeting.recording_id),
-        targetUrl: '#meetings',
+        targetUrl: '/employee-portal#meetings',
         createdBy: employee.employeeId,
         createdByName: employee.name,
         createdByRole: employee.role
@@ -1588,7 +1590,7 @@ export function Meetings() {
       <Card padding="lg" glow>
         <div className="flex flex-col items-center justify-center py-16">
           <SpinnerUI size="lg" />
-          <p className="text-neutral-400 mt-4 text-sm">Loading meetings from Fathom...</p>
+          <p className="text-[#64748B] dark:text-neutral-400 mt-4 text-sm">Loading meetings from Fathom...</p>
         </div>
       </Card>
     )
@@ -1598,9 +1600,9 @@ export function Meetings() {
     return (
       <Card padding="lg">
         <div className="text-center py-12">
-          <FaVideo className="text-4xl text-red-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-2">Failed to Load Meetings</h3>
-          <p className="text-neutral-400 text-sm mb-4">{error}</p>
+          <FaVideo className="text-4xl text-red-500 dark:text-red-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-2">Failed to Load Meetings</h3>
+          <p className="text-[#64748B] dark:text-neutral-400 text-sm mb-4">{error}</p>
           <Button onClick={handleRefresh} variant="primary" size="sm">
             <FaSyncAlt className="mr-2" /> Retry
           </Button>
@@ -1614,21 +1616,21 @@ export function Meetings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <FaVideo className="text-blue-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+            <FaVideo className="text-[#2563EB] dark:text-blue-400" />
             Recent Meetings
           </h2>
-          <p className="text-neutral-500 text-xs mt-0.5">
+          <p className="text-[#64748B] dark:text-neutral-500 text-xs mt-0.5">
             {filteredMeetings.length} meeting{filteredMeetings.length !== 1 ? 's' : ''}
             {isAdmin && hiddenMeetingIds.size > 0 && (
-              <span className="text-red-400 ml-1.5">• {hiddenMeetingIds.size} hidden</span>
+              <span className="text-red-500 dark:text-red-400 ml-1.5">&#x2022; {hiddenMeetingIds.size} hidden</span>
             )}
           </p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-all text-xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] dark:bg-neutral-800 hover:bg-[#E2E8F0] dark:hover:bg-neutral-700 text-[#475569] dark:text-neutral-300 rounded-lg transition-all text-xs disabled:opacity-50"
         >
           <FaSyncAlt className={`text-[10px] ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
@@ -1637,13 +1639,13 @@ export function Meetings() {
 
       {/* Search */}
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 text-xs" />
+        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#94A3B8] dark:text-neutral-500 text-xs" />
         <input
           type="text"
           placeholder="Search meetings, people, or tasks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 bg-neutral-800/50 border border-neutral-700/50 rounded-lg text-neutral-200 text-sm placeholder:text-neutral-600 focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
+          className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.06)] dark:border-neutral-700/50 rounded-lg text-[#0F172A] dark:text-neutral-200 text-sm placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 transition-all outline-none"
         />
       </div>
 
@@ -1651,7 +1653,7 @@ export function Meetings() {
       {filteredMeetings.length === 0 ? (
         <Card padding="lg">
           <EmptyState
-            icon={<FaVideo className="text-3xl text-neutral-600" />}
+            icon={<FaVideo className="text-3xl text-[#94A3B8] dark:text-neutral-600" />}
             title={searchQuery ? 'No meetings match your search' : 'No meetings found'}
             description={searchQuery ? 'Try different keywords' : 'Meetings will appear here after being recorded via Fathom.'}
           />
@@ -1679,7 +1681,7 @@ export function Meetings() {
               <button
                 onClick={() => fetchMeetings(nextCursor)}
                 disabled={loadingMore}
-                className="px-5 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-all text-xs disabled:opacity-50 flex items-center gap-2 mx-auto"
+                className="px-5 py-2 bg-[#F1F5F9] dark:bg-neutral-800 hover:bg-[#E2E8F0] dark:hover:bg-neutral-700 text-[#475569] dark:text-neutral-300 rounded-lg transition-all text-xs disabled:opacity-50 flex items-center gap-2 mx-auto"
               >
                 {loadingMore ? (
                   <><FaSpinner className="animate-spin" /> Loading...</>

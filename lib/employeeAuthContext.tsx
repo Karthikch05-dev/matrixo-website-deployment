@@ -19,11 +19,11 @@ import {
   Timestamp,
   updateDoc
 } from 'firebase/firestore'
-import { auth } from './firebaseConfig'
+import { auth, db as firebaseDb, firebaseReady } from './firebaseConfig'
 import { getFirestore } from 'firebase/firestore'
 
-// Initialize Firestore
-const db = getFirestore()
+// Use shared Firestore instance when configured
+const db = firebaseDb as ReturnType<typeof getFirestore>
 
 export interface EmployeeProfile {
   employeeId: string
@@ -76,6 +76,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setEmployee(null)
+      setLoading(false)
+      return
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       if (user) {
@@ -111,6 +117,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (employeeId: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured')
     // First, find the employee by employeeId to get their email
     const employeesRef = collection(db, 'Employees')
     const q = query(employeesRef, where('employeeId', '==', employeeId.trim()))
@@ -134,6 +141,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
     setEmployee(null)
   }
@@ -255,9 +263,28 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const calculateAttendancePercentage = (records: AttendanceRecord[]): number => {
-    if (records.length === 0) return 0
-    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O').length
-    return Math.round((presentDays / records.length) * 100)
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const monthEnd = new Date(year, month + 1, 0)
+    const monthStart = new Date(year, month, 1)
+
+    // Calculate working days (exclude Sundays)
+    let workingDays = 0
+    const cursor = new Date(monthStart)
+    while (cursor <= monthEnd) {
+      if (cursor.getDay() !== 0) workingDays++ // exclude Sundays
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`
+    const monthlyRecords = records.filter(r => r.date >= startStr && r.date <= endStr)
+
+    const presentDays = monthlyRecords.filter(r => r.status === 'P' || r.status === 'O').length
+
+    if (workingDays === 0) return 0
+    return parseFloat(((presentDays / workingDays) * 100).toFixed(2))
   }
 
   return (

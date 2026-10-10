@@ -31,12 +31,19 @@ import {
   FaEnvelope,
   FaCheck,
   FaHome,
-  FaListAlt
+  FaListAlt,
+  FaEyeSlash
 } from 'react-icons/fa'
-import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest } from '@/lib/employeePortalContext'
-import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData } from './ui'
+import { useEmployeeAuth, EmployeeProfile, AttendanceRecord, ActivityLog, LeaveRequest, isAdminOrSubAdmin, formatDate, Holiday } from '@/lib/employeePortalContext'
+import { Card, Button, Input, Select, Badge, Avatar, Modal, Spinner, EmptyState, Tabs, ProfileInfo, ProfileInfoData, employeeToProfileData, getLocalProfileImage } from './ui'
 import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
+import EventVisibilityManager from './EventVisibilityManager'
+
+// ============================================
+// LOCAL PROFILE IMAGE FALLBACKS (use centralized getLocalProfileImage from ui)
+// ============================================
+const getEmpProfileImage = getLocalProfileImage
 
 // ============================================
 // TYPES
@@ -90,14 +97,13 @@ function EmployeeProfileModal({
         .then((history) => {
           setAttendanceHistory(history)
           // Calculate stats from history
-          const present = history.filter(r => r.status === 'P').length
-          const wfh = history.filter(r => r.status === 'W').length
+          const present = history.filter(r => r.status === 'P' || r.status === 'W').length
           const absent = history.filter(r => r.status === 'A').length
           const leave = history.filter(r => r.status === 'L').length
           const onDuty = history.filter(r => r.status === 'O').length
           const unauthLeave = history.filter(r => r.status === 'U').length
           const total = history.length
-          const percentage = total > 0 ? ((present + wfh + onDuty) / total) * 100 : 0
+          const percentage = total > 0 ? ((present + onDuty) / total) * 100 : 0
           
           setStats({
             presentDays: present,
@@ -164,33 +170,33 @@ function EmployeeProfileModal({
       size="xl"
     >
       {/* Employee Header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 p-4 sm:p-5 bg-gradient-to-r from-neutral-800/80 to-neutral-900/80 backdrop-blur-xl rounded-xl sm:rounded-2xl mb-4 sm:mb-6 border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 p-4 sm:p-5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-neutral-800/80 dark:to-neutral-900/80 backdrop-blur-xl rounded-xl sm:rounded-2xl mb-4 sm:mb-6 border border-[#2563EB]/10 dark:border-white/10 shadow-sm dark:shadow-none">
         <div className="relative">
-          <Avatar src={employee.profileImage} name={employee.name} employeeId={employee.employeeId} size="xl" showBorder={false} />
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-neutral-900" />
+          <Avatar src={getEmpProfileImage(employee.profileImage, employee.employeeId)} name={employee.name} size="xl" showBorder={false} />
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-neutral-900" />
         </div>
         <div className="flex-1 min-w-0 text-center sm:text-left">
-          <h3 className="text-xl sm:text-2xl font-bold text-white truncate">{employee.name}</h3>
+          <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white truncate">{employee.name}</h3>
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
             <Badge variant="primary">{employee.employeeId}</Badge>
             {employee.department && employee.department !== employee.role && <Badge variant="info">{employee.department}</Badge>}
-            <Badge variant={employee.role === 'admin' ? 'warning' : 'default'}>
-              {employee.role === 'admin' ? '👑 Admin' : employee.role}
+            <Badge variant={isAdminOrSubAdmin(employee.role) ? 'warning' : 'default'}>
+              {employee.role === 'admin' ? '👑 Admin' : employee.role === 'sub-admin' ? '⭐ Sub-Admin' : employee.role}
             </Badge>
           </div>
           {employee.email && (
-            <p className="text-sm text-neutral-400 mt-2 truncate">{employee.email}</p>
+            <p className="text-sm text-[#475569] dark:text-neutral-400 mt-2 truncate">{employee.email}</p>
           )}
         </div>
-        <div className="text-right bg-white/5 p-4 rounded-xl border border-white/10">
+        <div className="text-right bg-white dark:bg-white/5 p-4 rounded-xl border border-[rgba(15,23,42,0.06)] dark:border-white/10 shadow-sm dark:shadow-none">
           {loading ? (
             <Spinner size="sm" />
           ) : (
             <>
-              <div className="text-3xl font-bold gradient-text">
+              <div className="text-3xl font-bold bg-gradient-to-r from-[#2563EB] to-cyan-600 dark:from-primary-400 dark:to-cyan-400 bg-clip-text text-transparent">
                 {stats.attendancePercentage.toFixed(1)}%
               </div>
-              <p className="text-xs text-neutral-400 mt-1">Attendance Rate</p>
+              <p className="text-xs text-[#64748B] dark:text-neutral-400 mt-1">Attendance Rate</p>
             </>
           )}
         </div>
@@ -217,41 +223,41 @@ function EmployeeProfileModal({
           <div className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-green-400">{stats.presentDays}</div>
-                <p className="text-sm text-neutral-400">Present</p>
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-500/20 dark:to-green-600/10 border border-green-200 dark:border-green-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.presentDays}</div>
+                <p className="text-sm text-green-700 dark:text-neutral-400">Present</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-red-400">{stats.absentDays}</div>
-                <p className="text-sm text-neutral-400">Absent</p>
+              <div className="p-4 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-500/20 dark:to-red-600/10 border border-red-200 dark:border-red-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.absentDays}</div>
+                <p className="text-sm text-red-700 dark:text-neutral-400">Absent</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-amber-400">{stats.lateDays}</div>
-                <p className="text-sm text-neutral-400">Leave</p>
+              <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-500/20 dark:to-amber-600/10 border border-amber-200 dark:border-amber-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.lateDays}</div>
+                <p className="text-sm text-amber-700 dark:text-neutral-400">Leave</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-blue-400">{stats.onDutyDays}</div>
-                <p className="text-sm text-neutral-400">On Duty</p>
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-500/20 dark:to-blue-600/10 border border-blue-200 dark:border-blue-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.onDutyDays}</div>
+                <p className="text-sm text-blue-700 dark:text-neutral-400">On Duty</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-orange-400">{stats.unauthLeaveDays}</div>
-                <p className="text-sm text-neutral-400">Unauth. Leave</p>
+              <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/20 dark:to-orange-600/10 border border-orange-200 dark:border-orange-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.unauthLeaveDays}</div>
+                <p className="text-sm text-orange-700 dark:text-neutral-400">Unauth. Leave</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-neutral-500/20 to-neutral-600/10 border border-neutral-500/30 rounded-xl text-center">
-                <div className="text-2xl font-bold text-neutral-300">{stats.totalDays}</div>
-                <p className="text-sm text-neutral-400">Total</p>
+              <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-neutral-500/20 dark:to-neutral-600/10 border border-slate-200 dark:border-neutral-500/30 rounded-xl text-center">
+                <div className="text-2xl font-bold text-[#0F172A] dark:text-neutral-300">{stats.totalDays}</div>
+                <p className="text-sm text-[#475569] dark:text-neutral-400">Total</p>
               </div>
             </div>
 
             {/* Recent Attendance (Last 10) */}
             <div>
-              <h4 className="font-semibold text-white mb-3">Recent Attendance (Last 10)</h4>
+              <h4 className="font-semibold text-[#0F172A] dark:text-white mb-3">Recent Attendance (Last 10)</h4>
               {attendanceHistory.length === 0 ? (
-                <p className="text-neutral-500 text-center py-4">No attendance records found</p>
+                <p className="text-[#64748B] dark:text-neutral-500 text-center py-4">No attendance records found</p>
               ) : (
                 <div className="space-y-2">
                   {attendanceHistory.slice(0, 10).map((record, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-lg">
+                    <div key={i} className="flex items-center justify-between p-3 bg-[#F8FAFC] dark:bg-neutral-800/30 rounded-lg border border-[rgba(15,23,42,0.06)] dark:border-transparent">
                       <div className="flex items-center gap-3">
                         <Badge variant={
                           record.status === 'P' ? 'success' :
@@ -268,9 +274,9 @@ function EmployeeProfileModal({
                            record.status === 'H' ? 'Holiday' :
                            record.status === 'U' ? 'Unauth. Leave' : record.status}
                         </Badge>
-                        <span className="text-neutral-300">{formatDateString(record.date)}</span>
+                        <span className="text-[#0F172A] dark:text-neutral-300">{formatDateString(record.date)}</span>
                       </div>
-                      <span className="text-sm text-neutral-500">{formatTime(record.timestamp)}</span>
+                      <span className="text-sm text-[#64748B] dark:text-neutral-500">{formatTime(record.timestamp)}</span>
                     </div>
                   ))}
                 </div>
@@ -291,20 +297,20 @@ function EmployeeProfileModal({
               />
             ) : (
               <table className="w-full">
-                <thead className="bg-neutral-800/50 sticky top-0">
+                <thead className="bg-[#F8FAFC] dark:bg-neutral-800/50 sticky top-0">
                   <tr>
-                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Date</th>
-                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Status</th>
-                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Time</th>
-                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Location</th>
-                    <th className="text-left p-3 text-sm font-medium text-neutral-400">Modified</th>
-                    <th className="text-center p-3 text-sm font-medium text-neutral-400">Actions</th>
+                    <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Date</th>
+                    <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Status</th>
+                    <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Time</th>
+                    <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Location</th>
+                    <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Modified</th>
+                    <th className="text-center p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {attendanceHistory.map((record, i) => (
-                    <tr key={i} className="border-t border-neutral-700/50">
-                      <td className="p-3 text-white">{formatDateString(record.date)}</td>
+                    <tr key={i} className="border-t border-[rgba(15,23,42,0.06)] dark:border-neutral-700/50">
+                      <td className="p-3 text-[#0F172A] dark:text-white">{formatDateString(record.date)}</td>
                       <td className="p-3">
                         <Badge variant={
                           record.status === 'P' ? 'success' :
@@ -325,7 +331,7 @@ function EmployeeProfileModal({
                            record.status === 'U' ? 'Unauth. Leave' : record.status}
                         </Badge>
                       </td>
-                      <td className="p-3 text-neutral-400">{formatHistoryTime(record)}</td>
+                      <td className="p-3 text-[#475569] dark:text-neutral-400">{formatHistoryTime(record)}</td>
                       <td className="p-3">
                         {record.locationVerified ? (
                           <Badge variant="success" size="sm">
@@ -334,21 +340,21 @@ function EmployeeProfileModal({
                         ) : record.latitude ? (
                           <Badge variant="warning" size="sm">Not in range</Badge>
                         ) : (
-                          <span className="text-neutral-500">-</span>
+                          <span className="text-[#94A3B8] dark:text-neutral-500">-</span>
                         )}
                       </td>
                       <td className="p-3">
                         {record.modifiedBy ? (
                           <div className="text-xs">
-                            <div className="text-amber-400">By {record.modifiedByName || record.modifiedBy}</div>
+                            <div className="text-amber-600 dark:text-amber-400">By {record.modifiedByName || record.modifiedBy}</div>
                             {record.modifiedAt && (
-                              <div className="text-neutral-500">
+                              <div className="text-[#94A3B8] dark:text-neutral-500">
                                 {new Date(record.modifiedAt.toDate()).toLocaleString()}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-neutral-500">-</span>
+                          <span className="text-[#94A3B8] dark:text-neutral-500">-</span>
                         )}
                       </td>
                       <td className="p-3 text-center">
@@ -384,10 +390,10 @@ function EmployeeProfileModal({
                 {attendanceHistory
                   .filter(r => r.notes)
                   .map((record, i) => (
-                    <div key={i} className="p-4 bg-neutral-800/30 rounded-xl border border-neutral-700/50">
+                    <div key={i} className="p-4 bg-[#FFFFFF] dark:bg-neutral-800/30 rounded-xl border border-[rgba(15,23,42,0.08)] dark:border-neutral-700/50 shadow-sm dark:shadow-none">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-neutral-300">{formatDateString(record.date)}</span>
+                          <span className="text-sm font-medium text-[#0F172A] dark:text-neutral-300">{formatDateString(record.date)}</span>
                           <Badge size="sm" variant={
                             record.status === 'P' ? 'success' :
                             record.status === 'W' ? 'info' :
@@ -401,9 +407,9 @@ function EmployeeProfileModal({
                              record.status === 'O' ? 'On Duty' : record.status}
                           </Badge>
                         </div>
-                        <span className="text-xs text-neutral-500">{formatTime(record.timestamp)}</span>
+                        <span className="text-xs text-[#64748B] dark:text-neutral-500">{formatTime(record.timestamp)}</span>
                       </div>
-                      <p className="text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed">{record.notes}</p>
+                      <p className="text-sm text-[#475569] dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{record.notes}</p>
                     </div>
                   ))}
               </div>
@@ -433,7 +439,7 @@ function EmployeeProfileModal({
       )}
       
       {/* Close Button at bottom */}
-      <div className="flex justify-end mt-6 pt-4 border-t border-white/10">
+      <div className="flex justify-end mt-6 pt-4 border-t border-[rgba(15,23,42,0.08)] dark:border-white/10">
         <Button variant="secondary" onClick={onClose} icon={<FaTimes />}>
           Close (ESC)
         </Button>
@@ -500,24 +506,24 @@ function EditAttendanceModal({
     >
       <div className="space-y-4">
         {/* Employee Info */}
-        <div className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
-          <Avatar src={employee.profileImage} name={employee.name} employeeId={employee.employeeId} size="md" showBorder={false} />
+        <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] dark:bg-neutral-800/50 rounded-lg border border-[rgba(15,23,42,0.06)] dark:border-transparent shadow-sm dark:shadow-none">
+          <Avatar src={getEmpProfileImage(employee.profileImage, employee.employeeId)} name={employee.name} size="md" showBorder={false} />
           <div>
-            <p className="font-medium text-white">{employee.name}</p>
-            <p className="text-sm text-neutral-400">{employee.employeeId}</p>
+            <p className="font-medium text-[#0F172A] dark:text-white">{employee.name}</p>
+            <p className="text-sm text-[#64748B] dark:text-neutral-400">{employee.employeeId}</p>
           </div>
         </div>
 
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-1">Date</label>
-          <p className="text-white">{formatDate(record.timestamp)}</p>
+          <label className="block text-sm font-medium text-[#64748B] dark:text-neutral-400 mb-1">Date</label>
+          <p className="text-[#0F172A] dark:text-white">{formatDate(record.timestamp)}</p>
         </div>
 
         {/* Current Status */}
         <div className="flex items-center gap-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-400 mb-1">Current Status</label>
+            <label className="block text-sm font-medium text-[#64748B] dark:text-neutral-400 mb-1">Current Status</label>
             <Badge variant={
               record.status === 'P' ? 'success' :
               record.status === 'A' ? 'error' :
@@ -534,9 +540,9 @@ function EditAttendanceModal({
                record.status === 'W' ? 'Work From Home' : record.status}
             </Badge>
           </div>
-          <div className="text-2xl text-neutral-500">→</div>
+          <div className="text-2xl text-[#94A3B8] dark:text-neutral-500">→</div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-neutral-400 mb-1">New Status</label>
+            <label className="block text-sm font-medium text-[#64748B] dark:text-neutral-400 mb-1">New Status</label>
             <Select
               value={status}
               onChange={(value) => setStatus(value)}
@@ -554,14 +560,14 @@ function EditAttendanceModal({
         </div>
 
         {/* Audit Notice */}
-        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+        <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg shadow-sm dark:shadow-none">
           <div className="flex items-start gap-2">
-            <FaExclamationTriangle className="text-amber-400 mt-1" />
+            <FaExclamationTriangle className="text-amber-500 dark:text-amber-400 mt-1" />
             <div>
-              <p className="text-sm text-amber-300">
+              <p className="text-sm text-amber-700 dark:text-amber-300">
                 This change will be logged as modified by:
               </p>
-              <p className="text-sm font-medium text-white mt-1">
+              <p className="text-sm font-medium text-amber-900 dark:text-white mt-1">
                 {currentAdmin?.name} ({currentAdmin?.employeeId})
               </p>
             </div>
@@ -637,15 +643,15 @@ function AttendanceTable({
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
-        <thead className="bg-neutral-800/50">
+        <thead className="bg-[#F8FAFC] dark:bg-neutral-800/50">
           <tr>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Employee</th>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Date</th>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Time</th>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Status</th>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Location</th>
-            <th className="text-left p-3 text-sm font-medium text-neutral-400">Modified By</th>
-            <th className="text-right p-3 text-sm font-medium text-neutral-400">Actions</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Employee</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Date</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Time</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Status</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Location</th>
+            <th className="text-left p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Modified By</th>
+            <th className="text-right p-3 text-sm font-medium text-[#64748B] dark:text-neutral-400">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -658,19 +664,19 @@ function AttendanceTable({
                 key={record.id || `${record.employeeId}_${record.date}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="border-t border-white/5 hover:bg-white/5 transition-colors"
+                className="border-t border-[rgba(15,23,42,0.06)] dark:border-white/5 hover:bg-[#F8FAFC] dark:hover:bg-white/5 transition-colors"
               >
                 <td className="p-3">
                   <div className="flex items-center gap-3">
-                    <Avatar src={emp.profileImage} name={emp.name} employeeId={emp.employeeId} size="sm" showBorder={false} />
+                    <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
                     <div>
-                      <p className="font-medium text-white">{emp.name}</p>
-                      <p className="text-xs text-neutral-500">{emp.employeeId}</p>
+                      <p className="font-medium text-[#0F172A] dark:text-white">{emp.name}</p>
+                      <p className="text-xs text-[#64748B] dark:text-neutral-500">{emp.employeeId}</p>
                     </div>
                   </div>
                 </td>
-                <td className="p-3 text-neutral-300">{formatDate(record.timestamp)}</td>
-                <td className="p-3 text-neutral-400">{formatTime(record.timestamp)}</td>
+                <td className="p-3 text-[#0F172A] dark:text-neutral-300">{formatDate(record.timestamp)}</td>
+                <td className="p-3 text-[#64748B] dark:text-neutral-400">{formatTime(record.timestamp)}</td>
                 <td className="p-3">
                   <Badge variant={
                     record.status === 'P' ? 'success' :
@@ -696,19 +702,19 @@ function AttendanceTable({
                   ) : record.latitude ? (
                     <Badge variant="warning" size="sm">Out of range</Badge>
                   ) : (
-                    <span className="text-neutral-500">-</span>
+                    <span className="text-[#94A3B8] dark:text-neutral-500">-</span>
                   )}
                 </td>
                 <td className="p-3">
                   {record.modifiedBy ? (
                     <div>
-                      <p className="text-sm text-amber-400">{record.modifiedByName || record.modifiedBy}</p>
+                      <p className="text-sm text-amber-600 dark:text-amber-400">{record.modifiedByName || record.modifiedBy}</p>
                       {record.modificationReason && (
-                        <p className="text-xs text-neutral-500 truncate max-w-32">{record.modificationReason}</p>
+                        <p className="text-xs text-[#64748B] dark:text-neutral-500 truncate max-w-32">{record.modificationReason}</p>
                       )}
                     </div>
                   ) : (
-                    <span className="text-neutral-500">-</span>
+                    <span className="text-[#94A3B8] dark:text-neutral-500">-</span>
                   )}
                 </td>
                 <td className="p-3">
@@ -720,14 +726,14 @@ function AttendanceTable({
                           onViewProfile(empWithStats)
                         }
                       }}
-                      className="p-2 text-neutral-400 hover:text-primary-400 hover:bg-primary-500/10 rounded-lg transition-all"
+                      className="p-2 text-[#64748B] dark:text-neutral-400 hover:text-[#2563EB] dark:hover:text-primary-400 hover:bg-[#2563EB]/10 dark:hover:bg-primary-500/10 rounded-lg transition-all"
                       title="View Profile"
                     >
                       <FaEye />
                     </button>
                     <button
                       onClick={() => onEditRecord(record, emp)}
-                      className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                      className="p-2 text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-[rgba(15,23,42,0.06)] dark:hover:bg-white/10 rounded-lg transition-all"
                       title="Edit Attendance"
                     >
                       <FaEdit />
@@ -772,16 +778,16 @@ function EmployeeList({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card hover className="relative">
+          <Card hover className="relative shadow-sm dark:shadow-none">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Avatar src={emp.profileImage} name={emp.name} employeeId={emp.employeeId} size="lg" />
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-neutral-900 rounded-full flex items-center justify-center border border-primary-500/50">
-                    <span className="text-[8px] font-bold text-primary-400">M</span>
+                  <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="lg" />
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-neutral-900 rounded-full flex items-center justify-center border border-[#2563EB]/50 dark:border-primary-500/50">
+                    <span className="text-[8px] font-bold text-[#2563EB] dark:text-primary-400">M</span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white truncate">{emp.name}</h3>
+                  <h3 className="font-semibold text-[#0F172A] dark:text-white truncate">{emp.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge size="sm">{emp.employeeId}</Badge>
                     {emp.department && (
@@ -791,24 +797,24 @@ function EmployeeList({
                 </div>
                 <div className="text-right">
                   <div className={`text-2xl font-bold ${
-                    emp.attendancePercentage >= 90 ? 'text-green-400' :
-                    emp.attendancePercentage >= 75 ? 'text-amber-400' : 'text-red-400'
+                    emp.attendancePercentage >= 90 ? 'text-green-600 dark:text-green-400' :
+                    emp.attendancePercentage >= 75 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     {emp.attendancePercentage.toFixed(0)}%
                   </div>
-                  <p className="text-xs text-neutral-500">Attendance</p>
+                  <p className="text-xs text-[#64748B] dark:text-neutral-500">Attendance</p>
                 </div>
               </div>
             
-            <div className="mt-4 pt-4 border-t border-neutral-700/50">
+            <div className="mt-4 pt-4 border-t border-[rgba(15,23,42,0.08)] dark:border-neutral-700/50">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-green-400">P: {emp.presentDays}</span>
-                <span className="text-red-400">A: {emp.absentDays}</span>
-                <span className="text-amber-400">L: {emp.lateDays}</span>
-                <span className="text-blue-400">O: {emp.onDutyDays}</span>
+                <span className="text-green-600 dark:text-green-400">P: {emp.presentDays}</span>
+                <span className="text-red-600 dark:text-red-400">A: {emp.absentDays}</span>
+                <span className="text-amber-600 dark:text-amber-400">L: {emp.lateDays}</span>
+                <span className="text-blue-600 dark:text-blue-400">O: {emp.onDutyDays}</span>
                 <button 
                   onClick={() => onViewProfile(emp)}
-                  className="text-primary-400 hover:text-primary-300"
+                  className="text-[#2563EB] dark:text-primary-400 hover:text-blue-700 dark:hover:text-primary-300"
                 >
                   <FaEye className="mr-1 inline" /> View
                 </button>
@@ -851,9 +857,9 @@ function ExportReportModal({
     if (!employeeSearch.trim()) return employees
     const query = employeeSearch.toLowerCase()
     return employees.filter(e => 
-      e.name.toLowerCase().includes(query) ||
-      e.employeeId.toLowerCase().includes(query) ||
-      e.department?.toLowerCase().includes(query)
+      (e.name || '').toLowerCase().includes(query) ||
+      (e.employeeId || '').toLowerCase().includes(query) ||
+      (e.department || '').toLowerCase().includes(query)
     )
   }, [employees, employeeSearch])
 
@@ -1220,14 +1226,14 @@ function ExportReportModal({
       <div className="space-y-6">
         {/* Export Type */}
         <div>
-          <label className="block text-sm font-medium text-white mb-2">Export Data For</label>
+          <label className="block text-sm font-medium text-[#0F172A] dark:text-white mb-2">Export Data For</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setExportType('all')}
               className={`p-4 rounded-lg border-2 transition-all ${
                 exportType === 'all'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaUsers className="text-2xl mb-2 mx-auto" />
@@ -1238,8 +1244,8 @@ function ExportReportModal({
               onClick={() => setExportType('individual')}
               className={`p-4 rounded-lg border-2 transition-all ${
                 exportType === 'individual'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaUserCircle className="text-2xl mb-2 mx-auto" />
@@ -1252,21 +1258,21 @@ function ExportReportModal({
         {/* Individual Employee Selection */}
         {exportType === 'individual' && (
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Select Employee</label>
+            <label className="block text-sm font-medium text-[#0F172A] dark:text-white mb-2">Select Employee</label>
             <div className="relative">
-              <FaSearch className="absolute left-3 top-3.5 text-neutral-500 z-10" />
+              <FaSearch className="absolute left-3 top-3.5 text-[#94A3B8] dark:text-neutral-500 z-10" />
               <input
                 type="text"
                 placeholder="Search by name, ID, or department..."
                 value={employeeSearch}
                 onChange={(e) => setEmployeeSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                className="w-full pl-10 pr-4 py-3 bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-xl text-[#0F172A] dark:text-white placeholder-[#94A3B8] dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/50 dark:focus:ring-primary-500/50 shadow-sm dark:shadow-none"
               />
             </div>
             {employeeSearch && (
-              <div className="mt-2 max-h-60 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-xl">
+              <div className="mt-2 max-h-60 overflow-y-auto bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-xl shadow-md dark:shadow-none">
                 {filteredEmployees.length === 0 ? (
-                  <div className="p-4 text-center text-neutral-500">No employees found</div>
+                  <div className="p-4 text-center text-[#64748B] dark:text-neutral-500">No employees found</div>
                 ) : (
                   filteredEmployees.map((emp) => (
                     <button
@@ -1276,19 +1282,19 @@ function ExportReportModal({
                         setSelectedEmployee(emp.employeeId)
                         setEmployeeSearch('')
                       }}
-                      className={`w-full p-3 text-left transition-all flex items-center gap-3 border-b border-neutral-700/50 last:border-0 ${
+                      className={`w-full p-3 text-left transition-all flex items-center gap-3 border-b border-[rgba(15,23,42,0.06)] dark:border-neutral-700/50 last:border-0 ${
                         selectedEmployee === emp.employeeId
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'hover:bg-neutral-700/50 text-white'
+                          ? 'bg-[#2563EB]/10 text-[#2563EB] dark:bg-primary-500/20 dark:text-primary-400'
+                          : 'hover:bg-[#F8FAFC] dark:hover:bg-neutral-700/50 text-[#0F172A] dark:text-white'
                       }`}
                     >
-                      <Avatar src={emp.profileImage} name={emp.name} employeeId={emp.employeeId} size="sm" showBorder={false} />
+                      <Avatar src={getEmpProfileImage(emp.profileImage, emp.employeeId)} name={emp.name} size="sm" showBorder={false} />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{emp.name}</div>
-                        <div className="text-xs text-neutral-500 truncate">{emp.employeeId} • {emp.department}</div>
+                        <div className="text-xs text-[#64748B] dark:text-neutral-500 truncate">{emp.employeeId} • {emp.department}</div>
                       </div>
                       {selectedEmployee === emp.employeeId && (
-                        <FaCheckCircle className="text-primary-500" />
+                        <FaCheckCircle className="text-[#2563EB] dark:text-primary-500" />
                       )}
                     </button>
                   ))
@@ -1296,13 +1302,13 @@ function ExportReportModal({
               </div>
             )}
             {selectedEmployee && (
-              <div className="mt-2 p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg flex items-center justify-between">
-                <span className="text-sm text-white">
+              <div className="mt-2 p-3 bg-[#2563EB]/10 dark:bg-primary-500/10 border border-[#2563EB]/30 dark:border-primary-500/30 rounded-lg flex items-center justify-between">
+                <span className="text-sm text-[#0F172A] dark:text-white">
                   Selected: {employees.find(e => e.employeeId === selectedEmployee)?.name}
                 </span>
                 <button
                   onClick={() => setSelectedEmployee('')}
-                  className="text-neutral-400 hover:text-white"
+                  className="text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-white"
                 >
                   <FaTimes />
                 </button>
@@ -1313,14 +1319,14 @@ function ExportReportModal({
 
         {/* Date Range */}
         <div>
-          <label className="block text-sm font-medium text-white mb-2">Date Range</label>
+          <label className="block text-sm font-medium text-[#0F172A] dark:text-white mb-2">Date Range</label>
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setDateRange('monthly')}
               className={`p-3 rounded-lg border-2 transition-all ${
                 dateRange === 'monthly'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaCalendarAlt className="text-xl mb-1 mx-auto" />
@@ -1330,8 +1336,8 @@ function ExportReportModal({
               onClick={() => setDateRange('custom')}
               className={`p-3 rounded-lg border-2 transition-all ${
                 dateRange === 'custom'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaFilter className="text-xl mb-1 mx-auto" />
@@ -1341,8 +1347,8 @@ function ExportReportModal({
               onClick={() => setDateRange('full')}
               className={`p-3 rounded-lg border-2 transition-all ${
                 dateRange === 'full'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaHistory className="text-xl mb-1 mx-auto" />
@@ -1371,14 +1377,14 @@ function ExportReportModal({
 
         {/* Export Format */}
         <div>
-          <label className="block text-sm font-medium text-white mb-2">Export Format</label>
+          <label className="block text-sm font-medium text-[#0F172A] dark:text-white mb-2">Export Format</label>
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setFormat('pdf')}
               className={`p-4 rounded-lg border-2 transition-all ${
                 format === 'pdf'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaFilePdf className="text-2xl mb-2 mx-auto text-red-500" />
@@ -1389,8 +1395,8 @@ function ExportReportModal({
               onClick={() => setFormat('csv')}
               className={`p-4 rounded-lg border-2 transition-all ${
                 format === 'csv'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaFileCsv className="text-2xl mb-2 mx-auto text-green-500" />
@@ -1401,8 +1407,8 @@ function ExportReportModal({
               onClick={() => setFormat('xlsx')}
               className={`p-4 rounded-lg border-2 transition-all ${
                 format === 'xlsx'
-                  ? 'border-primary-500 bg-primary-500/10 text-white'
-                  : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                  ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-primary-500 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-[rgba(15,23,42,0.08)] bg-[#F8FAFC] text-[#64748B] hover:border-[rgba(15,23,42,0.12)] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600'
               }`}
             >
               <FaFileExcel className="text-2xl mb-2 mx-auto text-emerald-500" />
@@ -1413,7 +1419,7 @@ function ExportReportModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-neutral-700">
+        <div className="flex gap-3 pt-4 border-t border-[rgba(15,23,42,0.08)] dark:border-neutral-700">
           <Button
             variant="secondary"
             onClick={onClose}
@@ -1511,19 +1517,19 @@ function LeaveRequestsPanel() {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <Card padding="md">
+      <Card padding="md" className="shadow-sm dark:shadow-none">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-amber-400">{leaveRequests.filter(r => r.status === 'Pending').length}</div>
-            <p className="text-sm text-neutral-400">Pending</p>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{leaveRequests.filter(r => r.status === 'Pending').length}</div>
+            <p className="text-sm text-[#64748B] dark:text-neutral-400">Pending</p>
           </div>
           <div>
-            <div className="text-2xl font-bold text-green-400">{leaveRequests.filter(r => r.status === 'Approved').length}</div>
-            <p className="text-sm text-neutral-400">Approved</p>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{leaveRequests.filter(r => r.status === 'Approved').length}</div>
+            <p className="text-sm text-[#64748B] dark:text-neutral-400">Approved</p>
           </div>
           <div>
-            <div className="text-2xl font-bold text-red-400">{leaveRequests.filter(r => r.status === 'Rejected').length}</div>
-            <p className="text-sm text-neutral-400">Rejected</p>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{leaveRequests.filter(r => r.status === 'Rejected').length}</div>
+            <p className="text-sm text-[#64748B] dark:text-neutral-400">Rejected</p>
           </div>
         </div>
       </Card>
@@ -1560,14 +1566,14 @@ function LeaveRequestsPanel() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Card padding="md" hover>
+              <Card padding="md" hover className="shadow-sm dark:shadow-none">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                   {/* Employee Info + Request Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <div>
-                        <h4 className="font-semibold text-white">{request.employeeName}</h4>
-                        <p className="text-xs text-neutral-500">{request.employeeId}</p>
+                        <h4 className="font-semibold text-[#0F172A] dark:text-white">{request.employeeName}</h4>
+                        <p className="text-xs text-[#64748B] dark:text-neutral-500">{request.employeeId}</p>
                       </div>
                       <Badge variant={
                         request.status === 'Pending' ? 'warning' :
@@ -1579,21 +1585,21 @@ function LeaveRequestsPanel() {
 
                     <div className="space-y-1 mb-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <FaCalendarAlt className="text-neutral-500" />
-                        <span className="text-neutral-300">
-                          Date: <span className="text-white font-medium">{request.date}</span>
+                        <FaCalendarAlt className="text-[#94A3B8] dark:text-neutral-500" />
+                        <span className="text-[#475569] dark:text-neutral-300">
+                          Date: <span className="text-[#0F172A] dark:text-white font-medium">{request.date}</span>
                         </span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-neutral-400">Subject: </span>
-                        <span className="text-white">{request.subject}</span>
+                        <span className="text-[#64748B] dark:text-neutral-400">Subject: </span>
+                        <span className="text-[#0F172A] dark:text-white">{request.subject}</span>
                       </div>
                     </div>
 
                     {/* Expandable letter/reason */}
                     <button
                       onClick={() => setSelectedRequest(selectedRequest?.id === request.id ? null : request)}
-                      className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                      className="text-sm text-[#2563EB] dark:text-primary-400 hover:text-blue-700 dark:hover:text-primary-300 transition-colors"
                     >
                       {selectedRequest?.id === request.id ? 'Hide Details ▲' : 'View Details ▼'}
                     </button>
@@ -1606,22 +1612,22 @@ function LeaveRequestsPanel() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-3 p-3 bg-neutral-800/50 rounded-lg space-y-2">
+                          <div className="mt-3 p-3 bg-[#F8FAFC] dark:bg-neutral-800/50 rounded-lg space-y-2 border border-[rgba(15,23,42,0.06)] dark:border-transparent shadow-inner dark:shadow-none">
                             <div>
-                              <p className="text-xs text-neutral-500 mb-1">Leave Letter</p>
-                              <p className="text-sm text-neutral-300 whitespace-pre-wrap">{request.letter}</p>
+                              <p className="text-xs text-[#64748B] dark:text-neutral-500 mb-1">Leave Letter</p>
+                              <p className="text-sm text-[#475569] dark:text-neutral-300 whitespace-pre-wrap">{request.letter}</p>
                             </div>
                             {request.reason && (
                               <div>
-                                <p className="text-xs text-neutral-500 mb-1">Reason</p>
-                                <p className="text-sm text-neutral-300">{request.reason}</p>
+                                <p className="text-xs text-[#64748B] dark:text-neutral-500 mb-1">Reason</p>
+                                <p className="text-sm text-[#475569] dark:text-neutral-300">{request.reason}</p>
                               </div>
                             )}
                             {request.reviewedByName && (
-                              <div className="pt-2 border-t border-neutral-700">
-                                <p className="text-xs text-neutral-500">
+                              <div className="pt-2 border-t border-[rgba(15,23,42,0.06)] dark:border-neutral-700">
+                                <p className="text-xs text-[#64748B] dark:text-neutral-500">
                                   {request.status === 'Approved' ? 'Approved' : 'Rejected'} by{' '}
-                                  <span className="text-white">{request.reviewedByName}</span>
+                                  <span className="text-[#0F172A] dark:text-white">{request.reviewedByName}</span>
                                   {request.reviewedAt && (
                                     <> on {new Date(request.reviewedAt.toDate()).toLocaleString()}</>
                                   )}
@@ -1654,7 +1660,7 @@ function LeaveRequestsPanel() {
                         onClick={() => handleReject(request)}
                         loading={processing === request.id}
                         disabled={processing !== null}
-                        className="hover:!bg-red-500/20 hover:!text-red-400 hover:!border-red-500/30"
+                        className="hover:!bg-red-500/10 hover:!text-red-700 hover:!border-red-200 dark:hover:!bg-red-500/20 dark:hover:!text-red-400 dark:hover:!border-red-500/30"
                       >
                         Reject
                       </Button>
@@ -1663,8 +1669,8 @@ function LeaveRequestsPanel() {
                 </div>
 
                 {/* Submitted timestamp */}
-                <div className="mt-2 pt-2 border-t border-neutral-800">
-                  <p className="text-xs text-neutral-500">
+                <div className="mt-2 pt-2 border-t border-[rgba(15,23,42,0.06)] dark:border-neutral-800">
+                  <p className="text-xs text-[#94A3B8] dark:text-neutral-500">
                     Submitted {request.createdAt ? new Date(request.createdAt.toDate()).toLocaleString() : 'Recently'}
                   </p>
                 </div>
@@ -1682,14 +1688,17 @@ function LeaveRequestsPanel() {
 // ============================================
 
 export function AdminPanel() {
-  const { 
-    employee, 
-    getAllEmployees, 
+  const {
+    employee,
+    getAllEmployees,
     getAllEmployeesAttendance,
     getEmployeeAttendanceHistory,
     runAutoAbsentJob,
     workMode,
-    setGlobalWorkMode
+    setGlobalWorkMode,
+    holidays,
+    isHoliday: checkIsHoliday,
+    getMonthlyAttendanceStats,
   } = useEmployeeAuth()
   
   const [activeTab, setActiveTab] = useState('employees')
@@ -1794,24 +1803,37 @@ export function AdminPanel() {
       })
       const uniqueAttendance = Array.from(attendanceMap.values())
       
+      // Filter out attendance records that are before each employee's joining date
+      const joiningDateMap = new Map<string, string>()
+      uniqueEmps.forEach(emp => {
+        if (emp.joiningDate) joiningDateMap.set(emp.employeeId, emp.joiningDate)
+      })
+      const filteredAttendance = uniqueAttendance.filter(record => {
+        const joinDate = joiningDateMap.get(record.employeeId)
+        if (joinDate && record.date < joinDate) return false
+        return true
+      })
+      
       setEmployees(uniqueEmps)
-      setAttendanceRecords(uniqueAttendance)
+      setAttendanceRecords(filteredAttendance)
       
       // Calculate stats for each employee
       const empsWithStats: EmployeeWithStats[] = await Promise.all(
         uniqueEmps.map(async (emp) => {
-          const history = await getEmployeeAttendanceHistory(emp.employeeId, 30)
-          const presentDays = history.filter(r => r.status === 'P').length
-          const absentDays = history.filter(r => r.status === 'A').length
-          const lateDays = history.filter(r => r.status === 'L').length
-          const onDutyDays = history.filter(r => r.status === 'O').length
-          const unauthLeaveDays = history.filter(r => r.status === 'U').length
-          const wfhDays = history.filter(r => r.status === 'W').length
+          // Get history from the already fetched filteredAttendance for this month
+          const history = filteredAttendance.filter(r => r.employeeId === emp.employeeId)
+
+          // Use the single source of truth calculation
+          const now = new Date()
+          const stats = getMonthlyAttendanceStats(history, now.getMonth(), now.getFullYear())
+
+          const attendancePercentage = stats.attendanceRate
+          const presentDays = stats.presentDays
+          const absentDays = stats.absentDays
+          const onDutyDays = stats.onDutyDays
+          const unauthLeaveDays = stats.unauthorisedLeaveDays
+          const lateDays = history.filter(r => r.status === 'L').length // Keep lateDays if not in stats
           const totalDays = history.length
-          // Match profile modal formula: (present + onDuty + wfh) / total
-          const attendancePercentage = totalDays > 0 
-            ? ((presentDays + onDutyDays + wfhDays) / totalDays) * 100 
-            : 0
 
           return {
             ...emp,
@@ -1821,7 +1843,7 @@ export function AdminPanel() {
             lateDays,
             onDutyDays,
             unauthLeaveDays,
-            wfhDays,
+            wfhDays: 0,
             totalDays,
             recentAttendance: history.slice(0, 10)
           }
@@ -1858,8 +1880,8 @@ export function AdminPanel() {
         const emp = employees.find(e => e.employeeId === record.employeeId)
         const query = searchQuery.toLowerCase()
         const matchesSearch = 
-          emp?.name.toLowerCase().includes(query) ||
-          record.employeeId.toLowerCase().includes(query)
+          (emp?.name || '').toLowerCase().includes(query) ||
+          (record.employeeId || '').toLowerCase().includes(query)
         if (!matchesSearch) return false
       }
       
@@ -1889,11 +1911,14 @@ export function AdminPanel() {
   // Filter employees
   const filteredEmployees = useMemo(() => {
     return employeesWithStats.filter(emp => {
+      // Exclude admins from the employee grid
+      if (emp.role === 'admin') return false
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matches = 
-          emp.name.toLowerCase().includes(query) ||
-          emp.employeeId.toLowerCase().includes(query)
+          (emp.name || '').toLowerCase().includes(query) ||
+          (emp.employeeId || '').toLowerCase().includes(query)
         if (!matches) return false
       }
       
@@ -1913,7 +1938,7 @@ export function AdminPanel() {
 
   const hasFilters = searchQuery || filterDepartment || filterStatus || filterDateFrom || filterDateTo
 
-  if (employee?.role !== 'admin') {
+  if (!isAdminOrSubAdmin(employee?.role)) {
     return (
       <EmptyState
         icon={<FaExclamationTriangle className="text-2xl text-red-400" />}
@@ -1928,20 +1953,20 @@ export function AdminPanel() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-            <FaUsers className="text-primary-500" />
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+            <FaUsers className="text-[#2563EB] dark:text-primary-500" />
             Admin Panel
           </h2>
-          <p className="text-neutral-400 text-sm sm:text-base mt-1">
+          <p className="text-[#64748B] dark:text-neutral-400 text-sm sm:text-base mt-1">
             Manage employees and attendance
           </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           {/* WFH/WFO Toggle */}
-          <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg">
-            <FaBuilding className={`text-sm ${workMode === 'WFO' ? 'text-primary-400' : 'text-neutral-500'}`} />
-            <span className={`text-sm font-medium ${workMode === 'WFO' ? 'text-white' : 'text-neutral-500'}`}>WFO</span>
+          <div className="flex items-center gap-3 px-4 py-2 bg-[#F8FAFC] dark:bg-neutral-800 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-lg shadow-sm dark:shadow-none">
+            <FaBuilding className={`text-sm ${workMode === 'WFO' ? 'text-[#2563EB] dark:text-primary-400' : 'text-[#94A3B8] dark:text-neutral-500'}`} />
+            <span className={`text-sm font-medium ${workMode === 'WFO' ? 'text-[#0F172A] dark:text-white' : 'text-[#64748B] dark:text-neutral-500'}`}>WFO</span>
             <button
               onClick={async () => {
                 const newMode = workMode === 'WFO' ? 'WFH' : 'WFO'
@@ -1949,15 +1974,15 @@ export function AdminPanel() {
                 toast.success(`Work mode switched to ${newMode === 'WFH' ? 'Work From Home' : 'Work From Office'}`)
               }}
               className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
-                workMode === 'WFH' ? 'bg-cyan-500' : 'bg-neutral-600'
+                workMode === 'WFH' ? 'bg-[#2563EB] dark:bg-cyan-500' : 'bg-[rgba(15,23,42,0.12)] dark:bg-neutral-600'
               }`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
                 workMode === 'WFH' ? 'translate-x-6' : 'translate-x-0.5'
               }`} />
             </button>
-            <FaHome className={`text-sm ${workMode === 'WFH' ? 'text-cyan-400' : 'text-neutral-500'}`} />
-            <span className={`text-sm font-medium ${workMode === 'WFH' ? 'text-white' : 'text-neutral-500'}`}>WFH</span>
+            <FaHome className={`text-sm ${workMode === 'WFH' ? 'text-[#2563EB] dark:text-cyan-400' : 'text-[#94A3B8] dark:text-neutral-500'}`} />
+            <span className={`text-sm font-medium ${workMode === 'WFH' ? 'text-[#0F172A] dark:text-white' : 'text-[#64748B] dark:text-neutral-500'}`}>WFH</span>
           </div>
 
           <Button
@@ -1985,6 +2010,7 @@ export function AdminPanel() {
         tabs={[
           { id: 'employees', label: 'All Employees' },
           { id: 'attendance', label: 'Recent Activity' },
+          { id: 'events', label: 'Event Visibility' },
           { id: 'leaveRequests', label: 'Leave Requests' }
         ]}
         activeTab={activeTab}
@@ -1994,23 +2020,23 @@ export function AdminPanel() {
       {/* Filters - hidden for leave requests tab */}
       {activeTab !== 'leaveRequests' && (
       <div className="relative" style={{ zIndex: 10 }}>
-        <Card padding="md">
+        <Card padding="md" className="shadow-sm dark:shadow-none">
         <div className="flex items-center gap-2 mb-4">
-          <FaFilter className="text-neutral-400" />
-          <span className="font-medium text-white">Filters</span>
+          <FaFilter className="text-[#94A3B8] dark:text-neutral-400" />
+          <span className="font-medium text-[#0F172A] dark:text-white">Filters</span>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] dark:text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or ID..."
-                className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white placeholder-[#94A3B8] dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-primary-500 shadow-sm dark:shadow-none"
               />
             </div>
           </div>
@@ -2059,21 +2085,21 @@ export function AdminPanel() {
         {activeTab === 'attendance' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">From Date</label>
+              <label className="block text-sm font-medium text-[#64748B] dark:text-neutral-400 mb-1">From Date</label>
               <input
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-primary-500 shadow-sm dark:shadow-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">To Date</label>
+              <label className="block text-sm font-medium text-[#64748B] dark:text-neutral-400 mb-1">To Date</label>
               <input
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => setFilterDateTo(e.target.value)}
-                className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.12)] dark:border-neutral-700 rounded-lg text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-primary-500 shadow-sm dark:shadow-none"
               />
             </div>
           </div>
@@ -2084,45 +2110,45 @@ export function AdminPanel() {
 
       {/* Stats Summary */}
       {activeTab === 'attendance' && !loading && (
-        <Card padding="md">
+        <Card padding="md" className="shadow-sm dark:shadow-none">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <FaChartBar className="text-neutral-400" />
-            <span className="font-medium text-white text-sm sm:text-base">Summary</span>
+            <FaChartBar className="text-[#94A3B8] dark:text-neutral-400" />
+            <span className="font-medium text-[#0F172A] dark:text-white text-sm sm:text-base">Summary</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-white">{filteredAttendance.length}</div>
-              <p className="text-xs sm:text-sm text-neutral-400">Total Records</p>
+              <div className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white">{filteredAttendance.length}</div>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">Total Records</p>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-green-400">
+              <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                 {filteredAttendance.filter(r => r.status === 'P').length}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-400">Present</p>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">Present</p>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-red-400">
+              <div className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
                 {filteredAttendance.filter(r => r.status === 'A').length}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-400">Absent</p>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">Absent</p>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-amber-400">
+              <div className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {filteredAttendance.filter(r => r.status === 'L').length}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-400">Leave</p>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">Leave</p>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-orange-400">
+              <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {filteredAttendance.filter(r => r.status === 'U').length}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-400">Unauth. Leave</p>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">Unauth. Leave</p>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-cyan-400">
+              <div className="text-xl sm:text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                 {filteredAttendance.filter(r => r.status === 'W').length}
               </div>
-              <p className="text-xs sm:text-sm text-neutral-400">WFH</p>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-neutral-400">WFH</p>
             </div>
           </div>
         </Card>
@@ -2135,6 +2161,8 @@ export function AdminPanel() {
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
         </div>
+      ) : activeTab === 'events' ? (
+        <EventVisibilityManager />
       ) : activeTab === 'attendance' ? (
         <Card padding="none">
           <AttendanceTable

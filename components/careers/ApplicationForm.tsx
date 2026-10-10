@@ -11,13 +11,12 @@ import { doc, getDoc, collection, addDoc, Timestamp, updateDoc } from 'firebase/
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebaseConfig'
 import { useAuth } from '@/lib/AuthContext'
-import { storeRedirectAfterLogin } from '@/lib/authRedirect'
 import { useProfile } from '@/lib/ProfileContext'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import PositionClosed from './PositionClosed'
-import HeadingHighlight from '@/components/HeadingHighlight'
+import XOLoader from '@/components/XOLoader'
 
 // ============================================
 // TYPES
@@ -350,6 +349,7 @@ function CustomDropdown({ value, options, onChange }: { value: any; options: str
 
 export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user } = useAuth()
   const { profile } = useProfile()
   const formRef = useRef<HTMLDivElement>(null)
@@ -455,8 +455,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   const handleApplyClick = () => {
     if (!user) {
       toast.info('Please sign in to apply for this role')
-      storeRedirectAfterLogin()
-      router.push('/auth')
+      router.push(`/auth?returnUrl=${encodeURIComponent(pathname)}`)
       return
     }
     setShowForm(true)
@@ -659,7 +658,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
   if (loading) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <XOLoader size={20} />
       </div>
     )
   }
@@ -676,9 +675,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
       <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center max-w-md mx-auto">
           <FaCheckCircle className="text-6xl text-green-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            <HeadingHighlight text="Application Submitted!" />
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Application Submitted!</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
             Thank you for applying for <strong>{role.title}</strong>. We&apos;ll review your application and get back to you via email.
           </p>
@@ -703,9 +700,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
             <div className="glass-card overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-cyan-600 to-blue-700 p-6 sm:p-8">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3">
-                  <HeadingHighlight text={role.title} solidClassName="text-white" />
-                </h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>{role.title}</h1>
                 <div className="flex flex-wrap gap-3 text-cyan-100 text-sm">
                   <span className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full"><FaUsers className="text-xs" /> {role.team}</span>
                   <span className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full"><FaMapMarkerAlt className="text-xs" /> {role.location}</span>
@@ -716,17 +711,13 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
               {/* Details */}
               <div className="p-6 sm:p-8 space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                    <HeadingHighlight text="About This Role" />
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">About This Role</h3>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{role.description}</p>
                 </div>
 
                 {role.responsibilities && role.responsibilities.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                      <HeadingHighlight text="Responsibilities" />
-                    </h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Responsibilities</h3>
                     <ul className="space-y-2">
                       {role.responsibilities.map((resp, i) => (
                         <li key={i} className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
@@ -740,9 +731,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
 
                 {role.eligibility && role.eligibility.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                      <HeadingHighlight text="Requirements & Eligibility" />
-                    </h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Requirements & Eligibility</h3>
                     <ul className="space-y-2">
                       {role.eligibility.map((elig, i) => (
                         <li key={i} className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
@@ -758,7 +747,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="pt-4 border-t border-gray-200 dark:border-neutral-800">
                     <button
                       onClick={handleApplyClick}
-                      className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
+                      className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 group cta-glass"
                     >
                       {user ? 'Apply Now' : 'Sign in & Apply'} <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -775,9 +764,7 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
           <AnimatePresence>
             {showForm && (
               <motion.div ref={formRef} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.4 }} className="glass-card p-6 sm:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  <HeadingHighlight text="Application Form" />
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Application Form</h2>
                 <p className="text-gray-500 dark:text-neutral-400 text-sm mb-6">
                   Fill in your details below to apply for <strong className="text-gray-700 dark:text-neutral-200">{role.title}</strong>
                 </p>
@@ -939,15 +926,17 @@ export default function ApplicationForm({ roleId }: ApplicationFormProps) {
                   {/* Submit */}
                   <div className="pt-4 border-t border-gray-200 dark:border-neutral-800">
                     <button type="submit" disabled={submitting || isUploading}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="w-full py-4 rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed cta-glass">
                       {submitting ? (
                         <span className="flex items-center justify-center gap-3">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          {/* Dark-on-light: the submit button is a pale glass pill
+                              now, so a white spinner would be invisible on it. */}
+                          <div className="w-5 h-5 border-2 border-gray-400/30 border-t-gray-700 rounded-full animate-spin" />
                           {isUploading ? `Uploading resume... ${uploadProgress}%` : 'Submitting application...'}
                         </span>
                       ) : isUploading ? (
                         <span className="flex items-center justify-center gap-3">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <XOLoader size={16} />
                           Waiting for upload...
                         </span>
                       ) : 'Submit Application'}

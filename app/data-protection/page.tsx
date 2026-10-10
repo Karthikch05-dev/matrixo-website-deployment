@@ -1,27 +1,16 @@
-import { Metadata } from 'next'
-import HeadingHighlight from '@/components/HeadingHighlight'
+import type { Metadata } from 'next'
+import LegalPage from '@/components/site/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Data Protection & Security - matriXO',
-  description: 'How matriXO protects your personal data, skill profiles, and learning information. Our commitment to data security and user privacy.',
-  openGraph: {
-    title: 'Data Protection & Security - matriXO',
-    description: 'matriXO data protection and security policy for user accounts, skill profiles, and learning data.',
-    url: 'https://matrixo.in/data-protection',
-    siteName: 'matriXO',
-    images: [{ url: 'https://matrixo.in/logos/matrixo logo wide.png', width: 1200, height: 630 }],
-  },
+  title: 'Data protection and security',
+  description: 'How matriXO stores, protects and lets you control your data.',
+  alternates: { canonical: '/data-protection' },
+  openGraph: { url: '/data-protection' },
 }
 
 export default function DataProtectionPage() {
   return (
-    <div className="min-h-screen pt-20 pb-20 bg-transparent">
-      <div className="container-custom px-6 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8">
-          <HeadingHighlight text="Data Protection & Security" />
-        </h1>
-        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: March 3, 2026</p>
+    <LegalPage title="Data protection and security" updated="March 3, 2026" path="/data-protection">
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Our Commitment</h2>
@@ -137,8 +126,6 @@ export default function DataProtectionPage() {
               <li><strong>Address:</strong> KPRISE Incubation Center, KPRES, Ghanpur, Hyderabad, Telangana - 500088</li>
             </ul>
           </section>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   )
 }

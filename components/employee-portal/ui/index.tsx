@@ -3,44 +3,44 @@
 import { ReactNode, forwardRef, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaSpinner, FaChevronDown, FaTimes, FaCheck, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa'
+import { Loader2 as FaSpinner, ChevronDown as FaChevronDown, X as FaTimes, Check as FaCheck, AlertTriangle as FaExclamationTriangle, Info as FaInfoCircle } from 'lucide-react'
 
 // ============================================
 // DESIGN TOKENS - Professional Color Palette
 // ============================================
 export const colors = {
-  // Primary brand colors
+  // Primary brand colors (Accent)
   primary: {
-    50: '#f0f4ff',
-    100: '#e0e7ff',
-    200: '#c7d2fe',
-    300: '#a5b4fc',
-    400: '#818cf8',
-    500: '#6366f1', // Main primary
-    600: '#4f46e5',
-    700: '#4338ca',
-    800: '#3730a3',
-    900: '#312e81',
+    50: '#F8FAFC',
+    100: '#CBD5E1',
+    200: '#94A3B8',
+    300: '#64748B',
+    400: '#3B82F6', // Hover Navy
+    500: '#2563EB', // Primary Navy
+    600: '#1D4ED8', // Active Navy
+    700: '#152542', // Card Hover
+    800: '#101C30', // Cards
+    900: '#07111F', // Page Background
   },
-  // Neutral grays
+  // Neutral grays (Navy grays)
   neutral: {
-    50: '#fafafa',
-    100: '#f4f4f5',
-    200: '#e4e4e7',
-    300: '#d4d4d8',
-    400: '#a1a1aa',
-    500: '#71717a',
-    600: '#52525b',
-    700: '#3f3f46',
-    800: '#27272a',
-    900: '#18181b',
-    950: '#0f0f11',
+    50: '#F8FAFC',
+    100: '#CBD5E1',
+    200: '#94A3B8',
+    300: '#64748B',
+    400: '#475569',
+    500: '#334155',
+    600: '#1E293B',
+    700: '#12203A', // Popup
+    800: '#101C30', // Cards
+    900: '#0B172A', // Secondary
+    950: '#081423', // Navbar
   },
   // Semantic colors
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  info: '#3b82f6',
+  success: '#4ADE80',
+  warning: '#FBBF24',
+  error: '#F87171',
+  info: '#2563EB',
 }
 
 // ============================================
@@ -73,14 +73,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   type = 'button',
   className = '',
 }, ref) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-900 backdrop-blur-sm'
-  
+  // The focus ring's offset colour has to follow the theme. It was pinned to
+  // the dark page colour, which drew a near-black halo around every focused
+  // button in light mode.
+  // No `transition-*` here. It would land in Tailwind's utilities layer and
+  // override .cta-glass's own timing, turning the primary label white in 150ms
+  // while the gradient behind it takes 400–600ms to arrive — a flash of white
+  // text on a still-white button. Each variant brings its own transition.
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-[14px] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#07111F]'
+
+  const flat = 'transition-all duration-150'
+
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white focus:ring-primary-500 shadow-lg shadow-primary-500/25 border border-primary-400/20',
-    secondary: 'bg-white/5 hover:bg-white/10 text-white focus:ring-neutral-500 border border-white/10 backdrop-blur-xl',
-    ghost: 'bg-transparent hover:bg-white/5 text-neutral-300 hover:text-white focus:ring-neutral-500',
-    danger: 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white focus:ring-red-500 shadow-lg shadow-red-500/25 border border-red-400/20',
-    success: 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white focus:ring-emerald-500 shadow-lg shadow-emerald-500/25 border border-emerald-400/20',
+    // The site's CTA treatment: a light glass pill with a gradient sweep on
+    // hover. Sets no bg/text/border utility of its own — those would sit in
+    // Tailwind's utilities layer and outrank the .cta-glass component rule.
+    primary: 'cta-glass portal-cta',
+    // Subordinate to the glass primary: flat, no shadow, and carried by its
+    // border. Cards are #FFFFFF, so a white fill here would vanish — the
+    // border is what separates it, not the background.
+    secondary: `${flat} bg-transparent hover:bg-[#EEF3F8] text-[#0F2B5B] border border-[rgba(15,23,42,0.16)] dark:bg-transparent dark:hover:bg-[#152542] dark:text-[#F8FAFC] dark:border-[rgba(255,255,255,0.12)]`,
+    ghost: `${flat} bg-transparent hover:bg-[#EEF3F8] text-[#475569] hover:text-[#0F172A] dark:hover:bg-[#152542] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC]`,
+    danger: `${flat} bg-[#FEF2F2] hover:bg-red-100 text-[#DC2626] dark:bg-[rgba(239,68,68,0.12)] dark:hover:bg-[#EF4444] dark:text-[#F87171] dark:hover:text-white border border-[rgba(220,38,38,0.2)] dark:border-[rgba(239,68,68,0.2)]`,
+    success: `${flat} bg-[#ECFDF3] hover:bg-green-100 text-[#16A34A] dark:bg-[rgba(34,197,94,0.12)] dark:hover:bg-[#22C55E] dark:text-[#4ADE80] dark:hover:text-white border border-[rgba(22,163,74,0.2)] dark:border-[rgba(34,197,94,0.2)]`,
   }
   
   const sizes = {
@@ -152,9 +167,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   return (
     <div className={`space-y-1.5 ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-neutral-300">
+        <label className="block text-sm font-medium text-[#475569] dark:text-neutral-300">
           {label}
-          {required && <span className="text-red-400 ml-1">*</span>}
+          {required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
         </label>
       )}
       <div className="relative">
@@ -175,12 +190,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           max={max}
           name={name}
           className={`
-            w-full px-4 py-3 bg-white/5 backdrop-blur-xl border rounded-xl text-white placeholder-neutral-500
-            focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
-            transition-all duration-300
+            w-full px-4 py-3 bg-[#FFFFFF] dark:bg-[#0B172A] border border-[rgba(15,23,42,0.08)] dark:border-[rgba(255,255,255,0.08)] rounded-[14px] text-[#0F172A] dark:text-[#F8FAFC] placeholder-[#64748B] dark:shadow-inner
+            focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] dark:focus:ring-1
+            transition-all duration-150
             ${icon ? 'pl-10' : ''}
-            ${error ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${error ? 'border-[#DC2626] bg-[#FEF2F2] dark:border-red-500 dark:bg-[rgba(239,68,68,0.05)]' : 'hover:border-[rgba(15,23,42,0.15)] dark:hover:border-[rgba(255,255,255,0.12)]'}
+            ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]' : ''}
           `}
         />
       </div>
@@ -228,9 +243,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   return (
     <div className={`space-y-1.5 ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-neutral-300">
+        <label className="block text-sm font-medium text-[#475569] dark:text-neutral-300">
           {label}
-          {required && <span className="text-red-400 ml-1">*</span>}
+          {required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
         </label>
       )}
       <textarea
@@ -244,11 +259,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         rows={rows}
         name={name}
         className={`
-          w-full px-4 py-3 bg-white/5 backdrop-blur-xl border rounded-xl text-white placeholder-neutral-500
-          focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
-          transition-all duration-300 resize-none
-          ${error ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+          w-full px-4 py-3 bg-[#FFFFFF] dark:bg-[#0B172A] border border-[rgba(15,23,42,0.08)] dark:border-[rgba(255,255,255,0.08)] rounded-[14px] text-[#0F172A] dark:text-[#F8FAFC] placeholder-[#64748B] dark:shadow-inner
+          focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] dark:focus:ring-1
+          transition-all duration-150 resize-none
+          ${error ? 'border-[#DC2626] bg-[#FEF2F2] dark:border-red-500 dark:bg-[rgba(239,68,68,0.05)]' : 'hover:border-[rgba(15,23,42,0.15)] dark:hover:border-[rgba(255,255,255,0.12)]'}
+          ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]' : ''}
         `}
       />
       {error && (
@@ -354,13 +369,22 @@ export const Select = ({
     }
   }, [isOpen])
 
-  // Close on scroll (parent containers)
+  // Close when a PARENT container scrolls (the dropdown is fixed-positioned, so
+  // it would otherwise detach from its trigger).
+  //
+  // The listener is in capture phase, which means it also sees scrolls that
+  // happen INSIDE the dropdown's own option list. Without the check below, any
+  // attempt to scroll a long list closed it immediately -- making options past
+  // the visible few unreachable.
   useEffect(() => {
-    if (isOpen) {
-      const handleScroll = () => setIsOpen(false)
-      window.addEventListener('scroll', handleScroll, true)
-      return () => window.removeEventListener('scroll', handleScroll, true)
+    if (!isOpen) return
+    const handleScroll = (event: Event) => {
+      const target = event.target as Node | null
+      if (target && dropdownRef.current?.contains(target)) return // scrolling the list itself
+      setIsOpen(false)
     }
+    window.addEventListener('scroll', handleScroll, true)
+    return () => window.removeEventListener('scroll', handleScroll, true)
   }, [isOpen])
 
   const selectedOption = options.find(opt => opt.value === value)
@@ -377,13 +401,13 @@ export const Select = ({
           onClick={handleToggle}
           disabled={disabled}
           className={`
-            w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left
-            flex items-center justify-between transition-all duration-300
-            focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:bg-white/10
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/20 hover:bg-white/10'}
+            w-full px-4 py-3 bg-[#FFFFFF] dark:bg-[#0B172A] border border-[rgba(15,23,42,0.08)] dark:border-[rgba(255,255,255,0.08)] rounded-[14px] text-left
+            flex items-center justify-between transition-all duration-150 dark:shadow-inner
+            focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] dark:focus:ring-1
+            ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-[rgba(255,255,255,0.02)]' : 'hover:border-[rgba(15,23,42,0.15)] dark:hover:border-[rgba(255,255,255,0.12)] hover:bg-[#EEF3F8] dark:hover:bg-[#12203A]'}
           `}
         >
-          <span className={selectedOption ? 'text-white' : 'text-neutral-500'}>
+          <span className={selectedOption ? 'text-[#0F172A] dark:text-white' : 'text-[#64748B] dark:text-neutral-500'}>
             {selectedOption?.label || placeholder}
           </span>
           <FaChevronDown className={`text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -398,7 +422,7 @@ export const Select = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: openAbove ? 10 : -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-neutral-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
+              className="bg-[#FFFFFF] dark:bg-neutral-900 border border-[rgba(15,23,42,0.08)] dark:border-white/10 rounded-xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] dark:shadow-2xl dark:shadow-black/50 overflow-hidden"
               style={{
                 position: 'fixed',
                 top: dropdownPosition.top,
@@ -419,8 +443,8 @@ export const Select = ({
                     className={`
                       w-full px-4 py-3 text-left transition-all duration-200
                       ${value === option.value 
-                        ? 'bg-primary-500/20 text-primary-400 border-l-2 border-primary-500' 
-                        : 'text-neutral-300 hover:bg-white/10 hover:text-white border-l-2 border-transparent'
+                        ? 'bg-[#EEF3F8] text-[#0F2B5B] border-l-2 border-[#2563EB] dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500' 
+                        : 'text-[#475569] hover:bg-[#EEF3F8] hover:text-[#0F172A] border-l-2 border-transparent dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
                       }
                     `}
                   >
@@ -449,12 +473,12 @@ interface BadgeProps {
 
 export const Badge = ({ children, variant = 'default', size = 'md', className = '' }: BadgeProps) => {
   const variants = {
-    default: 'bg-neutral-700 text-neutral-300',
-    success: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-    warning: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-    error: 'bg-red-500/20 text-red-400 border border-red-500/30',
-    info: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-    primary: 'bg-primary-500/20 text-primary-400 border border-primary-500/30',
+    default: 'bg-[#F1F5F9] text-[#475569] border border-[rgba(15,23,42,0.08)] dark:bg-neutral-700 dark:text-neutral-300 dark:border-transparent',
+    success: 'bg-[#ECFDF3] text-[#16A34A] border border-[rgba(22,163,74,0.2)] dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
+    warning: 'bg-[#FFFBEB] text-[#D97706] border border-[rgba(217,119,6,0.2)] dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+    error: 'bg-[#FEF2F2] text-[#DC2626] border border-[rgba(220,38,38,0.2)] dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',
+    info: 'bg-[#EFF6FF] text-[#2563EB] border border-[rgba(37,99,235,0.2)] dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30',
+    primary: 'bg-[#EFF6FF] text-[#2563EB] border border-[rgba(37,99,235,0.2)] dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500/30',
   }
   
   const sizes = {
@@ -492,10 +516,9 @@ export const Card = ({ children, className = '', padding = 'md', hover = false, 
     <motion.div
       whileHover={hover ? { y: -4, scale: 1.01 } : undefined}
       className={`
-        bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl
+        bg-[#FFFFFF] dark:bg-[#101C30] border border-[rgba(15,23,42,0.06)] dark:border-[rgba(255,255,255,0.06)] rounded-[20px] dark:rounded-[22px] shadow-[0_4px_20px_rgba(15,23,42,0.03)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] text-[#0F172A] dark:text-[#F8FAFC]
         ${paddings[padding]}
-        ${hover ? 'transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 hover:border-white/20' : ''}
-        ${glow ? 'shadow-lg shadow-primary-500/10' : ''}
+        ${hover ? 'transition-all duration-150 hover:bg-[#F5F7FB] dark:hover:bg-[#152542] hover:-translate-y-1' : ''}
         ${className}
       `}
     >
@@ -537,7 +560,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
@@ -546,17 +569,53 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
     }
   }, [isOpen])
   
-  const modalContent = (
+  if (typeof window === 'undefined') {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/90 backdrop-blur-2xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className={`relative w-full ${sizes[size]} bg-[#FFFFFF] dark:bg-neutral-900/95 backdrop-blur-3xl border border-[rgba(15,23,42,0.08)] dark:border-white/20 rounded-2xl sm:rounded-3xl shadow-[0_24px_48px_rgba(15,23,42,0.12)] dark:shadow-2xl dark:shadow-black/60 ring-1 ring-[rgba(15,23,42,0.05)] dark:ring-white/10 max-h-[90vh] flex flex-col ${className}`}
+            >
+              <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#2563EB]/5 dark:from-primary-500/10 via-transparent to-transparent pointer-events-none" />
+              {title && (
+                <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[rgba(15,23,42,0.08)] dark:border-white/10 flex-shrink-0">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#0F172A] dark:text-white truncate pr-2">{title}</h3>
+                  <button onClick={onClose} className="p-1.5 sm:p-2 text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-200 flex-shrink-0">
+                    <FaTimes />
+                  </button>
+                </div>
+              )}
+              <div className="relative p-4 sm:p-6 overflow-y-auto flex-1">{children}</div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    )
+  }
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
-          {/* Backdrop with strong blur - covers entire viewport */}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed top-0 left-0 right-0 bottom-0 bg-black/90 backdrop-blur-2xl"
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl"
             style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
           />
           
@@ -566,18 +625,18 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${sizes[size]} bg-neutral-900/95 backdrop-blur-3xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/10 max-h-[90vh] flex flex-col ${className}`}
+            className={`relative w-full ${sizes[size]} bg-[#FFFFFF] dark:bg-neutral-900/95 backdrop-blur-3xl border border-[rgba(15,23,42,0.08)] dark:border-white/20 rounded-2xl sm:rounded-3xl shadow-[0_24px_48px_rgba(15,23,42,0.12)] dark:shadow-2xl dark:shadow-black/60 ring-1 ring-[rgba(15,23,42,0.05)] dark:ring-white/10 max-h-[90vh] flex flex-col ${className}`}
           >
             {/* Gradient accent */}
-            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#2563EB]/5 dark:from-primary-500/10 via-transparent to-transparent pointer-events-none" />
             
             {/* Header */}
             {title && (
-              <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex-shrink-0">
-                <h3 className="text-lg sm:text-xl font-bold text-white truncate pr-2">{title}</h3>
+              <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[rgba(15,23,42,0.08)] dark:border-white/10 flex-shrink-0">
+                <h3 className="text-lg sm:text-xl font-bold text-[#0F172A] dark:text-white truncate pr-2">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-1.5 sm:p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-200 flex-shrink-0"
+                  className="p-1.5 sm:p-2 text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-200 flex-shrink-0"
                 >
                   <FaTimes />
                 </button>
@@ -591,11 +650,9 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md', className
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
-
-  if (typeof window === 'undefined') return modalContent
-  return createPortal(modalContent, document.body)
 }
 
 // ============================================
@@ -610,10 +667,10 @@ interface AlertProps {
 
 export const Alert = ({ children, variant = 'info', icon, className = '' }: AlertProps) => {
   const variants = {
-    info: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-    success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-    warning: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-    error: 'bg-red-500/10 border-red-500/30 text-red-400',
+    info: 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1D4ED8] dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400',
+    success: 'bg-[#ECFDF3] border-[#A7F3D0] text-[#16A34A] dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400',
+    warning: 'bg-[#FFF7E6] border-[#FDE68A] text-[#D97706] dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400',
+    error: 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626] dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400',
   }
   
   const defaultIcons = {
@@ -634,19 +691,20 @@ export const Alert = ({ children, variant = 'info', icon, className = '' }: Aler
 // ============================================
 // LOCAL PROFILE IMAGE FALLBACKS
 // ============================================
-export const localProfileImages: Record<string, string> = {
+const localProfileImages: Record<string, string> = {
   'M-A001': '/intern-images/M-A001.webp',
   'M-A005': '/intern-images/M-A005.webp',
   'M-A006': '/intern-images/M-A006.webp',
-  'M-A008': '/intern-images/M-A008.jpeg',
-  'M-A009': '/intern-images/M-A009.jpg',
-  'M-A010': '/intern-images/M-A010.png',
-  'M-A011': '/intern-images/M-A011.png',
+  'M-A008': '/intern-images/M-A008.webp',
+  'M-A009': '/intern-images/M-A009.webp',
+  'M-A010': '/intern-images/M-A010.webp',
+  'M-A011': '/intern-images/M-A011.webp',
   'M-A012': '/intern-images/M-A012.webp',
   'M-A013': '/intern-images/M-A013.webp',
 }
 
-export const getLocalProfileImage = (employeeId?: string): string | undefined => {
+export const getLocalProfileImage = (profileImage?: string, employeeId?: string): string | undefined => {
+  if (profileImage) return profileImage
   if (employeeId && localProfileImages[employeeId]) return localProfileImages[employeeId]
   return undefined
 }
@@ -657,13 +715,13 @@ export const getLocalProfileImage = (employeeId?: string): string | undefined =>
 interface AvatarProps {
   src?: string
   name?: string
-  employeeId?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   showBorder?: boolean
+  employeeId?: string
 }
 
-export const Avatar = ({ src, name = 'User', employeeId, size = 'md', className = '', showBorder = true }: AvatarProps) => {
+export const Avatar = ({ src, name = 'User', size = 'md', className = '', showBorder = true, employeeId }: AvatarProps) => {
   const sizes = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
@@ -674,14 +732,12 @@ export const Avatar = ({ src, name = 'User', employeeId, size = 'md', className 
   const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&size=200`
-  
-  // Resolve image: src > local fallback by employeeId > ui-avatars
-  const resolvedSrc = src || getLocalProfileImage(employeeId) || fallbackUrl
+  const resolvedSrc = getLocalProfileImage(src, employeeId) || fallbackUrl
   
   return (
     <div 
       className={`
-        ${sizes[size]} rounded-xl overflow-hidden flex-shrink-0
+        ${sizes[size]} rounded-full overflow-hidden flex-shrink-0
         ${showBorder ? 'ring-2 ring-primary-500 ring-offset-2 ring-offset-neutral-900' : ''}
         ${className}
       `}
@@ -716,7 +772,7 @@ export const Skeleton = ({ width = '100%', height = '1rem', rounded = 'md', clas
   
   return (
     <div
-      className={`animate-pulse bg-neutral-800 ${roundedStyles[rounded]} ${className}`}
+      className={`animate-pulse bg-[#E2E8F0] dark:bg-neutral-800 ${roundedStyles[rounded]} ${className}`}
       style={{ width, height }}
     />
   )
@@ -741,7 +797,7 @@ interface TabsProps {
 
 export const Tabs = ({ tabs, activeTab, onChange, className = '' }: TabsProps) => {
   return (
-    <div className={`flex items-center gap-1 p-1 bg-neutral-900 rounded-lg ${className}`}>
+    <div className={`flex items-center gap-1 p-1 bg-[#F1F5F9] dark:bg-neutral-900 rounded-lg border border-[rgba(15,23,42,0.06)] dark:border-transparent ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -749,8 +805,8 @@ export const Tabs = ({ tabs, activeTab, onChange, className = '' }: TabsProps) =
           className={`
             flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
             ${activeTab === tab.id 
-              ? 'bg-primary-600 text-white shadow-sm' 
-              : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              ? 'bg-[#FFFFFF] text-[#0F172A] shadow-sm border border-[rgba(15,23,42,0.06)] dark:bg-primary-600 dark:text-white dark:border-transparent' 
+              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[rgba(15,23,42,0.04)] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800'
             }
           `}
         >
@@ -759,7 +815,7 @@ export const Tabs = ({ tabs, activeTab, onChange, className = '' }: TabsProps) =
           {tab.badge !== undefined && (
             <span className={`
               px-1.5 py-0.5 rounded-full text-xs font-bold
-              ${activeTab === tab.id ? 'bg-white/20' : 'bg-neutral-700'}
+              ${activeTab === tab.id ? 'bg-[#EEF3F8] text-[#2563EB] dark:bg-white/20 dark:text-white' : 'bg-[#E2E8F0] text-[#475569] dark:bg-neutral-700 dark:text-neutral-300'}
             `}>
               {tab.badge}
             </span>
@@ -785,12 +841,12 @@ export const EmptyState = ({ icon, title, description, action, className = '' }:
   return (
     <div className={`flex flex-col items-center justify-center py-12 text-center ${className}`}>
       {icon && (
-        <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-500 mb-4">
+        <div className="w-16 h-16 rounded-full bg-[#F1F5F9] dark:bg-neutral-800 flex items-center justify-center text-[#94A3B8] dark:text-neutral-500 mb-4">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
-      {description && <p className="text-neutral-400 text-sm max-w-sm">{description}</p>}
+      <h3 className="text-lg font-semibold text-[#0F172A] dark:text-white mb-1">{title}</h3>
+      {description && <p className="text-[#64748B] dark:text-neutral-400 text-sm max-w-sm">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
@@ -813,7 +869,7 @@ export const Spinner = ({ size = 'md', className = '' }: SpinnerProps) => {
   
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <FaSpinner className={`animate-spin text-primary-500 ${sizes[size]}`} />
+      <XOLoader size={16} />
     </div>
   )
 }
@@ -823,6 +879,7 @@ export const Spinner = ({ size = 'md', className = '' }: SpinnerProps) => {
 // ============================================
 
 import { FaEnvelope, FaCalendarAlt as FaCalendar2, FaChartLine, FaCircle, FaIdCard, FaBriefcase, FaEye, FaEdit, FaClock } from 'react-icons/fa'
+import XOLoader from '@/components/XOLoader'
 
 // Profile Data Contract
 export interface ProfileInfoData {
@@ -1004,11 +1061,12 @@ export const ProfileInfo = ({
     return () => document.removeEventListener('keydown', handleEsc)
   }, [])
 
+  const resolvedProfileImage = getLocalProfileImage(data.profileImage, data.employeeId)
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name?.split(' ').map(n => n[0]).join('') || 'U')}&background=4f46e5&color=fff&size=200`
   
   const getRoleBadgeVariant = (role: string) => {
-    if (role === 'admin') return 'warning'
-    if (role === 'Intern') return 'info'
+    if (role === 'admin' || role === 'sub-admin') return 'warning'
+    if ((role || '').toLowerCase().includes('intern')) return 'info'
     return 'primary'
   }
 
@@ -1059,11 +1117,11 @@ export const ProfileInfo = ({
             top: position.y,
             zIndex: 99980,
           }}
-          className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 p-4 w-[280px] max-w-[calc(100vw-32px)]"
+          className="bg-[#FFFFFF]/98 dark:bg-neutral-900/98 backdrop-blur-2xl border border-[rgba(15,23,42,0.08)] dark:border-white/15 rounded-xl shadow-[0_24px_48px_rgba(15,23,42,0.12)] dark:shadow-2xl dark:shadow-black/40 p-4 w-[280px] max-w-[calc(100vw-32px)]"
         >
           {/* Arrow - positioned dynamically based on whether hover opens above or below */}
           <div 
-            className={`absolute w-4 h-4 bg-neutral-900 border-white/15 ${
+            className={`absolute w-4 h-4 bg-[#FFFFFF] dark:bg-neutral-900 border-[rgba(15,23,42,0.08)] dark:border-white/15 ${
               arrowPosition === 'top' 
                 ? '-top-2 border-l border-t' 
                 : '-bottom-2 border-r border-b'
@@ -1077,33 +1135,33 @@ export const ProfileInfo = ({
           <div className="flex items-center gap-3 relative">
             <div className="relative">
               <img
-                src={data.profileImage || fallbackUrl}
+                src={resolvedProfileImage || fallbackUrl}
                 alt={data.name}
                 className="w-12 h-12 rounded-full object-cover"
                 onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
               />
-              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
+              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#FFFFFF] dark:border-neutral-900 ${data.status === 'Active' ? 'bg-[#10B981] dark:bg-emerald-500' : data.status === 'On Leave' ? 'bg-[#F59E0B] dark:bg-amber-500' : 'bg-[#94A3B8] dark:bg-neutral-500'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-white truncate">{data.name}</p>
-              <p className="text-xs text-neutral-400 truncate">{data.designation || data.department}</p>
-              <p className="text-xs text-primary-400 font-mono">{data.employeeId}</p>
+              <p className="font-semibold text-[#0F172A] dark:text-white truncate">{data.name}</p>
+              <p className="text-xs text-[#64748B] dark:text-neutral-400 truncate">{data.designation || data.department}</p>
+              <p className="text-xs text-[#2563EB] dark:text-primary-400 font-mono">{data.employeeId}</p>
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+          <div className="mt-3 pt-3 border-t border-[rgba(15,23,42,0.06)] dark:border-white/5 flex items-center justify-between text-xs">
             <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
-              {data.role === 'admin' ? '👑 Admin' : data.role}
+              {data.role === 'admin' ? '👑 Admin' : data.role === 'sub-admin' ? '⭐ Sub-Admin' : data.role}
             </Badge>
             {!inline && data.attendancePercentage !== undefined && (
-              <span className="text-neutral-400 flex items-center gap-1">
-                <FaChartLine className="text-primary-400" />
+              <span className="text-[#64748B] dark:text-neutral-400 flex items-center gap-1">
+                <FaChartLine className="text-[#2563EB] dark:text-primary-400" />
                 {data.attendancePercentage.toFixed(0)}% attendance
               </span>
             )}
           </div>
           
-          {!inline && <p className="text-xs text-neutral-500 text-center mt-2">Click for more details</p>}
+          {!inline && <p className="text-xs text-[#94A3B8] dark:text-neutral-500 text-center mt-2">Click for more details</p>}
         </motion.div>,
         document.body
       )}
@@ -1134,35 +1192,35 @@ export const ProfileInfo = ({
               top: position.y,
               zIndex: 99996,
             }}
-            className="bg-neutral-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/50 w-[360px] max-w-[calc(100vw-32px)] max-h-[80vh] overflow-auto"
+            className="bg-[#FFFFFF]/98 dark:bg-neutral-900/98 backdrop-blur-2xl border border-[rgba(15,23,42,0.08)] dark:border-white/15 rounded-2xl shadow-[0_24px_48px_rgba(15,23,42,0.12)] dark:shadow-2xl dark:shadow-black/50 w-[360px] max-w-[calc(100vw-32px)] max-h-[80vh] overflow-auto"
           >
             {/* Close Button */}
             <button
               onClick={() => setShowExpanded(false)}
-              className="absolute top-3 right-3 p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-all z-10"
+              className="absolute top-3 right-3 p-1.5 text-[#94A3B8] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/10 rounded-lg transition-all z-10"
             >
               <FaTimes className="text-sm" />
             </button>
 
             {/* Header with Gradient */}
-            <div className="p-5 bg-gradient-to-br from-primary-600/20 via-primary-500/10 to-transparent border-b border-white/5">
+            <div className="p-5 bg-gradient-to-br from-[#2563EB]/10 via-[#2563EB]/5 dark:from-primary-600/20 dark:via-primary-500/10 to-transparent border-b border-[rgba(15,23,42,0.06)] dark:border-white/5">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <img
-                    src={data.profileImage || fallbackUrl}
+                    src={resolvedProfileImage || fallbackUrl}
                     alt={data.name}
                     className="relative w-16 h-16 rounded-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = fallbackUrl }}
                   />
-                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-neutral-900 ${data.status === 'Active' ? 'bg-emerald-500' : data.status === 'On Leave' ? 'bg-amber-500' : 'bg-neutral-500'}`} />
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#FFFFFF] dark:border-neutral-900 ${data.status === 'Active' ? 'bg-[#10B981] dark:bg-emerald-500' : data.status === 'On Leave' ? 'bg-[#F59E0B] dark:bg-amber-500' : 'bg-[#94A3B8] dark:bg-neutral-500'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-white truncate">{data.name}</h3>
-                  <p className="text-sm text-neutral-400 truncate">{data.designation || 'Employee'}</p>
+                  <h3 className="text-xl font-bold text-[#0F172A] dark:text-white truncate">{data.name}</h3>
+                  <p className="text-sm text-[#64748B] dark:text-neutral-400 truncate">{data.designation || 'Employee'}</p>
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
                     <Badge variant="primary" size="sm">{data.employeeId}</Badge>
                     <Badge variant={getRoleBadgeVariant(data.role)} size="sm">
-                      {data.role === 'admin' ? '👑 Admin' : data.role}
+                      {data.role === 'admin' ? '👑 Admin' : data.role === 'sub-admin' ? '⭐ Sub-Admin' : data.role}
                     </Badge>
                   </div>
                 </div>
@@ -1170,49 +1228,49 @@ export const ProfileInfo = ({
             </div>
 
             {/* Primary Info */}
-            <div className="p-4 space-y-3 border-b border-white/5">
+            <div className="p-4 space-y-3 border-b border-[rgba(15,23,42,0.06)] dark:border-white/5">
               {data.department && (
                 <div className="flex items-center gap-3 text-sm">
                   <FaBriefcase className="text-primary-400 flex-shrink-0" />
-                  <span className="text-neutral-400">Department:</span>
-                  <span className="text-white">{data.department}</span>
+                  <span className="text-[#64748B] dark:text-neutral-400">Department:</span>
+                  <span className="text-[#0F172A] dark:text-white">{data.department}</span>
                 </div>
               )}
               {data.specialization && (
                 <div className="flex items-center gap-3 text-sm">
                   <FaIdCard className="text-cyan-400 flex-shrink-0" />
-                  <span className="text-neutral-400">Specialization:</span>
-                  <span className="text-white">{data.specialization}</span>
+                  <span className="text-[#64748B] dark:text-neutral-400">Specialization:</span>
+                  <span className="text-[#0F172A] dark:text-white">{data.specialization}</span>
                 </div>
               )}
               {data.email && (
                 <div className="flex items-center gap-3 text-sm">
                   <FaEnvelope className="text-primary-400 flex-shrink-0" />
-                  <span className="text-neutral-400">Email:</span>
-                  <span className="text-white truncate">{data.email}</span>
+                  <span className="text-[#64748B] dark:text-neutral-400">Email:</span>
+                  <span className="text-[#0F172A] dark:text-white truncate">{data.email}</span>
                 </div>
               )}
               {data.joiningDate && (
                 <div className="flex items-center gap-3 text-sm">
                   <FaCalendar2 className="text-emerald-400 flex-shrink-0" />
-                  <span className="text-neutral-400">Joined:</span>
-                  <span className="text-white">{data.joiningDate}</span>
+                  <span className="text-[#64748B] dark:text-neutral-400">Joined:</span>
+                  <span className="text-[#0F172A] dark:text-white">{data.joiningDate}</span>
                 </div>
               )}
             </div>
 
             {/* Secondary Info */}
-            <div className="p-4 space-y-3 border-b border-white/5">
+            <div className="p-4 space-y-3 border-b border-[rgba(15,23,42,0.06)] dark:border-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-sm">
                   <FaCircle className={`text-xs flex-shrink-0 ${getStatusColor(data.status)}`} />
-                  <span className="text-neutral-400">Status:</span>
+                  <span className="text-[#64748B] dark:text-neutral-400">Status:</span>
                   <span className={`font-medium ${getStatusColor(data.status)}`}>{data.status || 'Unknown'}</span>
                 </div>
                 {data.attendancePercentage !== undefined && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
-                    <FaChartLine className="text-primary-400 text-sm" />
-                    <span className="text-lg font-bold gradient-text">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F1F5F9] dark:bg-white/5 rounded-lg">
+                    <FaChartLine className="text-[#2563EB] dark:text-primary-400 text-sm" />
+                    <span className="text-lg font-bold bg-gradient-to-r from-[#2563EB] to-[#0ea5e9] dark:from-primary-400 dark:to-cyan-400 bg-clip-text text-transparent">
                       {data.attendancePercentage.toFixed(1)}%
                     </span>
                   </div>
@@ -1222,29 +1280,29 @@ export const ProfileInfo = ({
 
             {/* Admin-only Info */}
             {isAdmin && (data.presentCount !== undefined || data.lastAttendanceDate) && (
-              <div className="p-4 bg-amber-500/5 border-b border-amber-500/10">
-                <p className="text-xs text-amber-400 font-medium mb-3 flex items-center gap-1">
+              <div className="p-4 bg-[#FFFBEB] dark:bg-amber-500/5 border-b border-[rgba(217,119,6,0.1)] dark:border-amber-500/10">
+                <p className="text-xs text-[#D97706] dark:text-amber-400 font-medium mb-3 flex items-center gap-1">
                   <FaClock /> Admin View
                 </p>
                 {data.lastAttendanceDate && (
                   <div className="flex items-center gap-3 text-sm mb-2">
-                    <span className="text-neutral-400">Last marked:</span>
-                    <span className="text-white">{data.lastAttendanceDate}</span>
+                    <span className="text-[#64748B] dark:text-neutral-400">Last marked:</span>
+                    <span className="text-[#0F172A] dark:text-white">{data.lastAttendanceDate}</span>
                   </div>
                 )}
                 {data.presentCount !== undefined && (
                   <div className="grid grid-cols-3 gap-2 mt-2">
-                    <div className="text-center p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                      <div className="text-lg font-bold text-emerald-400">{data.presentCount}</div>
-                      <div className="text-xs text-neutral-400">Present</div>
+                    <div className="text-center p-2 bg-[#ECFDF3] dark:bg-emerald-500/10 rounded-lg border border-[rgba(22,163,74,0.1)] dark:border-emerald-500/20">
+                      <div className="text-lg font-bold text-[#16A34A] dark:text-emerald-400">{data.presentCount}</div>
+                      <div className="text-xs text-[#64748B] dark:text-neutral-400">Present</div>
                     </div>
-                    <div className="text-center p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                      <div className="text-lg font-bold text-red-400">{data.absentCount || 0}</div>
-                      <div className="text-xs text-neutral-400">Absent</div>
+                    <div className="text-center p-2 bg-[#FEF2F2] dark:bg-red-500/10 rounded-lg border border-[rgba(220,38,38,0.1)] dark:border-red-500/20">
+                      <div className="text-lg font-bold text-[#DC2626] dark:text-red-400">{data.absentCount || 0}</div>
+                      <div className="text-xs text-[#64748B] dark:text-neutral-400">Absent</div>
                     </div>
-                    <div className="text-center p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                      <div className="text-lg font-bold text-amber-400">{data.leaveCount || 0}</div>
-                      <div className="text-xs text-neutral-400">Leave</div>
+                    <div className="text-center p-2 bg-[#FFFBEB] dark:bg-amber-500/10 rounded-lg border border-[rgba(217,119,6,0.1)] dark:border-amber-500/20">
+                      <div className="text-lg font-bold text-[#D97706] dark:text-amber-400">{data.leaveCount || 0}</div>
+                      <div className="text-xs text-[#64748B] dark:text-neutral-400">Leave</div>
                     </div>
                   </div>
                 )}
@@ -1271,7 +1329,7 @@ export const ProfileInfo = ({
                       setShowExpanded(false)
                       onEditProfile()
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors border border-white/10"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F8FAFC] hover:bg-[#EEF3F8] text-[#0F172A] dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl transition-colors border border-[rgba(15,23,42,0.08)] dark:border-white/10"
                   >
                     <FaEdit />
                   </button>
@@ -1308,7 +1366,7 @@ export const employeeToProfileData = (
 ): ProfileInfoData => ({
   employeeId: employee.employeeId,
   name: employee.name,
-  profileImage: employee.profileImage,
+  profileImage: getLocalProfileImage(employee.profileImage, employee.employeeId),
   role: employee.role || 'employee',
   department: employee.department,
   designation: employee.designation,

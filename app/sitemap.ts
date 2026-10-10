@@ -1,21 +1,29 @@
 import { MetadataRoute } from 'next'
+import { getPublishedOffers } from '@/lib/studentvault/data'
+import eventsData from '@/data/events.json'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://matrixo.in'
-  
+export const revalidate = 3600
+
+const baseUrl = 'https://matrixo.in'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
   const staticPages = [
     '',
     '/events',
+    '/home',
     '/services',
     '/about',
     '/team',
+    '/careers',
     '/contact',
-    '/auth',
+    '/brand',
     '/privacy',
     '/terms',
     '/refund',
     '/data-protection',
+    '/studentvault',
+    '/studentvault/expired',
   ]
 
   // Generate sitemap entries for static pages
@@ -26,5 +34,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }))
 
-  return staticEntries
+  // StudentVault offer and category pages. Gated routes (/unlock, /vault,
+  // /tracker) are deliberately excluded — they are noindex.
+  let studentVaultEntries: MetadataRoute.Sitemap = []
+
+  try {
+    const offers = await getPublishedOffers()
+
+    const offerEntries = offers.map((offer) => ({
+      url: `${baseUrl}/studentvault/${offer.slug}`,
+      lastModified: offer.lastVerifiedAt ? new Date(offer.lastVerifiedAt) : new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+
+    const categories = Array.from(
+      new Set(offers.map((o) => o.category).filter(Boolean))
+    )
+    const categoryEntries = categories.map((category) => ({
+      url: `${baseUrl}/studentvault/category/${encodeURIComponent(category)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
+
+    studentVaultEntries = [...offerEntries, ...categoryEntries]
+  } catch (error) {
+    // A Firestore outage must not break the whole sitemap.
+    console.error('[sitemap] Could not load StudentVault offers:', error)
+  }
+
+  const eventEntries: MetadataRoute.Sitemap = (eventsData as Array<{ slug: string; date?: string; hidden?: boolean }>)
+    .filter((event) => !event.hidden)
+    .map((event) => ({
+      url: `${baseUrl}/events/${event.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
+
+  return [...staticEntries, ...eventEntries, ...studentVaultEntries]
 }

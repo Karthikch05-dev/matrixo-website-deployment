@@ -1,0 +1,30 @@
+export const DEVAGENTS_SPEAKER_IMAGE_URL =
+  process.env.NEXT_PUBLIC_DEVAGENTS_SPEAKER_IMAGE_URL || "";
+
+export const SHOW_DEVAGENTS_LEAD_SPEAKER =
+  process.env.NEXT_PUBLIC_SHOW_DEVAGENTS_LEAD_SPEAKER === "true";
+
+export const MATRIXO_LOGO_LIGHT_URL =
+  process.env.NEXT_PUBLIC_MATRIXO_LOGO_LIGHT_URL || "/brand/matrixo-logo.svg";
+
+export const MATRIXO_LOGO_DARK_URL =
+  process.env.NEXT_PUBLIC_MATRIXO_LOGO_DARK_URL || "/brand/matrixo-logo-white.svg";
+
+export const DEVAGENTS_APPROVAL_ENTRY_PREFIX =
+  process.env.NEXT_PUBLIC_DEVAGENTS_ENTRY_PREFIX || "DEVAGENTS";
+
+export const THE_STUDENT_SPOT_LOGO_LIGHT_URL =
+  process.env.NEXT_PUBLIC_THE_STUDENT_SPOT_LOGO_LIGHT_URL ||
+  "/events/thestudentspotlight.png";
+
+export const THE_STUDENT_SPOT_LOGO_DARK_URL =
+  process.env.NEXT_PUBLIC_THE_STUDENT_SPOT_LOGO_DARK_URL ||
+  "/events/thestudentspotdark.png";
+
+export const ANY_EVENTS_AHEAD_LOGO_LIGHT_URL =
+  process.env.NEXT_PUBLIC_ANY_EVENTS_AHEAD_LOGO_LIGHT_URL ||
+  "/events/anyeventsahead.PNG";
+
+export const ANY_EVENTS_AHEAD_LOGO_DARK_URL =
+  process.env.NEXT_PUBLIC_ANY_EVENTS_AHEAD_LOGO_DARK_URL ||
+  "/events/anyeventsahead.PNG";

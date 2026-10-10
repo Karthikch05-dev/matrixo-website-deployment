@@ -17,11 +17,12 @@ import {
 } from 'react-icons/md'
 import { collection, addDoc, updateDoc, doc, deleteDoc, Timestamp, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebaseConfig'
-import { useEmployeeAuth } from '@/lib/employeePortalContext'
+import { useEmployeeAuth, isAdminOrSubAdmin } from '@/lib/employeePortalContext'
 import { Card, Button, Input, Textarea, Select, Modal, Badge, Alert } from './ui'
 import { toast } from 'sonner'
 import type { FormQuestion } from '@/components/careers/ApplicationForm'
 import { normalizeQuestions } from '@/components/careers/ApplicationForm'
+import XOLoader from '@/components/XOLoader'
 
 // ============================================
 // TYPES
@@ -145,10 +146,10 @@ function QuestionEditorCard({
   }
 
   return (
-    <div className="bg-neutral-800/60 border border-neutral-700 rounded-2xl overflow-hidden group hover:border-neutral-600 transition-all">
+    <div className="bg-[#FFFFFF] dark:bg-neutral-800/60 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-2xl overflow-hidden group hover:border-[rgba(15,23,42,0.12)] dark:hover:border-neutral-600 transition-all shadow-sm dark:shadow-none">
       {/* Drag Handle */}
       <div className="flex justify-center py-1.5 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
-        <FaGripVertical className="text-neutral-600 text-xs" />
+        <FaGripVertical className="text-[#94A3B8] dark:text-neutral-600 text-xs" />
       </div>
 
       <div className="px-4 pb-4 space-y-3">
@@ -159,7 +160,7 @@ function QuestionEditorCard({
               value={question.title}
               onChange={(e) => onUpdate({ ...question, title: e.target.value })}
               placeholder="Question title"
-              className="w-full bg-transparent border-0 border-b-2 border-neutral-700 focus:border-primary-500 text-white text-sm font-medium py-2 px-0 focus:outline-none focus:ring-0 transition-colors placeholder:text-neutral-500"
+              className="w-full bg-transparent border-0 border-b-2 border-[rgba(15,23,42,0.08)] dark:border-neutral-700 focus:border-[#2563EB] dark:focus:border-primary-500 text-[#0F172A] dark:text-white text-sm font-medium py-2 px-0 focus:outline-none focus:ring-0 transition-colors placeholder:text-[#94A3B8] dark:placeholder:text-neutral-500"
             />
           </div>
 
@@ -168,11 +169,11 @@ function QuestionEditorCard({
             <button
               type="button"
               onClick={() => setShowTypeMenu(!showTypeMenu)}
-              className="flex items-center gap-2 px-3 py-2 bg-neutral-700/50 hover:bg-neutral-700 rounded-lg text-xs text-neutral-300 transition-all border border-neutral-600"
+              className="flex items-center gap-2 px-3 py-2 bg-[#F8FAFC] dark:bg-neutral-700/50 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700 rounded-lg text-xs text-[#0F172A] dark:text-neutral-300 transition-all border border-[rgba(15,23,42,0.06)] dark:border-neutral-600"
             >
               <TypeIcon className="text-base" />
               <span className="hidden sm:inline">{typeConfig.label}</span>
-              <FaChevronDown className="text-[8px] text-neutral-500" />
+              <FaChevronDown className="text-[8px] text-[#94A3B8] dark:text-neutral-500" />
             </button>
 
             <AnimatePresence>
@@ -183,7 +184,7 @@ function QuestionEditorCard({
                     initial={{ opacity: 0, y: -5, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                    className="absolute right-0 top-full mt-1 z-50 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl min-w-[220px] py-1 overflow-hidden"
+                    className="absolute right-0 top-full mt-1 z-50 bg-[#FFFFFF] dark:bg-neutral-800 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-xl shadow-lg dark:shadow-2xl min-w-[220px] py-1 overflow-hidden"
                   >
                     {QUESTION_TYPES.map(({ value, label, icon: Icon, description }) => (
                       <button
@@ -197,7 +198,7 @@ function QuestionEditorCard({
                           onUpdate({ ...question, ...updates })
                           setShowTypeMenu(false)
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-neutral-700/50 transition-all ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#F1F5F9] dark:hover:bg-neutral-700/50 transition-all ${
                           question.type === value ? 'bg-primary-500/10 text-primary-400' : 'text-neutral-300'
                         }`}
                       >
@@ -220,7 +221,7 @@ function QuestionEditorCard({
           value={question.description}
           onChange={(e) => onUpdate({ ...question, description: e.target.value })}
           placeholder="Description (optional)"
-          className="w-full bg-transparent text-xs text-neutral-400 py-1 border-0 border-b border-transparent hover:border-neutral-700 focus:border-neutral-600 focus:outline-none focus:ring-0 transition-colors placeholder:text-neutral-600"
+          className="w-full bg-transparent text-xs text-[#64748B] dark:text-neutral-400 py-1 border-0 border-b border-transparent hover:border-[rgba(15,23,42,0.08)] dark:hover:border-neutral-700 focus:border-[#94A3B8] dark:focus:border-neutral-600 focus:outline-none focus:ring-0 transition-colors placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
         />
 
         {/* Options Editor (for MC, Checkboxes, Dropdown) */}
@@ -228,19 +229,19 @@ function QuestionEditorCard({
           <div className="space-y-2 pt-1">
             {question.options.map((opt, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="text-neutral-500 text-xs w-4 text-center">
+                <span className="text-[#94A3B8] dark:text-neutral-500 text-xs w-4 text-center">
                   {question.type === 'multiple-choice' ? '○' : question.type === 'checkboxes' ? '☐' : `${i + 1}.`}
                 </span>
                 <input
                   value={opt}
                   onChange={(e) => handleOptionChange(i, e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-neutral-300 py-1.5 border-0 border-b border-neutral-700 focus:border-neutral-500 focus:outline-none focus:ring-0 transition-colors"
+                  className="flex-1 bg-transparent text-sm text-[#0F172A] dark:text-neutral-300 py-1.5 border-0 border-b border-[rgba(15,23,42,0.08)] dark:border-neutral-700 focus:border-[#94A3B8] dark:focus:border-neutral-500 focus:outline-none focus:ring-0 transition-colors"
                 />
                 {question.options.length > 1 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveOption(i)}
-                    className="p-1 text-neutral-600 hover:text-red-400 transition-colors"
+                    className="p-1 text-[#94A3B8] dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   >
                     <FaTimes className="text-[10px]" />
                   </button>
@@ -250,7 +251,7 @@ function QuestionEditorCard({
             <button
               type="button"
               onClick={handleAddOption}
-              className="flex items-center gap-2 text-xs text-neutral-500 hover:text-primary-400 transition-colors py-1"
+              className="flex items-center gap-2 text-xs text-[#64748B] dark:text-neutral-500 hover:text-[#2563EB] dark:hover:text-primary-400 transition-colors py-1"
             >
               <FaPlus className="text-[8px]" />
               Add option
@@ -263,21 +264,21 @@ function QuestionEditorCard({
           <div className="space-y-2 pt-1">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] text-neutral-500 mb-1 block">Min</label>
+                <label className="text-[10px] text-[#94A3B8] dark:text-neutral-500 mb-1 block">Min</label>
                 <input
                   type="number"
                   value={question.scaleConfig?.min || 1}
                   onChange={(e) => onUpdate({ ...question, scaleConfig: { ...(question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }), min: parseInt(e.target.value) || 0 } })}
-                  className="w-full bg-neutral-700/50 text-sm text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none"
+                  className="w-full bg-[#F8FAFC] dark:bg-neutral-700/50 text-sm text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-[10px] text-neutral-500 mb-1 block">Max</label>
+                <label className="text-[10px] text-[#94A3B8] dark:text-neutral-500 mb-1 block">Max</label>
                 <input
                   type="number"
                   value={question.scaleConfig?.max || 5}
                   onChange={(e) => onUpdate({ ...question, scaleConfig: { ...(question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }), max: parseInt(e.target.value) || 10 } })}
-                  className="w-full bg-neutral-700/50 text-sm text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none"
+                  className="w-full bg-[#F8FAFC] dark:bg-neutral-700/50 text-sm text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -286,13 +287,13 @@ function QuestionEditorCard({
                 value={question.scaleConfig?.minLabel || ''}
                 onChange={(e) => onUpdate({ ...question, scaleConfig: { ...(question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }), minLabel: e.target.value } })}
                 placeholder="Min label (optional)"
-                className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
               />
               <input
                 value={question.scaleConfig?.maxLabel || ''}
                 onChange={(e) => onUpdate({ ...question, scaleConfig: { ...(question.scaleConfig || { min: 1, max: 5, minLabel: '', maxLabel: '' }), maxLabel: e.target.value } })}
                 placeholder="Max label (optional)"
-                className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
               />
             </div>
           </div>
@@ -301,11 +302,11 @@ function QuestionEditorCard({
         {/* Rating Config */}
         {question.type === 'rating' && (
           <div className="flex items-center gap-3 pt-1">
-            <label className="text-xs text-neutral-400">Max stars:</label>
+            <label className="text-xs text-[#64748B] dark:text-neutral-400">Max stars:</label>
             <select
               value={question.ratingMax || 5}
               onChange={(e) => onUpdate({ ...question, ratingMax: parseInt(e.target.value) })}
-              className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none"
+              className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none"
             >
               {[3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -328,17 +329,17 @@ function QuestionEditorCard({
                   onUpdate({ ...question, validation: { type: 'none' } })
                 }
               }}
-              className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
+              className="text-[10px] text-[#64748B] dark:text-neutral-500 hover:text-[#0F172A] dark:hover:text-neutral-300 transition-colors"
             >
               {showValidation ? '▾ Hide validation' : '▸ Response validation'}
             </button>
 
             {showValidation && (
-              <div className="mt-2 space-y-2 pl-2 border-l-2 border-neutral-700">
+              <div className="mt-2 space-y-2 pl-2 border-l-2 border-[rgba(15,23,42,0.08)] dark:border-neutral-700">
                 <select
                   value={question.validation?.type || 'none'}
                   onChange={(e) => onUpdate({ ...question, validation: { ...(question.validation || { type: 'none' }), type: e.target.value as any } })}
-                  className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none"
+                  className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none"
                 >
                   <option value="none">No validation</option>
                   <option value="number">Number</option>
@@ -353,7 +354,7 @@ function QuestionEditorCard({
                         value={question.validation.pattern || ''}
                         onChange={(e) => onUpdate({ ...question, validation: { ...question.validation!, pattern: e.target.value } })}
                         placeholder="Regex pattern"
-                        className="col-span-2 bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                        className="col-span-2 bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
                       />
                     ) : (
                       <>
@@ -362,14 +363,14 @@ function QuestionEditorCard({
                           value={question.validation.min ?? ''}
                           onChange={(e) => onUpdate({ ...question, validation: { ...question.validation!, min: e.target.value ? Number(e.target.value) : undefined } })}
                           placeholder={question.validation.type === 'length' ? 'Min length' : 'Min value'}
-                          className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                          className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
                         />
                         <input
                           type="number"
                           value={question.validation.max ?? ''}
                           onChange={(e) => onUpdate({ ...question, validation: { ...question.validation!, max: e.target.value ? Number(e.target.value) : undefined } })}
                           placeholder={question.validation.type === 'length' ? 'Max length' : 'Max value'}
-                          className="bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                          className="bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
                         />
                       </>
                     )}
@@ -377,7 +378,7 @@ function QuestionEditorCard({
                       value={question.validation?.errorMessage || ''}
                       onChange={(e) => onUpdate({ ...question, validation: { ...question.validation!, errorMessage: e.target.value } })}
                       placeholder="Custom error message"
-                      className="col-span-2 bg-neutral-700/50 text-xs text-neutral-300 rounded-lg px-3 py-1.5 border border-neutral-600 focus:border-primary-500 focus:outline-none placeholder:text-neutral-600"
+                      className="col-span-2 bg-[#F8FAFC] dark:bg-neutral-700/50 text-xs text-[#0F172A] dark:text-neutral-300 rounded-lg px-3 py-1.5 border border-[rgba(15,23,42,0.06)] dark:border-neutral-600 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none placeholder:text-[#94A3B8] dark:placeholder:text-neutral-600"
                     />
                   </div>
                 )}
@@ -387,32 +388,32 @@ function QuestionEditorCard({
         )}
 
         {/* Footer: Required toggle + Actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-neutral-700/50">
+        <div className="flex items-center justify-between pt-2 border-t border-[rgba(15,23,42,0.08)] dark:border-neutral-700/50">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={onDuplicate} className="p-2 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700/50 rounded-lg transition-all" title="Duplicate">
+            <button type="button" onClick={onDuplicate} className="p-2 text-[#64748B] dark:text-neutral-500 hover:text-[#0F172A] dark:hover:text-neutral-300 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700/50 rounded-lg transition-all" title="Duplicate">
               <FaCopy className="text-xs" />
             </button>
-            <button type="button" onClick={onDelete} className="p-2 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all" title="Delete">
+            <button type="button" onClick={onDelete} className="p-2 text-[#64748B] dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all" title="Delete">
               <FaTrash className="text-xs" />
             </button>
             {!isFirst && (
-              <button type="button" onClick={onMoveUp} className="p-2 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700/50 rounded-lg transition-all" title="Move up">
+              <button type="button" onClick={onMoveUp} className="p-2 text-[#64748B] dark:text-neutral-500 hover:text-[#0F172A] dark:hover:text-neutral-300 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700/50 rounded-lg transition-all" title="Move up">
                 <FaArrowUp className="text-xs" />
               </button>
             )}
             {!isLast && (
-              <button type="button" onClick={onMoveDown} className="p-2 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700/50 rounded-lg transition-all" title="Move down">
+              <button type="button" onClick={onMoveDown} className="p-2 text-[#64748B] dark:text-neutral-500 hover:text-[#0F172A] dark:hover:text-neutral-300 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700/50 rounded-lg transition-all" title="Move down">
                 <FaArrowDown className="text-xs" />
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-neutral-500">Required</span>
+            <span className="text-[10px] text-[#64748B] dark:text-neutral-500">Required</span>
             <button
               type="button"
               onClick={() => onUpdate({ ...question, required: !question.required })}
-              className={`relative w-9 h-5 rounded-full transition-all ${question.required ? 'bg-primary-500' : 'bg-neutral-600'}`}
+              className={`relative w-9 h-5 rounded-full transition-all ${question.required ? 'bg-[#2563EB] dark:bg-primary-500' : 'bg-[#CBD5E1] dark:bg-neutral-600'}`}
             >
               <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${question.required ? 'left-[18px]' : 'left-0.5'}`} />
             </button>
@@ -572,12 +573,12 @@ function JobFormModal({
     <Modal isOpen={isOpen} onClose={onClose} title={editingRole ? 'Edit Job Posting' : 'Create Job Posting'} size="lg">
       <form onSubmit={handleSubmit}>
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-neutral-800/50 p-1 rounded-xl">
+        <div className="flex gap-1 mb-4 bg-[#F8FAFC] dark:bg-neutral-800/50 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => setActiveTab('details')}
             className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              activeTab === 'details' ? 'bg-primary-500/20 text-primary-400' : 'text-neutral-400 hover:text-neutral-200'
+              activeTab === 'details' ? 'bg-[#FFFFFF] dark:bg-primary-500/20 text-[#2563EB] dark:text-primary-400 shadow-sm dark:shadow-none' : 'text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-neutral-200'
             }`}
           >
             Job Details
@@ -586,12 +587,12 @@ function JobFormModal({
             type="button"
             onClick={() => setActiveTab('questions')}
             className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'questions' ? 'bg-primary-500/20 text-primary-400' : 'text-neutral-400 hover:text-neutral-200'
+              activeTab === 'questions' ? 'bg-[#FFFFFF] dark:bg-primary-500/20 text-[#2563EB] dark:text-primary-400 shadow-sm dark:shadow-none' : 'text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-neutral-200'
             }`}
           >
             Questions
             {questions.length > 0 && (
-              <span className="bg-primary-500/30 text-primary-300 text-[9px] px-1.5 py-0.5 rounded-full">{questions.length}</span>
+              <span className="bg-[#2563EB]/10 dark:bg-primary-500/30 text-[#1D4ED8] dark:text-primary-300 text-[9px] px-1.5 py-0.5 rounded-full">{questions.length}</span>
             )}
           </button>
         </div>
@@ -618,9 +619,9 @@ function JobFormModal({
                   id="requireResumeCheckbox"
                   checked={form.requireResume}
                   onChange={(e) => setForm({ ...form, requireResume: e.target.checked })}
-                  className="w-4 h-4 rounded border-neutral-700 bg-neutral-800 text-primary-600 focus:ring-primary-500"
+                  className="w-4 h-4 rounded border-[rgba(15,23,42,0.16)] dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[#2563EB] dark:text-primary-600 focus:ring-[#2563EB] dark:focus:ring-primary-500"
                 />
-                <label htmlFor="requireResumeCheckbox" className="text-sm text-neutral-300">Require resume upload from applicants</label>
+                <label htmlFor="requireResumeCheckbox" className="text-sm text-[#0F172A] dark:text-neutral-300">Require resume upload from applicants</label>
               </div>
             </div>
           )}
@@ -630,9 +631,9 @@ function JobFormModal({
             <div className="space-y-3">
               {questions.length === 0 ? (
                 <div className="text-center py-12">
-                  <FaClipboardList className="text-3xl text-neutral-600 mx-auto mb-3" />
-                  <p className="text-neutral-400 text-sm mb-1">No custom questions yet</p>
-                  <p className="text-neutral-500 text-xs mb-4">Add questions for applicants to answer alongside their basic details</p>
+                  <FaClipboardList className="text-3xl text-[#94A3B8] dark:text-neutral-600 mx-auto mb-3" />
+                  <p className="text-[#64748B] dark:text-neutral-400 text-sm mb-1">No custom questions yet</p>
+                  <p className="text-[#94A3B8] dark:text-neutral-500 text-xs mb-4">Add questions for applicants to answer alongside their basic details</p>
                   <Button size="sm" icon={<FaPlus />} onClick={handleAddQuestion}>Add Question</Button>
                 </div>
               ) : (
@@ -664,8 +665,8 @@ function JobFormModal({
           )}
         </div>
 
-        <div className="flex justify-between items-center gap-3 pt-4 border-t border-neutral-800 mt-4">
-          <p className="text-[10px] text-neutral-600">
+        <div className="flex justify-between items-center gap-3 pt-4 border-t border-[rgba(15,23,42,0.08)] dark:border-neutral-800 mt-4">
+          <p className="text-[10px] text-[#94A3B8] dark:text-neutral-600">
             {questions.length} question{questions.length !== 1 ? 's' : ''} • {form.requireResume ? 'Resume required' : 'No resume'}
           </p>
           <div className="flex gap-3">
@@ -747,16 +748,16 @@ function ApplicationsModal({
           <button
             type="button"
             onClick={() => setSelectedApp(null)}
-            className="flex items-center gap-2 text-xs text-neutral-400 hover:text-neutral-200 mb-4 transition-colors"
+            className="flex items-center gap-2 text-xs text-[#64748B] dark:text-neutral-400 hover:text-[#0F172A] dark:hover:text-neutral-200 mb-4 transition-colors"
           >
             ← Back to all applications
           </button>
 
           {/* Applicant Header */}
-          <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-5 mb-4">
+          <div className="bg-[#FFFFFF] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-2xl p-5 mb-4 shadow-sm dark:shadow-none">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
-                <h3 className="text-xl font-bold text-white">{selectedApp.fullName}</h3>
+                <h3 className="text-xl font-bold text-[#0F172A] dark:text-white">{selectedApp.fullName}</h3>
                 <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-medium mt-1 border ${statusColors[selectedApp.status] || statusColors.pending}`}>
                   {selectedApp.status.charAt(0).toUpperCase() + selectedApp.status.slice(1)}
                 </span>
@@ -764,23 +765,23 @@ function ApplicationsModal({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2 text-neutral-300">
-                <FaEnvelope className="text-xs text-neutral-500" />
-                <a href={`mailto:${selectedApp.email}`} className="hover:text-primary-400 transition-colors">{selectedApp.email}</a>
+              <div className="flex items-center gap-2 text-[#475569] dark:text-neutral-300">
+                <FaEnvelope className="text-xs text-[#94A3B8] dark:text-neutral-500" />
+                <a href={`mailto:${selectedApp.email}`} className="hover:text-[#2563EB] dark:hover:text-primary-400 transition-colors">{selectedApp.email}</a>
               </div>
-              <div className="flex items-center gap-2 text-neutral-300">
-                <FaPhone className="text-xs text-neutral-500" />
-                <a href={`tel:${selectedApp.phone}`} className="hover:text-primary-400 transition-colors">{selectedApp.phone}</a>
+              <div className="flex items-center gap-2 text-[#475569] dark:text-neutral-300">
+                <FaPhone className="text-xs text-[#94A3B8] dark:text-neutral-500" />
+                <a href={`tel:${selectedApp.phone}`} className="hover:text-[#2563EB] dark:hover:text-primary-400 transition-colors">{selectedApp.phone}</a>
               </div>
-              <div className="flex items-center gap-2 text-neutral-300">
-                <FaUniversity className="text-xs text-neutral-500" />
+              <div className="flex items-center gap-2 text-[#475569] dark:text-neutral-300">
+                <FaUniversity className="text-xs text-[#94A3B8] dark:text-neutral-500" />
                 {selectedApp.college}
               </div>
-              <div className="flex items-center gap-2 text-neutral-300">
-                <FaBriefcase className="text-xs text-neutral-500" />
+              <div className="flex items-center gap-2 text-[#475569] dark:text-neutral-300">
+                <FaBriefcase className="text-xs text-[#94A3B8] dark:text-neutral-500" />
                 {selectedApp.yearOrExperience}
               </div>
-              <div className="flex items-center gap-2 text-neutral-400 text-xs sm:col-span-2">
+              <div className="flex items-center gap-2 text-[#64748B] dark:text-neutral-400 text-xs sm:col-span-2">
                 <FaCalendarAlt className="text-[10px]" />
                 Applied {selectedApp.submittedAt?.toDate ? selectedApp.submittedAt.toDate().toLocaleString() : new Date(selectedApp.submittedAt).toLocaleString()}
               </div>
@@ -789,28 +790,28 @@ function ApplicationsModal({
 
           {/* Resume */}
           {selectedApp.resumeURL && (
-            <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-4 mb-4">
-              <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                <FaFilePdf className="text-red-400" /> Resume
+            <div className="bg-[#FFFFFF] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-2xl p-4 mb-4 shadow-sm dark:shadow-none">
+              <h4 className="text-sm font-semibold text-[#0F172A] dark:text-white mb-3 flex items-center gap-2">
+                <FaFilePdf className="text-red-500 dark:text-red-400" /> Resume
               </h4>
               <div className="flex items-center gap-3">
                 <a
                   href={selectedApp.resumeURL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-xl text-sm transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#2563EB]/10 dark:bg-blue-500/10 text-[#2563EB] dark:text-blue-400 hover:bg-[#2563EB]/20 dark:hover:bg-blue-500/20 rounded-xl text-sm transition-all"
                 >
                   <FaExternalLinkAlt className="text-xs" /> View Resume
                 </a>
                 <a
                   href={selectedApp.resumeURL}
                   download
-                  className="flex items-center gap-2 px-4 py-2 bg-neutral-700/50 text-neutral-300 hover:bg-neutral-700 rounded-xl text-sm transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F8FAFC] dark:bg-neutral-700/50 text-[#475569] dark:text-neutral-300 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700 rounded-xl text-sm transition-all border border-[rgba(15,23,42,0.06)] dark:border-transparent"
                 >
                   <FaDownload className="text-xs" /> Download
                 </a>
                 {(selectedApp as any).resumeFileName && (
-                  <span className="text-xs text-neutral-500">{(selectedApp as any).resumeFileName}</span>
+                  <span className="text-xs text-[#94A3B8] dark:text-neutral-500">{(selectedApp as any).resumeFileName}</span>
                 )}
               </div>
             </div>
@@ -818,15 +819,15 @@ function ApplicationsModal({
 
           {/* Custom Answers */}
           {selectedApp.customAnswers && Object.keys(selectedApp.customAnswers).length > 0 && (
-            <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-4 mb-4">
-              <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                <FaClipboardList className="text-primary-400" /> Responses
+            <div className="bg-[#FFFFFF] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-2xl p-4 mb-4 shadow-sm dark:shadow-none">
+              <h4 className="text-sm font-semibold text-[#0F172A] dark:text-white mb-3 flex items-center gap-2">
+                <FaClipboardList className="text-[#2563EB] dark:text-primary-400" /> Responses
               </h4>
               <div className="space-y-4">
                 {Object.entries(selectedApp.customAnswers).map(([question, answer]) => (
-                  <div key={question} className="border-b border-neutral-700/50 pb-3 last:border-0 last:pb-0">
-                    <p className="text-xs text-neutral-400 font-medium mb-1">{question}</p>
-                    <p className="text-sm text-neutral-200 whitespace-pre-wrap">
+                  <div key={question} className="border-b border-[rgba(15,23,42,0.08)] dark:border-neutral-700/50 pb-3 last:border-0 last:pb-0">
+                    <p className="text-xs text-[#64748B] dark:text-neutral-400 font-medium mb-1">{question}</p>
+                    <p className="text-sm text-[#0F172A] dark:text-neutral-200 whitespace-pre-wrap">
                       {Array.isArray(answer) ? answer.join(', ') : String(answer)}
                     </p>
                   </div>
@@ -836,8 +837,8 @@ function ApplicationsModal({
           )}
 
           {/* Status Actions */}
-          <div className="bg-neutral-800/50 border border-neutral-700 rounded-2xl p-4">
-            <h4 className="text-sm font-semibold text-white mb-3">Update Status</h4>
+          <div className="bg-[#FFFFFF] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-2xl p-4 shadow-sm dark:shadow-none">
+            <h4 className="text-sm font-semibold text-[#0F172A] dark:text-white mb-3">Update Status</h4>
             <div className="flex flex-wrap gap-2">
               {(['pending', 'reviewed', 'shortlisted', 'rejected'] as const).map(s => (
                 <button
@@ -847,7 +848,7 @@ function ApplicationsModal({
                   className={`px-4 py-2 rounded-xl text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed border ${
                     selectedApp.status === s
                       ? statusColors[s]
-                      : 'bg-neutral-700/30 text-neutral-400 border-neutral-600 hover:bg-neutral-700 hover:text-neutral-200'
+                      : 'bg-[#F8FAFC] dark:bg-neutral-700/30 text-[#64748B] dark:text-neutral-400 border-[rgba(15,23,42,0.06)] dark:border-neutral-600 hover:bg-[#F1F5F9] dark:hover:bg-neutral-700 hover:text-[#0F172A] dark:hover:text-neutral-200'
                   }`}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -866,17 +867,17 @@ function ApplicationsModal({
         {/* Stats Bar */}
         <div className="flex flex-wrap gap-2 mb-4">
           {[
-            { key: 'all', label: `All (${roleApps.length})`, color: 'bg-neutral-700/50 text-neutral-300' },
-            { key: 'pending', label: `Pending (${statusCount('pending')})`, color: 'bg-amber-500/10 text-amber-400' },
-            { key: 'reviewed', label: `Reviewed (${statusCount('reviewed')})`, color: 'bg-blue-500/10 text-blue-400' },
-            { key: 'shortlisted', label: `Shortlisted (${statusCount('shortlisted')})`, color: 'bg-emerald-500/10 text-emerald-400' },
-            { key: 'rejected', label: `Rejected (${statusCount('rejected')})`, color: 'bg-red-500/10 text-red-400' },
+            { key: 'all', label: `All (${roleApps.length})`, color: 'bg-[#F1F5F9] dark:bg-neutral-700/50 text-[#475569] dark:text-neutral-300' },
+            { key: 'pending', label: `Pending (${statusCount('pending')})`, color: 'bg-amber-500/10 text-amber-500 dark:text-amber-400' },
+            { key: 'reviewed', label: `Reviewed (${statusCount('reviewed')})`, color: 'bg-blue-500/10 text-blue-500 dark:text-blue-400' },
+            { key: 'shortlisted', label: `Shortlisted (${statusCount('shortlisted')})`, color: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' },
+            { key: 'rejected', label: `Rejected (${statusCount('rejected')})`, color: 'bg-red-500/10 text-red-500 dark:text-red-400' },
           ].map(f => (
             <button
               key={f.key}
               onClick={() => setFilterStatus(f.key)}
               className={`text-[10px] px-2.5 py-1 rounded-lg font-medium transition-all border ${
-                filterStatus === f.key ? `${f.color} border-current` : 'bg-neutral-800/50 text-neutral-500 border-transparent hover:text-neutral-300'
+                filterStatus === f.key ? `${f.color} border-current` : 'bg-[#F8FAFC] dark:bg-neutral-800/50 text-[#64748B] dark:text-neutral-500 border-transparent hover:text-[#0F172A] dark:hover:text-neutral-300'
               }`}
             >
               {f.label}
@@ -887,12 +888,12 @@ function ApplicationsModal({
         {/* Search */}
         {roleApps.length > 3 && (
           <div className="relative mb-3">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs" />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] dark:text-neutral-500 text-xs" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search applicants..."
-              className="w-full pl-8 pr-4 py-2 bg-neutral-800/50 border border-neutral-700 rounded-xl text-xs text-neutral-300 focus:border-primary-500 focus:outline-none"
+              className="w-full pl-8 pr-4 py-2 bg-[#F8FAFC] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.06)] dark:border-neutral-700 rounded-xl text-xs text-[#0F172A] dark:text-neutral-300 focus:border-[#2563EB] dark:focus:border-primary-500 focus:outline-none"
             />
           </div>
         )}
@@ -900,8 +901,8 @@ function ApplicationsModal({
         {/* Applications List */}
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <FaClipboardList className="text-3xl text-neutral-600 mx-auto mb-3" />
-            <p className="text-neutral-400 text-sm">{searchQuery || filterStatus !== 'all' ? 'No matching applications' : 'No applications yet'}</p>
+            <FaClipboardList className="text-3xl text-[#94A3B8] dark:text-neutral-600 mx-auto mb-3" />
+            <p className="text-[#64748B] dark:text-neutral-400 text-sm">{searchQuery || filterStatus !== 'all' ? 'No matching applications' : 'No applications yet'}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -910,19 +911,19 @@ function ApplicationsModal({
                 key={app.id}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-neutral-800/50 border border-neutral-700 rounded-xl hover:border-neutral-600 transition-all cursor-pointer group"
+                className="p-4 bg-[#FFFFFF] dark:bg-neutral-800/50 border border-[rgba(15,23,42,0.08)] dark:border-neutral-700 rounded-xl hover:border-[rgba(15,23,42,0.12)] dark:hover:border-neutral-600 transition-all cursor-pointer group shadow-sm dark:shadow-none"
                 onClick={() => setSelectedApp(app)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-white font-semibold text-sm group-hover:text-primary-400 transition-colors">{app.fullName}</h4>
-                      {app.resumeURL && <FaFilePdf className="text-[10px] text-red-400" title="Has resume" />}
+                      <h4 className="text-[#0F172A] dark:text-white font-semibold text-sm group-hover:text-[#2563EB] dark:group-hover:text-primary-400 transition-colors">{app.fullName}</h4>
+                      {app.resumeURL && <FaFilePdf className="text-[10px] text-red-500 dark:text-red-400" title="Has resume" />}
                     </div>
-                    <p className="text-xs text-neutral-400 mt-0.5">{app.email} • {app.phone}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">{app.college} • {app.yearOrExperience}</p>
+                    <p className="text-xs text-[#64748B] dark:text-neutral-400 mt-0.5">{app.email} • {app.phone}</p>
+                    <p className="text-xs text-[#94A3B8] dark:text-neutral-500 mt-0.5">{app.college} • {app.yearOrExperience}</p>
                     {app.submittedAt && (
-                      <p className="text-[10px] text-neutral-600 mt-1">
+                      <p className="text-[10px] text-[#94A3B8] dark:text-neutral-600 mt-1">
                         Applied {app.submittedAt?.toDate ? app.submittedAt.toDate().toLocaleDateString() : new Date(app.submittedAt).toLocaleDateString()}
                       </p>
                     )}
@@ -933,16 +934,16 @@ function ApplicationsModal({
                 </div>
 
                 {/* Quick Actions */}
-                <div className="flex gap-2 mt-3 pt-2 border-t border-neutral-800">
+                <div className="flex gap-2 mt-3 pt-2 border-t border-[rgba(15,23,42,0.06)] dark:border-neutral-800">
                   {(['reviewed', 'shortlisted', 'rejected'] as const).map(s => (
                     <button
                       key={s}
                       onClick={(e) => { e.stopPropagation(); handleUpdateStatus(app.id, s) }}
                       disabled={app.status === s}
                       className={`text-[10px] px-2 py-1 rounded-lg font-medium transition-all disabled:opacity-30 ${
-                        s === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' :
-                        s === 'rejected' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' :
-                        'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        s === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/20' :
+                        s === 'rejected' ? 'bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/20' :
+                        'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20'
                       }`}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -951,7 +952,7 @@ function ApplicationsModal({
                   <span className="flex-1" />
                   <button
                     onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }}
-                    className="text-[10px] px-2 py-1 rounded-lg font-medium text-primary-400 bg-primary-500/10 hover:bg-primary-500/20 transition-all"
+                    className="text-[10px] px-2 py-1 rounded-lg font-medium text-[#2563EB] dark:text-primary-400 bg-[#2563EB]/10 dark:bg-primary-500/10 hover:bg-[#2563EB]/20 dark:hover:bg-primary-500/20 transition-all"
                   >
                     View Details →
                   </button>
@@ -971,7 +972,7 @@ function ApplicationsModal({
 
 export default function JobPostings() {
   const { employee } = useEmployeeAuth()
-  const isAdmin = employee?.role === 'admin'
+  const isAdmin = isAdminOrSubAdmin(employee?.role)
 
   const [roles, setRoles] = useState<JobRole[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
@@ -1038,8 +1039,8 @@ export default function JobPostings() {
     return (
       <Card padding="lg">
         <div className="text-center py-8">
-          <FaLock className="text-3xl text-neutral-600 mx-auto mb-3" />
-          <p className="text-neutral-400">Admin access required</p>
+          <FaLock className="text-3xl text-[#94A3B8] dark:text-neutral-600 mx-auto mb-3" />
+          <p className="text-[#64748B] dark:text-neutral-400">Admin access required</p>
         </div>
       </Card>
     )
@@ -1049,11 +1050,11 @@ export default function JobPostings() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <FaBriefcase className="text-cyan-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+            <FaBriefcase className="text-[#2563EB] dark:text-cyan-400" />
             Job Postings
           </h2>
-          <p className="text-neutral-500 text-xs mt-0.5">
+          <p className="text-[#64748B] dark:text-neutral-500 text-xs mt-0.5">
             {roles.filter(r => r.status === 'open').length} active • {applications.length} total applications
           </p>
         </div>
@@ -1061,13 +1062,13 @@ export default function JobPostings() {
       </div>
 
       {loading ? (
-        <Card padding="lg"><div className="flex items-center justify-center py-12"><FaSpinner className="animate-spin text-2xl text-primary-500" /></div></Card>
+        <Card padding="lg"><div className="flex items-center justify-center py-12"><XOLoader size={16} /></div></Card>
       ) : roles.length === 0 ? (
         <Card padding="lg">
           <div className="text-center py-12">
-            <FaBriefcase className="text-3xl text-neutral-600 mx-auto mb-3" />
-            <p className="text-neutral-400 text-sm">No job postings yet</p>
-            <p className="text-neutral-500 text-xs mt-1">Click &quot;New Posting&quot; to create one. It will appear on the careers page.</p>
+            <FaBriefcase className="text-3xl text-[#94A3B8] dark:text-neutral-600 mx-auto mb-3" />
+            <p className="text-[#64748B] dark:text-neutral-400 text-sm">No job postings yet</p>
+            <p className="text-[#94A3B8] dark:text-neutral-500 text-xs mt-1">Click &quot;New Posting&quot; to create one. It will appear on the careers page.</p>
           </div>
         </Card>
       ) : (
@@ -1085,36 +1086,36 @@ export default function JobPostings() {
 
               return (
                 <motion.div key={role.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} layout>
-                  <Card className="hover:border-neutral-600 transition-all">
+                  <Card className="hover:border-[rgba(15,23,42,0.12)] dark:hover:border-neutral-600 transition-all shadow-sm dark:shadow-none">
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm font-semibold text-white">{role.title}</h3>
+                            <h3 className="text-sm font-semibold text-[#0F172A] dark:text-white">{role.title}</h3>
                             <Badge variant={role.status === 'open' ? 'success' : 'default'} size="sm">{role.status === 'open' ? 'Open' : 'Closed'}</Badge>
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-neutral-400">
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-[#64748B] dark:text-neutral-400">
                             <span className="flex items-center gap-1"><FaUsers className="text-[10px]" />{role.team}</span>
                             <span className="flex items-center gap-1"><FaMapMarkerAlt className="text-[10px]" />{role.location}</span>
                             <span className="flex items-center gap-1"><FaClock className="text-[10px]" />{role.type}</span>
                           </div>
-                          <p className="text-xs text-neutral-500 mt-2 line-clamp-2">{role.description}</p>
+                          <p className="text-xs text-[#94A3B8] dark:text-neutral-500 mt-2 line-clamp-2">{role.description}</p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          <button onClick={() => setViewingApps(role)} className="relative p-2 text-neutral-400 hover:bg-blue-500/10 hover:text-blue-400 rounded-lg transition-all" title={`View ${appCount} applications`}>
+                          <button onClick={() => setViewingApps(role)} className="relative p-2 text-[#64748B] dark:text-neutral-400 hover:bg-[#2563EB]/10 dark:hover:bg-blue-500/10 hover:text-[#2563EB] dark:hover:text-blue-400 rounded-lg transition-all" title={`View ${appCount} applications`}>
                             <FaEye className="text-xs" />
                             {pendingCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{pendingCount}</span>}
                           </button>
-                          <button onClick={() => { setEditingRole(role); setShowForm(true) }} className="p-2 text-neutral-400 hover:bg-blue-500/10 hover:text-blue-400 rounded-lg transition-all" title="Edit"><FaEdit className="text-xs" /></button>
-                          <button onClick={() => handleToggleStatus(role)} className={`p-2 rounded-lg transition-all ${role.status === 'open' ? 'text-neutral-400 hover:bg-amber-500/10 hover:text-amber-400' : 'text-emerald-400 hover:bg-emerald-500/10'}`} title={role.status === 'open' ? 'Close posting' : 'Reopen posting'}>
+                          <button onClick={() => { setEditingRole(role); setShowForm(true) }} className="p-2 text-[#64748B] dark:text-neutral-400 hover:bg-[#2563EB]/10 dark:hover:bg-blue-500/10 hover:text-[#2563EB] dark:hover:text-blue-400 rounded-lg transition-all" title="Edit"><FaEdit className="text-xs" /></button>
+                          <button onClick={() => handleToggleStatus(role)} className={`p-2 rounded-lg transition-all ${role.status === 'open' ? 'text-[#64748B] dark:text-neutral-400 hover:bg-amber-500/10 hover:text-amber-500 dark:hover:text-amber-400' : 'text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10'}`} title={role.status === 'open' ? 'Close posting' : 'Reopen posting'}>
                             {role.status === 'open' ? <FaLock className="text-xs" /> : <FaUnlock className="text-xs" />}
                           </button>
-                          <button onClick={() => handleDelete(role.id)} className="p-2 text-neutral-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-all" title="Delete"><FaTrash className="text-xs" /></button>
+                          <button onClick={() => handleDelete(role.id)} className="p-2 text-[#64748B] dark:text-neutral-400 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-all" title="Delete"><FaTrash className="text-xs" /></button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-neutral-800 text-[11px] text-neutral-500">
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[rgba(15,23,42,0.08)] dark:border-neutral-800 text-[11px] text-[#94A3B8] dark:text-neutral-500">
                         <span>{appCount} application{appCount !== 1 ? 's' : ''}</span>
-                        {pendingCount > 0 && <span className="text-amber-400">{pendingCount} pending review</span>}
+                        {pendingCount > 0 && <span className="text-amber-500 dark:text-amber-400">{pendingCount} pending review</span>}
                         {questions.length > 0 && <span>{questions.length} custom question{questions.length !== 1 ? 's' : ''}</span>}
                         {role.requireResume && <span>Resume required</span>}
                       </div>

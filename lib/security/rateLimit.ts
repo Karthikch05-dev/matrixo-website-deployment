@@ -25,9 +25,9 @@ const SWEEP_INTERVAL = 5 * 60 * 1000
 function sweep(now: number) {
   if (now - lastSweep < SWEEP_INTERVAL) return
   lastSweep = now
-  for (const [key, bucket] of buckets) {
+  buckets.forEach((bucket, key) => {
     if (now > bucket.resetAt) buckets.delete(key)
-  }
+  })
 }
 
 export interface RateLimitResult {

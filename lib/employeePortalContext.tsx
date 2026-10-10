@@ -1,16 +1,16 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
-import { 
+import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   User
 } from 'firebase/auth'
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
+import {
+  doc,
+  getDoc,
+  setDoc,
   collection,
   query,
   where,
@@ -24,7 +24,7 @@ import {
   writeBatch,
   Firestore
 } from 'firebase/firestore'
-import { auth, db } from './firebaseConfig'
+import { auth, db, firebaseReady } from './firebaseConfig'
 import { createGlobalNotification } from './notificationUtils'
 
 // ============================================
@@ -41,7 +41,7 @@ export interface EmployeeProfile {
   profileImage: string
   imageUpdatedAt?: Timestamp | string
   phone?: string
-  role: 'employee' | 'admin' | 'Intern' | string
+  role: 'employee' | 'admin' | 'sub-admin' | 'Intern' | string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -129,16 +129,26 @@ export interface Task {
   comments: TaskComment[]
 }
 
+// Leave type options for multi-day leave applications
+export type LeaveType = 'Sick' | 'Casual' | 'Paid' | 'Unpaid' | 'Personal' | 'Medical' | 'Emergency' | 'Other'
+
 export interface LeaveRequest {
   id?: string
   employeeId: string
   employeeName: string
+  // Multi-day leave support - startDate and endDate define the range (inclusive)
+  startDate: string
+  endDate: string
+  totalDays: number
+  leaveType: LeaveType
+  // Legacy field for backward compatibility (equals startDate)
   date: string
   subject: string
   letter: string
   reason: string
   status: 'Pending' | 'Approved' | 'Rejected'
   createdAt: Timestamp
+  appliedAt?: Timestamp
   reviewedBy: string | null
   reviewedByName?: string | null
   reviewedAt?: Timestamp | null
@@ -216,21 +226,24 @@ export const OFFICE_LOCATION = {
 // HELPER FUNCTIONS
 // ============================================
 
+// Check if a role has admin-level privileges (admin or sub-admin)
+export const isAdminOrSubAdmin = (role?: string): boolean => role === 'admin' || role === 'sub-admin'
+
 // Calculate distance between two coordinates using Haversine formula
 export function calculateDistance(
   lat1: number, lon1: number,
   lat2: number, lon2: number
 ): number {
   const R = 6371e3 // Earth's radius in meters
-  const φ1 = lat1 * Math.PI / 180
-  const φ2 = lat2 * Math.PI / 180
-  const Δφ = (lat2 - lat1) * Math.PI / 180
-  const Δλ = (lon2 - lon1) * Math.PI / 180
+  const phi1 = lat1 * Math.PI / 180
+  const phi2 = lat2 * Math.PI / 180
+  const dPhi = (lat2 - lat1) * Math.PI / 180
+  const dLambda = (lon2 - lon1) * Math.PI / 180
 
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) *
+    Math.sin(dLambda / 2) * Math.sin(dLambda / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
   return R * c // Distance in meters
 }
@@ -251,7 +264,7 @@ export function getCurrentLocation(): Promise<GeolocationPosition> {
       reject(new Error('Geolocation is not supported by this browser.'))
       return
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       resolve,
       reject,
@@ -289,44 +302,46 @@ interface EmployeeAuthContextType {
   db: Firestore
   signIn: (employeeId: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  
+
   // Work Mode
   workMode: 'WFO' | 'WFH'
   setGlobalWorkMode: (mode: 'WFO' | 'WFH') => Promise<void>
-  
+
   // Attendance
+  attendanceRefreshKey: number
   markAttendance: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<void>
   updateAttendanceNotes: (notes: string) => Promise<void>
   markLeaveRange: (startDate: string, endDate: string, notes?: string) => Promise<void>
   getAttendanceRecords: (startDate?: Date, endDate?: Date) => Promise<AttendanceRecord[]>
   getTodayAttendance: () => Promise<AttendanceRecord | null>
   calculateAttendancePercentage: (records: AttendanceRecord[]) => number
+  getMonthlyAttendanceStats: (records: AttendanceRecord[], targetMonth?: number, targetYear?: number) => { presentDays: number; absentDays: number; leaveDays: number; onDutyDays: number; unauthorisedLeaveDays: number; totalWorkingDays: number; workingDaysSoFar: number; totalDaysInMonth: number; attendanceRate: number; isMonthComplete: boolean; monthName: string; year: number }
   markAttendanceWithLocation: (status: AttendanceRecord['status'], notes?: string, extraData?: Partial<AttendanceRecord>) => Promise<{ success: boolean; locationVerified: boolean; workFromHome?: boolean; error?: string }>
-  
+
   // Admin Attendance
   updateEmployeeAttendance: (attendanceId: string, updates: Partial<AttendanceRecord>, reason: string) => Promise<void>
   getAllEmployeesAttendance: (startDate: string, endDate: string) => Promise<AttendanceRecord[]>
   getEmployeeAttendanceHistory: (employeeId: string, limit?: number) => Promise<AttendanceRecord[]>
-  
+
   // Employees
   getAllEmployees: () => Promise<EmployeeProfile[]>
   getEmployeeById: (employeeId: string) => Promise<EmployeeProfile | null>
   updateEmployeeProfile: (employeeId: string, updates: Partial<EmployeeProfile>) => Promise<void>
   refreshEmployee: () => Promise<void>
-  
+
   // Holidays
   holidays: Holiday[]
   addHoliday: (holiday: Omit<Holiday, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => Promise<void>
   updateHoliday: (id: string, updates: Partial<Holiday>) => Promise<void>
   deleteHoliday: (id: string) => Promise<void>
   isHoliday: (date: string) => boolean
-  
+
   // Calendar Events
   calendarEvents: CalendarEvent[]
   addCalendarEvent: (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => Promise<void>
   updateCalendarEvent: (id: string, updates: Partial<CalendarEvent>) => Promise<void>
   deleteCalendarEvent: (id: string) => Promise<void>
-  
+
   // Tasks
   tasks: Task[]
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName' | 'comments'>) => Promise<void>
@@ -336,7 +351,7 @@ interface EmployeeAuthContextType {
   addTaskComment: (taskId: string, text: string, mentions?: string[], mentionedDepartments?: string[]) => Promise<void>
   deleteTaskComment: (taskId: string, commentId: string) => Promise<void>
   toggleTaskCommentReaction: (taskId: string, commentId: string, emoji: string) => Promise<void>
-  
+
   // Discussions
   discussions: Discussion[]
   addDiscussion: (content: string, mentions?: string[], mentionedDepartments?: string[]) => Promise<void>
@@ -348,24 +363,31 @@ interface EmployeeAuthContextType {
   deleteDiscussionReply: (discussionId: string, replyId: string) => Promise<void>
   togglePinDiscussion: (id: string) => Promise<void>
   toggleDiscussionReaction: (discussionId: string, emoji: string) => Promise<void>
-  
+
   // Activity Logs
   logActivity: (log: Omit<ActivityLog, 'id' | 'timestamp' | 'performedBy' | 'performedByName'>) => Promise<void>
   getActivityLogs: (employeeId?: string, limit?: number) => Promise<ActivityLog[]>
-  
+
   // Personal Todos
   personalTodos: PersonalTodo[]
   addPersonalTodo: (title: string, dueDate?: string) => Promise<void>
   updatePersonalTodo: (id: string, updates: Partial<PersonalTodo>) => Promise<void>
   deletePersonalTodo: (id: string) => Promise<void>
-  
+
   // Leave Requests
   leaveRequests: LeaveRequest[]
-  submitLeaveRequest: (request: { date: string; subject: string; letter: string; reason: string }) => Promise<void>
+  submitLeaveRequest: (request: {
+    startDate: string
+    endDate: string
+    leaveType: LeaveType
+    subject: string
+    letter: string
+    reason: string
+  }) => Promise<void>
   approveLeaveRequest: (requestId: string) => Promise<void>
   rejectLeaveRequest: (requestId: string) => Promise<void>
   getAllLeaveRequests: () => Promise<LeaveRequest[]>
-  
+
   // Auto-absent
   runAutoAbsentJob: () => Promise<void>
 }
@@ -380,7 +402,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [authReady, setAuthReady] = useState(false) // 🔥 NEW: Track if auth is initialized
+  const [authReady, setAuthReady] = useState(false) // NEW: Track if auth is initialized
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
@@ -388,15 +410,23 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [personalTodos, setPersonalTodos] = useState<PersonalTodo[]>([])
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
   const [workMode, setWorkMode] = useState<'WFO' | 'WFH'>('WFO')
+  const [attendanceRefreshKey, setAttendanceRefreshKey] = useState(0)
 
   // ============================================
   // AUTH EFFECTS - Step 1: Initialize Firebase Auth
   // ============================================
-  
+
   useEffect(() => {
+    if (!firebaseReady) {
+      setUser(null)
+      setEmployee(null)
+      setAuthReady(false)
+      setLoading(false)
+      return
+    }
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
-      
+
       if (!firebaseUser) {
         // User logged out - clear everything
         setEmployee(null)
@@ -407,15 +437,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
       // User is authenticated - wait for token to propagate
       try {
-        // 🔥 CRITICAL: Wait for token to be ready before Firestore access
+        // CRITICAL: Wait for token to be ready before Firestore access
         await firebaseUser.getIdToken(true) // Force refresh to ensure token is valid
-        
+
         // Small delay to ensure token reaches Firestore servers
         await new Promise(resolve => setTimeout(resolve, 100))
-        
+
         // Mark auth as ready BEFORE fetching employee data
         setAuthReady(true)
-        
+
       } catch (error) {
         console.error('Error refreshing auth token:', error)
         setAuthReady(true) // Still mark ready to allow retry
@@ -430,7 +460,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
   // EMPLOYEE DATA FETCH - Step 2: Fetch employee profile AFTER auth is ready
   // ============================================
-  
+
   useEffect(() => {
     if (!authReady || !user) {
       setEmployee(null)
@@ -452,7 +482,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         const employeesRef = collection(db, 'Employees')
         const q = query(employeesRef, where('email', '==', user.email))
         const querySnapshot = await getDocs(q)
-        
+
         if (!querySnapshot.empty) {
           const data = querySnapshot.docs[0].data() as EmployeeProfile
           setEmployee(data)
@@ -473,15 +503,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
   // REALTIME SUBSCRIPTIONS - Step 3: Subscribe to Firestore ONLY when auth ready + user exists
   // ============================================
-  
+
   // Subscribe to holidays - ONLY when authReady AND user authenticated
   useEffect(() => {
-    // 🔥 CRITICAL: Don't subscribe until BOTH authReady AND user exist
+    // CRITICAL: Don't subscribe until BOTH authReady AND user exist
     if (!authReady || !user) {
       setHolidays([])
       return
     }
-    
+
     const unsubscribe = onSnapshot(
       collection(db, 'holidays'),
       (snapshot) => {
@@ -494,7 +524,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching holidays:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to calendar events - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -502,7 +532,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       setCalendarEvents([])
       return
     }
-    
+
     const unsubscribe = onSnapshot(
       collection(db, 'calendarEvents'),
       (snapshot) => {
@@ -520,7 +550,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching calendar events:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to tasks - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -528,7 +558,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       setTasks([])
       return
     }
-    
+
     const unsubscribe = onSnapshot(
       collection(db, 'tasks'),
       (snapshot) => {
@@ -548,7 +578,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching tasks:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to discussions - ONLY when authReady AND user authenticated
   useEffect(() => {
@@ -556,7 +586,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       setDiscussions([])
       return
     }
-    
+
     const unsubscribe = onSnapshot(
       collection(db, 'discussions'),
       (snapshot) => {
@@ -574,7 +604,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       (error) => console.error('Error fetching discussions:', error)
     )
     return () => unsubscribe()
-  }, [authReady, user]) // 🔥 Depend on BOTH authReady AND user
+  }, [authReady, user]) // Depend on BOTH authReady AND user
 
   // Subscribe to personal todos - private per user
   useEffect(() => {
@@ -582,7 +612,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       setPersonalTodos([])
       return
     }
-    
+
     const unsubscribe = onSnapshot(
       query(
         collection(db, 'personalTodos'),
@@ -618,13 +648,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       setLeaveRequests([])
       return
     }
-    
+
     const leaveRequestsRef = collection(db, 'leaveRequests')
-    // Admins see all leave requests, employees see only their own
-    const q = employee.role === 'admin'
+    // Admins/sub-admins see all leave requests, employees see only their own
+    const q = isAdminOrSubAdmin(employee.role)
       ? query(leaveRequestsRef, orderBy('createdAt', 'desc'))
       : query(leaveRequestsRef, where('employeeId', '==', employee.employeeId))
-    
+
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
         const requestsData = snapshot.docs.map(doc => ({
@@ -646,7 +676,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // Subscribe to global work mode setting
   useEffect(() => {
     if (!authReady || !user) return
-    
+
     const unsubscribe = onSnapshot(
       doc(db, 'systemConfig', 'workMode'),
       (docSnap) => {
@@ -670,24 +700,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const signIn = async (employeeId: string, password: string) => {
+    if (!firebaseReady) throw new Error('Firebase is not configured')
     try {
       // Step 1: Query Firestore for employee (this needs special rule - see FIRESTORE RULES below)
       const employeesRef = collection(db, 'Employees')
       const q = query(employeesRef, where('employeeId', '==', employeeId.trim()))
       const querySnapshot = await getDocs(q)
-      
+
       if (querySnapshot.empty) {
         throw new Error('EMPLOYEE_NOT_FOUND')
       }
 
       const employeeData = querySnapshot.docs[0].data() as EmployeeProfile
-      
+
       // Step 2: Sign in with Firebase Auth
       await signInWithEmailAndPassword(auth, employeeData.email, password)
-      
+
       // onAuthStateChanged will handle the rest (setting user, fetching employee profile)
       // Don't throw Firestore permission errors here
-      
+
     } catch (error: any) {
       // Re-throw with clearer messages
       if (error.message === 'EMPLOYEE_NOT_FOUND') {
@@ -712,6 +743,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    if (!firebaseReady) return
     await signOut(auth)
     setEmployee(null)
     setAuthReady(false)
@@ -730,13 +762,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Check if a date is a working day (not weekend, not holiday)
-  const isWorkingDay = (dateString: string): boolean => {
+  const isWorkingDay = useCallback((dateString: string): boolean => {
     // Check for working day override (weekend marked as working day)
     const hasWorkingDayOverride = holidays.some(h => h.date === dateString && h.name === '__WORKING_DAY__')
-    
+
     // If there's a working day override, it's a working day regardless of weekend
     if (hasWorkingDayOverride) return true
-    
+
     // Check if it's a holiday from database (excluding working day overrides)
     const hasHoliday = holidays.some(h => h.date === dateString && h.name !== '__WORKING_DAY__')
     if (hasHoliday) return false
@@ -748,14 +780,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (dayOfWeek === 0) return false // Only Sunday is off
 
     return true
-  }
+  }, [holidays])
 
   // ============================================
   // WORK MODE FUNCTIONS
   // ============================================
 
   const setGlobalWorkMode = async (mode: 'WFO' | 'WFH') => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await setDoc(doc(db, 'systemConfig', 'workMode'), {
       mode,
       updatedBy: employee.employeeId,
@@ -774,7 +806,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const today = new Date()
     const dateString = getLocalDateString(today)
     const now = new Date()
-    
+
     // 7:30PM cutoff: Prevent marking attendance after 7:30 PM (except Leave and admin modifications)
     const currentHour = now.getHours()
     const currentMinutes = now.getMinutes()
@@ -782,14 +814,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     if (isPastCutoff && status !== 'L' && status !== 'A') {
       throw new Error('Attendance marking is closed for today. The cutoff time is 7:30 PM.')
     }
-    
+
     const attendanceId = `${employee.employeeId}_${dateString}`
     const deviceInfo = `${navigator.userAgent.substring(0, 100)}`
-    
+
     // Delete any duplicate records for this date (cleanup)
     const attendanceRef = collection(db, 'attendance')
     const q = query(
-      attendanceRef, 
+      attendanceRef,
       where('employeeId', '==', employee.employeeId),
       where('date', '==', dateString)
     )
@@ -800,7 +832,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         batch.delete(doc.ref)
       }
     })
-    
+
     const attendanceData: AttendanceRecord = {
       employeeId: employee.employeeId,
       date: dateString,
@@ -815,7 +847,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Write the new/updated attendance record
     batch.set(doc(db, 'attendance', attendanceId), attendanceData)
     await batch.commit()
-    
+
+    // Bump refresh key so Dashboard auto-refetches stats
+    setAttendanceRefreshKey(k => k + 1)
+
     // Log activity
     await logActivity({
       type: 'attendance',
@@ -827,8 +862,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const markAttendanceWithLocation = async (
-    status: AttendanceRecord['status'], 
-    notes?: string, 
+    status: AttendanceRecord['status'],
+    notes?: string,
     extraData?: Partial<AttendanceRecord>
   ): Promise<{ success: boolean; locationVerified: boolean; workFromHome?: boolean; error?: string }> => {
     if (!user || !employee) {
@@ -839,10 +874,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       // Get current location
       const position = await getCurrentLocation()
       const { latitude, longitude, accuracy } = position.coords
-      
+
       // Check if within office radius
       const isInOffice = isLocationVerified(latitude, longitude)
-      
+
       // Apply WFO/WFH verification matrix
       let finalStatus = status
       let locationVerified = isInOffice
@@ -864,7 +899,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-      
+
       // Mark attendance with location data
       await markAttendance(finalStatus, notes, {
         ...extraData,
@@ -886,14 +921,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           locationVerified: false,
           workMode
         } as Partial<AttendanceRecord>)
-        return { 
-          success: true, 
-          locationVerified: false, 
+        return {
+          success: true,
+          locationVerified: false,
           workFromHome: finalStatus === 'W',
-          error: 'Location permission denied' 
+          error: 'Location permission denied'
         }
       }
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, locationVerified: false, error: errorMessage }
     }
@@ -901,10 +936,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const updateAttendanceNotes = async (notes: string) => {
     if (!user || !employee) throw new Error('Not authenticated')
-    
+
     const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
-    
+
     await updateDoc(doc(db, 'attendance', attendanceId), {
       notes,
       lastUpdated: Timestamp.now()
@@ -913,16 +948,16 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const markLeaveRange = async (startDate: string, endDate: string, notes?: string) => {
     if (!user || !employee) throw new Error('Not authenticated')
-    
+
     const start = new Date(startDate)
     const end = new Date(endDate)
     const deviceInfo = `${navigator.userAgent.substring(0, 100)}`
     const batch = writeBatch(db)
-    
+
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateString = getLocalDateString(d)
       const attendanceId = `${employee.employeeId}_${dateString}`
-      
+
       const attendanceData: AttendanceRecord = {
         employeeId: employee.employeeId,
         date: dateString,
@@ -933,12 +968,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         leaveEndDate: endDate,
         deviceInfo
       }
-      
+
       batch.set(doc(db, 'attendance', attendanceId), attendanceData)
     }
-    
+
     await batch.commit()
-    
+
+    // Bump refresh key so Dashboard auto-refetches stats
+    setAttendanceRefreshKey(k => k + 1)
+
     await logActivity({
       type: 'attendance',
       action: 'leave',
@@ -951,9 +989,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
     const today = getLocalDateString(new Date())
     const attendanceId = `${employee.employeeId}_${today}`
-    
+
     const attendanceDoc = await getDoc(doc(db, 'attendance', attendanceId))
-    
+
     if (attendanceDoc.exists()) {
       return { id: attendanceDoc.id, ...attendanceDoc.data() } as AttendanceRecord
     }
@@ -965,7 +1003,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
     const attendanceRef = collection(db, 'attendance')
     const q = query(
-      attendanceRef, 
+      attendanceRef,
       where('employeeId', '==', employee.employeeId)
     )
 
@@ -975,41 +1013,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       ...doc.data()
     })) as AttendanceRecord[]
 
-    // Deduplicate: keep only one record per date
-    // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
-    const statusPriority = (s: string) => {
-      if (s === 'L') return 4
-      if (s === 'P' || s === 'W' || s === 'O') return 3
-      if (s === 'H') return 2
-      if (s === 'U') return 1
-      return 0 // 'A'
-    }
-    
-    const recordsByDate = new Map<string, AttendanceRecord>()
-    records.forEach(record => {
-      const existing = recordsByDate.get(record.date)
-      if (!existing) {
-        recordsByDate.set(record.date, record)
-      } else {
-        const existingPriority = statusPriority(existing.status)
-        const newPriority = statusPriority(record.status)
-        
-        if (newPriority > existingPriority) {
-          recordsByDate.set(record.date, record)
-        } else if (newPriority < existingPriority) {
-          // Keep existing (higher priority)
-        } else {
-          // Same priority, keep the one with later timestamp
-          const existingTime = existing.timestamp?.toDate?.()?.getTime?.() || 0
-          const recordTime = record.timestamp?.toDate?.()?.getTime?.() || 0
-          if (recordTime > existingTime) {
-            recordsByDate.set(record.date, record)
-          }
-        }
-      }
-    })
-    
-    records = Array.from(recordsByDate.values())
     records.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
     if (startDate && endDate) {
@@ -1021,10 +1024,125 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     return records
   }, [employee])
 
+  // ============================================
+  // ATTENDANCE ENGINE - HR-grade monthly calculation
+  // Excludes Sundays + holidays, respects joining date
+  // ============================================
+
+  const calculateWorkingDays = useCallback((startDate: Date, endDate: Date): number => {
+    let workingDays = 0
+    const current = new Date(startDate)
+    current.setHours(0, 0, 0, 0)
+    const end = new Date(endDate)
+    end.setHours(0, 0, 0, 0)
+
+    while (current <= end) {
+      const dateString = getLocalDateString(current)
+      if (isWorkingDay(dateString)) {
+        workingDays++
+      }
+      current.setDate(current.getDate() + 1)
+    }
+    return workingDays
+  }, [holidays, isWorkingDay])
+
+  const getMonthlyStartDate = useCallback((targetMonth?: number, targetYear?: number): Date => {
+    const now = new Date()
+    const y = targetYear ?? now.getFullYear()
+    const m = targetMonth ?? now.getMonth()
+    const monthStart = new Date(y, m, 1)
+
+    if (!employee?.joiningDate) return monthStart
+
+    const joiningDate = new Date(employee.joiningDate)
+    // If employee joined in the target month, start from joining date
+    if (joiningDate.getFullYear() === y && joiningDate.getMonth() === m) {
+      return joiningDate
+    }
+    // Otherwise start from 1st of the month
+    return monthStart
+  }, [employee])
+
   const calculateAttendancePercentage = (records: AttendanceRecord[]): number => {
-    if (records.length === 0) return 0
-    const presentDays = records.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').length
-    return Math.round((presentDays / records.length) * 100)
+    return getMonthlyAttendanceStats(records).attendanceRate
+  }
+
+  const getMonthlyAttendanceStats = (records: AttendanceRecord[], targetMonth?: number, targetYear?: number) => {
+    const now = new Date()
+    const year = targetYear ?? now.getFullYear()
+    const month = targetMonth ?? now.getMonth()
+
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const isFutureMonth = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth())
+
+    const monthStart = new Date(year, month, 1)
+    const monthEnd = new Date(year, month + 1, 0)
+    const totalDaysInMonth = monthEnd.getDate()
+
+    const startStr = getLocalDateString(monthStart)
+    const endStr = getLocalDateString(monthEnd)
+    const monthlyRecords = records.filter(r => r.date && r.date >= startStr && r.date <= endStr)
+
+    const presentDates = new Set(monthlyRecords.filter(r => r.status === 'P' || r.status === 'O' || r.status === 'W').map(r => r.date))
+    const leaveDates = new Set(monthlyRecords.filter(r => r.status === 'L').map(r => r.date))
+    const onDutyDates = new Set(monthlyRecords.filter(r => r.status === 'O').map(r => r.date))
+    const unauthorisedDates = new Set(monthlyRecords.filter(r => r.status === 'U').map(r => r.date))
+
+    let totalWorkingDays = 0
+    let workingDaysSoFar = 0
+    let presentDays = 0
+    let absentDays = 0
+    let leaveDays = 0
+    let onDutyDays = 0
+    let unauthorisedLeaveDays = 0
+
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      const date = new Date(year, month, d)
+      const dateString = getLocalDateString(date)
+      
+      if (isWorkingDay(dateString)) {
+        totalWorkingDays++
+        
+        const isPastOrToday = !isFutureMonth && (isCurrentMonth ? date <= todayDate : true)
+        
+        if (isPastOrToday) {
+          workingDaysSoFar++
+          
+          if (presentDates.has(dateString)) {
+            presentDays++
+          } else {
+            absentDays++
+          }
+
+          if (leaveDates.has(dateString)) leaveDays++
+          if (onDutyDates.has(dateString)) onDutyDays++
+          if (unauthorisedDates.has(dateString)) unauthorisedLeaveDays++
+        }
+      }
+    }
+
+    const attendanceRate = workingDaysSoFar > 0
+      ? parseFloat(((presentDays / workingDaysSoFar) * 100).toFixed(2))
+      : 0
+
+    const today = now.getDate()
+    const isMonthComplete = isFutureMonth ? false : (!isCurrentMonth || today >= totalDaysInMonth)
+
+    return {
+      presentDays,
+      absentDays,
+      leaveDays,
+      onDutyDays,
+      unauthorisedLeaveDays,
+      totalWorkingDays,
+      workingDaysSoFar,
+      totalDaysInMonth,
+      attendanceRate,
+      isMonthComplete,
+      monthName: monthStart.toLocaleString('default', { month: 'long' }),
+      year,
+    }
   }
 
   // ============================================
@@ -1032,15 +1150,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const updateEmployeeAttendance = async (attendanceId: string, updates: Partial<AttendanceRecord>, reason: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const attendanceRef = doc(db, 'attendance', attendanceId)
     const existingDoc = await getDoc(attendanceRef)
-    
+
     if (!existingDoc.exists()) throw new Error('Attendance record not found')
-    
+
     const originalData = existingDoc.data() as AttendanceRecord
-    
+
     await updateDoc(attendanceRef, {
       ...updates,
       modifiedBy: employee.employeeId,
@@ -1049,7 +1167,10 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       modificationReason: reason,
       originalStatus: originalData.status
     })
-    
+
+    // Bump refresh key so Dashboard auto-refetches stats
+    setAttendanceRefreshKey(k => k + 1)
+
     await logActivity({
       type: 'attendance',
       action: 'modify',
@@ -1063,17 +1184,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const getAllEmployeesAttendance = async (startDate: string, endDate: string): Promise<AttendanceRecord[]> => {
     const attendanceRef = collection(db, 'attendance')
     const querySnapshot = await getDocs(attendanceRef)
-    
+
     let records = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as AttendanceRecord[]
-    
+
     // Filter by date range
     records = records
       .filter(r => r.date && r.date >= startDate && r.date <= endDate)
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    
+
     // Deduplicate: keep only one record per employee per date
     // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
     const statusPriority = (s: string) => {
@@ -1083,7 +1204,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       if (s === 'U') return 1
       return 0 // 'A'
     }
-    
+
     const uniqueRecords = new Map<string, AttendanceRecord>()
     records.forEach(record => {
       const key = `${record.employeeId}_${record.date}`
@@ -1093,7 +1214,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       } else {
         const existingPriority = statusPriority(existing.status)
         const newPriority = statusPriority(record.status)
-        
+
         if (newPriority > existingPriority) {
           uniqueRecords.set(key, record)
         } else if (newPriority < existingPriority) {
@@ -1108,16 +1229,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         }
       }
     })
-    
+
     return Array.from(uniqueRecords.values())
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   }
 
   const getEmployeeAttendanceHistory = async (employeeId: string, limit = 100): Promise<AttendanceRecord[]> => {
+    if (!employeeId) return []
     const attendanceRef = collection(db, 'attendance')
     const q = query(attendanceRef, where('employeeId', '==', employeeId))
     const querySnapshot = await getDocs(q)
-    
+
     // Get the employee's joining date to filter out records before it
     let joiningDate: string | undefined
     const empRef = collection(db, 'Employees')
@@ -1127,17 +1249,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       const empData = empSnap.docs[0].data() as EmployeeProfile
       joiningDate = empData.joiningDate
     }
-    
+
     let records = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as AttendanceRecord[]
-    
+
     // Filter out records before the employee's joining date
     if (joiningDate) {
       records = records.filter(r => r.date >= joiningDate!)
     }
-    
+
     // Deduplicate: keep only one record per date
     // Priority: L (Leave) > P/W/O (Present/WFH/OnDuty) > H (Holiday) > U (Unauth) > A (Absent)
     const statusPriority = (s: string) => {
@@ -1147,7 +1269,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       if (s === 'U') return 1
       return 0 // 'A'
     }
-    
+
     const recordsByDate = new Map<string, AttendanceRecord>()
     records.forEach(record => {
       const existing = recordsByDate.get(record.date)
@@ -1156,7 +1278,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       } else {
         const existingPriority = statusPriority(existing.status)
         const newPriority = statusPriority(record.status)
-        
+
         if (newPriority > existingPriority) {
           recordsByDate.set(record.date, record)
         } else if (newPriority < existingPriority) {
@@ -1171,7 +1293,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         }
       }
     })
-    
+
     records = Array.from(recordsByDate.values())
     return records.sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, limit)
   }
@@ -1181,13 +1303,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const getAllEmployees = async (): Promise<EmployeeProfile[]> => {
-    console.log('🔍 getAllEmployees: Fetching from Firestore...')
+    console.log('getAllEmployees: Fetching from Firestore...')
     const employeesRef = collection(db, 'Employees')
     const querySnapshot = await getDocs(employeesRef)
-    const allEmployees = querySnapshot.docs.map(doc => doc.data() as EmployeeProfile)
-    console.log('🔍 getAllEmployees: Found', allEmployees.length, 'employees')
+    const allEmployees = querySnapshot.docs
+      .map(doc => doc.data() as EmployeeProfile)
+      .filter(emp => emp.employeeId && emp.name && emp.email)
+    console.log('getAllEmployees: Found', allEmployees.length, 'employees')
     allEmployees.forEach(e => {
-      console.log(`   📌 ${e.name} - Role: "${e.role}" - Dept: "${e.department}"`)
+      console.log(`   ${e.name} - Role: "${e.role}" - Dept: "${e.department}"`)
     })
     return allEmployees
   }
@@ -1196,7 +1320,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     const employeesRef = collection(db, 'Employees')
     const q = query(employeesRef, where('employeeId', '==', employeeId))
     const querySnapshot = await getDocs(q)
-    
+
     if (querySnapshot.empty) return null
     return querySnapshot.docs[0].data() as EmployeeProfile
   }
@@ -1221,20 +1345,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateEmployeeProfile = async (employeeId: string, updates: Partial<EmployeeProfile>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const employeesRef = collection(db, 'Employees')
     const q = query(employeesRef, where('employeeId', '==', employeeId))
     const querySnapshot = await getDocs(q)
-    
+
     if (querySnapshot.empty) throw new Error('Employee not found')
-    
+
     const docRef = querySnapshot.docs[0].ref
     await updateDoc(docRef, {
       ...updates,
       updatedAt: Timestamp.now()
     })
-    
+
     await logActivity({
       type: 'profile',
       action: 'update',
@@ -1252,35 +1376,35 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     // Check if there's a working day override (weekend marked as working day)
     const hasWorkingDayOverride = holidays.some(h => h.date === date && h.name === '__WORKING_DAY__')
     if (hasWorkingDayOverride) return false
-    
+
     // Return true only if there's an actual holiday (not a working day override)
     return holidays.some(h => h.date === date && h.name !== '__WORKING_DAY__')
   }
 
   const addHoliday = async (holiday: Omit<Holiday, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const holidayDoc = await addDoc(collection(db, 'holidays'), {
       ...holiday,
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdAt: Timestamp.now()
     })
-    
+
     await logActivity({
       type: 'holiday',
       action: 'create',
       description: `Added holiday: ${holiday.name} on ${holiday.date}`,
     })
 
-    // 🔔 GLOBAL NOTIFICATION: Holiday added
+    // GLOBAL NOTIFICATION: Holiday added
     await createGlobalNotification({
       type: 'calendar',
       action: 'created',
-      title: '🏖️ Holiday Added',
+      title: 'Holiday Added',
       message: `${holiday.name} on ${new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
       relatedEntityId: holidayDoc.id,
-      targetUrl: '#calendar',
+      targetUrl: '/employee-portal#calendar',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
@@ -1288,25 +1412,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateHoliday = async (id: string, updates: Partial<Holiday>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await updateDoc(doc(db, 'holidays', id), updates)
   }
 
   const deleteHoliday = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     // Delete the holiday
     await deleteDoc(doc(db, 'holidays', id))
-    
+
     // Delete associated notifications from userNotifications collection
     const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
-    
-    const deletePromises = snapshot.docs.map(docSnapshot => 
+
+    const deletePromises = snapshot.docs.map(docSnapshot =>
       deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
-    
+
     await Promise.all(deletePromises)
   }
 
@@ -1315,8 +1439,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const addCalendarEvent = async (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const eventDoc = await addDoc(collection(db, 'calendarEvents'), {
       ...event,
       createdBy: employee.employeeId,
@@ -1324,14 +1448,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdAt: Timestamp.now()
     })
 
-    // 🔔 GLOBAL NOTIFICATION: Calendar event created
+    // GLOBAL NOTIFICATION: Calendar event created
     await createGlobalNotification({
       type: 'calendar',
       action: 'created',
       title: 'New Calendar Event',
       message: `${event.title} on ${event.date}`,
       relatedEntityId: eventDoc.id,
-      targetUrl: '#calendar',
+      targetUrl: '/employee-portal#calendar',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
@@ -1339,25 +1463,25 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateCalendarEvent = async (id: string, updates: Partial<CalendarEvent>) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
     await updateDoc(doc(db, 'calendarEvents', id), updates)
   }
 
   const deleteCalendarEvent = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     // Delete the calendar event
     await deleteDoc(doc(db, 'calendarEvents', id))
-    
+
     // Delete associated notifications from userNotifications collection
     const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
-    
-    const deletePromises = snapshot.docs.map(docSnapshot => 
+
+    const deletePromises = snapshot.docs.map(docSnapshot =>
       deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
-    
+
     await Promise.all(deletePromises)
   }
 
@@ -1367,7 +1491,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName' | 'comments'>) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskDoc = await addDoc(collection(db, 'tasks'), {
       ...task,
       createdBy: employee.employeeId,
@@ -1376,21 +1500,21 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       updatedAt: Timestamp.now(),
       comments: []
     })
-    
+
     await logActivity({
       type: 'task',
       action: 'create',
       description: `Created task: ${task.title}`,
     })
 
-    // 🔔 GLOBAL NOTIFICATION: Task created
+    // GLOBAL NOTIFICATION: Task created
     await createGlobalNotification({
       type: 'task',
       action: 'created',
       title: 'New Task Created',
       message: `${employee.name} created: ${task.title}`,
       relatedEntityId: taskDoc.id,
-      targetUrl: '#tasks',
+      targetUrl: '/employee-portal#tasks',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
@@ -1399,13 +1523,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskRef = doc(db, 'tasks', id)
     const taskDoc = await getDoc(taskRef)
-    
+
     if (!taskDoc.exists()) throw new Error('Task not found')
     const oldTask = taskDoc.data() as Task
-    
+
     // Build update payload
     const updatePayload: any = {
       ...updates,
@@ -1413,20 +1537,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       editedBy: employee.employeeId,
       editedByName: employee.name
     }
-    
-    // If non-admin tries to mark task as completed, move to review with pending approval
-    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role !== 'admin') {
+
+    // If non-admin/sub-admin tries to mark task as completed, move to review with pending approval
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && !isAdminOrSubAdmin(employee.role)) {
       updatePayload.status = 'review' // Change to review instead of completed
       updatePayload.approvalStatus = 'pending'
     }
-    
-    // If admin marks task as completed, auto-approve
-    if (updates.status === 'completed' && oldTask.status !== 'completed' && employee.role === 'admin') {
+
+    // If admin/sub-admin marks task as completed, auto-approve
+    if (updates.status === 'completed' && oldTask.status !== 'completed' && isAdminOrSubAdmin(employee.role)) {
       updatePayload.approvalStatus = 'approved'
       updatePayload.approvedBy = employee.employeeId
       updatePayload.approvedByName = employee.name
     }
-    
+
     // If status changes away from completed or review, clear approval
     if (updates.status && updates.status !== 'completed' && updates.status !== 'review') {
       if (oldTask.status === 'completed' || oldTask.status === 'review') {
@@ -1435,30 +1559,30 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         updatePayload.approvedByName = null
       }
     }
-    
+
     await updateDoc(taskRef, updatePayload)
-    
-    // 🔔 GLOBAL NOTIFICATION: Status change
+
+    // GLOBAL NOTIFICATION: Status change
     if (updates.status && updates.status !== oldTask.status) {
       const actualStatus = updatePayload.status || updates.status
       const notifMessage = actualStatus === 'review' && updatePayload.approvalStatus === 'pending'
-        ? `${employee.name} marked "${oldTask.title}" as completed — awaiting admin approval`
+        ? `${employee.name} marked "${oldTask.title}" as completed - awaiting admin approval`
         : `${employee.name} changed "${oldTask.title}" to ${actualStatus}`
-      
+
       await createGlobalNotification({
         type: 'task',
         action: 'status_changed',
         title: actualStatus === 'review' ? 'Task Pending Approval' : 'Task Status Updated',
         message: notifMessage,
         relatedEntityId: id,
-        targetUrl: '#tasks',
+        targetUrl: '/employee-portal#tasks',
         createdBy: employee.employeeId,
         createdByName: employee.name,
         createdByRole: employee.role
       })
     }
-    
-    // 🔔 GLOBAL NOTIFICATION: Assignment change
+
+    // GLOBAL NOTIFICATION: Assignment change
     if (updates.assignedTo && JSON.stringify(updates.assignedTo) !== JSON.stringify(oldTask.assignedTo)) {
       await createGlobalNotification({
         type: 'task',
@@ -1466,7 +1590,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         title: 'Task Assigned',
         message: `${employee.name} updated assignment for "${oldTask.title}"`,
         relatedEntityId: id,
-        targetUrl: '#tasks',
+        targetUrl: '/employee-portal#tasks',
         createdBy: employee.employeeId,
         createdByName: employee.name,
         createdByRole: employee.role
@@ -1476,67 +1600,67 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteTask = async (id: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskDoc = await getDoc(doc(db, 'tasks', id))
     if (!taskDoc.exists()) throw new Error('Task not found')
-    
+
     const task = taskDoc.data() as Task
-    
-    // Only creator or admin can delete
-    if (task.createdBy !== employee.employeeId && employee.role !== 'admin') {
+
+    // Only creator or admin/sub-admin can delete
+    if (task.createdBy !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
-    
+
     // Delete the task
     await deleteDoc(doc(db, 'tasks', id))
-    
+
     // Delete associated notifications from userNotifications collection
     try {
-      console.log('🗑️ Deleting notifications for task ID:', id)
+      console.log('Deleting notifications for task ID:', id)
       const notificationsRef = collection(db, 'userNotifications')
       const q = query(notificationsRef, where('relatedEntityId', '==', id))
-      
-      console.log('🗑️ Querying userNotifications with relatedEntityId:', id)
+
+      console.log('Querying userNotifications with relatedEntityId:', id)
       const snapshot = await getDocs(q)
-      
-      console.log('🗑️ Found', snapshot.docs.length, 'notifications to delete')
-      
+
+      console.log('Found', snapshot.docs.length, 'notifications to delete')
+
       // Log all found notifications for debugging
       snapshot.docs.forEach(docSnapshot => {
-        console.log('🗑️ Found notification:', docSnapshot.id, 'data:', JSON.stringify(docSnapshot.data()))
+        console.log('Found notification:', docSnapshot.id, 'data:', JSON.stringify(docSnapshot.data()))
       })
-      
+
       if (snapshot.docs.length > 0) {
         const deletePromises = snapshot.docs.map(docSnapshot => {
-          console.log('🗑️ Deleting notification:', docSnapshot.id)
+          console.log('Deleting notification:', docSnapshot.id)
           return deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
         })
-        
+
         await Promise.all(deletePromises)
-        console.log('🗑️ All notifications deleted successfully')
+        console.log('All notifications deleted successfully')
       } else {
-        console.log('⚠️ No notifications found for this task ID')
+        console.log('Warning: No notifications found for this task ID')
       }
     } catch (notifError) {
-      console.error('❌ Error deleting notifications:', notifError)
+      console.error('Error deleting notifications:', notifError)
       // Don't throw - task is already deleted, just log the notification error
     }
   }
 
   const approveTask = async (id: string) => {
     if (!employee) throw new Error('Not authenticated')
-    if (employee.role !== 'admin') throw new Error('Only admins can approve tasks')
-    
+    if (!isAdminOrSubAdmin(employee.role)) throw new Error('Only admins can approve tasks')
+
     const taskRef = doc(db, 'tasks', id)
     const taskDoc = await getDoc(taskRef)
-    
+
     if (!taskDoc.exists()) throw new Error('Task not found')
     const task = taskDoc.data() as Task
-    
+
     if (task.status !== 'review' || task.approvalStatus !== 'pending') {
       throw new Error('Task must be in review with pending approval')
     }
-    
+
     await updateDoc(taskRef, {
       status: 'completed', // Move from review to completed
       approvalStatus: 'approved',
@@ -1544,15 +1668,15 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       approvedByName: employee.name,
       updatedAt: Timestamp.now()
     })
-    
-    // 🔔 GLOBAL NOTIFICATION: Task approved
+
+    // GLOBAL NOTIFICATION: Task approved
     await createGlobalNotification({
       type: 'task',
       action: 'status_changed',
       title: 'Task Approved',
       message: `${employee.name} approved task: "${task.title}"`,
       relatedEntityId: id,
-      targetUrl: '#tasks',
+      targetUrl: '/employee-portal#tasks',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
@@ -1561,12 +1685,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const addTaskComment = async (taskId: string, text: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskRef = doc(db, 'tasks', taskId)
     const taskDoc = await getDoc(taskRef)
-    
+
     if (!taskDoc.exists()) throw new Error('Task not found')
-    
+
     const task = taskDoc.data() as Task
     const newComment: TaskComment = {
       id: `comment_${Date.now()}`,
@@ -1579,12 +1703,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       mentionedDepartments,
       reactions: {}
     }
-    
+
     await updateDoc(taskRef, {
       comments: [...(task.comments || []), newComment],
       updatedAt: Timestamp.now()
     })
-    
+
     // Create notifications for mentioned users
     if (mentions.length > 0) {
       const batch = writeBatch(db)
@@ -1600,7 +1724,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             createdAt: Timestamp.now(),
             targetType: 'task',
             targetId: taskId,
-            targetUrl: '#tasks',
+            targetUrl: '/employee-portal#tasks',
             createdBy: employee.employeeId,
             createdByName: employee.name,
             createdByRole: employee.role
@@ -1613,20 +1737,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteTaskComment = async (taskId: string, commentId: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskRef = doc(db, 'tasks', taskId)
     const taskDoc = await getDoc(taskRef)
-    
+
     if (!taskDoc.exists()) throw new Error('Task not found')
-    
+
     const task = taskDoc.data() as Task
     const comment = task.comments?.find(c => c.id === commentId)
-    
-    // Only comment author or admin can delete
-    if (comment?.authorId !== employee.employeeId && employee.role !== 'admin') {
+
+    // Only comment author or admin/sub-admin can delete
+    if (comment?.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
-    
+
     await updateDoc(taskRef, {
       comments: task.comments?.filter(c => c.id !== commentId) || [],
       updatedAt: Timestamp.now()
@@ -1635,22 +1759,22 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const toggleTaskCommentReaction = async (taskId: string, commentId: string, emoji: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const taskRef = doc(db, 'tasks', taskId)
     const taskDoc = await getDoc(taskRef)
-    
+
     if (!taskDoc.exists()) throw new Error('Task not found')
-    
+
     const task = taskDoc.data() as Task
     const comments = task.comments || []
     const commentIndex = comments.findIndex(c => c.id === commentId)
-    
+
     if (commentIndex === -1) throw new Error('Comment not found')
-    
+
     const comment = comments[commentIndex]
     const reactions = comment.reactions || {}
     const userReactions = reactions[emoji] || []
-    
+
     // Toggle reaction
     if (userReactions.includes(employee.employeeId)) {
       // Remove reaction
@@ -1662,9 +1786,9 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       // Add reaction
       reactions[emoji] = [...userReactions, employee.employeeId]
     }
-    
+
     comments[commentIndex] = { ...comment, reactions }
-    
+
     await updateDoc(taskRef, {
       comments,
       updatedAt: Timestamp.now()
@@ -1677,8 +1801,8 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const addDiscussion = async (content: string, mentions: string[] = [], mentionedDepartments: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
-    
-    console.log('📝 Adding discussion...')
+
+    console.log('Adding discussion...')
     const discussionDoc = await addDoc(collection(db, 'discussions'), {
       content,
       authorId: employee.employeeId,
@@ -1691,37 +1815,37 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       replies: [],
       isPinned: false
     })
-    console.log('📝 Discussion created with ID:', discussionDoc.id)
+    console.log('Discussion created with ID:', discussionDoc.id)
 
-    // 🔔 GLOBAL NOTIFICATION: New discussion
-    console.log('🔔 Calling createGlobalNotification...')
+    // GLOBAL NOTIFICATION: New discussion
+    console.log('Calling createGlobalNotification...')
     await createGlobalNotification({
       type: 'discussion',
       action: 'created',
       title: 'New Discussion Posted',
       message: `${employee.name}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
       relatedEntityId: discussionDoc.id,
-      targetUrl: '#discussions',
+      targetUrl: '/employee-portal#discussions',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
     })
-    console.log('🔔 createGlobalNotification completed')
+    console.log('createGlobalNotification completed')
   }
 
   const updateDiscussion = async (id: string, content: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionDoc = await getDoc(doc(db, 'discussions', id))
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
-    
-    // Only author or admin can edit
-    if (discussion.authorId !== employee.employeeId && employee.role !== 'admin') {
+
+    // Only author or admin/sub-admin can edit
+    if (discussion.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
-    
+
     await updateDoc(doc(db, 'discussions', id), {
       content,
       updatedAt: Timestamp.now()
@@ -1730,36 +1854,36 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteDiscussion = async (id: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionDoc = await getDoc(doc(db, 'discussions', id))
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
-    
-    // Only author or admin can delete
-    if (discussion.authorId !== employee.employeeId && employee.role !== 'admin') {
+
+    // Only author or admin/sub-admin can delete
+    if (discussion.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
-    
+
     // Delete the discussion
     await deleteDoc(doc(db, 'discussions', id))
-    
+
     // Delete associated notifications from userNotifications collection
     const notificationsRef = collection(db, 'userNotifications')
     const q = query(notificationsRef, where('relatedEntityId', '==', id))
     const snapshot = await getDocs(q)
-    
-    const deletePromises = snapshot.docs.map(docSnapshot => 
+
+    const deletePromises = snapshot.docs.map(docSnapshot =>
       deleteDoc(doc(db, 'userNotifications', docSnapshot.id))
     )
-    
+
     await Promise.all(deletePromises)
   }
 
   const restoreDiscussion = async (discussion: Discussion) => {
     if (!employee) throw new Error('Not authenticated')
     if (!discussion.id) throw new Error('Discussion ID is required for restore')
-    
+
     try {
       // Prepare the data, ensuring Timestamps are handled properly
       const restoreData: Record<string, unknown> = {
@@ -1775,12 +1899,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         isPinned: discussion.isPinned || false,
         reactions: discussion.reactions || {}
       }
-      
+
       // Only include updatedAt if it exists
       if (discussion.updatedAt) {
         restoreData.updatedAt = discussion.updatedAt
       }
-      
+
       // Restore the discussion with its original ID
       await setDoc(doc(db, 'discussions', discussion.id), restoreData)
     } catch (error) {
@@ -1791,12 +1915,12 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const addDiscussionReply = async (discussionId: string, content: string, mentions: string[] = []) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionRef = doc(db, 'discussions', discussionId)
     const discussionDoc = await getDoc(discussionRef)
-    
+
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
     const newReply: DiscussionReply = {
       id: `reply_${Date.now()}`,
@@ -1807,19 +1931,19 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       createdAt: Timestamp.now(),
       mentions
     }
-    
+
     await updateDoc(discussionRef, {
       replies: [...(discussion.replies || []), newReply]
     })
 
-    // 🔔 GLOBAL NOTIFICATION: New reply
+    // GLOBAL NOTIFICATION: New reply
     await createGlobalNotification({
       type: 'discussion',
       action: 'replied',
       title: 'New Reply Posted',
       message: `${employee.name} replied: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
       relatedEntityId: discussionId,
-      targetUrl: '#discussions',
+      targetUrl: '/employee-portal#discussions',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role
@@ -1828,20 +1952,20 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const deleteDiscussionReply = async (discussionId: string, replyId: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionRef = doc(db, 'discussions', discussionId)
     const discussionDoc = await getDoc(discussionRef)
-    
+
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
     const reply = discussion.replies?.find(r => r.id === replyId)
-    
-    // Only reply author or admin can delete
-    if (reply?.authorId !== employee.employeeId && employee.role !== 'admin') {
+
+    // Only reply author or admin/sub-admin can delete
+    if (reply?.authorId !== employee.employeeId && !isAdminOrSubAdmin(employee.role)) {
       throw new Error('Unauthorized')
     }
-    
+
     await updateDoc(discussionRef, {
       replies: discussion.replies?.filter(r => r.id !== replyId) || []
     })
@@ -1849,42 +1973,42 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const updateDiscussionReply = async (discussionId: string, replyId: string, content: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionRef = doc(db, 'discussions', discussionId)
     const discussionDoc = await getDoc(discussionRef)
-    
+
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
     const replyIndex = discussion.replies?.findIndex(r => r.id === replyId) ?? -1
-    
+
     if (replyIndex === -1) throw new Error('Reply not found')
-    
+
     const reply = discussion.replies![replyIndex]
-    
+
     // Only reply author can edit
     if (reply.authorId !== employee.employeeId) {
       throw new Error('Unauthorized - only the author can edit this reply')
     }
-    
+
     const updatedReplies = [...(discussion.replies || [])]
     updatedReplies[replyIndex] = {
       ...reply,
       content,
       updatedAt: Timestamp.now()
     }
-    
+
     await updateDoc(discussionRef, {
       replies: updatedReplies
     })
   }
 
   const togglePinDiscussion = async (id: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const discussionDoc = await getDoc(doc(db, 'discussions', id))
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
     await updateDoc(doc(db, 'discussions', id), {
       isPinned: !discussion.isPinned
@@ -1893,17 +2017,17 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const toggleDiscussionReaction = async (discussionId: string, emoji: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const discussionDoc = await getDoc(doc(db, 'discussions', discussionId))
     if (!discussionDoc.exists()) throw new Error('Discussion not found')
-    
+
     const discussion = discussionDoc.data() as Discussion
     const reactions = discussion.reactions || {}
     const emojiReactions = reactions[emoji] || []
-    
+
     // Toggle: add if not present, remove if present
     const hasReacted = emojiReactions.includes(employee.employeeId)
-    
+
     if (hasReacted) {
       // Remove reaction
       reactions[emoji] = emojiReactions.filter((id: string) => id !== employee.employeeId)
@@ -1915,7 +2039,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       // Add reaction
       reactions[emoji] = [...emojiReactions, employee.employeeId]
     }
-    
+
     await updateDoc(doc(db, 'discussions', discussionId), { reactions })
   }
 
@@ -1925,7 +2049,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const addPersonalTodo = async (title: string, dueDate?: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     try {
       await addDoc(collection(db, 'personalTodos'), {
         title,
@@ -1945,42 +2069,42 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const updatePersonalTodo = async (id: string, updates: Partial<PersonalTodo>) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const todoRef = doc(db, 'personalTodos', id)
     const todoDoc = await getDoc(todoRef)
-    
+
     if (!todoDoc.exists()) throw new Error('Todo not found')
-    
+
     const todo = todoDoc.data()
-    
+
     // Only owner can update their todos
     if (todo.employeeId !== employee.employeeId) {
       throw new Error('Unauthorized')
     }
-    
+
     const updateData: any = { ...updates }
     if (updates.status === 'completed') {
       updateData.completedAt = Timestamp.now()
     }
-    
+
     await updateDoc(todoRef, updateData)
   }
 
   const deletePersonalTodo = async (id: string) => {
     if (!employee) throw new Error('Not authenticated')
-    
+
     const todoRef = doc(db, 'personalTodos', id)
     const todoDoc = await getDoc(todoRef)
-    
+
     if (!todoDoc.exists()) throw new Error('Todo not found')
-    
+
     const todo = todoDoc.data()
-    
+
     // Only owner can delete their todos
     if (todo.employeeId !== employee.employeeId) {
       throw new Error('Unauthorized')
     }
-    
+
     await deleteDoc(todoRef)
   }
 
@@ -1990,7 +2114,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const logActivity = async (log: Omit<ActivityLog, 'id' | 'timestamp' | 'performedBy' | 'performedByName'>) => {
     if (!employee) return
-    
+
     await addDoc(collection(db, 'activityLogs'), {
       ...log,
       performedBy: employee.employeeId,
@@ -2002,16 +2126,16 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const getActivityLogs = async (employeeId?: string, limit = 50): Promise<ActivityLog[]> => {
     const logsRef = collection(db, 'activityLogs')
     const querySnapshot = await getDocs(logsRef)
-    
+
     let logs = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as ActivityLog[]
-    
+
     if (employeeId) {
       logs = logs.filter(log => log.performedBy === employeeId)
     }
-    
+
     return logs
       .sort((a, b) => b.timestamp?.toMillis() - a.timestamp?.toMillis())
       .slice(0, limit)
@@ -2021,121 +2145,295 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // LEAVE REQUEST FUNCTIONS
   // ============================================
 
-  const submitLeaveRequest = async (request: { date: string; subject: string; letter: string; reason: string }) => {
-    if (!employee) throw new Error('Not authenticated')
-    
+  // Utility function to calculate total days between two dates (inclusive)
+  const calculateLeaveDays = (startDate: string, endDate: string): number => {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays + 1 // +1 because both start and end dates are inclusive
+  }
+
+  // Utility function to get all dates in a range (inclusive)
+  const getDateRange = (startDate: string, endDate: string): string[] => {
+    const dates: string[] = []
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const current = new Date(start)
+
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0])
+      current.setDate(current.getDate() + 1)
+    }
+    return dates
+  }
+
+  // Check if there's any overlap with existing leave requests
+  const checkLeaveOverlap = async (employeeId: string, startDate: string, endDate: string): Promise<boolean> => {
+    const leaveRequestsRef = collection(db, 'leaveRequests')
+    const q = query(
+      leaveRequestsRef,
+      where('employeeId', '==', employeeId),
+      where('status', 'in', ['Pending', 'Approved'])
+    )
+    const snapshot = await getDocs(q)
+
+    const requestedStart = new Date(startDate)
+    const requestedEnd = new Date(endDate)
+
+    for (const doc of snapshot.docs) {
+      const existing = doc.data()
+      // Handle both old single-date and new multi-day formats
+      const existingStart = new Date(existing.startDate || existing.date)
+      const existingEnd = new Date(existing.endDate || existing.date)
+
+      // Check for overlap: requestedStart <= existingEnd && requestedEnd >= existingStart
+      if (requestedStart <= existingEnd && requestedEnd >= existingStart) {
+        return true // Overlap found
+      }
+    }
+    return false
+  }
+
+  // Check if any dates in range have existing attendance (except Absent)
+  const checkExistingAttendance = async (employeeId: string, startDate: string, endDate: string): Promise<string[]> => {
+    const conflictDates: string[] = []
+    const dates = getDateRange(startDate, endDate)
+
+    for (const date of dates) {
+      const attendanceId = `${employeeId}_${date}`
+      const attendanceDoc = await getDoc(doc(db, 'attendance', attendanceId))
+
+      if (attendanceDoc.exists()) {
+        const data = attendanceDoc.data()
+        // Only consider it a conflict if already marked as Present, On Duty, WFH, or Leave
+        if (['P', 'O', 'W', 'L'].includes(data.status)) {
+          conflictDates.push(date)
+        }
+      }
+    }
+    return conflictDates
+  }
+
+  const submitLeaveRequest = async (request: {
+    startDate: string
+    endDate: string
+    leaveType: LeaveType
+    subject: string
+    letter: string
+    reason: string
+  }) => {
+    console.log('🚀 submitLeaveRequest called with:', request)
+
+    // Enhanced validation
+    if (!employee) {
+      console.error('❌ No employee in context')
+      throw new Error('You are not authenticated. Please log in again.')
+    }
+
+    if (!employee.employeeId || !employee.name) {
+      console.error('❌ Invalid employee profile:', employee)
+      throw new Error('Your employee profile is incomplete. Please contact admin.')
+    }
+
+    // Validate date range
+    if (!request.startDate || !request.endDate) {
+      throw new Error('Please select both start and end dates.')
+    }
+
+    if (request.startDate > request.endDate) {
+      throw new Error('End date cannot be before start date.')
+    }
+
+    // Check for overlapping leave requests
+    const hasOverlap = await checkLeaveOverlap(employee.employeeId, request.startDate, request.endDate)
+    if (hasOverlap) {
+      throw new Error('You already have a pending or approved leave request that overlaps with these dates.')
+    }
+
+    // Check for existing attendance records
+    const conflictDates = await checkExistingAttendance(employee.employeeId, request.startDate, request.endDate)
+    if (conflictDates.length > 0) {
+      throw new Error(`Cannot apply leave for dates with existing attendance: ${conflictDates.join(', ')}`)
+    }
+
+    // Calculate total days
+    const totalDays = calculateLeaveDays(request.startDate, request.endDate)
+
     const leaveRequestData = {
       employeeId: employee.employeeId,
       employeeName: employee.name,
-      date: request.date,
+      // Multi-day leave fields
+      startDate: request.startDate,
+      endDate: request.endDate,
+      totalDays,
+      leaveType: request.leaveType,
+      // Legacy field for backward compatibility
+      date: request.startDate,
       subject: request.subject,
       letter: request.letter,
       reason: request.reason,
       status: 'Pending' as const,
       createdAt: Timestamp.now(),
+      appliedAt: Timestamp.now(),
       reviewedBy: null,
       reviewedByName: null,
       reviewedAt: null
     }
-    
-    const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
-    
-    // Auto-create discussion post tagging Lahari and Yasasvi
-    const allEmps = await getAllEmployees()
-    const lahari = allEmps.find(e => e.name.toLowerCase().includes('lahari'))
-    const yasasvi = allEmps.find(e => e.name.toLowerCase().includes('yasasvi'))
-    
-    const mentions: string[] = []
-    let mentionText = ''
-    if (lahari) {
-      mentions.push(lahari.employeeId)
-      mentionText += `@${lahari.name} `
+
+    console.log('📝 Attempting to save to Firestore:', leaveRequestData)
+
+    try {
+      const docRef = await addDoc(collection(db, 'leaveRequests'), leaveRequestData)
+      console.log('✅ Leave request saved with ID:', docRef.id)
+
+      // Format date range for display
+      const dateRangeText = request.startDate === request.endDate
+        ? request.startDate
+        : `${request.startDate} to ${request.endDate} (${totalDays} days)`
+
+      // Auto-create discussion post and notifications (non-critical)
+      try {
+        const allEmps = await getAllEmployees()
+        const lahari = allEmps.find(e => e.name.toLowerCase().includes('lahari'))
+        const yasasvi = allEmps.find(e => e.name.toLowerCase().includes('yasasvi'))
+
+        const mentions: string[] = []
+        let mentionText = ''
+        if (lahari) {
+          mentions.push(lahari.employeeId)
+          mentionText += `@${lahari.name} `
+        }
+        if (yasasvi) {
+          mentions.push(yasasvi.employeeId)
+          mentionText += `@${yasasvi.name} `
+        }
+
+        const discussionContent = `${mentionText}\nI have submitted a ${request.leaveType} leave request for ${dateRangeText}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
+
+        await addDiscussion(discussionContent, mentions, [])
+        console.log('✅ Discussion post created')
+
+        // Send notifications to management team only
+        if (mentions.length > 0) {
+          await createGlobalNotification({
+            type: 'calendar',
+            action: 'created',
+            title: 'Leave Request Submitted',
+            message: `${employee.name} has submitted a ${request.leaveType} leave request for ${dateRangeText}. Subject: ${request.subject}`,
+            relatedEntityId: docRef.id,
+            targetUrl: '/employee-portal#attendance',
+            createdBy: employee.employeeId,
+            createdByName: employee.name,
+            createdByRole: employee.role,
+            recipientRoles: ['admin']
+          })
+          console.log('✅ Notification sent')
+        }
+
+        await logActivity({
+          type: 'attendance',
+          action: 'leave-request',
+          description: `Submitted ${request.leaveType} leave request for ${dateRangeText}: ${request.subject}`,
+        })
+        console.log('✅ Activity logged')
+      } catch (postError) {
+        console.warn('⚠️ Post-submission tasks failed (non-critical):', postError)
+        // Don't throw - leave request was already saved successfully
+      }
+    } catch (firestoreError: any) {
+      console.error('❌ Firestore error:', firestoreError)
+
+      // Provide specific error messages while preserving original error.code
+      if (firestoreError.code === 'permission-denied') {
+        const error: any = new Error('Permission denied. Please check your authentication status.')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
+      } else if (firestoreError.code === 'unavailable') {
+        const error: any = new Error('Service unavailable. Please check your internet connection.')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
+      } else {
+        const error: any = new Error(firestoreError?.message || 'Failed to save leave request to database')
+        if (firestoreError && typeof firestoreError === 'object' && 'code' in firestoreError) {
+          error.code = firestoreError.code
+        }
+        throw error
+      }
     }
-    if (yasasvi) {
-      mentions.push(yasasvi.employeeId)
-      mentionText += `@${yasasvi.name} `
-    }
-    
-    const discussionContent = `${mentionText}\nI have submitted a leave request for ${request.date}. Kindly review and approve.\n\nSubject: ${request.subject}\nReason: ${request.reason}`
-    
-    await addDiscussion(discussionContent, mentions, [])
-    
-    // Send notifications to management team only
-    if (mentions.length > 0) {
-      await createGlobalNotification({
-        type: 'calendar',
-        action: 'created',
-        title: 'Leave Request Submitted',
-        message: `${employee.name} has submitted a leave request for ${request.date}. Subject: ${request.subject}`,
-        relatedEntityId: docRef.id,
-        targetUrl: '#attendance',
-        createdBy: employee.employeeId,
-        createdByName: employee.name,
-        createdByRole: employee.role,
-        recipientRoles: ['admin'] // Only notify management team
-      })
-    }
-    
-    await logActivity({
-      type: 'attendance',
-      action: 'leave-request',
-      description: `Submitted leave request for ${request.date}: ${request.subject}`,
-    })
   }
 
   const approveLeaveRequest = async (requestId: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const requestRef = doc(db, 'leaveRequests', requestId)
     const requestDoc = await getDoc(requestRef)
-    
+
     if (!requestDoc.exists()) throw new Error('Leave request not found')
-    
+
     const requestData = requestDoc.data() as LeaveRequest
-    
+
     await updateDoc(requestRef, {
       status: 'Approved',
       reviewedBy: employee.employeeId,
       reviewedByName: employee.name,
       reviewedAt: Timestamp.now()
     })
-    
-    // Clean up any existing attendance records for this employee+date
-    // (e.g., auto-absent may have already created an Absent record)
-    const existingAttendanceQuery = query(
-      collection(db, 'attendance'),
-      where('employeeId', '==', requestData.employeeId),
-      where('date', '==', requestData.date)
-    )
-    const existingDocs = await getDocs(existingAttendanceQuery)
+
+    // Get all dates in the leave range (supports both old single-date and new multi-day formats)
+    const startDate = requestData.startDate || requestData.date
+    const endDate = requestData.endDate || requestData.date
+    const leaveDates = getDateRange(startDate, endDate)
+
     const cleanupBatch = writeBatch(db)
-    existingDocs.docs.forEach(docSnapshot => {
-      cleanupBatch.delete(docSnapshot.ref)
-    })
-    
-    // Mark attendance as Leave (L) for the requested date
-    const attendanceId = `${requestData.employeeId}_${requestData.date}`
     const deviceInfo = 'System - Leave Approved'
-    
-    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
-      employeeId: requestData.employeeId,
-      date: requestData.date,
-      timestamp: Timestamp.now(),
-      status: 'L',
-      notes: `Leave approved - ${requestData.subject}`,
-      deviceInfo
-    })
-    
+
+    // Process each date in the leave range
+    for (const date of leaveDates) {
+      // Clean up any existing attendance records for this employee+date
+      const existingAttendanceQuery = query(
+        collection(db, 'attendance'),
+        where('employeeId', '==', requestData.employeeId),
+        where('date', '==', date)
+      )
+      const existingDocs = await getDocs(existingAttendanceQuery)
+      existingDocs.docs.forEach(docSnapshot => {
+        cleanupBatch.delete(docSnapshot.ref)
+      })
+
+      // Mark attendance as Leave (L) for each date
+      const attendanceId = `${requestData.employeeId}_${date}`
+      cleanupBatch.set(doc(db, 'attendance', attendanceId), {
+        employeeId: requestData.employeeId,
+        date: date,
+        timestamp: Timestamp.now(),
+        status: 'L',
+        notes: `Leave approved - ${requestData.subject}`,
+        leaveStartDate: startDate,
+        leaveEndDate: endDate,
+        deviceInfo
+      })
+    }
+
     await cleanupBatch.commit()
-    
+
+    // Format date range for notification
+    const dateRangeText = startDate === endDate
+      ? startDate
+      : `${startDate} to ${endDate} (${leaveDates.length} days)`
+
     // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
       title: 'Leave Request Approved',
-      message: `Your leave request for ${requestData.date} has been approved by ${employee.name}.`,
+      message: `Your leave request for ${dateRangeText} has been approved by ${employee.name}.`,
       relatedEntityId: requestId,
-      targetUrl: '#attendance',
+      targetUrl: '/employee-portal#attendance',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role,
@@ -2144,57 +2442,72 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const rejectLeaveRequest = async (requestId: string) => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const requestRef = doc(db, 'leaveRequests', requestId)
     const requestDoc = await getDoc(requestRef)
-    
+
     if (!requestDoc.exists()) throw new Error('Leave request not found')
-    
+
     const requestData = requestDoc.data() as LeaveRequest
-    
+
     await updateDoc(requestRef, {
       status: 'Rejected',
       reviewedBy: employee.employeeId,
       reviewedByName: employee.name,
       reviewedAt: Timestamp.now()
     })
-    
-    // Clean up any existing attendance records for this employee+date
-    const existingAttendanceQuery = query(
-      collection(db, 'attendance'),
-      where('employeeId', '==', requestData.employeeId),
-      where('date', '==', requestData.date)
-    )
-    const existingDocs = await getDocs(existingAttendanceQuery)
+
+    // Get all dates in the leave range (supports both old single-date and new multi-day formats)
+    const startDate = requestData.startDate || requestData.date
+    const endDate = requestData.endDate || requestData.date
+    const leaveDates = getDateRange(startDate, endDate)
+
     const cleanupBatch = writeBatch(db)
-    existingDocs.docs.forEach(docSnapshot => {
-      cleanupBatch.delete(docSnapshot.ref)
-    })
-    
-    // Mark attendance as Unauthorised Leave (U) for the requested date
-    const attendanceId = `${requestData.employeeId}_${requestData.date}`
     const deviceInfo = 'System - Leave Rejected'
-    
-    cleanupBatch.set(doc(db, 'attendance', attendanceId), {
-      employeeId: requestData.employeeId,
-      date: requestData.date,
-      timestamp: Timestamp.now(),
-      status: 'U',
-      notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
-      deviceInfo
-    })
-    
+
+    // Process each date in the leave range
+    for (const date of leaveDates) {
+      // Clean up any existing attendance records for this employee+date
+      const existingAttendanceQuery = query(
+        collection(db, 'attendance'),
+        where('employeeId', '==', requestData.employeeId),
+        where('date', '==', date)
+      )
+      const existingDocs = await getDocs(existingAttendanceQuery)
+      existingDocs.docs.forEach(docSnapshot => {
+        cleanupBatch.delete(docSnapshot.ref)
+      })
+
+      // Mark attendance as Unauthorised Leave (U) for each date
+      const attendanceId = `${requestData.employeeId}_${date}`
+      cleanupBatch.set(doc(db, 'attendance', attendanceId), {
+        employeeId: requestData.employeeId,
+        date: date,
+        timestamp: Timestamp.now(),
+        status: 'U',
+        notes: `Unauthorised Leave - Leave request rejected: ${requestData.subject}`,
+        leaveStartDate: startDate,
+        leaveEndDate: endDate,
+        deviceInfo
+      })
+    }
+
     await cleanupBatch.commit()
-    
+
+    // Format date range for notification
+    const dateRangeText = startDate === endDate
+      ? startDate
+      : `${startDate} to ${endDate} (${leaveDates.length} days)`
+
     // Notify the employee who requested the leave
     await createGlobalNotification({
       type: 'calendar',
       action: 'updated',
       title: 'Leave Request Rejected',
-      message: `Your leave request for ${requestData.date} has been rejected by ${employee.name}. It has been marked as Unauthorised Leave.`,
+      message: `Your leave request for ${dateRangeText} has been rejected by ${employee.name}. It has been marked as Unauthorised Leave.`,
       relatedEntityId: requestId,
-      targetUrl: '#attendance',
+      targetUrl: '/employee-portal#attendance',
       createdBy: employee.employeeId,
       createdByName: employee.name,
       createdByRole: employee.role,
@@ -2215,54 +2528,59 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const runAutoAbsentJob = async () => {
-    if (!employee || employee.role !== 'admin') throw new Error('Unauthorized')
-    
+    if (!employee || !isAdminOrSubAdmin(employee.role)) throw new Error('Unauthorized')
+
     const allEmployees = await getAllEmployees()
-    
+
     // Fetch all approved leave requests to avoid marking leave days as absent
     const leaveRequestsSnapshot = await getDocs(collection(db, 'leaveRequests'))
     const approvedLeaves = leaveRequestsSnapshot.docs
       .map(d => d.data() as LeaveRequest)
       .filter(lr => lr.status === 'Approved')
-    
+
     // Build a set of approved leave keys: "employeeId_date"
     const approvedLeaveKeys = new Set<string>()
     approvedLeaves.forEach(lr => {
       approvedLeaveKeys.add(`${lr.employeeId}_${lr.date}`)
     })
-    
+
     let totalMarked = 0
-    
+
     // Check last 7 days (not just yesterday) to catch any missed days
     for (let daysAgo = 1; daysAgo <= 7; daysAgo++) {
       const checkDate = new Date()
       checkDate.setDate(checkDate.getDate() - daysAgo)
       const dateString = getLocalDateString(checkDate)
-      
+
       // Skip if not a working day (Sunday or holiday)
       if (!isWorkingDay(dateString)) {
         console.log(`Skipping auto-absent for ${dateString} - not a working day`)
         continue
       }
-      
+
       const batch = writeBatch(db)
       let markedCount = 0
       let cleanedCount = 0
-      
-      // Create timestamp for 6:00 PM (18:00) of the absent day — the cutoff time
+
+      // Create timestamp for 6:00 PM (18:00) of the absent day - the cutoff time
       const absentDayCutoff = new Date(checkDate)
       absentDayCutoff.setHours(18, 0, 0, 0)
       const absentTimestamp = Timestamp.fromDate(absentDayCutoff)
-      
+
       for (const emp of allEmployees) {
+        // Skip admins - they don't participate in attendance tracking
+        if (emp.role === 'admin') continue
+        // Skip corrupt/incomplete employee records
+        if (!emp.employeeId) continue
+
         const attendanceId = `${emp.employeeId}_${dateString}`
         const leaveKey = `${emp.employeeId}_${dateString}`
-        
+
         // Skip if this date is before the employee's joining date
         if (emp.joiningDate && dateString < emp.joiningDate) {
           continue
         }
-        
+
         // Check for any existing records for this employee on this date
         const attendanceRef = collection(db, 'attendance')
         const q = query(
@@ -2271,11 +2589,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           where('date', '==', dateString)
         )
         const existingDocs = await getDocs(q)
-        
+
         // If there's an approved leave for this date, ensure only the Leave record exists
         if (approvedLeaveKeys.has(leaveKey)) {
           if (existingDocs.empty) {
-            // Approved leave but no attendance record — create Leave record
+            // Approved leave but no attendance record - create Leave record
             batch.set(doc(db, 'attendance', attendanceId), {
               employeeId: emp.employeeId,
               date: dateString,
@@ -2294,7 +2612,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
                 hasLeaveRecord = true
               }
             })
-            
+
             // Delete all records for this date and set the correct one
             existingDocs.docs.forEach(docSnapshot => {
               if (docSnapshot.id !== attendanceId) {
@@ -2302,7 +2620,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
                 cleanedCount++
               }
             })
-            
+
             if (!hasLeaveRecord) {
               // Override with Leave status since leave was approved
               batch.set(doc(db, 'attendance', attendanceId), {
@@ -2318,7 +2636,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           }
           continue // Skip to next employee, leave is handled
         }
-        
+
         // If there's no attendance record at all, mark as absent
         if (existingDocs.empty) {
           const attendanceData: AttendanceRecord = {
@@ -2329,16 +2647,16 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             notes: 'Auto-marked as absent (no attendance recorded before 6 PM)',
             deviceInfo: 'System - Auto Absent Job'
           }
-          
+
           batch.set(doc(db, 'attendance', attendanceId), attendanceData)
           markedCount++
-        } 
+        }
         // If there are multiple records (duplicates), clean them up
         else if (existingDocs.size > 1) {
           // Keep the best record: priority is L > P/W/O > A
           let recordToKeep: any = null
           const docsToDelete: any[] = []
-          
+
           const statusPriority = (s: string) => {
             if (s === 'L') return 4
             if (s === 'P' || s === 'W' || s === 'O') return 3
@@ -2346,7 +2664,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             if (s === 'U') return 1
             return 0 // 'A'
           }
-          
+
           existingDocs.docs.forEach(docSnapshot => {
             const record = docSnapshot.data()
             if (!recordToKeep) {
@@ -2354,7 +2672,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             } else {
               const keepPriority = statusPriority(recordToKeep.status)
               const newPriority = statusPriority(record.status)
-              
+
               if (newPriority > keepPriority) {
                 docsToDelete.push(recordToKeep.docId)
                 recordToKeep = { docId: docSnapshot.id, ...record }
@@ -2373,7 +2691,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
               }
             }
           })
-          
+
           // Delete duplicate records
           docsToDelete.forEach(docId => {
             batch.delete(doc(db, 'attendance', docId))
@@ -2381,11 +2699,11 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
           })
         }
       }
-      
+
       if (markedCount > 0 || cleanedCount > 0) {
         await batch.commit()
         totalMarked += markedCount
-        
+
         if (markedCount > 0) {
           await logActivity({
             type: 'system',
@@ -2396,7 +2714,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    
+
     if (totalMarked > 0) {
       console.log(`Auto-absent job completed: marked ${totalMarked} total absent records across last 7 days`)
     }
@@ -2416,12 +2734,14 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       logout,
       workMode,
       setGlobalWorkMode,
+      attendanceRefreshKey,
       markAttendance,
       updateAttendanceNotes,
       markLeaveRange,
       getAttendanceRecords,
       getTodayAttendance,
       calculateAttendancePercentage,
+      getMonthlyAttendanceStats,
       markAttendanceWithLocation,
       updateEmployeeAttendance,
       getAllEmployeesAttendance,

@@ -1,9 +1,12 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import ContactContent from '@/components/contact/ContactContent'
 
 export const metadata: Metadata = {
-  title: 'Contact Us - matriXO',
-  description: 'Get in touch with matriXO. We\'re here to help with your event ticketing needs.',
+  title: 'Contact',
+  description:
+    'Contact matriXO about workshops, hackathons and bootcamps at your college, event registrations, partnerships or StudentVault. Email hello@matrixo.in.',
+  alternates: { canonical: '/contact' },
+  openGraph: { url: '/contact', title: 'Contact matriXO' },
 }
 
 export default function ContactPage() {

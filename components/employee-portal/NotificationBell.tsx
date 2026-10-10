@@ -10,7 +10,9 @@ import {
   FaCalendarAlt, 
   FaCheckDouble,
   FaTrash,
-  FaBriefcase
+  FaBriefcase,
+  FaVideo,
+  FaClipboardCheck
 } from 'react-icons/fa'
 import { 
   collection, 
@@ -32,11 +34,12 @@ import { formatDistanceToNow } from 'date-fns'
 // Notification type
 interface Notification {
   id: string
-  type: 'task' | 'discussion' | 'calendar' | 'application'
+  type: 'task' | 'discussion' | 'calendar' | 'application' | 'attendance' | 'meeting'
   action?: string
   title: string
   message: string
   createdByName?: string
+  targetUrl?: string
   read: boolean
   createdAt: Timestamp
 }
@@ -281,23 +284,52 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
     }
     
     if (onNavigate) {
-      switch (notification.type) {
-        case 'task': onNavigate('tasks'); break
-        case 'discussion': onNavigate('discussions'); break
-        case 'calendar': onNavigate('calendar'); break
-        case 'application': onNavigate('job-postings'); break
+      // First try to extract tab from targetUrl (e.g. "/employee-portal#tasks" → "tasks")
+      let tab: string | null = null
+      if (notification.targetUrl) {
+        const hash = notification.targetUrl.split('#')[1]
+        if (hash) tab = hash
       }
+      // Fall back to type-based mapping
+      if (!tab) {
+        switch (notification.type) {
+          case 'task': tab = 'tasks'; break
+          case 'discussion': tab = 'discussions'; break
+          case 'calendar': tab = 'calendar'; break
+          case 'application': tab = 'job-postings'; break
+          case 'attendance': tab = 'attendance'; break
+          case 'meeting': tab = 'meetings'; break
+        }
+      }
+      if (tab) onNavigate(tab)
     }
     
     setIsOpen(false)
   }
 
+  // Strip leading mojibake characters (corrupted emoji stored as Latin-1 sequences)
+  const sanitizeTitle = (title: string) => {
+  if (!title) return ''
+
+  // Remove common mojibake sequences like Â, Ã, â€
+  return title
+    .replace(/Â/g, '')
+    .replace(/Ã/g, '')
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€/g, '"')
+    .replace(/â€“/g, '-')
+    .replace(/â€”/g, '-')
+    .trim()
+}
   const getIcon = (type: string) => {
     switch (type) {
       case 'task': return <FaTasks className="text-blue-400" />
       case 'discussion': return <FaComments className="text-green-400" />
       case 'calendar': return <FaCalendarAlt className="text-purple-400" />
       case 'application': return <FaBriefcase className="text-cyan-400" />
+      case 'meeting': return <FaVideo className="text-amber-400" />
+      case 'attendance': return <FaClipboardCheck className="text-emerald-400" />
       default: return <FaBell className="text-neutral-400" />
     }
   }
@@ -344,7 +376,7 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
         ref={buttonRef}
         onClick={handleClick}
         type="button"
-        className="relative p-2.5 rounded-xl transition-all group cursor-pointer"
+        className="relative p-1.5 sm:p-2.5 rounded-xl transition-all group cursor-pointer"
         style={{
           background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
           border: darkMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)',
@@ -355,7 +387,7 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
         aria-label="Notifications"
         aria-expanded={isOpen}
       >
-        <FaBell className={`text-lg transition-colors ${darkMode ? 'text-neutral-300 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-800'}`} />
+        <FaBell className={`text-base sm:text-lg transition-colors ${darkMode ? 'text-neutral-300 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-800'}`} />
         
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
@@ -447,7 +479,7 @@ export default function NotificationBell({ onNavigate, darkMode = true }: Notifi
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className={`text-sm font-medium truncate ${!notification.read ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-neutral-300' : 'text-gray-600')}`}>
-                            {notification.title}
+                            {sanitizeTitle(notification.title)}
                           </p>
                           {getActionBadge(notification.action)}
                           {!notification.read && (
